@@ -75,7 +75,7 @@ export function Flock({ count, state }: FlockProps) {
             boid.update(state);
 
             tempObject.position.copy(boid.position);
-            tempObject.scale.setScalar(boid.size);
+            tempObject.scale.setScalar(boid.size * state.sizeMultiplier);
 
             if (boid.velocity.lengthSq() > 0.0001) {
                 tempObject.lookAt(boid.position.clone().add(boid.velocity));
@@ -89,8 +89,13 @@ export function Flock({ count, state }: FlockProps) {
     });
 
     return (
-        <instancedMesh ref={meshRef} args={[geometry, undefined, count]} castShadow>
-            <meshStandardMaterial emissiveIntensity={0.5} toneMapped={false} />
+        <instancedMesh ref={meshRef} args={[geometry, undefined, count]} castShadow receiveShadow>
+            <meshStandardMaterial
+                roughness={0.3}
+                metalness={0.6}
+                emissiveIntensity={0} // Rely on light for visibility
+                toneMapped={false}
+            />
         </instancedMesh>
     );
 }

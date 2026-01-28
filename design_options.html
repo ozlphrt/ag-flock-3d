@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Design Options</title>
+    <style>
+        body {
+            background-color: #333;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            margin: 0;
+            background-image: linear-gradient(45deg, #222, #444);
+            min-height: 100vh;
+        }
+
+        h1 {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .design-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 350px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .design-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ----- OPTION 1: GLASSMORPHISM ----- */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            color: #eee;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel h3 {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            font-weight: 300;
+        }
+
+        .glass-panel table {
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .glass-panel td {
+            padding: 4px;
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ----- OPTION 2: CYBERPUNK HUD ----- */
+        .hud-panel {
+            background: rgba(10, 10, 15, 0.9);
+            border: 1px solid #0ff;
+            color: #0ff;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.05);
+        }
+
+        .hud-panel::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid #0ff;
+            border-left: 2px solid #0ff;
+        }
+
+        .hud-panel::after {
+            content: 'SYSTEM_READY';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            opacity: 0.7;
+        }
+
+        .hud-panel h3 {
+            text-transform: uppercase;
+            border-bottom: 1px dashed #0ff;
+            margin-bottom: 10px;
+        }
+
+        .hud-panel table {
+            width: 100%;
+            font-size: 11px;
+        }
+
+        .hud-panel td {
+            padding: 2px;
+            border: 1px solid #004444;
+        }
+
+        .hud-btn {
+            background: transparent;
+            border: 1px solid #0ff;
+            color: #0ff;
+            text-transform: uppercase;
+            padding: 8px;
+            width: 48%;
+            cursor: pointer;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+
+        .hud-btn:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 10px #0ff;
+        }
+
+        /* ----- OPTION 3: MINIMAL SWISS ----- */
+        .swiss-panel {
+            background: #f0f0f0;
+            color: #333;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            padding: 24px;
+            border-radius: 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .swiss-panel h3 {
+            font-size: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            border-left: 4px solid #333;
+            padding-left: 10px;
+        }
+
+        .swiss-panel table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+
+        .swiss-panel td {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .swiss-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* ----- OPTION 4: DARK MODULAR ----- */
+        .dark-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #bbb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .dark-section {
+            background: #252525;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            padding: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .dark-panel h3 {
+            font-size: 11px;
+            color: #666;
+            margin: 0 0 8px 0;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .dark-panel table {
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .dark-btn {
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* ----- OPTION 5: RETRO BRUTALIST ----- */
+        .retro-panel {
+            background: #e0e0e0;
+            border: 2px solid #000;
+            color: #000;
+            font-family: 'Verdana', sans-serif;
+            padding: 15px;
+            box-shadow: 8px 8px 0px #000;
+        }
+
+        .retro-panel h3 {
+            background: #000;
+            color: #fff;
+            display: inline-block;
+            padding: 2px 5px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .retro-panel table {
+            width: 100%;
+            border: 2px solid #000;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .retro-panel td {
+            border: 1px solid #000;
+            padding: 4px;
+            background: #fff;
+        }
+
+        .retro-btn {
+            background: #ff5252;
+            border: 2px solid #000;
+            color: #000;
+            font-weight: bold;
+            padding: 8px;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #000;
+            margin-top: 5px;
+        }
+
+        .retro-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #000;
+        }
+
+        /* MOCK CONTENT HELPERS */
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .val {
+            float: right;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .bar {
+            height: 4px;
+            width: 30px;
+            background: currentColor;
+            opacity: 0.3;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>UI Panel Design Options</h1>
+
+    <!-- OPTION 1 -->
+    <div class="design-container">
+        <div class="design-title">1. Modern Glass</div>
+        <div class="glass-panel">
+            <h3>Simulation Stats</h3>
+            <table>
+                <tr>
+                    <td>Pop</td>
+                    <td align="right">500</td>
+                </tr>
+                <tr>
+                    <td>Speed</td>
+                    <td align="right">0.60</td>
+                </tr>
+            </table>
+
+            <br>
+            <h3>Attributes</h3>
+            <table>
+                <tr>
+                    <td>Type</td>
+                    <td>Spd</td>
+                    <td>Vis</td>
+                    <td>Sep</td>
+                </tr>
+                <tr>
+                    <td><span class="color-dot" style="background:red"></span></td>
+                    <td>0.6</td>
+                    <td>6.0</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td><span class="color-dot" style="background:lime"></span></td>
+                    <td>0.5</td>
+                    <td>5.0</td>
+                    <td>1.0</td>
+                </tr>
+            </table>
+
+            <button class="glass-btn">Randomize System</button>
+        </div>
+    </div>
+
+    <!-- OPTION 2 -->
+    <div class="design-container">
+        <div class="design-title">2. Sci-Fi HUD</div>
+        <div class="hud-panel">
+            <h3>> SYSTEM_STATUS</h3>
+            <table>
+                <tr>
+                    <td>[POPULATION]</td>
+                    <td align="right">500</td>
+                </tr>
+                <tr>
+                    <td>[GLOBAL_SPD]</td>
+                    <td align="right">0.60</td>
+                </tr>
+            </table>
+
+            <br>
+            <h3>> MATRIX_CONFIG</h3>
+            <table>
+                <tr>
+                    <td>ID</td>
+                    <td>V_VEC</td>
+                    <td>S_RAD</td>
+                </tr>
+                <tr>
+                    <td style="color:red">RED</td>
+                    <td>0.60</td>
+                    <td>6.00</td>
+                </tr>
+                <tr>
+                    <td style="color:#0f0">GRN</td>
+                    <td>0.50</td>
+                    <td>5.00</td>
+                </tr>
+            </table>
+
+            <div style="display:flex; justify-content:space-between;">
+                <button class="hud-btn">RND_INIT</button>
+                <button class="hud-btn">RESET</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OPTION 3 -->
+    <div class="design-container">
+        <div class="design-title">3. Minimal Swiss</div>
+        <div class="swiss-panel">
+            <h3>Control Center</h3>
+            <table>
+                <tr>
+                    <td>Total Agents</td>
+                    <td><b>500</b></td>
+                </tr>
+                <tr>
+                    <td>Time Scalar</td>
+                    <td><b>x0.6</b></td>
+                </tr>
+                <tr>
+                    <td>Scale Factor</td>
+                    <td><b>x1.5</b></td>
+                </tr>
+            </table>
+
+            <br>
+            <h3>Parameters</h3>
+            <table>
+                <tr>
+                    <td><span class="color-dot" style="background:red"></span> Red</td>
+                    <td align="right">High Speed</td>
+                </tr>
+                <tr>
+                    <td><span class="color-dot" style="background:lime"></span> Green</td>
+                    <td align="right">Med Range</td>
+                </tr>
+            </table>
+
+            <button class="swiss-btn">Randomize</button>
+        </div>
+    </div>
+
+    <!-- OPTION 4 -->
+    <div class="design-container">
+        <div class="design-title">4. Dark Modular</div>
+        <div class="dark-panel">
+            <div class="dark-section">
+                <h3>Global</h3>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px">
+                    <span>Population</span> <span>500</span>
+                </div>
+                <div style="height:4px; background:#333; width:100%; border-radius:2px;">
+                    <div style="width:50%; background:#0070f3; height:100%; border-radius:2px;"></div>
+                </div>
+            </div>
+
+            <div class="dark-section">
+                <h3>Attributes</h3>
+                <table>
+                    <tr>
+                        <td><span class="color-dot" style="background:red"></span></td>
+                        <td>0.6</td>
+                        <td>Sep: 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><span class="color-dot" style="background:lime"></span></td>
+                        <td>0.5</td>
+                        <td>Sep: 1.2</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="dark-section">
+                <button class="dark-btn">Randomize All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OPTION 5 -->
+    <div class="design-container">
+        <div class="design-title">5. Retro Brutalist</div>
+        <div class="retro-panel">
+            <h3>CONTROLS</h3>
+            <table>
+                <tr>
+                    <td><b>POP</b></td>
+                    <td>500</td>
+                </tr>
+                <tr>
+                    <td><b>SPD</b></td>
+                    <td>0.6</td>
+                </tr>
+            </table>
+
+            <h3>DATA</h3>
+            <table>
+                <tr>
+                    <td style="background:red"></td>
+                    <td>0.6</td>
+                    <td>6.0</td>
+                </tr>
+                <tr>
+                    <td style="background:lime"></td>
+                    <td>0.5</td>
+                    <td>5.0</td>
+                </tr>
+            </table>
+
+            <button class="retro-btn">SHUFFLE</button>
+        </div>
+    </div>
+
+</body>
+
+</html>

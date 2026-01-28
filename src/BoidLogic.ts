@@ -29,6 +29,7 @@ export interface SimulationState {
     interactions: number[][]; // [i][j] = Weight of species i being attracted/repelled by species j
     bounds: number;
     speedMultiplier: number;
+    sizeMultiplier: number;
 }
 
 export class Boid {

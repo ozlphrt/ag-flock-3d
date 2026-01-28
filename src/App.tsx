@@ -31,8 +31,7 @@ const INITIAL_MATRIX = [
     [0, 0, 0, 0]  // Yellow
 ];
 
-function FPSStats() {
-    const [fps, setFps] = useState(0)
+function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
     const frames = useRef(0)
     const prevTime = useRef(performance.now())
 
@@ -40,64 +39,46 @@ function FPSStats() {
         frames.current++
         const time = performance.now()
         if (time >= prevTime.current + 1000) {
-            setFps(Math.round((frames.current * 1000) / (time - prevTime.current)))
+            onChange(Math.round((frames.current * 1000) / (time - prevTime.current)))
             prevTime.current = time
             frames.current = 0
         }
     })
-
-    return (
-        <Html
-            fullscreen
-            style={{
-                pointerEvents: 'none',
-                userSelect: 'none',
-            }}
-        >
-            <div style={{
-                position: 'absolute',
-                bottom: '10px',
-                right: '10px',
-                background: 'rgba(0,0,0,0.5)',
-                color: '#00ffcc',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '12px',
-                fontFamily: 'monospace',
-                border: '1px solid rgba(0,255,204,0.3)'
-            }}>
-                FPS: {fps}
-            </div>
-        </Html>
-    )
+    return null
 }
 
 function App() {
     const [population, setPopulation] = useState(500)
+    const [fps, setFps] = useState(0)
 
     // We use a ref for state to communicate with the loop without re-rendering everything constantly
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
         interactions: INITIAL_MATRIX,
         bounds: 50,
-        speedMultiplier: 1.0
+        speedMultiplier: 0.6,
+        sizeMultiplier: 1.5
     });
 
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-            <OverlayUI simState={simState} population={population} setPopulation={setPopulation} />
+            <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
             <Canvas shadows gl={{ antialias: false }}>
                 <color attach="background" args={['#050505']} />
                 <PerspectiveCamera makeDefault position={[120, 120, 120]} />
                 <OrbitControls makeDefault />
 
-                <FPSStats />
+                <FPSUpdater onChange={setFps} />
 
-                <ambientLight intensity={0.5} />
-                <pointLight position={[100, 100, 100]} castShadow intensity={1000} />
-                <pointLight position={[-100, -100, -100]} color="#00ffff" intensity={500} />
+                <ambientLight intensity={0.4} />
+                <directionalLight
+                    position={[50, 100, 50]}
+                    intensity={2.0}
+                    castShadow
+                    shadow-mapSize={[2048, 2048]}
+                />
+                <pointLight position={[-100, -100, -100]} color="#00ffff" intensity={200} />
 
-                <Stars radius={200} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
                 <Flock count={population} state={simState.current} />
 
