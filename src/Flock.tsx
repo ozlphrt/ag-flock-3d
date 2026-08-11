@@ -19,8 +19,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const { controls } = useThree();
 
     const smoothCenter = useRef(new THREE.Vector3(0, 0, 0));
-    const smoothDistance = useRef(35);
-    const smoothCamTarget = useRef(new THREE.Vector3(30, 25, 40));
+    const smoothDistance = useRef(110.0);
+    const smoothCamTarget = useRef(new THREE.Vector3(80, 65, 100));
     const smoothLookTarget = useRef(new THREE.Vector3(0, 0, 0));
     const recentFormationsHistory = useRef<number[]>([]);
     const lastInteractionTime = useRef<number>(0);

@@ -4,7 +4,7 @@ import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { useState, useRef, useMemo } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLOR_PALETTES } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { getRLPreferences, sampleRLAttribute, generateProceduralGenome } from './RLEngine'
 
@@ -53,14 +53,7 @@ function App() {
     const [population, setPopulation] = useState(20000)
     const [fps, setFps] = useState(0)
 
-    const initialRLPrefs = getRLPreferences();
-    const initialMode = sampleRLAttribute(
-        31,
-        initialRLPrefs.formationLikes,
-        initialRLPrefs.formationDislikes,
-        initialRLPrefs.totalLikes,
-        initialRLPrefs.totalDislikes
-    ) as FormationMode;
+    const randomMode = Math.floor(Math.random() * 31) as FormationMode;
 
     // We use a ref for state to communicate with the loop without re-rendering everything constantly
     const simState = useRef<SimulationState>({
@@ -70,10 +63,10 @@ function App() {
         speedMultiplier: 0.28,
         sizeMultiplier: 1.5,
         defeatScenario: DefeatScenario.Remove,
-        formationMode: initialMode,
+        formationMode: randomMode,
         formationSeed: Math.random() * 10000,
-        proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
-        speciesColors: ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22'],
+        proceduralGenome: randomMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
+        speciesColors: [...COLOR_PALETTES[randomMode % COLOR_PALETTES.length]],
         materialSettings: {
             roughness: 0.03,
             metalness: 0.94,
