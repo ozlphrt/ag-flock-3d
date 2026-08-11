@@ -1,13 +1,15 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Stars, Html } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Stars, Html, Environment } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
+import * as THREE from 'three'
 import { Flock } from './Flock'
-import { SpeciesAttributes, SimulationState } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
+import { getRLPreferences, sampleRLAttribute, generateProceduralGenome } from './RLEngine'
 
 const INITIAL_ATTRIBUTES: SpeciesAttributes = {
-    separationWeight: 1.0,
+    separationWeight: 3.5,
     alignmentWeight: 1.0,
     cohesionWeight: 1.0,
     maxSpeed: 0.5,
@@ -17,10 +19,10 @@ const INITIAL_ATTRIBUTES: SpeciesAttributes = {
 
 // 4 Species with slightly different traits
 const SPECIES_CONFIG: SpeciesAttributes[] = [
-    { ...INITIAL_ATTRIBUTES, maxSpeed: 0.6, perceptionRadius: 6.0 }, // Red (Hunter)
-    { ...INITIAL_ATTRIBUTES, maxSpeed: 0.5, perceptionRadius: 5.0 }, // Green
-    { ...INITIAL_ATTRIBUTES, maxSpeed: 0.4, perceptionRadius: 4.0 }, // Blue
-    { ...INITIAL_ATTRIBUTES, maxSpeed: 0.55, perceptionRadius: 5.5 } // Yellow
+    { ...INITIAL_ATTRIBUTES, separationWeight: 4.0, maxSpeed: 0.6, perceptionRadius: 6.0 }, // Red (Hunter)
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.5, maxSpeed: 0.5, perceptionRadius: 5.0 }, // Green
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.2, maxSpeed: 0.4, perceptionRadius: 4.0 }, // Blue
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.8, maxSpeed: 0.55, perceptionRadius: 5.5 } // Yellow
 ];
 
 // Initial Matrix: All 0 (neutral) except some presets if desired
@@ -48,44 +50,88 @@ function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
 }
 
 function App() {
-    const [population, setPopulation] = useState(500)
+    const [population, setPopulation] = useState(20000)
     const [fps, setFps] = useState(0)
+
+    const initialRLPrefs = getRLPreferences();
+    const initialMode = sampleRLAttribute(
+        31,
+        initialRLPrefs.formationLikes,
+        initialRLPrefs.formationDislikes,
+        initialRLPrefs.totalLikes,
+        initialRLPrefs.totalDislikes
+    ) as FormationMode;
 
     // We use a ref for state to communicate with the loop without re-rendering everything constantly
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
         interactions: INITIAL_MATRIX,
         bounds: 50,
-        speedMultiplier: 0.6,
-        sizeMultiplier: 1.5
+        speedMultiplier: 0.28,
+        sizeMultiplier: 1.5,
+        defeatScenario: DefeatScenario.Remove,
+        formationMode: initialMode,
+        formationSeed: Math.random() * 10000,
+        proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
+        speciesColors: ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22'],
+        materialSettings: {
+            roughness: 0.03,
+            metalness: 0.94,
+            wireframe: false,
+            flatShading: true,
+            emissiveIntensity: 0.75
+        },
+        materialPreset: 0
     });
 
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
             <Canvas shadows gl={{ antialias: false }}>
-                <color attach="background" args={['#050505']} />
-                <PerspectiveCamera makeDefault position={[120, 120, 120]} />
-                <OrbitControls makeDefault />
+                <color attach="background" args={['#0d111a']} />
+                <fog attach="fog" args={['#0d111a', 120, 360]} />
+                <PerspectiveCamera makeDefault position={[30, 25, 40]} />
+                <OrbitControls makeDefault enableDamping dampingFactor={0.03} />
 
                 <FPSUpdater onChange={setFps} />
 
-                <ambientLight intensity={0.4} />
+                <Stars radius={160} depth={60} count={3000} factor={3} saturation={0.3} fade speed={0.5} />
+
+                {/* 360° Studio Environment Map for Strong Specular Facet Reflections */}
+                <Environment preset="city" environmentIntensity={2.0} />
+
+                {/* Studio Lighting - Strong Specular Highlights & Glowing Facets */}
+                {/* 1. Base Ambient Fill */}
+                <ambientLight intensity={0.55 * (simState.current.lightIntensityMultiplier ?? 1.0)} color="#ffffff" />
+
+                {/* 2. Key Light (Strong Metallic Specular Highlight) */}
                 <directionalLight
-                    position={[50, 100, 50]}
-                    intensity={2.0}
+                    position={[35, 45, 30]}
+                    intensity={2.4 * (simState.current.lightIntensityMultiplier ?? 1.0)}
+                    color="#ffffff"
                     castShadow
                     shadow-mapSize={[2048, 2048]}
+                    shadow-bias={-0.0001}
                 />
-                <pointLight position={[-100, -100, -100]} color="#00ffff" intensity={200} />
 
+                {/* 3. Fill Light (Soft Neutral White Shadow Fill) */}
+                <directionalLight
+                    position={[-40, 25, -25]}
+                    intensity={0.65 * (simState.current.lightIntensityMultiplier ?? 1.0)}
+                    color="#ffffff"
+                />
 
-                <Flock count={population} state={simState.current} />
+                {/* 4. Rim / Back Light (Strong Silhouette Edge Highlight) */}
+                <directionalLight
+                    position={[0, 50, -45]}
+                    intensity={1.6 * (simState.current.lightIntensityMultiplier ?? 1.0)}
+                    color="#ffffff"
+                />
 
-                <gridHelper args={[100, 20, 0x333333, 0x222222]} position={[0, -50, 0]} />
+                <Flock count={population} state={simState.current} setPopulation={setPopulation} />
 
                 <EffectComposer>
-                    <Bloom luminanceThreshold={0.5} mipmapBlur intensity={0.5} />
+                    <Bloom luminanceThreshold={0.22} mipmapBlur intensity={1.25} radius={0.75} />
                 </EffectComposer>
             </Canvas>
         </div>
