@@ -322,69 +322,112 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     return (
         <>
         {/* Floating Bottom Right Controls */}
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
-            {/* Auto Randomize (30s) Timer Toggle Button */}
+        <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '14px', zIndex: 1000 }}>
+            {/* Auto Randomize (30s) Circular Animated Timer Toggle Button */}
             <button
-                className="defeat-selector-btn"
+                className={`defeat-selector-btn ${autoRandomize ? 'timer-active-pulse' : ''}`}
                 onClick={toggleAutoRandomize}
                 title={autoRandomize ? `Auto-cycle active (${countdown}s remaining) - Click to Pause` : "Auto-cycle paused - Click to Resume"}
                 style={{
-                    padding: '8px 20px',
-                    borderRadius: '30px',
-                    fontSize: '17px',
-                    fontWeight: 900,
-                    fontFamily: 'monospace',
-                    background: autoRandomize ? 'rgba(16, 185, 129, 0.18)' : 'rgba(255, 255, 255, 0.08)',
-                    border: autoRandomize ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid rgba(255, 255, 255, 0.2)',
-                    color: autoRandomize ? '#34d399' : 'rgba(255, 255, 255, 0.45)',
-                    boxShadow: autoRandomize ? '0 0 18px rgba(16, 185, 129, 0.3)' : 'none',
+                    position: 'relative',
+                    width: '56px',
+                    height: '56px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    background: 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    letterSpacing: '1px',
                     cursor: 'pointer',
+                    outline: 'none',
+                    boxShadow: autoRandomize ? '0 0 20px rgba(0, 255, 204, 0.35)' : '0 4px 16px rgba(0,0,0,0.5)',
                     transition: 'all 0.3s ease'
                 }}
             >
-                <span>{autoRandomize ? `${countdown}` : 'PAUSED'}</span>
+                {/* Radial Animated Progress SVG Ring */}
+                <svg width="56" height="56" viewBox="0 0 56 56" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                    {/* Background Track Circle */}
+                    <circle
+                        cx="28"
+                        cy="28"
+                        r="24"
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.12)"
+                        strokeWidth="3.5"
+                    />
+                    {/* Animated Countdown Progress Ring */}
+                    <circle
+                        cx="28"
+                        cy="28"
+                        r="24"
+                        fill="none"
+                        stroke={autoRandomize ? '#00ffcc' : 'rgba(255, 255, 255, 0.3)'}
+                        strokeWidth="3.5"
+                        strokeDasharray="150.796"
+                        strokeDashoffset={autoRandomize ? (150.796 * (1 - countdown / 30)).toFixed(2) : '150.796'}
+                        strokeLinecap="round"
+                        style={{
+                            transition: 'stroke-dashoffset 0.8s ease-out, stroke 0.3s ease'
+                        }}
+                    />
+                </svg>
+
+                {/* Large Legible Center Text Filling Circle */}
+                <span style={{
+                    position: 'relative',
+                    zIndex: 2,
+                    fontSize: autoRandomize ? '22px' : '15px',
+                    fontWeight: 900,
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    color: autoRandomize ? '#00ffcc' : 'rgba(255, 255, 255, 0.45)',
+                    lineHeight: 1,
+                    letterSpacing: '-0.5px'
+                }}>
+                    {autoRandomize ? countdown : 'II'}
+                </span>
             </button>
 
-            {/* Main Settings Toggle Button (Icon Only) */}
+            {/* Main Settings Toggle Button (Icon Only, 56px Matching Circle) */}
             <button
                 className="defeat-selector-btn"
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                 title="Toggle Swarm Studio Settings Panel"
                 style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '56px',
+                    height: '56px',
                     padding: 0,
                     borderRadius: '50%',
-                    fontSize: '17px',
+                    fontSize: '20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: isSettingsOpen ? 'rgba(0, 255, 204, 0.25)' : 'rgba(255, 255, 255, 0.08)',
-                    border: isSettingsOpen ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.2)',
+                    background: isSettingsOpen ? 'rgba(0, 255, 204, 0.25)' : 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: isSettingsOpen ? '1.5px solid #00ffcc' : '1.5px solid rgba(255, 255, 255, 0.18)',
                     color: isSettingsOpen ? '#00ffcc' : '#ffffff',
-                    boxShadow: isSettingsOpen ? '0 0 20px rgba(0, 255, 204, 0.35)' : 'none',
+                    boxShadow: isSettingsOpen ? '0 0 24px rgba(0, 255, 204, 0.4)' : '0 4px 16px rgba(0,0,0,0.5)',
                     transition: 'all 0.3s ease',
                     cursor: 'pointer'
                 }}
             >
-                <span style={{ fontSize: '17px', lineHeight: 1 }}>{isSettingsOpen ? '✕' : '⚙️'}</span>
+                <span style={{ fontSize: '20px', lineHeight: 1 }}>{isSettingsOpen ? '✕' : '⚙️'}</span>
             </button>
         </div>
 
-        {/* Unified Swarm Studio Settings Panel (Minimalist Architectural Design) */}
+        {/* Unified Swarm Studio Settings Panel (Mobile Portrait Responsive & Minimalist) */}
         {isSettingsOpen && (
             <div
-                className="no-scrollbar"
+                className="swarm-settings-panel no-scrollbar"
                 style={{
                     position: 'fixed',
-                    bottom: '80px',
+                    bottom: '88px',
                     right: '24px',
                     width: '420px',
-                    maxHeight: 'calc(100vh - 120px)',
+                    maxHeight: 'calc(100vh - 130px)',
                     overflowY: 'auto',
                     overflowX: 'hidden',
                     background: 'rgba(12, 16, 26, 0.95)',
@@ -429,7 +472,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </button>
                 </div>
 
-                {/* Navigation Tabs (Minimalist Typography, No Icons) */}
+                {/* Navigation Tabs */}
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '14px' }}>
                     {[
                         { id: 'topology', label: 'TOPOLOGY' },
@@ -460,9 +503,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     ))}
                 </div>
 
-                {/* Tab 1: Topology Grid (No Icons, No Scrollbars) */}
+                {/* Tab 1: Topology Grid (Responsive & Mobile Friendly) */}
                 {activeTab === 'topology' && (
-                    <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                    <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
                         {formations.map(f => (
                             <button
                                 key={f.id}

@@ -23,6 +23,40 @@ body {
   height: 0 !important;
 }
 
+/* Timer pulse animation */
+@keyframes timerPulse {
+  0% { transform: scale(1); box-shadow: 0 0 12px rgba(0, 255, 204, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 0 24px rgba(0, 255, 204, 0.6); }
+  100% { transform: scale(1); box-shadow: 0 0 12px rgba(0, 255, 204, 0.3); }
+}
+
+.timer-active-pulse {
+  animation: timerPulse 2s infinite ease-in-out;
+}
+
+/* Mobile Portrait Responsive Adjustments */
+@media (max-width: 600px) {
+  .swarm-settings-panel {
+    width: calc(100vw - 32px) !important;
+    right: 16px !important;
+    left: 16px !important;
+    bottom: 84px !important;
+    max-height: calc(100vh - 110px) !important;
+    padding: 16px !important;
+    border-radius: 20px !important;
+  }
+  
+  .topology-grid {
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)) !important;
+    max-height: 52vh !important;
+  }
+
+  .floating-bottom-bar {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+}
+
 /* Position Stats (drei) at bottom right */
 .stats-panel {
   top: auto !important;
