@@ -879,7 +879,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 BOID POPULATION
                             </div>
                             <div style={{ display: 'flex', gap: '6px' }}>
-                                {[5000, 10000, 15000, 20000].map(count => (
+                                {[5000, 10000, 20000, 35000, 50000].map(count => (
                                     <button
                                         key={count}
                                         onClick={() => {

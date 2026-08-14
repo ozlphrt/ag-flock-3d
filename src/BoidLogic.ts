@@ -1085,6 +1085,100 @@ export class BlobCenter {
     }
 }
 
+export class BoidSwarmData {
+    count: number;
+    posX: Float32Array;
+    posY: Float32Array;
+    posZ: Float32Array;
+    velX: Float32Array;
+    velY: Float32Array;
+    velZ: Float32Array;
+    species: Uint8Array;
+    size: Float32Array;
+    noiseSeed: Float32Array;
+    indexInSpecies: Uint32Array;
+    totalInSpecies: Uint32Array;
+    isStray: Uint8Array;
+    strayOrbitRadius: Float32Array;
+    strayOrbitSpeed: Float32Array;
+    isLeader: Uint8Array;
+
+    constructor(maxCapacity: number = 100000) {
+        this.count = 0;
+        this.posX = new Float32Array(maxCapacity);
+        this.posY = new Float32Array(maxCapacity);
+        this.posZ = new Float32Array(maxCapacity);
+        this.velX = new Float32Array(maxCapacity);
+        this.velY = new Float32Array(maxCapacity);
+        this.velZ = new Float32Array(maxCapacity);
+        this.species = new Uint8Array(maxCapacity);
+        this.size = new Float32Array(maxCapacity);
+        this.noiseSeed = new Float32Array(maxCapacity);
+        this.indexInSpecies = new Uint32Array(maxCapacity);
+        this.totalInSpecies = new Uint32Array(maxCapacity);
+        this.isStray = new Uint8Array(maxCapacity);
+        this.strayOrbitRadius = new Float32Array(maxCapacity);
+        this.strayOrbitSpeed = new Float32Array(maxCapacity);
+        this.isLeader = new Uint8Array(maxCapacity);
+    }
+
+    setPopulation(targetCount: number, state: SimulationState) {
+        const prevCount = this.count;
+        this.count = targetCount;
+
+        const speciesBaseSizes = [0.45, 0.30, 0.18, 0.10];
+        const speciesCounts = [0, 0, 0, 0];
+
+        // If growing population, initialize new particles
+        if (targetCount > prevCount) {
+            for (let i = prevCount; i < targetCount; i++) {
+                const sp = Math.floor(Math.random() * 4) as SpeciesType;
+                this.species[i] = sp;
+
+                const baseSize = speciesBaseSizes[sp];
+                const sizeVariance = 0.4 + Math.pow(Math.random(), 2.0) * 0.5;
+                const isAlphaLeader = (i % 12 === 0);
+                const isTitanLeader = (i % 45 === 0);
+                const leaderMult = isTitanLeader ? 1.25 : (isAlphaLeader ? 1.1 : 1.0);
+                this.size[i] = baseSize * sizeVariance * leaderMult;
+
+                this.noiseSeed[i] = Math.random() * 1000.0;
+                this.isStray[i] = (Math.random() < 0.05) ? 1 : 0;
+                this.strayOrbitRadius[i] = 6.0 + Math.random() * 6.0;
+                this.strayOrbitSpeed[i] = (0.2 + Math.random() * 0.4) * (Math.random() > 0.5 ? 1 : -1);
+
+                this.velX[i] = 0;
+                this.velY[i] = 0;
+                this.velZ[i] = 1;
+            }
+        }
+
+        // Re-index species indices and totals
+        for (let i = 0; i < targetCount; i++) {
+            const sp = this.species[i];
+            this.indexInSpecies[i] = speciesCounts[sp]++;
+            this.isLeader[i] = (this.indexInSpecies[i] % 25 === 0) ? 1 : 0;
+        }
+
+        const mode = state && state.formationMode !== undefined ? state.formationMode : 0;
+        const seed = state && state.formationSeed !== undefined ? state.formationSeed : 42;
+
+        for (let i = 0; i < targetCount; i++) {
+            const sp = this.species[i];
+            this.totalInSpecies[i] = speciesCounts[sp];
+
+            // If newly initialized, snap to formation point
+            if (i >= prevCount) {
+                const u = this.indexInSpecies[i] / (this.totalInSpecies[i] > 0 ? this.totalInSpecies[i] : 100);
+                const [tx, ty, tz] = computeFormationPoint(mode, seed, u, 0, sp, this.indexInSpecies[i], 3.5, state.speedMultiplier || 0.28, state);
+                this.posX[i] = tx;
+                this.posY[i] = ty;
+                this.posZ[i] = tz;
+            }
+        }
+    }
+}
+
 export class Boid {
     position: THREE.Vector3;
     velocity: THREE.Vector3;
