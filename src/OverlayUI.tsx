@@ -257,12 +257,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         {/* Floating Toast Message */}
         {toastMessage && <div className="rl-toast">{toastMessage}</div>}
 
-        {/* Ephemeral Granular Like Bar (Center Bottom) */}
+        {/* Ephemeral Granular Like Bar (Right Vertical) */}
         <div
             className="ephemeral-like-bar"
             style={{
-                opacity: isLikeBarVisible ? 1 : 0,
-                pointerEvents: isLikeBarVisible ? 'auto' : 'none'
+                opacity: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 1 : 0,
+                pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
             }}
         >
             <button
