@@ -357,67 +357,42 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
             }}
         >
-            {/* Palette Row */}
+            {/* Palette Row: [ 👍  Palette  👎 ] */}
             <div className="ephemeral-row">
+                <button
+                    className="thumb-btn like"
+                    onClick={() => handleLikeDimension('palette')}
+                    title="Like this Color Palette"
+                >
+                    👍
+                </button>
                 <span className="dimension-label">Palette</span>
-                <div className="thumb-btn-group">
-                    <button
-                        className="thumb-btn like"
-                        onClick={() => handleLikeDimension('palette')}
-                        title="Like this Color Palette"
-                    >
-                        👍
-                    </button>
-                    <button
-                        className="thumb-btn dislike"
-                        onClick={() => handleDislikeDimension('palette')}
-                        title="Dislike this Color Palette"
-                    >
-                        👎
-                    </button>
-                </div>
+                <button
+                    className="thumb-btn dislike"
+                    onClick={() => handleDislikeDimension('palette')}
+                    title="Dislike this Color Palette"
+                >
+                    👎
+                </button>
             </div>
 
-            {/* Formation Row */}
+            {/* Formation Row: [ 👍  Formation  👎 ] */}
             <div className="ephemeral-row">
+                <button
+                    className="thumb-btn like"
+                    onClick={() => handleLikeDimension('formation')}
+                    title="Like this 3D Formation"
+                >
+                    👍
+                </button>
                 <span className="dimension-label">Formation</span>
-                <div className="thumb-btn-group">
-                    <button
-                        className="thumb-btn like"
-                        onClick={() => handleLikeDimension('formation')}
-                        title="Like this 3D Formation"
-                    >
-                        👍
-                    </button>
-                    <button
-                        className="thumb-btn dislike"
-                        onClick={() => handleDislikeDimension('formation')}
-                        title="Dislike this 3D Formation"
-                    >
-                        👎
-                    </button>
-                </div>
-            </div>
-
-            {/* Lighting Row */}
-            <div className="ephemeral-row">
-                <span className="dimension-label">Lighting</span>
-                <div className="thumb-btn-group">
-                    <button
-                        className="thumb-btn like"
-                        onClick={() => handleLikeDimension('lighting')}
-                        title="Like this Lighting Mood"
-                    >
-                        👍
-                    </button>
-                    <button
-                        className="thumb-btn dislike"
-                        onClick={() => handleDislikeDimension('lighting')}
-                        title="Dislike this Lighting Mood"
-                    >
-                        👎
-                    </button>
-                </div>
+                <button
+                    className="thumb-btn dislike"
+                    onClick={() => handleDislikeDimension('formation')}
+                    title="Dislike this 3D Formation"
+                >
+                    👎
+                </button>
             </div>
 
             {/* Save Masterpiece Snapshot */}

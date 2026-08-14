@@ -79,6 +79,8 @@ body {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.2px;
+  text-align: center;
+  flex: 1;
 }
 
 .thumb-btn-group {
