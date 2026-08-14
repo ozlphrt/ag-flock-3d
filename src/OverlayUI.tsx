@@ -21,6 +21,24 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'topology' | 'geometry' | 'material' | 'lighting' | 'physics'>('topology');
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [countdown, setCountdown] = useState(30);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const state = simState.current;
+            if (!state) return;
+            const now = state.currentTime ?? (performance.now() / 1000.0);
+            const start = state.transitionStartTime ?? now;
+            const elapsed = Math.max(0, now - start);
+            const totalCycle = 32.0;
+            const p = Math.min(1.0, elapsed / totalCycle);
+            setProgress(p);
+            const rem = Math.max(0, Math.ceil(totalCycle - elapsed));
+            setCountdown(rem);
+        }, 100);
+        return () => clearInterval(interval);
+    }, [simState]);
 
     // Ephemeral Like Bar Visibility state
     const [isLikeBarVisible, setIsLikeBarVisible] = useState(true);
@@ -336,21 +354,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 🖼️
             </button>
 
-            {/* Auto Mode Toggle Button */}
+            {/* Auto Mode Toggle Button with Radial Timer Ring */}
             <button
                 className={`defeat-selector-btn ${isAutoMode ? 'timer-active-pulse' : ''}`}
                 onClick={toggleAutoMode}
-                title={isAutoMode ? "Auto-cycle is ACTIVE — Click to Pause & Hold Formation" : "Auto-cycle is PAUSED — Click to Resume"}
+                title={isAutoMode ? `Auto-cycle is ACTIVE (${countdown}s remaining) — Click to Pause & Hold` : "Auto-cycle is PAUSED — Click to Resume"}
                 style={{
                     position: 'relative',
-                    width: '52px',
-                    height: '52px',
+                    width: '56px',
+                    height: '56px',
                     padding: 0,
                     borderRadius: '50%',
                     background: 'rgba(12, 16, 26, 0.85)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
-                    border: isAutoMode ? '1.5px solid #00ffcc' : '1.5px solid rgba(255, 255, 255, 0.2)',
+                    border: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -360,15 +378,77 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     transition: 'all 0.3s ease'
                 }}
             >
-                <span style={{
-                    fontSize: '15px',
-                    fontWeight: 900,
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    color: isAutoMode ? '#00ffcc' : 'rgba(255, 255, 255, 0.45)',
+                {/* Radial Animated Progress SVG Ring */}
+                <svg width="56" height="56" viewBox="0 0 56 56" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                    {/* Background Track Circle */}
+                    <circle
+                        cx="28"
+                        cy="28"
+                        r="24"
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.12)"
+                        strokeWidth="3.5"
+                    />
+                    {/* Animated Countdown Progress Ring */}
+                    <circle
+                        cx="28"
+                        cy="28"
+                        r="24"
+                        fill="none"
+                        stroke={isAutoMode ? '#00ffcc' : 'rgba(255, 255, 255, 0.3)'}
+                        strokeWidth="3.5"
+                        strokeDasharray="150.796"
+                        strokeDashoffset={isAutoMode ? (150.796 * progress).toFixed(2) : '150.796'}
+                        strokeLinecap="round"
+                        style={{
+                            transition: 'stroke-dashoffset 0.15s linear, stroke 0.3s ease'
+                        }}
+                    />
+                </svg>
+
+                {/* Center Content */}
+                <div style={{
+                    position: 'relative',
+                    zIndex: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     lineHeight: 1
                 }}>
-                    {isAutoMode ? 'AUTO' : 'HOLD'}
-                </span>
+                    {isAutoMode ? (
+                        <>
+                            <span style={{
+                                fontSize: '18px',
+                                fontWeight: 900,
+                                fontFamily: 'monospace',
+                                color: '#00ffcc',
+                                letterSpacing: '-0.5px'
+                            }}>
+                                {countdown}
+                            </span>
+                            <span style={{
+                                fontSize: '8px',
+                                fontWeight: 800,
+                                color: 'rgba(0, 255, 204, 0.7)',
+                                letterSpacing: '0.5px',
+                                marginTop: '1px'
+                            }}>
+                                SEC
+                            </span>
+                        </>
+                    ) : (
+                        <span style={{
+                            fontSize: '12px',
+                            fontWeight: 900,
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            color: 'rgba(255, 255, 255, 0.45)',
+                            letterSpacing: '0.5px'
+                        }}>
+                            HOLD
+                        </span>
+                    )}
+                </div>
             </button>
 
             {/* Main Settings Toggle Button */}
