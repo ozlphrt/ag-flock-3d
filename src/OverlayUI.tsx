@@ -291,6 +291,64 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         {/* Floating Toast Message */}
         {toastMessage && <div className="rl-toast">{toastMessage}</div>}
 
+        {/* Top-Left Telemetry & FPS Badge */}
+        <div
+            className="hud-fps-badge"
+            style={{
+                position: 'fixed',
+                top: '18px',
+                left: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '6px 12px',
+                background: 'rgba(12, 16, 26, 0.75)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                zIndex: 999,
+                userSelect: 'none',
+                pointerEvents: 'none'
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                <span
+                    style={{
+                        fontFamily: 'monospace',
+                        fontSize: '15px',
+                        fontWeight: 900,
+                        color: fps >= 55 ? '#00ffcc' : fps >= 30 ? '#ffcc00' : '#ff3b30',
+                        letterSpacing: '-0.5px'
+                    }}
+                >
+                    {fps || 60}
+                </span>
+                <span
+                    style={{
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        color: 'rgba(255, 255, 255, 0.45)',
+                        letterSpacing: '0.5px'
+                    }}
+                >
+                    FPS
+                </span>
+            </div>
+
+            <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.85)' }}>
+                    {population.toLocaleString()}
+                </span>
+                <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)' }}>
+                    BOIDS
+                </span>
+            </div>
+        </div>
+
         {/* Ephemeral Granular Like/Dislike Bar (Right Vertical) */}
         <div
             className="ephemeral-like-bar"
