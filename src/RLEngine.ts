@@ -1,4 +1,4 @@
-import { COLOR_PALETTES, MATERIAL_PRESETS, FormationMode, ProceduralGenome } from './BoidLogic';
+import { COLOR_PALETTES, MATERIAL_PRESETS, FormationMode, ProceduralGenome, LIGHTING_PROFILES } from './BoidLogic';
 
 export interface LikedCreation {
     id: string;
@@ -9,6 +9,8 @@ export interface LikedCreation {
     shapeLabel: string;
     materialPreset: number;
     materialLabel: string;
+    paletteIndex?: number;
+    lightingProfileIndex?: number;
     colors: string[];
     genome?: ProceduralGenome;
 }
@@ -19,6 +21,8 @@ export interface DislikedCreation {
     formationMode: number;
     boidShape: number;
     materialPreset: number;
+    paletteIndex?: number;
+    lightingProfileIndex?: number;
 }
 
 export interface RLPreferences {
@@ -28,14 +32,35 @@ export interface RLPreferences {
     shapeDislikes: Record<number, number>;
     materialLikes: Record<number, number>;
     materialDislikes: Record<number, number>;
+    paletteLikes: Record<number, number>;
+    paletteDislikes: Record<number, number>;
+    lightingLikes: Record<number, number>;
+    lightingDislikes: Record<number, number>;
+    cameraLikes: Record<string, number>;
+    cameraDislikes: Record<string, number>;
     totalLikes: number;
     totalDislikes: number;
     likedGenomes: ProceduralGenome[];
 }
 
+export interface PersistedLastState {
+    formationMode: number;
+    formationSeed: number;
+    paletteIndex: number;
+    materialPreset: number;
+    lightingProfileIndex: number;
+    boidShape: number;
+    savedAt: number;
+}
+
 const STORAGE_KEY_LIKES = 'flock_liked_creations';
 const STORAGE_KEY_DISLIKES = 'flock_disliked_creations';
-const STORAGE_KEY_PREFS = 'flock_rl_preferences_v2';
+const STORAGE_KEY_PREFS_V3 = 'flock_rl_preferences_v3';
+const STORAGE_KEY_PREFS_V2 = 'flock_rl_preferences_v2';
+const STORAGE_KEY_LAST_STATE = 'flock_last_state';
+
+// In-memory cache for ultra-fast, zero-overhead access inside render loops
+let cachedPrefs: RLPreferences | null = null;
 
 export function getLikedCreations(): LikedCreation[] {
     try {
@@ -56,22 +81,119 @@ export function getDislikedCreations(): DislikedCreation[] {
 }
 
 export function getRLPreferences(): RLPreferences {
+    if (cachedPrefs) return cachedPrefs;
+
     try {
-        const data = localStorage.getItem(STORAGE_KEY_PREFS);
-        if (data) return JSON.parse(data);
+        const dataV3 = localStorage.getItem(STORAGE_KEY_PREFS_V3);
+        if (dataV3) {
+            cachedPrefs = JSON.parse(dataV3);
+            return cachedPrefs!;
+        }
+
+        // Seamless migration from v2 to v3 without losing user data
+        const dataV2 = localStorage.getItem(STORAGE_KEY_PREFS_V2);
+        if (dataV2) {
+            const oldPrefs = JSON.parse(dataV2);
+            cachedPrefs = {
+                formationLikes: oldPrefs.formationLikes || {},
+                formationDislikes: oldPrefs.formationDislikes || {},
+                shapeLikes: oldPrefs.shapeLikes || {},
+                shapeDislikes: oldPrefs.shapeDislikes || {},
+                materialLikes: oldPrefs.materialLikes || {},
+                materialDislikes: oldPrefs.materialDislikes || {},
+                paletteLikes: {},
+                paletteDislikes: {},
+                lightingLikes: {},
+                lightingDislikes: {},
+                cameraLikes: {},
+                cameraDislikes: {},
+                totalLikes: oldPrefs.totalLikes || 0,
+                totalDislikes: oldPrefs.totalDislikes || 0,
+                likedGenomes: oldPrefs.likedGenomes || []
+            };
+            localStorage.setItem(STORAGE_KEY_PREFS_V3, JSON.stringify(cachedPrefs));
+            return cachedPrefs;
+        }
     } catch { }
 
-    return {
+    cachedPrefs = {
         formationLikes: {},
         formationDislikes: {},
         shapeLikes: {},
         shapeDislikes: {},
         materialLikes: {},
         materialDislikes: {},
+        paletteLikes: {},
+        paletteDislikes: {},
+        lightingLikes: {},
+        lightingDislikes: {},
+        cameraLikes: {},
+        cameraDislikes: {},
         totalLikes: 0,
         totalDislikes: 0,
         likedGenomes: []
     };
+    return cachedPrefs;
+}
+
+function persistPrefs(prefs: RLPreferences) {
+    cachedPrefs = prefs;
+    try {
+        localStorage.setItem(STORAGE_KEY_PREFS_V3, JSON.stringify(prefs));
+    } catch { }
+}
+
+// Granular Like/Dislike Functions per Aesthetic Dimension
+export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting', id: number): { totalLikes: number } {
+    const prefs = getRLPreferences();
+    prefs.totalLikes = (prefs.totalLikes || 0) + 1;
+
+    switch (dimension) {
+        case 'formation':
+            prefs.formationLikes[id] = (prefs.formationLikes[id] || 0) + 1;
+            break;
+        case 'shape':
+            prefs.shapeLikes[id] = (prefs.shapeLikes[id] || 0) + 1;
+            break;
+        case 'material':
+            prefs.materialLikes[id] = (prefs.materialLikes[id] || 0) + 1;
+            break;
+        case 'palette':
+            prefs.paletteLikes[id] = (prefs.paletteLikes[id] || 0) + 1;
+            break;
+        case 'lighting':
+            prefs.lightingLikes[id] = (prefs.lightingLikes[id] || 0) + 1;
+            break;
+    }
+
+    persistPrefs(prefs);
+    return { totalLikes: prefs.totalLikes };
+}
+
+export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting', id: number): { totalDislikes: number } {
+    const prefs = getRLPreferences();
+    prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
+
+    switch (dimension) {
+        case 'formation':
+            prefs.formationDislikes[id] = (prefs.formationDislikes[id] || 0) + 1;
+            break;
+        case 'shape':
+            prefs.shapeDislikes[id] = (prefs.shapeDislikes[id] || 0) + 1;
+            break;
+        case 'material':
+            prefs.materialDislikes[id] = (prefs.materialDislikes[id] || 0) + 1;
+            break;
+        case 'palette':
+            prefs.paletteDislikes[id] = (prefs.paletteDislikes[id] || 0) + 1;
+            break;
+        case 'lighting':
+            prefs.lightingDislikes[id] = (prefs.lightingDislikes[id] || 0) + 1;
+            break;
+    }
+
+    persistPrefs(prefs);
+    return { totalDislikes: prefs.totalDislikes };
 }
 
 export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; totalLikes: number; totalDislikes: number } {
@@ -92,15 +214,23 @@ export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; to
         prefs.formationLikes[creation.formationMode] = (prefs.formationLikes[creation.formationMode] || 0) + 1;
         prefs.shapeLikes[creation.boidShape] = (prefs.shapeLikes[creation.boidShape] || 0) + 1;
         prefs.materialLikes[creation.materialPreset] = (prefs.materialLikes[creation.materialPreset] || 0) + 1;
+        if (creation.paletteIndex !== undefined) {
+            prefs.paletteLikes[creation.paletteIndex] = (prefs.paletteLikes[creation.paletteIndex] || 0) + 1;
+        }
+        if (creation.lightingProfileIndex !== undefined) {
+            prefs.lightingLikes[creation.lightingProfileIndex] = (prefs.lightingLikes[creation.lightingProfileIndex] || 0) + 1;
+        }
         prefs.totalLikes = (prefs.totalLikes || 0) + 1;
 
         if (creation.genome) {
             prefs.likedGenomes.push(creation.genome);
-            if (prefs.likedGenomes.length > 20) prefs.likedGenomes.shift();
+            if (prefs.likedGenomes.length > 30) prefs.likedGenomes.shift();
         }
 
-        localStorage.setItem(STORAGE_KEY_LIKES, JSON.stringify(likes.slice(0, 100)));
-        localStorage.setItem(STORAGE_KEY_PREFS, JSON.stringify(prefs));
+        try {
+            localStorage.setItem(STORAGE_KEY_LIKES, JSON.stringify(likes.slice(0, 100)));
+        } catch { }
+        persistPrefs(prefs);
     }
 
     return { isNew, totalLikes: prefs.totalLikes, totalDislikes: prefs.totalDislikes || 0 };
@@ -124,10 +254,18 @@ export function saveDislikedCreation(dislike: DislikedCreation): { isNew: boolea
         prefs.formationDislikes[dislike.formationMode] = (prefs.formationDislikes[dislike.formationMode] || 0) + 1;
         prefs.shapeDislikes[dislike.boidShape] = (prefs.shapeDislikes[dislike.boidShape] || 0) + 1;
         prefs.materialDislikes[dislike.materialPreset] = (prefs.materialDislikes[dislike.materialPreset] || 0) + 1;
+        if (dislike.paletteIndex !== undefined) {
+            prefs.paletteDislikes[dislike.paletteIndex] = (prefs.paletteDislikes[dislike.paletteIndex] || 0) + 1;
+        }
+        if (dislike.lightingProfileIndex !== undefined) {
+            prefs.lightingDislikes[dislike.lightingProfileIndex] = (prefs.lightingDislikes[dislike.lightingProfileIndex] || 0) + 1;
+        }
         prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
 
-        localStorage.setItem(STORAGE_KEY_DISLIKES, JSON.stringify(dislikes.slice(0, 100)));
-        localStorage.setItem(STORAGE_KEY_PREFS, JSON.stringify(prefs));
+        try {
+            localStorage.setItem(STORAGE_KEY_DISLIKES, JSON.stringify(dislikes.slice(0, 100)));
+        } catch { }
+        persistPrefs(prefs);
     }
 
     return { isNew, totalLikes: prefs.totalLikes || 0, totalDislikes: prefs.totalDislikes };
@@ -149,6 +287,28 @@ export function isCreationDisliked(formationMode: number, boidShape: number, mat
              d.boidShape === boidShape &&
              d.materialPreset === materialPreset
     );
+}
+
+// Session Resumption State (Last active aesthetic configuration)
+export function saveLastState(state: PersistedLastState) {
+    try {
+        localStorage.setItem(STORAGE_KEY_LAST_STATE, JSON.stringify(state));
+    } catch { }
+}
+
+export function getLastState(): PersistedLastState | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_LAST_STATE);
+        if (!raw) return null;
+        const parsed: PersistedLastState = JSON.parse(raw);
+        // If state is older than 7 days, start fresh
+        if (Date.now() - (parsed.savedAt || 0) > 7 * 24 * 60 * 60 * 1000) {
+            return null;
+        }
+        return parsed;
+    } catch {
+        return null;
+    }
 }
 
 // Softmax Weighted Sampling with Anti-Saturation, Hard Dislike Blacklisting & Novelty Exploration
@@ -212,7 +372,7 @@ export function sampleRLAttribute(
     return finalPool[Math.floor(Math.random() * finalPool.length)];
 }
 
-// Procedural DNA Genome Synthesis with Genetic Crossover & Wildcard Surprise Mutations
+// Procedural DNA Genome Synthesis across 3 Distinct Math Families
 export function generateProceduralGenome(): ProceduralGenome {
     const prefs = getRLPreferences();
     const likedGenomes = prefs.likedGenomes || [];
@@ -220,7 +380,11 @@ export function generateProceduralGenome(): ProceduralGenome {
     const rndInt = (min: number, max: number) => Math.floor(min + Math.random() * (max - min + 1));
     const rndFloat = (min: number, max: number) => min + Math.random() * (max - min);
 
-    // 25% Surprise Wildcard Mutation (Radical non-repetitive DNA)
+    // Randomly pick one of 3 distinct genome families: Fourier, Superformula, Branching
+    const families: ('harmonic' | 'superformula' | 'branching')[] = ['harmonic', 'superformula', 'branching'];
+    const family = families[Math.floor(Math.random() * families.length)];
+
+    // 25% Surprise Wildcard Mutation
     const isSurpriseWildcard = Math.random() < 0.25;
 
     if (!isSurpriseWildcard && likedGenomes.length > 0 && Math.random() < 0.70) {
@@ -230,6 +394,7 @@ export function generateProceduralGenome(): ProceduralGenome {
         const rndMutate = (v: number, scale = 0.2) => v + (Math.random() * 2 - 1) * scale;
 
         return {
+            family: parentA.family || family,
             k1: Math.max(1, Math.round(rndMutate((parentA.k1 + parentB.k1) / 2, 1))),
             k2: Math.max(1, Math.round(rndMutate((parentA.k2 + parentB.k2) / 2, 1))),
             k3: Math.max(1, Math.round(rndMutate((parentA.k3 + parentB.k3) / 2, 1))),
@@ -246,12 +411,16 @@ export function generateProceduralGenome(): ProceduralGenome {
             a3: Math.max(0.5, rndMutate((parentA.a3 + parentB.a3) / 2, 1.0)),
             phi1: (parentA.phi1 + parentB.phi1) / 2 + Math.random() * 0.5,
             phi2: (parentA.phi2 + parentB.phi2) / 2 + Math.random() * 0.5,
-            phi3: (parentA.phi3 + parentB.phi3) / 2 + Math.random() * 0.5
+            phi3: (parentA.phi3 + parentB.phi3) / 2 + Math.random() * 0.5,
+            m: parentA.m,
+            n1: parentA.n1,
+            n2: parentA.n2,
+            n3: parentA.n3
         };
     }
 
-    // Fresh Wildcard Surprise Procedural Genome
     return {
+        family,
         k1: rndInt(1, 8),
         k2: rndInt(1, 8),
         k3: rndInt(1, 8),
@@ -260,14 +429,75 @@ export function generateProceduralGenome(): ProceduralGenome {
         k6: rndInt(1, 8),
         k7: rndInt(1, 8),
         k8: rndInt(1, 8),
-        r1: rndFloat(4.0, 18.0),
-        r2: rndFloat(4.0, 18.0),
-        r3: rndFloat(4.0, 18.0),
+        r1: rndFloat(4.0, 16.0),
+        r2: rndFloat(4.0, 16.0),
+        r3: rndFloat(4.0, 16.0),
         a1: rndFloat(1.0, 8.0),
         a2: rndFloat(1.0, 8.0),
         a3: rndFloat(1.0, 8.0),
         phi1: rndFloat(0, Math.PI * 2),
         phi2: rndFloat(0, Math.PI * 2),
-        phi3: rndFloat(0, Math.PI * 2)
+        phi3: rndFloat(0, Math.PI * 2),
+        // Superformula parameters
+        m: rndInt(3, 12),
+        n1: rndFloat(0.2, 5.0),
+        n2: rndFloat(0.2, 5.0),
+        n3: rndFloat(0.2, 5.0),
+        a: 1.0,
+        b: 1.0
     };
+}
+
+// 8 Built-in Emotional Arcs (Narrative sequence of thematic formations)
+export interface EmotionalArc {
+    name: string;
+    description: string;
+    modes: FormationMode[];
+}
+
+export const EMOTIONAL_ARCS: EmotionalArc[] = [
+    {
+        name: 'Chaos to Order',
+        description: 'From free dynamic murmuration into structured geometric lattice',
+        modes: [FormationMode.MurmurationFlow, FormationMode.SpiderWeb, FormationMode.GeologicStrata]
+    },
+    {
+        name: 'Birth & Cosmic Expansion',
+        description: 'From central singularity into shockwave burst and nebula dust',
+        modes: [FormationMode.BigBangExpansion, FormationMode.SupernovaBurst, FormationMode.NebulaCloud]
+    },
+    {
+        name: 'Organic Biome Growth',
+        description: 'From rooted forest tree to deep coral reef and fungal mushroom',
+        modes: [FormationMode.TreeBranch, FormationMode.CoralReef, FormationMode.BioMushroom]
+    },
+    {
+        name: 'Crystalline Synthesis',
+        description: 'Imploding into diamond prism and multi-faceted platonic polyhedron',
+        modes: [FormationMode.CollapsingSphere, FormationMode.CrystalPrism, FormationMode.DodecahedronShield]
+    },
+    {
+        name: 'Storm & Celestial Calm',
+        description: 'Fractal lightning bolt crashing into ocean wave and settling into planetary rings',
+        modes: [FormationMode.LightningBolt, FormationMode.TsunamiWave, FormationMode.SaturnRings]
+    },
+    {
+        name: 'Fluid Kinetic Architecture',
+        description: 'Rolling shear wave vortices evolving into dancing ribbons and trefoil knot',
+        modes: [FormationMode.KelvinHelmholtz, FormationMode.DancingRibbon, FormationMode.TrefoilKnot]
+    },
+    {
+        name: 'Molecular Genetics',
+        description: 'Linear DNA ladder morphing into rotating double helix and quantum orbital',
+        modes: [FormationMode.DNALadder, FormationMode.DoubleHelix, FormationMode.QuantumAtom]
+    },
+    {
+        name: 'Digital Hyper-Geometry',
+        description: 'Clean wireframe cube unfolding into 4D tesseract and star prism',
+        modes: [FormationMode.WireCube, FormationMode.Tesseract4D, FormationMode.StarPolygon]
+    }
+];
+
+export function getRandomEmotionalArc(): EmotionalArc {
+    return EMOTIONAL_ARCS[Math.floor(Math.random() * EMOTIONAL_ARCS.length)];
 }

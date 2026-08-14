@@ -2,7 +2,7 @@ import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Boid, BlobCenter, SimulationState, SpeciesType, SPECIES_COLORS, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, computeFormationPoint } from './BoidLogic'
-import { getRLPreferences, sampleRLAttribute, generateProceduralGenome } from './RLEngine'
+import { createClockEngine, ClockEngine } from './ClockEngine'
 
 interface FlockProps {
     count: number;
@@ -14,6 +14,58 @@ const tempObject = new THREE.Object3D();
 const tempColor = new THREE.Color();
 const tempTarget = new THREE.Vector3();
 
+// Helper to categorize camera profiles by formation
+function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'overhead' | 'cinematic_sweep' | 'dynamic_burst' | 'orbit_wide' | 'intimate_close' | 'chaotic' {
+    switch (formation) {
+        case FormationMode.PulsingHeart:
+        case FormationMode.PhoenixWings:
+        case FormationMode.JellyfishPulse:
+        case FormationMode.BioMushroom:
+        case FormationMode.CoralReef:
+        case FormationMode.OuroborosSerpent:
+            return 'portrait';
+        case FormationMode.DoubleHelix:
+        case FormationMode.TripleHelix:
+        case FormationMode.Spiral:
+        case FormationMode.TornadoFunnel:
+        case FormationMode.DNALadder:
+        case FormationMode.BlackHoleJet:
+        case FormationMode.HourglassVortex:
+            return 'tunnel';
+        case FormationMode.SpiderWeb:
+        case FormationMode.GeologicStrata:
+        case FormationMode.WireCube:
+        case FormationMode.StarPolygon:
+        case FormationMode.AlienMothership:
+        case FormationMode.BeehiveSwarm:
+            return 'overhead';
+        case FormationMode.Serpent:
+        case FormationMode.TsunamiWave:
+        case FormationMode.KelvinHelmholtz:
+        case FormationMode.DancingRibbon:
+        case FormationMode.RiverDelta:
+        case FormationMode.LightningBolt:
+            return 'cinematic_sweep';
+        case FormationMode.SupernovaBurst:
+        case FormationMode.BigBangExpansion:
+        case FormationMode.CollapsingSphere:
+            return 'dynamic_burst';
+        case FormationMode.SaturnRings:
+        case FormationMode.FerrisWheel:
+        case FormationMode.TorusKnot:
+        case FormationMode.LissajousKnot:
+        case FormationMode.TrefoilKnot:
+            return 'orbit_wide';
+        case FormationMode.VirusCapsid:
+        case FormationMode.DodecahedronShield:
+        case FormationMode.CrystalPrism:
+        case FormationMode.QuantumAtom:
+            return 'intimate_close';
+        default:
+            return 'chaotic';
+    }
+}
+
 export function Flock({ count, state, setPopulation }: FlockProps) {
     const meshRef = useRef<THREE.InstancedMesh>(null!);
     const { controls } = useThree();
@@ -22,8 +74,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const smoothDistance = useRef(110.0);
     const smoothCamTarget = useRef(new THREE.Vector3(80, 65, 100));
     const smoothLookTarget = useRef(new THREE.Vector3(0, 0, 0));
-    const recentFormationsHistory = useRef<number[]>([]);
     const lastInteractionTime = useRef<number>(0);
+
+    // Instantiate ClockEngine with decoupled independent timers
+    const clockEngine = useMemo<ClockEngine>(() => createClockEngine(state), [state]);
 
     useEffect(() => {
         const handleInteraction = () => {
@@ -49,7 +103,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
     // Pre-rotated geometry
     const geometry = useMemo(() => {
-        // ConeGeometry rotated for realistic boid/organic pointing
         const g = new THREE.ConeGeometry(0.12, 0.45, 8);
         g.rotateX(Math.PI / 2);
         return g;
@@ -81,11 +134,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         new THREE.Color('#ffcc00')
     ]);
 
-    // Initialize Blob Centers once (or when interactions change)
+    // Initialize Blob Centers once
     if (blobCentersRef.current.length === 0) {
         for (let s = 0; s < 4; s++) {
             const baseR = 2.0 + s * 1.8;
-            const nBlobs = 3; // 3 distinct blobs per species (12 total mixed-color blobs!)
+            const nBlobs = 3;
             for (let b = 0; b < nBlobs; b++) {
                 const theta = Math.random() * Math.PI * 2;
                 const phi = Math.acos(Math.random() * 2 - 1);
@@ -97,7 +150,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
     }
 
-    // Initialize/Update Boid Population (mixed color blobs!)
+    // Initialize/Update Boid Population
     useMemo(() => {
         const centers = blobCentersRef.current;
         if (centers.length === 0) return;
@@ -108,17 +161,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const species = Math.floor(Math.random() * 4) as SpeciesType;
                 const baseSize = speciesBaseSizes[species];
 
-                // Fine-grain micro-shard size variance (max size ~0.6)
                 const sizeVariance = 0.4 + Math.pow(Math.random(), 2.0) * 0.5;
                 const isAlphaLeader = (idx % 12 === 0);
                 const isTitanLeader = (idx % 45 === 0);
                 const leaderMult = isTitanLeader ? 1.25 : (isAlphaLeader ? 1.1 : 1.0);
                 const size = baseSize * sizeVariance * leaderMult;
                 
-                // Uniformly assign to ANY active blob center to form multi-color organic blobs!
                 const assignedBlob = centers[Math.floor(Math.random() * centers.length)];
 
-                // 3D Gaussian local offset using Box-Muller transform
                 const u1 = Math.random(), u2 = Math.random(), u3 = Math.random(), u4 = Math.random();
                 const mag1 = 1.0 * Math.sqrt(-2.0 * Math.log(u1 + 1e-9));
                 const mag2 = 1.0 * Math.sqrt(-2.0 * Math.log(u3 + 1e-9));
@@ -140,7 +190,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             boids.current.splice(count);
         }
 
-        // Update species index distribution and snap initial position directly to target formation point on spawn!
         const speciesCounts = [0, 0, 0, 0];
         boids.current.forEach(b => {
             b.indexInSpecies = speciesCounts[b.species]++;
@@ -152,7 +201,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const seed = state.formationSeed !== undefined ? state.formationSeed : 42;
             const [tx, ty, tz] = computeFormationPoint(mode, seed, u, 0, b.species, b.indexInSpecies, 3.5, state.speedMultiplier, state);
             
-            // Only set position if it's currently at origin (0,0,0) or brand new spawn
             if (b.position.lengthSq() < 1e-3) {
                 b.position.set(tx, ty, tz);
             }
@@ -178,14 +226,17 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         let boidCount = boidsList.length;
         const time = stateContext.clock.getElapsedTime();
 
-        // 1. Advance Blob Centers on CPU (O(B^2) where B=12 - virtually instant!)
+        // 1. Advance Independent Clocks via ClockEngine (formation, color, material, lighting, camera, surprise)
+        clockEngine.update(time);
+
+        // 2. Advance Blob Centers on CPU (O(B^2) where B=12)
         const centers = blobCentersRef.current;
         const speed = state.attributes[0].maxSpeed * state.speedMultiplier;
         for (const center of centers) {
             center.update(centers, state.interactions, speed, time);
         }
 
-        // 2. Advance Particles pass (O(N) - extremely fast!)
+        // 3. Advance Particles pass (O(N))
         for (let i = 0; i < boidCount; i++) {
             const boid = boidsList[i];
             boid.update(state, time);
@@ -193,7 +244,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             tempObject.position.copy(boid.position);
             tempObject.scale.setScalar(boid.size * state.sizeMultiplier * 0.5);
 
-            // Orient the cone's pointy tip towards its movement direction
             if (boid.velocity && boid.velocity.lengthSq() > 1e-6) {
                 tempTarget.addVectors(boid.position, boid.velocity);
                 tempObject.lookAt(tempTarget);
@@ -205,7 +255,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         meshRef.current.instanceMatrix.needsUpdate = true;
 
-        // 2.5 Liquid HSL Shortest-Arc Color Interpolation over 14.0 seconds (Zero RGB mud, zero hue snap)
+        // 4. Liquid HSL Shortest-Arc Color Interpolation over 9.0 seconds
         const newPalette = state.speciesColors || SPECIES_COLORS;
         const paletteKey = newPalette.join(',');
 
@@ -226,8 +276,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
 
         const colorElapsed = Math.max(0.0, time - colorTransitionStartTime.current);
-        const colorP = Math.min(1.0, colorElapsed / 9.0); // 9.0s liquid smooth HSL color glide (matches formation morph speed)
-        // Quintic Smoothstep Ease-In & Ease-Out S-Curve: 6p^5 - 15p^4 + 10p^3
+        const colorP = Math.min(1.0, colorElapsed / 9.0);
         const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
 
         const hsl1 = { h: 0, s: 0, l: 0 };
@@ -240,7 +289,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             startColors.current[s].getHSL(hsl1);
             targetColors.current[s].getHSL(hsl2);
 
-            // Shortest circular arc on HSL color wheel
             let dHue = hsl2.h - hsl1.h;
             if (dHue > 0.5) dHue -= 1.0;
             if (dHue < -0.5) dHue += 1.0;
@@ -264,89 +312,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             meshRef.current.instanceColor!.needsUpdate = true;
         }
 
-        // 2.8 Auto-Cycle Formations (RL-guided order + Procedural DNA): 30.0s total per preset
-        state.currentTime = time;
-        if (state.isInspecting) {
-            state.transitionStartTime = time - 9.0; // Hold formation at 9s steady morph state during inspection
-        }
-        const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
-        const elapsed = Math.max(0.0, time - startTime);
-        const totalCycleTime = 30.0;
-        if (elapsed >= totalCycleTime && !state.isInspecting) {
-            const currentMode = state.formationMode !== undefined ? state.formationMode : 0;
-            const prefs = getRLPreferences();
-
-            // Sample next formation (31 options) with Anti-Saturation exclusion and Net RL Likes - Dislikes
-            const history = recentFormationsHistory.current;
-            let nextMode = sampleRLAttribute(
-                31,
-                prefs.formationLikes,
-                prefs.formationDislikes,
-                prefs.totalLikes,
-                prefs.totalDislikes,
-                history
-            ) as FormationMode;
-
-            if (nextMode === currentMode) {
-                nextMode = ((currentMode + 1) % 31) as FormationMode;
-            }
-
-            history.push(nextMode);
-            if (history.length > 6) history.shift();
-
-            // Save previous formation state for 100% gradual Quintic Ease-In / Ease-Out morphing
-            state.prevFormationMode = state.formationMode;
-            state.prevFormationSeed = state.formationSeed;
-
-            state.formationMode = nextMode;
-            state.formationSeed = Math.random() * 10000;
-            state.transitionStartTime = time;
-            state.transitionDuration = 9.0;
-            state.isCameraLocked = false;
-
-            if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
-                state.proceduralGenome = generateProceduralGenome();
-            }
-
-            // Randomize Palette & Material Aesthetics based on RL Positive + Negative feedback
-            const randomPalette = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
-            state.speciesColors = [...randomPalette];
-
-            if (state.autoShape !== false) {
-                state.boidShape = sampleRLAttribute(
-                    8,
-                    prefs.shapeLikes,
-                    prefs.shapeDislikes,
-                    prefs.totalLikes,
-                    prefs.totalDislikes
-                );
-            }
-
-            if (state.autoMaterial !== false) {
-                const sampledMatIdx = sampleRLAttribute(
-                    MATERIAL_PRESETS.length,
-                    prefs.materialLikes,
-                    prefs.materialDislikes,
-                    prefs.totalLikes,
-                    prefs.totalDislikes
-                );
-                state.materialPreset = sampledMatIdx;
-                state.materialSettings = { ...MATERIAL_PRESETS[sampledMatIdx].settings };
-            }
-
-            const sepPreset = [4.2, 3.8, 3.5, 4.0];
-            const spdPreset = [0.65, 0.55, 0.45, 0.60];
-            const radPreset = [6.5, 5.5, 4.5, 6.0];
-            state.attributes.forEach((attr, idx) => {
-                attr.separationWeight = sepPreset[idx];
-                attr.alignmentWeight = 1.2;
-                attr.cohesionWeight = 1.0;
-                attr.maxSpeed = spdPreset[idx];
-                attr.perceptionRadius = radPreset[idx];
-            });
-        }
-
-        // 3. Dynamic multi-harmonic cinematic camera choreography & dramatic perspective angles
+        // 5. Formation-Aware Cinematic Camera Choreography
         if (boidCount > 0) {
             let sumX = 0, sumY = 0, sumZ = 0;
             const sampleStep = Math.max(1, Math.floor(boidCount / 100));
@@ -378,25 +344,85 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const perspCam = stateContext.camera as THREE.PerspectiveCamera;
             const fovRad = (perspCam.fov || 75) * (Math.PI / 180);
             const requiredDist = (targetRadius / Math.sin(fovRad / 2)) * 0.90;
-            const targetDist = THREE.MathUtils.clamp(requiredDist, 8.0, 32.0);
+            const baseDist = THREE.MathUtils.clamp(requiredDist, 8.0, 32.0);
 
-            // Dynamic camera tracking lerp (snappy yet smooth)
             smoothCenter.current.lerp(new THREE.Vector3(centerX, centerY, centerZ), 0.02);
-            smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, targetDist, 0.015);
+            smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, baseDist, 0.015);
 
-            // Multi-harmonic orbital motion with wide pitch variation (hero low shots + high isometric plan views)
-            const orbitTime = time * 0.07;
+            // Formation category driven angle and pitch
+            const cat = getCameraCategory(state.formationMode);
+            state.cameraCategory = cat;
+
+            let orbitSpeed = 0.07;
+            let pitchCenter = 0.32;
+            let pitchAmp = 0.35;
+            let distScale = 1.0;
+            let yOffset = 0;
+
+            switch (cat) {
+                case 'portrait':
+                    orbitSpeed = 0.04;
+                    pitchCenter = 0.15;
+                    pitchAmp = 0.15;
+                    distScale = 0.82;
+                    break;
+                case 'tunnel':
+                    orbitSpeed = 0.09;
+                    pitchCenter = 0.85; // Looking down vertical spiral axis
+                    pitchAmp = 0.20;
+                    distScale = 0.90;
+                    break;
+                case 'overhead':
+                    orbitSpeed = 0.05;
+                    pitchCenter = 0.75; // High isometric plan view
+                    pitchAmp = 0.25;
+                    distScale = 1.15;
+                    break;
+                case 'cinematic_sweep':
+                    orbitSpeed = 0.06;
+                    pitchCenter = 0.20;
+                    pitchAmp = 0.28;
+                    distScale = 0.95;
+                    yOffset = Math.sin(time * 0.1) * 2.5;
+                    break;
+                case 'dynamic_burst':
+                    orbitSpeed = 0.08;
+                    pitchCenter = 0.30;
+                    pitchAmp = 0.30;
+                    distScale = 0.80 + Math.sin(time * 0.4) * 0.35;
+                    break;
+                case 'orbit_wide':
+                    orbitSpeed = 0.08;
+                    pitchCenter = 0.40;
+                    pitchAmp = 0.35;
+                    distScale = 1.25;
+                    break;
+                case 'intimate_close':
+                    orbitSpeed = 0.04;
+                    pitchCenter = 0.25;
+                    pitchAmp = 0.20;
+                    distScale = 0.75;
+                    break;
+                default: // chaotic
+                    orbitSpeed = 0.07;
+                    pitchCenter = 0.35 + Math.sin(time * 0.05) * 0.2;
+                    pitchAmp = 0.40;
+                    distScale = 1.0 + Math.sin(time * 0.08) * 0.2;
+                    break;
+            }
+
+            // Camera Mood overlay modulation
+            if (state.cameraMood === 'intimate_close') distScale *= 0.78;
+            if (state.cameraMood === 'orbit_wide') distScale *= 1.3;
+            if (state.cameraMood === 'overhead_iso') pitchCenter = 0.85;
+
+            const orbitTime = time * orbitSpeed;
             const camAngle = orbitTime;
-            // Pitch oscillates smoothly between low hero angles (-0.1 rad / -6°) and high isometric angles (0.75 rad / 43°)
-            const camPitch = 0.32 + Math.sin(time * 0.09) * 0.38 + Math.cos(time * 0.04) * 0.12;
-            // Distance modulates dynamically between tight close-ups and dramatic wide overviews
-            const distMod = 0.82 + Math.sin(time * 0.065) * 0.20 + Math.sin(time * 0.14) * 0.06;
-            // Vertical offset swoop
-            const camOffsetY = Math.sin(time * 0.08) * 3.2 + Math.cos(time * 0.03) * 1.8;
+            const camPitch = pitchCenter + Math.sin(time * 0.09) * pitchAmp;
+            const finalDist = smoothDistance.current * distScale;
 
-            const finalDist = smoothDistance.current * distMod;
             const targetCamX = smoothCenter.current.x + finalDist * Math.cos(camAngle) * Math.cos(camPitch);
-            const targetCamY = smoothCenter.current.y + camOffsetY + finalDist * Math.sin(camPitch);
+            const targetCamY = smoothCenter.current.y + yOffset + finalDist * Math.sin(camPitch);
             const targetCamZ = smoothCenter.current.z + finalDist * Math.sin(camAngle) * Math.cos(camPitch);
 
             const activeControls = controls as any;
@@ -406,12 +432,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
 
             const timeSinceInteraction = performance.now() - lastInteractionTime.current;
-            const isUserOverriding = timeSinceInteraction < 10000; // 10 seconds manual drag override
+            const isUserOverriding = timeSinceInteraction < 10000;
 
             if (!isUserOverriding) {
-                // Responsive & cinematic camera motion (0.015 lerp factor)
                 const rawGoal = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
-                smoothCamTarget.current.lerp(rawGoal, 0.015);
+                smoothCamTarget.current.lerp(rawGoal, 0.018);
                 smoothLookTarget.current.lerp(smoothCenter.current, 0.02);
 
                 stateContext.camera.position.copy(smoothCamTarget.current);
@@ -422,7 +447,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     stateContext.camera.lookAt(smoothLookTarget.current);
                 }
             } else {
-                // Keep smoothCamTarget seamlessly in sync with manual user drag
                 smoothCamTarget.current.copy(stateContext.camera.position);
                 if (activeControls && activeControls.target) {
                     smoothLookTarget.current.copy(activeControls.target);
@@ -433,35 +457,27 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
     // 8 Pre-calculated distinct Hard-Edged Low-Poly 3D Geometries
     const geometries = useMemo(() => {
-        // 0. Stealth Arrowhead Jet (3-sided sharp aerodynamic wedge)
         const g0 = new THREE.ConeGeometry(0.16, 0.5, 3);
         g0.rotateX(Math.PI / 2);
 
-        // 1. Faceted Gemstone Octahedron (8-faced dual-pointed crystal)
         const g1 = new THREE.OctahedronGeometry(0.22, 0);
         g1.scale(0.8, 0.8, 1.4);
 
-        // 2. Angular Prism Pyramid (4-sided sharp pyramid crystal)
         const g2 = new THREE.ConeGeometry(0.18, 0.48, 4);
         g2.rotateX(Math.PI / 2);
 
-        // 3. Low-Poly Hex Shield (6-sided faceted shield interceptor)
         const g3 = new THREE.ConeGeometry(0.2, 0.45, 6);
         g3.rotateX(Math.PI / 2);
 
-        // 4. Swept Delta Wing (4-sided swept-back wing blade)
         const g4 = new THREE.CylinderGeometry(0.02, 0.22, 0.45, 4);
         g4.rotateX(Math.PI / 2);
         g4.scale(1.3, 0.5, 1.0);
 
-        // 5. Dodecahedron Core (12-faced hard-edged platonic polyhedron)
         const g5 = new THREE.DodecahedronGeometry(0.18, 0);
 
-        // 6. Sharp Tetrahedral Shard (Ultra-sharp 4-faced wedge shard)
         const g6 = new THREE.TetrahedronGeometry(0.2, 0);
         g6.scale(0.7, 0.7, 1.5);
 
-        // 7. Faceted Energy Orb (20-faced low-poly icosahedron)
         const g7 = new THREE.IcosahedronGeometry(0.18, 0);
 
         return [g0, g1, g2, g3, g4, g5, g6, g7];
@@ -471,15 +487,21 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const activeShapeIdx = state.boidShape !== undefined ? Math.abs(state.boidShape) % geometries.length : 0;
     const activeGeometry = geometries[activeShapeIdx];
 
+    // Check for transient material pulse micro-surprise
+    let emissiveInt = mat.emissiveIntensity;
+    if (state.microSurpriseType === 'materialPulse' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+        emissiveInt = 1.4;
+    }
+
     return (
         <instancedMesh key={activeShapeIdx} ref={meshRef} args={[activeGeometry, undefined, count]} castShadow receiveShadow>
             <meshStandardMaterial
-                key={`${mat.flatShading ? 'f' : 's'}`}
+                key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
                 roughness={mat.roughness}
                 metalness={mat.metalness}
                 wireframe={false}
                 flatShading={mat.flatShading}
-                emissiveIntensity={mat.emissiveIntensity}
+                emissiveIntensity={emissiveInt}
                 toneMapped={true}
             />
         </instancedMesh>

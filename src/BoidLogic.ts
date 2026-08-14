@@ -60,14 +60,32 @@ export enum FormationMode {
     FerrisWheel = 27,
     SpiderWeb = 28,
     NebulaCloud = 29,
-    Procedural = 30
+    Procedural = 30,
+    // --- 14 New Non-Circular / Planar / Dynamic Formations ---
+    WireCube = 31,
+    TreeBranch = 32,
+    LightningBolt = 33,
+    RiverDelta = 34,
+    KelvinHelmholtz = 35,
+    DNALadder = 36,
+    StarPolygon = 37,
+    CollapsingSphere = 38,
+    BigBangExpansion = 39,
+    GeologicStrata = 40,
+    TrefoilKnot = 41,
+    MurmurationFlow = 42,
+    OuroborosSerpent = 43,
+    DancingRibbon = 44
 }
 
 export interface ProceduralGenome {
+    family?: 'harmonic' | 'superformula' | 'branching';
     k1: number; k2: number; k3: number; k4: number; k5: number; k6: number; k7: number; k8: number;
     r1: number; r2: number; r3: number;
     a1: number; a2: number; a3: number;
     phi1: number; phi2: number; phi3: number;
+    // Superformula params:
+    m?: number; n1?: number; n2?: number; n3?: number; a?: number; b?: number;
 }
 
 export interface MaterialSettings {
@@ -77,6 +95,166 @@ export interface MaterialSettings {
     flatShading: boolean;
     emissiveIntensity: number;
 }
+
+export interface LightingProfile {
+    id: number;
+    label: string;
+    ambientIntensity: number;
+    keyIntensity: number;
+    keyColor: string;
+    fillIntensity: number;
+    fillColor: string;
+    rimIntensity: number;
+    rimColor: string;
+    fogDensity: number;
+}
+
+export const LIGHTING_PROFILES: LightingProfile[] = [
+    {
+        id: 0,
+        label: 'Studio White',
+        ambientIntensity: 0.55,
+        keyIntensity: 2.4,
+        keyColor: '#ffffff',
+        fillIntensity: 0.65,
+        fillColor: '#ffffff',
+        rimIntensity: 1.6,
+        rimColor: '#e0e8ff',
+        fogDensity: 0.003
+    },
+    {
+        id: 1,
+        label: 'Golden Hour',
+        ambientIntensity: 0.45,
+        keyIntensity: 2.8,
+        keyColor: '#ffd580',
+        fillIntensity: 0.60,
+        fillColor: '#ffe5b4',
+        rimIntensity: 1.8,
+        rimColor: '#4060a0',
+        fogDensity: 0.0035
+    },
+    {
+        id: 2,
+        label: 'Arctic Cold',
+        ambientIntensity: 0.40,
+        keyIntensity: 2.6,
+        keyColor: '#c0d8ff',
+        fillIntensity: 0.70,
+        fillColor: '#d8f0ff',
+        rimIntensity: 1.9,
+        rimColor: '#ff8040',
+        fogDensity: 0.004
+    },
+    {
+        id: 3,
+        label: 'Deep Sea',
+        ambientIntensity: 0.30,
+        keyIntensity: 2.2,
+        keyColor: '#102040',
+        fillIntensity: 0.50,
+        fillColor: '#004060',
+        rimIntensity: 2.4,
+        rimColor: '#00ffcc',
+        fogDensity: 0.006
+    },
+    {
+        id: 4,
+        label: 'Volcanic',
+        ambientIntensity: 0.35,
+        keyIntensity: 3.0,
+        keyColor: '#ff6020',
+        fillIntensity: 0.50,
+        fillColor: '#801000',
+        rimIntensity: 2.2,
+        rimColor: '#200820',
+        fogDensity: 0.005
+    },
+    {
+        id: 5,
+        label: 'Nebula Purple',
+        ambientIntensity: 0.35,
+        keyIntensity: 2.5,
+        keyColor: '#9040ff',
+        fillIntensity: 0.60,
+        fillColor: '#401080',
+        rimIntensity: 2.0,
+        rimColor: '#40ff90',
+        fogDensity: 0.004
+    },
+    {
+        id: 6,
+        label: 'Moonlight',
+        ambientIntensity: 0.25,
+        keyIntensity: 2.0,
+        keyColor: '#d0e0ff',
+        fillIntensity: 0.40,
+        fillColor: '#102030',
+        rimIntensity: 2.2,
+        rimColor: '#204020',
+        fogDensity: 0.004
+    },
+    {
+        id: 7,
+        label: 'Sunrise',
+        ambientIntensity: 0.45,
+        keyIntensity: 2.7,
+        keyColor: '#ffb080',
+        fillIntensity: 0.60,
+        fillColor: '#ffd0b0',
+        rimIntensity: 1.8,
+        rimColor: '#6080c0',
+        fogDensity: 0.0035
+    },
+    {
+        id: 8,
+        label: 'Neon Cyber',
+        ambientIntensity: 0.35,
+        keyIntensity: 2.8,
+        keyColor: '#00ffcc',
+        fillIntensity: 0.50,
+        fillColor: '#200040',
+        rimIntensity: 2.6,
+        rimColor: '#ff0080',
+        fogDensity: 0.0045
+    },
+    {
+        id: 9,
+        label: 'Overcast',
+        ambientIntensity: 0.65,
+        keyIntensity: 1.8,
+        keyColor: '#c8c8d8',
+        fillIntensity: 0.80,
+        fillColor: '#d8c8c8',
+        rimIntensity: 1.2,
+        rimColor: '#b0b0c0',
+        fogDensity: 0.005
+    },
+    {
+        id: 10,
+        label: 'Bioluminescent',
+        ambientIntensity: 0.25,
+        keyIntensity: 2.4,
+        keyColor: '#40ff80',
+        fillIntensity: 0.45,
+        fillColor: '#003020',
+        rimIntensity: 2.5,
+        rimColor: '#00e0ff',
+        fogDensity: 0.006
+    },
+    {
+        id: 11,
+        label: 'Eclipse',
+        ambientIntensity: 0.20,
+        keyIntensity: 1.5,
+        keyColor: '#101018',
+        fillIntensity: 0.30,
+        fillColor: '#050510',
+        rimIntensity: 3.2,
+        rimColor: '#e0a020',
+        fogDensity: 0.007
+    }
+];
 
 export const COLOR_PALETTES = [
     ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22'], // 1. Organic Forest & Moss
@@ -189,21 +367,29 @@ export interface SimulationState {
     formationMode: FormationMode;
     formationSeed: number;
     speciesColors: string[];
+    paletteIndex?: number;
     materialSettings: MaterialSettings;
     transitionStartTime?: number;
     transitionDuration?: number;
     currentTime?: number;
     boidShape?: number;
     materialPreset?: number;
+    autoMode?: boolean;
     autoShape?: boolean;
     autoMaterial?: boolean;
     proceduralGenome?: ProceduralGenome;
     isCameraLocked?: boolean;
     lightIntensityMultiplier?: number;
+    lightingProfileIndex?: number;
+    lightingProfile?: LightingProfile;
+    cameraCategory?: string;
+    cameraMood?: string;
     isInspecting?: boolean;
     prevFormationMode?: FormationMode;
     prevFormationSeed?: number;
     targetPopulation?: number;
+    microSurpriseType?: string;
+    microSurpriseEndTime?: number;
 }
 
 export function computeFormationPoint(
@@ -219,7 +405,6 @@ export function computeFormationPoint(
 ): [number, number, number] {
     let tx = 0, ty = 0, tz = 0;
     const freqMult = 1.0;
-    const ampMult = 0.32; // Ultra-compact scale for razor-sharp, 100% contained 3D architectural sculptures
     const phaseShift = 0.0;
 
     if (formation === FormationMode.Serpent) {
@@ -500,14 +685,235 @@ export function computeFormationPoint(
         tx = webR * Math.cos(spokeAngle);
         ty = (species - 1.5) * 0.8 + Math.sin(spokeAngle * 3.0 + time) * 0.4;
         tz = webR * Math.sin(spokeAngle);
+    } else if (formation === FormationMode.WireCube) {
+        // --- 31. WireCube: 12 crisp 3D edges of a Platonic Cube ---
+        const edgeIdx = Math.floor(u * 12) % 12;
+        const edgeT = (u * 12) % 1.0;
+        const s = 3.2;
+        const p0 = (edgeT - 0.5) * s * 2;
+        // 12 edges connecting 8 vertices: (-s,-s,-s) to (s,s,s)
+        switch (edgeIdx) {
+            case 0:  tx = p0; ty = -s; tz = -s; break;
+            case 1:  tx = p0; ty = s; tz = -s; break;
+            case 2:  tx = p0; ty = -s; tz = s; break;
+            case 3:  tx = p0; ty = s; tz = s; break;
+            case 4:  tx = -s; ty = p0; tz = -s; break;
+            case 5:  tx = s; ty = p0; tz = -s; break;
+            case 6:  tx = -s; ty = p0; tz = s; break;
+            case 7:  tx = s; ty = p0; tz = s; break;
+            case 8:  tx = -s; ty = -s; tz = p0; break;
+            case 9:  tx = s; ty = -s; tz = p0; break;
+            case 10: tx = -s; ty = s; tz = p0; break;
+            default: tx = s; ty = s; tz = p0; break;
+        }
+        // Gentle 3D rotation of the cube frame
+        const rot = time * 0.25 * speedMult;
+        const cosR = Math.cos(rot), sinR = Math.sin(rot);
+        const rx = tx * cosR - tz * sinR;
+        const rz = tx * sinR + tz * cosR;
+        tx = rx; tz = rz;
+    } else if (formation === FormationMode.TreeBranch) {
+        // --- 32. TreeBranch: Recursive 3D L-System Branching Tree ---
+        if (u < 0.25) {
+            // Main central trunk
+            const trunkT = u / 0.25;
+            tx = Math.sin(trunkT * 2.0 + time * 0.4) * 0.2;
+            ty = (trunkT - 0.5) * 4.0 - 2.0;
+            tz = Math.cos(trunkT * 2.0 + time * 0.4) * 0.2;
+        } else if (u < 0.65) {
+            // 4 Secondary major boughs
+            const boughIdx = indexInSpecies % 4;
+            const boughAngle = (boughIdx / 4.0) * Math.PI * 2.0 + (species * 0.3);
+            const boughT = (u - 0.25) / 0.40;
+            const boughR = boughT * 3.5;
+            const sway = Math.sin(time * 0.6 * speedMult + boughIdx) * 0.3;
+            tx = Math.cos(boughAngle + sway) * boughR;
+            ty = -1.0 + boughT * 3.2;
+            tz = Math.sin(boughAngle + sway) * boughR;
+        } else {
+            // Tertiary canopy foliage twigs
+            const twigIdx = indexInSpecies % 12;
+            const twigAngle = (twigIdx / 12.0) * Math.PI * 2.0 + (time * 0.1);
+            const canopyR = 2.0 + ((u - 0.65) / 0.35) * 2.8;
+            const phi = ((u - 0.65) / 0.35) * Math.PI * 0.4;
+            tx = canopyR * Math.sin(phi) * Math.cos(twigAngle);
+            ty = 2.0 + Math.cos(phi) * 2.5 + Math.sin(time * 0.8 + twigIdx) * 0.2;
+            tz = canopyR * Math.sin(phi) * Math.sin(twigAngle);
+        }
+    } else if (formation === FormationMode.LightningBolt) {
+        // --- 33. LightningBolt: Stochastic Fractal Lightning Strike ---
+        const yNorm = (u - 0.5) * 10.0;
+        const seedMod = seed * 0.1;
+        const mainJitter = Math.sin(yNorm * 1.5 + seedMod) * 1.8 + Math.sin(yNorm * 4.2 + time * 2.0) * 0.6;
+        const zJitter = Math.cos(yNorm * 2.1 + seedMod * 1.3) * 1.4 + Math.sin(yNorm * 5.0) * 0.5;
+        
+        // 25% Branching tributary bolts
+        if (indexInSpecies % 4 === 0) {
+            const branchDist = (indexInSpecies % 7) * 0.4;
+            tx = mainJitter + Math.cos(species * Math.PI / 2) * branchDist;
+            ty = yNorm + Math.sin(species * Math.PI / 2) * branchDist * 0.5;
+            tz = zJitter + Math.sin(species * Math.PI / 2) * branchDist;
+        } else {
+            tx = mainJitter;
+            ty = yNorm;
+            tz = zJitter;
+        }
+    } else if (formation === FormationMode.RiverDelta) {
+        // --- 34. RiverDelta: Planar Branching Tributaries ---
+        const xProgress = (u - 0.5) * 9.0;
+        const spreadFactor = Math.max(0.2, (xProgress + 4.5) / 9.0);
+        const channel = (indexInSpecies % 7) - 3;
+        const meander = Math.sin(xProgress * 0.8 + channel + time * 0.5 * speedMult) * 0.8;
+        
+        tx = xProgress;
+        ty = (species - 1.5) * 0.4 + Math.sin(xProgress * 1.2 + time) * 0.15;
+        tz = channel * spreadFactor * 1.5 + meander * spreadFactor;
+    } else if (formation === FormationMode.KelvinHelmholtz) {
+        // --- 35. KelvinHelmholtz: Fluid Shear Layer Rolling Vortices ---
+        const xPos = (u - 0.5) * 10.0;
+        const waveK = 1.2;
+        const wavePhase = xPos * waveK - time * 1.2 * speedMult;
+        const shearLayer = Math.sign(species - 1.5);
+        const vortexRoll = Math.sin(wavePhase) * Math.exp(-Math.abs(Math.sin(wavePhase * 0.5)) * 0.5);
+        
+        tx = xPos;
+        ty = vortexRoll * 2.8 + shearLayer * (0.8 + Math.cos(wavePhase) * 0.4);
+        tz = Math.cos(wavePhase * 1.5) * 1.2 + (species - 1.5) * 0.6;
+    } else if (formation === FormationMode.DNALadder) {
+        // --- 36. DNALadder: Linear Grid Ladder with Horizontal Rungs ---
+        const isRail = (indexInSpecies % 3) !== 0;
+        const h = (u - 0.5) * 10.0;
+        const rot = time * 0.3 * speedMult;
+        const railSign = (indexInSpecies % 2 === 0) ? 1 : -1;
+        const railDist = 2.0;
+
+        let lx = 0, ly = h, lz = 0;
+        if (isRail) {
+            lx = railSign * railDist;
+            lz = (species - 1.5) * 0.3;
+        } else {
+            // Horizontal cross rungs
+            const rungT = ((indexInSpecies * 13) % 100) / 100.0;
+            lx = (rungT - 0.5) * railDist * 2.0;
+            lz = 0;
+        }
+        tx = lx * Math.cos(rot) - lz * Math.sin(rot);
+        ty = ly;
+        tz = lx * Math.sin(rot) + lz * Math.cos(rot);
+    } else if (formation === FormationMode.StarPolygon) {
+        // --- 37. StarPolygon: 3D 5-Point Star Extrusion ---
+        const points = 5;
+        const angle = u * Math.PI * 2.0 + time * 0.3 * speedMult;
+        const modA = Math.cos(points * angle);
+        const starR = 2.0 + 2.2 * Math.abs(modA);
+        const starH = (species - 1.5) * 2.0 + Math.sin(angle * 3.0 + time) * 0.5;
+
+        tx = starR * Math.cos(angle);
+        ty = starH;
+        tz = starR * Math.sin(angle);
+    } else if (formation === FormationMode.CollapsingSphere) {
+        // --- 38. CollapsingSphere: Breathing Singularity Implosion ---
+        const phi = Math.acos(2 * u - 1);
+        const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + time * 0.2;
+        const collapseCycle = (Math.sin(time * 0.8 * speedMult) + 1.0) * 0.5;
+        const breatheR = 0.6 + Math.pow(collapseCycle, 2.0) * 4.8;
+
+        tx = breatheR * Math.sin(phi) * Math.cos(theta);
+        ty = breatheR * Math.cos(phi);
+        tz = breatheR * Math.sin(phi) * Math.sin(theta);
+    } else if (formation === FormationMode.BigBangExpansion) {
+        // --- 39. BigBangExpansion: Radial Cosmic Shockwave Shells ---
+        const bangPhase = (time * 0.6 * speedMult + seed * 0.01) % 4.0;
+        const radialDist = Math.pow(bangPhase / 4.0, 0.75) * 6.5 + 0.5;
+        const phi = Math.acos(2 * u - 1);
+        const theta = (indexInSpecies * 2.39996) + (species * Math.PI / 2);
+
+        tx = radialDist * Math.sin(phi) * Math.cos(theta);
+        ty = radialDist * Math.cos(phi);
+        tz = radialDist * Math.sin(phi) * Math.sin(theta);
+    } else if (formation === FormationMode.GeologicStrata) {
+        // --- 40. GeologicStrata: 5 Layered Horizontal Planar Sheets ---
+        const layer = Math.floor(u * 5);
+        const layerU = (u * 5) % 1.0;
+        const planeX = (layerU - 0.5) * 8.0;
+        const planeZ = ((indexInSpecies % 20) / 20.0 - 0.5) * 8.0;
+        const topoRipple = Math.sin(planeX * 0.8 + time * 0.4) * Math.cos(planeZ * 0.8) * 0.5;
+        const layerY = (layer - 2) * 1.8 + topoRipple;
+
+        tx = planeX;
+        ty = layerY;
+        tz = planeZ;
+    } else if (formation === FormationMode.TrefoilKnot) {
+        // --- 41. TrefoilKnot: Mathematical Canonical (2,3) Knot ---
+        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult + (species * 0.2);
+        const kScale = 1.35;
+        tx = (Math.sin(t) + 2 * Math.sin(2 * t)) * kScale;
+        ty = (Math.cos(t) - 2 * Math.cos(2 * t)) * kScale;
+        tz = (-Math.sin(3 * t) * 1.8) * kScale;
+    } else if (formation === FormationMode.MurmurationFlow) {
+        // --- 42. MurmurationFlow: Dynamic Emergent Swarm Cloud ---
+        const swarmPhase = time * 0.5 * speedMult;
+        const sx = Math.sin(u * 6.0 + swarmPhase) * 3.5 + Math.cos(time * 0.3 + species) * 1.5;
+        const sy = Math.cos(u * 4.0 - swarmPhase * 0.8) * 2.8 + Math.sin(u * 8.0) * 0.8;
+        const sz = Math.sin(u * 5.0 + swarmPhase * 1.2) * 3.5 + Math.cos(time * 0.4 + species) * 1.2;
+
+        tx = sx; ty = sy; tz = sz;
+    } else if (formation === FormationMode.OuroborosSerpent) {
+        // --- 43. OuroborosSerpent: Planar Tail-Swallowing Ring ---
+        const ringAngle = u * Math.PI * 2.0 + time * 0.4 * speedMult;
+        const bodyThickness = (1.0 - Math.pow(u, 1.5)) * 1.2 + 0.3;
+        const spineWave = Math.sin(u * 12.0 - time * 2.0) * 0.4;
+        const baseR = 4.0 + (species - 1.5) * 0.4;
+
+        tx = (baseR + spineWave) * Math.cos(ringAngle);
+        ty = Math.sin(u * 8.0 + time) * (bodyThickness * 0.6);
+        tz = (baseR + spineWave) * Math.sin(ringAngle);
+    } else if (formation === FormationMode.DancingRibbon) {
+        // --- 44. DancingRibbon: Twisting 3D Kinetic Ribbon ---
+        const ribT = (u - 0.5) * 10.0;
+        const ribWave = ribT * 0.7 - time * 0.8 * speedMult;
+        const ribbonWidth = (indexInSpecies % 2 === 0 ? 1 : -1) * 0.8;
+        const twistAngle = ribT * 0.9 + time * 0.5;
+
+        const rx = Math.sin(ribWave) * 3.0;
+        const ry = ribT * 0.8 + Math.cos(ribWave) * 1.2;
+        const rz = Math.cos(ribWave) * 2.8;
+
+        tx = rx + Math.cos(twistAngle) * ribbonWidth;
+        ty = ry;
+        tz = rz + Math.sin(twistAngle) * ribbonWidth;
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;
         const wTime = time * 0.2 * speedMult;
 
-        tx = (g.r1 * Math.cos(g.k1 * th + g.phi1) * Math.sin(g.k2 * th + wTime) + g.a1 * Math.cos(g.k3 * th)) * 0.4;
-        ty = (g.r2 * Math.sin(g.k4 * th + g.phi2) * Math.cos(wTime) + g.a2 * Math.sin(g.k5 * th)) * 0.4;
-        tz = (g.r3 * Math.sin(g.k6 * th + g.phi3) * Math.cos(g.k7 * th + wTime) + g.a3 * Math.cos(g.k8 * th)) * 0.4;
+        if (g.family === 'superformula') {
+            const m = g.m || 6;
+            const n1 = g.n1 || 1.0, n2 = g.n2 || 1.0, n3 = g.n3 || 1.0;
+            const a = g.a || 1.0, b = g.b || 1.0;
+            const t1 = Math.pow(Math.abs(Math.cos(m * th / 4) / a), n2);
+            const t2 = Math.pow(Math.abs(Math.sin(m * th / 4) / b), n3);
+            const sfR = Math.pow(t1 + t2, -1 / n1) * 0.4;
+            const h = (species - 1.5) * 1.8 + Math.sin(th * 3.0 + wTime) * 0.8;
+
+            tx = sfR * Math.cos(th + wTime) * 3.5;
+            ty = h;
+            tz = sfR * Math.sin(th + wTime) * 3.5;
+        } else if (g.family === 'branching') {
+            const segment = Math.floor(u * (g.k1 || 4));
+            const segT = (u * (g.k1 || 4)) % 1.0;
+            const angle = (segment / (g.k1 || 4)) * Math.PI * 2.0 + wTime;
+            const r = segT * (g.r1 || 8.0) * 0.35;
+
+            tx = r * Math.cos(angle + Math.sin(segT * 3.0) * 0.4);
+            ty = (segT - 0.5) * 6.0 + Math.sin(angle * 2.0) * 0.5;
+            tz = r * Math.sin(angle + Math.cos(segT * 3.0) * 0.4);
+        } else {
+            // Fourier Harmonic family
+            tx = (g.r1 * Math.cos(g.k1 * th + g.phi1) * Math.sin(g.k2 * th + wTime) + g.a1 * Math.cos(g.k3 * th)) * 0.4;
+            ty = (g.r2 * Math.sin(g.k4 * th + g.phi2) * Math.cos(wTime) + g.a2 * Math.sin(g.k5 * th)) * 0.4;
+            tz = (g.r3 * Math.sin(g.k6 * th + g.phi3) * Math.cos(g.k7 * th + wTime) + g.a3 * Math.cos(g.k8 * th)) * 0.4;
+        }
     } else {
         const cloudRadius = 1.5 + u * 3.5;
         const theta = u * Math.PI * 8.0 + time * 0.25 * speedMult;
@@ -563,7 +969,7 @@ export class BlobCenter {
             }
         }
 
-        // 4. Pairwise interactions with other blob centers!
+        // 4. Pairwise interactions with other blob centers
         const spAvg = Array.from({ length: 4 }, () => new THREE.Vector3());
         const spCount = new Array(4).fill(0);
         for (const other of activeBlobs) {
@@ -605,6 +1011,10 @@ export class Boid {
     indexInSpecies: number;
     totalInSpecies: number;
     snapPosition: THREE.Vector3; // Physical position captured at transition start — morph anchor
+    isStray: boolean;
+    strayOrbitRadius: number;
+    strayOrbitSpeed: number;
+    isLeader: boolean;
 
     constructor(x: number, y: number, z: number, species: SpeciesType, size: number, assignedBlob: BlobCenter, localOffset: THREE.Vector3, indexInSpecies: number = 0, totalInSpecies: number = 100) {
         this.position = new THREE.Vector3().copy(localOffset);
@@ -617,6 +1027,10 @@ export class Boid {
         this.indexInSpecies = indexInSpecies;
         this.totalInSpecies = totalInSpecies;
         this.snapPosition = new THREE.Vector3().copy(localOffset);
+        this.isStray = (Math.random() < 0.05); // 5% organic halo stray boids
+        this.strayOrbitRadius = 6.0 + Math.random() * 6.0;
+        this.strayOrbitSpeed = (0.2 + Math.random() * 0.4) * (Math.random() > 0.5 ? 1 : -1);
+        this.isLeader = (indexInSpecies % 25 === 0);
     }
 
     update(state: SimulationState, time: number) {
@@ -630,31 +1044,43 @@ export class Boid {
         const sepWeight = (state && state.attributes && state.attributes[this.species])
             ? state.attributes[this.species].separationWeight
             : 3.5;
-        const speedMult = state ? state.speedMultiplier : 1.0;
+        let speedMult = state ? state.speedMultiplier : 1.0;
+        if (state && state.microSurpriseType === 'speedSurge' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+            speedMult *= 2.2;
+        }
+
         const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.Serpent;
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const total = this.totalInSpecies > 0 ? this.totalInSpecies : 100;
-        const u = this.indexInSpecies / total;
+        const rawU = this.indexInSpecies / total;
 
-        // Smooth Ease-In and Ease-Out Quintic S-Curve morphing over 9.0 seconds (silky, liquid formation morphing)
+        // Density gradient remapping: concentrate particles near center or smooth distribution
+        const u = Math.sin(rawU * Math.PI * 0.5);
+
+        // Smooth Ease-In and Ease-Out Quintic S-Curve morphing over 9.0 seconds
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
         const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 9.0;
         const elapsed = Math.max(0.0, time - startTime);
         const p = Math.min(1.0, elapsed / duration);
 
         // Quintic Smoothstep S-Curve Ease-In & Ease-Out: 6p^5 - 15p^4 + 10p^3
-        // Guarantees zero derivative at p=0 and p=1 with 100% continuous non-zero flight velocity!
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
         // Compute current target point
-        const [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, this.species, this.indexInSpecies, sepWeight, speedMult, state);
+        let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, this.species, this.indexInSpecies, sepWeight, speedMult, state);
+
+        // If this boid is a stray, orbit freely in a halo
+        if (this.isStray && p > 0.8) {
+            const strayAngle = time * this.strayOrbitSpeed + this.noiseSeed;
+            txCurr = this.strayOrbitRadius * Math.cos(strayAngle);
+            tyCurr = Math.sin(strayAngle * 2.0) * 2.5 + (this.species - 1.5) * 1.5;
+            tzCurr = this.strayOrbitRadius * Math.sin(strayAngle);
+        }
 
         let tx = txCurr, ty = tyCurr, tz = tzCurr;
 
-        // 100% C2-continuous Quintic S-Curve target morphing across the 9.0s transition.
-        // At p=0, target equals old formation target continuously (zero start jump).
-        // At p=1, target equals new formation target continuously (zero end jump at the 21s mark!).
+        // 100% C2-continuous Quintic S-Curve target morphing across the 9.0s transition
         if (state && state.prevFormationMode !== undefined && p <= 1.0) {
             const prevSeed = state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed;
             const [txPrev, tyPrev, tzPrev] = computeFormationPoint(
@@ -674,9 +1100,7 @@ export class Boid {
             tz = tzPrev + (tzCurr - tzPrev) * sCurve;
         }
 
-        // Clamp the spring target to R=14 — the spring must NEVER pull toward a point outside the universe.
-        // This is the root cause of streams: formation presets can exceed R=14, causing the spring to
-        // fight the boundary clamp every frame and create visible streams of boids at the surface.
+        // Clamp the spring target to R=14
         const targetDist = Math.sqrt(tx * tx + ty * ty + tz * tz);
         if (targetDist > 14 && targetDist > 1e-6) {
             const invT = 14 / targetDist;
@@ -685,8 +1109,7 @@ export class Boid {
             tz *= invT;
         }
 
-        // Ultra-gentle liquid spring attraction lerp (0.03 at transition start -> 0.06 steady state)
-        // Lerp rate smoothly rises from 0.03 to 0.06 over 9.0 seconds, landing perfectly at 0.06 at p=1.0 (zero jump!)
+        // Ultra-gentle liquid spring attraction lerp (0.03 -> 0.06 steady state)
         const activeLerpRate = (state && state.prevFormationMode !== undefined && p < 1.0)
             ? 0.03 + 0.03 * sCurve
             : 0.06;
@@ -695,17 +1118,24 @@ export class Boid {
         let dy = (ty - this.position.y) * activeLerpRate;
         let dz = (tz - this.position.z) * activeLerpRate;
 
-        // Subtle organic 3D drift (0.015) - continuous flight without distorting crisp 3D geometry
+        // Leader behavior: leader boids overshoot target slightly (12%)
+        if (this.isLeader) {
+            dx *= 1.12;
+            dy *= 1.12;
+            dz *= 1.12;
+        }
+
+        // Subtle organic 3D drift (0.015)
         const driftX = Math.sin(time * 1.5 + this.noiseSeed) * 0.015 * speedMult;
         const driftY = Math.cos(time * 1.2 + this.noiseSeed * 1.3) * 0.015 * speedMult;
         const driftZ = Math.sin(time * 1.8 + this.noiseSeed * 0.7) * 0.015 * speedMult;
 
-        // Silky smooth speed cap (0.04 at start -> 0.06 steady state) - 100% continuous landing at p=1.0
+        // Silky smooth speed cap (0.04 at start -> 0.06 steady state)
         const activeMaxDisp = (state && state.prevFormationMode !== undefined && p < 1.0)
             ? (0.04 + 0.02 * sCurve) * speedMult
             : 0.06 * speedMult;
 
-        // Target velocity desired for this frame
+        // Desired velocity for this frame
         const targetVelX = dx + driftX;
         const targetVelY = dy + driftY;
         const targetVelZ = dz + driftZ;
@@ -714,13 +1144,12 @@ export class Boid {
             this.velocity = new THREE.Vector3(targetVelX, targetVelY, targetVelZ);
         }
 
-        // 1. Calculate Acceleration Vector required to reach target velocity
+        // 1. Calculate Acceleration Vector
         let ax = targetVelX - this.velocity.x;
         let ay = targetVelY - this.velocity.y;
         let az = targetVelZ - this.velocity.z;
 
-        // 2. STRICTLY RESTRICT MASSIVE SPEED / ACCELERATION CHANGES
-        // Capping max acceleration per frame to 0.0025 * speedMult guarantees zero velocity spikes or sudden yanks!
+        // 2. Restrict max acceleration per frame (0.0025 * speedMult)
         const maxAccel = 0.0025 * speedMult;
         const accelMag = Math.sqrt(ax * ax + ay * ay + az * az);
         if (accelMag > maxAccel && accelMag > 1e-6) {
@@ -730,24 +1159,23 @@ export class Boid {
             az *= scale;
         }
 
-        // 3. Update boid velocity smoothly with physical momentum
+        // 3. Update velocity smoothly
         this.velocity.x += ax;
         this.velocity.y += ay;
         this.velocity.z += az;
 
-        // 4. Strict absolute speed cap (activeMaxDisp)
+        // 4. Strict speed cap
         const currentSpeed = this.velocity.length();
         if (currentSpeed > activeMaxDisp && currentSpeed > 1e-6) {
             this.velocity.multiplyScalar(activeMaxDisp / currentSpeed);
         }
 
-        // 5. Smooth position update from velocity
+        // 5. Position update
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
         this.position.z += this.velocity.z;
 
-        // Hard Spherical Boundary Clamp (R_max = 14.0) — boids are instantly projected back to
-        // the sphere surface if they escape. No soft pull, no gradual drift outside.
+        // Spherical boundary clamp (R_max = 14.0)
         const maxRadius = 14.0;
         const distFromCenter = Math.sqrt(
             this.position.x * this.position.x +
@@ -761,7 +1189,7 @@ export class Boid {
             this.position.z *= inv;
         }
 
-        // Scalar velocity lerp with ZERO heap allocations - seamless momentum flow!
+        // Scalar velocity lerp
         const vx = this.position.x - prevX;
         const vy = this.position.y - prevY;
         const vz = this.position.z - prevZ;

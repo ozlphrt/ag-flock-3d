@@ -1,12 +1,12 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Stars, Html, Environment } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Stars, Environment } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLOR_PALETTES } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
-import { getRLPreferences, sampleRLAttribute, generateProceduralGenome } from './RLEngine'
+import { getLastState, generateProceduralGenome } from './RLEngine'
 
 const INITIAL_ATTRIBUTES: SpeciesAttributes = {
     separationWeight: 3.5,
@@ -17,7 +17,6 @@ const INITIAL_ATTRIBUTES: SpeciesAttributes = {
     perceptionRadius: 5.0
 };
 
-// 4 Species with slightly different traits
 const SPECIES_CONFIG: SpeciesAttributes[] = [
     { ...INITIAL_ATTRIBUTES, separationWeight: 4.0, maxSpeed: 0.6, perceptionRadius: 6.0 }, // Red (Hunter)
     { ...INITIAL_ATTRIBUTES, separationWeight: 3.5, maxSpeed: 0.5, perceptionRadius: 5.0 }, // Green
@@ -25,12 +24,11 @@ const SPECIES_CONFIG: SpeciesAttributes[] = [
     { ...INITIAL_ATTRIBUTES, separationWeight: 3.8, maxSpeed: 0.55, perceptionRadius: 5.5 } // Yellow
 ];
 
-// Initial Matrix: All 0 (neutral) except some presets if desired
 const INITIAL_MATRIX = [
-    [0, 0, 0, 0], // Red
-    [0, 0, 0, 0], // Green
-    [0, 0, 0, 0], // Blue
-    [0, 0, 0, 0]  // Yellow
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0]
 ];
 
 function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
@@ -49,13 +47,107 @@ function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
     return null
 }
 
+function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
+    const ambientRef = useRef<THREE.AmbientLight>(null!);
+    const keyRef = useRef<THREE.DirectionalLight>(null!);
+    const fillRef = useRef<THREE.DirectionalLight>(null!);
+    const rimRef = useRef<THREE.DirectionalLight>(null!);
+
+    const curAmbient = useRef(0.55);
+    const curKey = useRef(2.4);
+    const curFill = useRef(0.65);
+    const curRim = useRef(1.6);
+    const curKeyColor = useRef(new THREE.Color('#ffffff'));
+    const curFillColor = useRef(new THREE.Color('#ffffff'));
+    const curRimColor = useRef(new THREE.Color('#e0e8ff'));
+
+    const targetKeyColor = useRef(new THREE.Color('#ffffff'));
+    const targetFillColor = useRef(new THREE.Color('#ffffff'));
+    const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
+
+    useFrame((stateContext) => {
+        const state = simState.current;
+        const profile = state.lightingProfile || LIGHTING_PROFILES[0];
+        const mult = state.lightIntensityMultiplier ?? 1.0;
+
+        let flashBoost = 1.0;
+        if (state.microSurpriseType === 'lightingFlash' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+            flashBoost = 2.4;
+        }
+
+        const targetAmb = profile.ambientIntensity * mult;
+        const targetK = profile.keyIntensity * mult * flashBoost;
+        const targetF = profile.fillIntensity * mult;
+        const targetR = profile.rimIntensity * mult * flashBoost;
+
+        targetKeyColor.current.set(profile.keyColor);
+        targetFillColor.current.set(profile.fillColor);
+        targetRimColor.current.set(profile.rimColor);
+
+        curAmbient.current = THREE.MathUtils.lerp(curAmbient.current, targetAmb, 0.03);
+        curKey.current = THREE.MathUtils.lerp(curKey.current, targetK, 0.05);
+        curFill.current = THREE.MathUtils.lerp(curFill.current, targetF, 0.03);
+        curRim.current = THREE.MathUtils.lerp(curRim.current, targetR, 0.04);
+
+        curKeyColor.current.lerp(targetKeyColor.current, 0.03);
+        curFillColor.current.lerp(targetFillColor.current, 0.03);
+        curRimColor.current.lerp(targetRimColor.current, 0.03);
+
+        if (ambientRef.current) ambientRef.current.intensity = curAmbient.current;
+        if (keyRef.current) {
+            keyRef.current.intensity = curKey.current;
+            keyRef.current.color.copy(curKeyColor.current);
+        }
+        if (fillRef.current) {
+            fillRef.current.intensity = curFill.current;
+            fillRef.current.color.copy(curFillColor.current);
+        }
+        if (rimRef.current) {
+            rimRef.current.intensity = curRim.current;
+            rimRef.current.color.copy(curRimColor.current);
+        }
+    });
+
+    return (
+        <>
+            <ambientLight ref={ambientRef} intensity={0.55} color="#ffffff" />
+            <directionalLight
+                ref={keyRef}
+                position={[35, 45, 30]}
+                intensity={2.4}
+                color="#ffffff"
+                castShadow
+                shadow-mapSize={[2048, 2048]}
+                shadow-bias={-0.0001}
+            />
+            <directionalLight
+                ref={fillRef}
+                position={[-40, 25, -25]}
+                intensity={0.65}
+                color="#ffffff"
+            />
+            <directionalLight
+                ref={rimRef}
+                position={[0, 50, -45]}
+                intensity={1.6}
+                color="#ffffff"
+            />
+        </>
+    );
+}
+
 function App() {
     const [population, setPopulation] = useState(20000)
     const [fps, setFps] = useState(0)
 
-    const randomMode = Math.floor(Math.random() * 31) as FormationMode;
+    // Hydrate from persisted last active state if available
+    const lastSaved = getLastState();
+    const initialMode = lastSaved ? (lastSaved.formationMode as FormationMode) : (Math.floor(Math.random() * 45) as FormationMode);
+    const initialPaletteIdx = lastSaved ? lastSaved.paletteIndex : (initialMode % COLOR_PALETTES.length);
+    const initialMatIdx = lastSaved ? lastSaved.materialPreset : 0;
+    const initialLightIdx = lastSaved ? lastSaved.lightingProfileIndex : 0;
+    const initialShape = lastSaved ? lastSaved.boidShape : 0;
 
-    // We use a ref for state to communicate with the loop without re-rendering everything constantly
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
         interactions: INITIAL_MATRIX,
@@ -63,22 +155,23 @@ function App() {
         speedMultiplier: 0.28,
         sizeMultiplier: 1.5,
         defeatScenario: DefeatScenario.Remove,
-        formationMode: randomMode,
-        formationSeed: Math.random() * 10000,
-        proceduralGenome: randomMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
-        speciesColors: [...COLOR_PALETTES[randomMode % COLOR_PALETTES.length]],
-        materialSettings: {
-            roughness: 0.03,
-            metalness: 0.94,
-            wireframe: false,
-            flatShading: true,
-            emissiveIntensity: 0.75
-        },
-        materialPreset: 0
+        formationMode: initialMode,
+        formationSeed: lastSaved ? lastSaved.formationSeed : Math.random() * 10000,
+        proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
+        paletteIndex: initialPaletteIdx,
+        speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],
+        materialSettings: { ...MATERIAL_PRESETS[initialMatIdx].settings },
+        materialPreset: initialMatIdx,
+        boidShape: initialShape,
+        autoMode: true,
+        autoShape: true,
+        autoMaterial: true,
+        lightingProfileIndex: initialLightIdx,
+        lightingProfile: LIGHTING_PROFILES[initialLightIdx]
     });
 
     return (
-        <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+        <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
             <Canvas shadows gl={{ antialias: false }}>
                 <color attach="background" args={['#0d111a']} />
@@ -90,36 +183,9 @@ function App() {
 
                 <Stars radius={160} depth={60} count={3000} factor={3} saturation={0.3} fade speed={0.5} />
 
-                {/* 360° Studio Environment Map for Strong Specular Facet Reflections */}
                 <Environment preset="city" environmentIntensity={2.0} />
 
-                {/* Studio Lighting - Strong Specular Highlights & Glowing Facets */}
-                {/* 1. Base Ambient Fill */}
-                <ambientLight intensity={0.55 * (simState.current.lightIntensityMultiplier ?? 1.0)} color="#ffffff" />
-
-                {/* 2. Key Light (Strong Metallic Specular Highlight) */}
-                <directionalLight
-                    position={[35, 45, 30]}
-                    intensity={2.4 * (simState.current.lightIntensityMultiplier ?? 1.0)}
-                    color="#ffffff"
-                    castShadow
-                    shadow-mapSize={[2048, 2048]}
-                    shadow-bias={-0.0001}
-                />
-
-                {/* 3. Fill Light (Soft Neutral White Shadow Fill) */}
-                <directionalLight
-                    position={[-40, 25, -25]}
-                    intensity={0.65 * (simState.current.lightIntensityMultiplier ?? 1.0)}
-                    color="#ffffff"
-                />
-
-                {/* 4. Rim / Back Light (Strong Silhouette Edge Highlight) */}
-                <directionalLight
-                    position={[0, 50, -45]}
-                    intensity={1.6 * (simState.current.lightIntensityMultiplier ?? 1.0)}
-                    color="#ffffff"
-                />
+                <DynamicStudioLighting simState={simState} />
 
                 <Flock count={population} state={simState.current} setPopulation={setPopulation} />
 
