@@ -148,7 +148,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 }
 
 function App() {
-    const [population, setPopulation] = useState(20000)
+    const [population, setPopulation] = useState(75000)
     const [fps, setFps] = useState(0)
 
     // Hydrate from persisted last active state if available

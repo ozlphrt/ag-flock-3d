@@ -193,13 +193,13 @@ self.onmessage = (e: MessageEvent) => {
                 posZ[i] *= inv;
             }
 
-            // Inline Column-Major Orientation Matrix
+            // Inline Column-Major Orientation Matrix (Forward Z points along velocity vector +vel)
             const s = sizeArr[i] * baseScale;
             const offset = i * 16;
 
-            let zx = -velX[i];
-            let zy = -velY[i];
-            let zz = -velZ[i];
+            let zx = velX[i];
+            let zy = velY[i];
+            let zz = velZ[i];
             let zLenSq = zx * zx + zy * zy + zz * zz;
             if (zLenSq < 1e-8) {
                 zx = 0; zy = 0; zz = 1;
@@ -208,23 +208,24 @@ self.onmessage = (e: MessageEvent) => {
                 zx *= invZ; zy *= invZ; zz *= invZ;
             }
 
-            let xx = -zz;
+            // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
+            let xx = zz;
             let xy = 0;
-            let xz = zx;
+            let xz = -zx;
             let xLenSq = xx * xx + xz * xz;
-            if (xLenSq < 1e-8) {
-                zx += 0.0001;
-                const invZ = 1.0 / Math.sqrt(zx * zx + zy * zy + zz * zz);
-                zx *= invZ; zy *= invZ; zz *= invZ;
-                xx = -zz; xz = zx;
-                xLenSq = xx * xx + xz * xz;
+            if (xLenSq < 1e-6) {
+                xx = 0;
+                xy = zz;
+                xz = -zy;
+                xLenSq = xy * xy + xz * xz;
             }
-            const invX = 1.0 / Math.sqrt(xLenSq);
-            xx *= invX; xz *= invX;
+            const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
+            xx *= invX; xy *= invX; xz *= invX;
 
-            const yx = zy * xz;
+            // Up vector y = z x x
+            const yx = zy * xz - zz * xy;
             const yy = zz * xx - zx * xz;
-            const yz = -zy * xx;
+            const yz = zx * xy - zy * xx;
 
             buf[offset + 0] = xx * s;
             buf[offset + 1] = xy * s;
