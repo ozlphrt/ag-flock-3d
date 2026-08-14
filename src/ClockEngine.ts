@@ -135,7 +135,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             // Auto Shape Mutation (if enabled)
             if (state.autoShape !== false) {
                 state.boidShape = sampleRLAttribute(
-                    8,
+                    6,
                     prefs.shapeLikes,
                     prefs.shapeDislikes,
                     prefs.totalLikes,

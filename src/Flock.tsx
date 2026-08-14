@@ -494,7 +494,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
     });
 
-    // 8 Pre-calculated distinct Hard-Edged Low-Poly 3D Geometries
+    // 6 Ultra-Fast, Low-Poly, Hard-Edged 3D Geometries
     const geometries = useMemo(() => {
         const g0 = new THREE.ConeGeometry(0.16, 0.5, 3);
         g0.rotateX(Math.PI / 2);
@@ -512,14 +512,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         g4.rotateX(Math.PI / 2);
         g4.scale(1.3, 0.5, 1.0);
 
-        const g5 = new THREE.DodecahedronGeometry(0.18, 0);
+        const g5 = new THREE.TetrahedronGeometry(0.2, 0);
+        g5.scale(0.7, 0.7, 1.5);
 
-        const g6 = new THREE.TetrahedronGeometry(0.2, 0);
-        g6.scale(0.7, 0.7, 1.5);
-
-        const g7 = new THREE.IcosahedronGeometry(0.18, 0);
-
-        return [g0, g1, g2, g3, g4, g5, g6, g7];
+        return [g0, g1, g2, g3, g4, g5];
     }, []);
 
     const mat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };

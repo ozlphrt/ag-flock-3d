@@ -131,14 +131,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const shapes = [
         { id: -1, label: 'Auto (Mutate Cycle)', icon: '🤖', desc: 'Randomize shape every formation cycle' },
-        { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge' },
-        { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal' },
-        { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal' },
-        { id: 3, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet' },
-        { id: 4, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade' },
-        { id: 5, label: 'Dodecahedron Polyhedron', icon: '⚛️', desc: '12-faced hard-edged platonic core' },
-        { id: 6, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard' },
-        { id: 7, label: 'Faceted Energy Orb', icon: '🔮', desc: '20-faced low-poly icosahedron' }
+        { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
+        { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal (8 tris)' },
+        { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal (6 tris)' },
+        { id: 3, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
+        { id: 4, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
+        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' }
     ];
 
     const materialOptions = [
@@ -148,7 +146,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const isAutoShape = simState.current.autoShape !== false;
     const isAutoMaterial = simState.current.autoMaterial !== false;
-    const currentShapeId = isAutoShape ? -1 : (simState.current.boidShape !== undefined ? Math.abs(simState.current.boidShape) % 8 : 0);
+    const currentShapeId = isAutoShape ? -1 : (simState.current.boidShape !== undefined ? Math.abs(simState.current.boidShape) % 6 : 0);
     const currentMaterialId = isAutoMaterial ? -1 : (simState.current.materialPreset !== undefined ? Math.abs(simState.current.materialPreset) % MATERIAL_PRESETS.length : 0);
     const currentLightingId = simState.current.lightingProfileIndex ?? 0;
 
