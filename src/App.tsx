@@ -187,7 +187,7 @@ function App() {
             <Canvas shadows gl={{ antialias: false }}>
                 <color attach="background" args={['#0d111a']} />
                 <fog attach="fog" args={['#0d111a', 120, 360]} />
-                <PerspectiveCamera makeDefault position={[14, 10, 16]} />
+                <PerspectiveCamera makeDefault position={[6.0, 4.0, 7.5]} />
                 <OrbitControls makeDefault enableDamping dampingFactor={0.03} />
 
                 <FPSUpdater onChange={setFps} />
