@@ -139,6 +139,53 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         new THREE.Color('#ffcc00')
     ]);
 
+    // Custom Shader Uniforms for Zero-CPU GPU-Direct Palette Coloring
+    const customUniforms = useRef({
+        uSpeciesColors: {
+            value: [
+                new THREE.Color('#ff3b30'),
+                new THREE.Color('#34c759'),
+                new THREE.Color('#007aff'),
+                new THREE.Color('#ffcc00')
+            ]
+        }
+    });
+
+    const onBeforeCompile = useMemo(() => {
+        return (shader: THREE.WebGLProgramParametersWithUniforms) => {
+            shader.uniforms.uSpeciesColors = customUniforms.current.uSpeciesColors;
+
+            shader.vertexShader = `
+                attribute float aSpecies;
+                uniform vec3 uSpeciesColors[4];
+                varying vec3 vBoidColor;
+                ${shader.vertexShader}
+            `;
+
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <color_vertex>',
+                `
+                #include <color_vertex>
+                int spId = int(clamp(aSpecies, 0.0, 3.0));
+                vBoidColor = uSpeciesColors[spId];
+                `
+            );
+
+            shader.fragmentShader = `
+                varying vec3 vBoidColor;
+                ${shader.fragmentShader}
+            `;
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <color_fragment>',
+                `
+                #include <color_fragment>
+                diffuseColor.rgb *= vBoidColor;
+                `
+            );
+        };
+    }, []);
+
     // Initialize Blob Centers once
     if (blobCentersRef.current.length === 0) {
         for (let s = 0; s < 4; s++) {
@@ -160,24 +207,18 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         swarm.setPopulation(count, state);
     }, [count]);
 
-    // Update instance colors whenever population changes
+    // Attach Instanced aSpecies attribute to geometry whenever count or shape changes
+    const activeShapeIdx = state.boidShape !== undefined ? Math.abs(state.boidShape) % 6 : 0;
     useEffect(() => {
         if (!meshRef.current) return;
         meshRef.current.count = count;
 
-        const colArray = meshRef.current.instanceColor ? meshRef.current.instanceColor.array : null;
-        if (colArray) {
-            for (let i = 0; i < count; i++) {
-                const sp = swarm.species[i];
-                const col = currentColors.current[sp];
-                const cOff = i * 3;
-                colArray[cOff] = col.r;
-                colArray[cOff + 1] = col.g;
-                colArray[cOff + 2] = col.b;
-            }
-            meshRef.current.instanceColor!.needsUpdate = true;
+        const specArr = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+            specArr[i] = swarm.species[i];
         }
-    }, [count]);
+        meshRef.current.geometry.setAttribute('aSpecies', new THREE.InstancedBufferAttribute(specArr, 1));
+    }, [count, activeShapeIdx]);
 
     useFrame((stateContext) => {
         if (!meshRef.current) return;
@@ -439,24 +480,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
         }
 
-        if ((colorsChanged || colorP < 1.0) && meshRef.current.instanceColor) {
-            const colArray = meshRef.current.instanceColor.array;
-            const c0 = currentColors.current[0], c1 = currentColors.current[1], c2 = currentColors.current[2], c3 = currentColors.current[3];
-            const r0 = c0.r, g0 = c0.g, b0 = c0.b;
-            const r1 = c1.r, g1 = c1.g, b1 = c1.b;
-            const r2 = c2.r, g2 = c2.g, b2 = c2.b;
-            const r3 = c3.r, g3 = c3.g, b3 = c3.b;
-
-            for (let i = 0; i < boidCount; i++) {
-                const sp = swarm.species[i];
-                const cOffset = i * 3;
-                if (sp === 0) { colArray[cOffset] = r0; colArray[cOffset + 1] = g0; colArray[cOffset + 2] = b0; }
-                else if (sp === 1) { colArray[cOffset] = r1; colArray[cOffset + 1] = g1; colArray[cOffset + 2] = b1; }
-                else if (sp === 2) { colArray[cOffset] = r2; colArray[cOffset + 1] = g2; colArray[cOffset + 2] = b2; }
-                else { colArray[cOffset] = r3; colArray[cOffset + 1] = g3; colArray[cOffset + 2] = b3; }
-            }
-            meshRef.current.instanceColor.needsUpdate = true;
-        }
+        // Direct GPU Palette Uniform Upload (0ms CPU time)
+        customUniforms.current.uSpeciesColors.value[0].copy(currentColors.current[0]);
+        customUniforms.current.uSpeciesColors.value[1].copy(currentColors.current[1]);
+        customUniforms.current.uSpeciesColors.value[2].copy(currentColors.current[2]);
+        customUniforms.current.uSpeciesColors.value[3].copy(currentColors.current[3]);
 
         // 5. Formation-Aware Cinematic Camera Choreography
         if (boidCount > 0) {
@@ -668,7 +696,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     }, []);
 
     const mat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };
-    const activeShapeIdx = state.boidShape !== undefined ? Math.abs(state.boidShape) % geometries.length : 0;
     const activeGeometry = geometries[activeShapeIdx];
 
     // Check for transient material pulse micro-surprise
@@ -678,7 +705,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     }
 
     return (
-        <instancedMesh key={activeShapeIdx} ref={meshRef} args={[activeGeometry, undefined, count]} castShadow receiveShadow>
+        <instancedMesh key={`${activeShapeIdx}-${count}`} ref={meshRef} args={[activeGeometry, undefined, count]} castShadow receiveShadow>
             <meshStandardMaterial
                 key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
                 roughness={mat.roughness}
@@ -687,6 +714,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 flatShading={mat.flatShading}
                 emissiveIntensity={emissiveInt}
                 toneMapped={true}
+                onBeforeCompile={onBeforeCompile}
+                customProgramCacheKey={() => 'boid_instanced_pbr_v2'}
             />
         </instancedMesh>
     );

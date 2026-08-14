@@ -878,8 +878,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
                                 BOID POPULATION
                             </div>
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                                {[5000, 10000, 20000, 35000, 50000].map(count => (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                                {[5000, 10000, 20000, 50000, 75000, 100000].map(count => (
                                     <button
                                         key={count}
                                         onClick={() => {
@@ -887,7 +887,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                             setTick(t => t + 1);
                                         }}
                                         style={{
-                                            flex: 1,
                                             padding: '8px 4px',
                                             borderRadius: '10px',
                                             fontSize: '11px',
@@ -895,10 +894,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                             border: population === count ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.1)',
                                             background: population === count ? 'rgba(0, 255, 204, 0.2)' : 'rgba(255, 255, 255, 0.04)',
                                             color: population === count ? '#00ffcc' : '#fff',
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
                                         }}
                                     >
-                                        {count / 1000}k
+                                        {count >= 1000 ? `${count / 1000}k` : count}
                                     </button>
                                 ))}
                             </div>
