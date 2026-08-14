@@ -383,6 +383,7 @@ export interface SimulationState {
     targetPopulation?: number;
     microSurpriseType?: string;
     microSurpriseEndTime?: number;
+    clockEngine?: any;
 }
 
 export function computeFormationPoint(

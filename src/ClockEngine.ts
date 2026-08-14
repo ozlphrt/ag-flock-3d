@@ -5,6 +5,7 @@ export interface ClockEngine {
     update: (time: number) => void;
     setManualOverride: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => void;
     getCountdownProgress: () => { formationProgress: number; colorProgress: number; currentArcName?: string };
+    skipDimension: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => void;
 }
 
 export function createClockEngine(state: SimulationState): ClockEngine {
@@ -243,9 +244,102 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         };
     };
 
+    const skipDimension = (dim: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => {
+        const prefs = getRLPreferences();
+        const time = state.currentTime || (performance.now() / 1000.0);
+
+        if (dim === 'formation') {
+            lastFormationTime = time;
+            formationInterval = rndJitter(32.0, 0.2);
+
+            let nextMode = sampleRLAttribute(
+                51,
+                prefs.formationLikes,
+                prefs.formationDislikes,
+                prefs.totalLikes,
+                prefs.totalDislikes,
+                recentFormations
+            ) as FormationMode;
+
+            if (nextMode === state.formationMode) {
+                nextMode = ((state.formationMode + 1) % 51) as FormationMode;
+            }
+
+            recentFormations.push(nextMode);
+            if (recentFormations.length > 5) recentFormations.shift();
+
+            state.prevFormationMode = state.formationMode;
+            state.prevFormationSeed = state.formationSeed;
+            state.formationMode = nextMode;
+            state.formationSeed = Math.random() * 10000;
+            state.transitionStartTime = time;
+            state.transitionDuration = 7.0;
+            state.isCameraLocked = false;
+
+            if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
+                state.proceduralGenome = generateProceduralGenome();
+            }
+        } else if (dim === 'palette') {
+            lastColorTime = time;
+            colorInterval = rndJitter(54.0, 0.25);
+
+            const nextPaletteIdx = sampleRLAttribute(
+                COLOR_PALETTES.length,
+                prefs.paletteLikes,
+                prefs.paletteDislikes,
+                prefs.totalLikes,
+                prefs.totalDislikes,
+                recentPalettes
+            );
+
+            recentPalettes.push(nextPaletteIdx);
+            if (recentPalettes.length > 4) recentPalettes.shift();
+
+            state.paletteIndex = nextPaletteIdx;
+            state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
+        } else if (dim === 'lighting') {
+            lastLightingTime = time;
+            lightingInterval = rndJitter(82.0, 0.25);
+
+            const nextLightIdx = sampleRLAttribute(
+                LIGHTING_PROFILES.length,
+                prefs.lightingLikes,
+                prefs.lightingDislikes,
+                prefs.totalLikes,
+                prefs.totalDislikes,
+                recentLighting
+            );
+
+            recentLighting.push(nextLightIdx);
+            if (recentLighting.length > 3) recentLighting.shift();
+
+            state.lightingProfileIndex = nextLightIdx;
+            state.lightingProfile = LIGHTING_PROFILES[nextLightIdx];
+        } else if (dim === 'material') {
+            lastMaterialTime = time;
+            materialInterval = rndJitter(72.0, 0.2);
+
+            const nextMatIdx = sampleRLAttribute(
+                MATERIAL_PRESETS.length,
+                prefs.materialLikes,
+                prefs.materialDislikes,
+                prefs.totalLikes,
+                prefs.totalDislikes,
+                recentMaterials
+            );
+
+            recentMaterials.push(nextMatIdx);
+            if (recentMaterials.length > 3) recentMaterials.shift();
+
+            state.materialPreset = nextMatIdx;
+            state.materialSettings = { ...MATERIAL_PRESETS[nextMatIdx].settings };
+        }
+    };
+
     return {
         update,
         setManualOverride,
-        getCountdownProgress
+        getCountdownProgress,
+        skipDimension
     };
 }

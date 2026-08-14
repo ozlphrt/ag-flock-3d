@@ -220,7 +220,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         if (dim === 'lighting') id = simState.current.lightingProfileIndex ?? 0;
 
         dislikeDimension(dim, id);
-        showToast(`-1 ${dim.toUpperCase()} excluded from Taste Profile`);
+
+        // Immediately advance to a fresh AI-selected creation without waiting for timer!
+        if (simState.current.clockEngine?.skipDimension) {
+            simState.current.clockEngine.skipDimension(dim);
+        }
+
+        showToast(`Skipped! Excluded from Taste Profile`);
         setTick(t => t + 1);
     };
 

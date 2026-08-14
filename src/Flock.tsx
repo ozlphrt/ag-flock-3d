@@ -88,7 +88,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const curYOffset = useRef(0.0);
 
     // Instantiate ClockEngine with decoupled independent timers
-    const clockEngine = useMemo<ClockEngine>(() => createClockEngine(state), [state]);
+    const clockEngine = useMemo<ClockEngine>(() => {
+        const engine = createClockEngine(state);
+        state.clockEngine = engine;
+        return engine;
+    }, [state]);
 
     useEffect(() => {
         const handleInteraction = () => {
