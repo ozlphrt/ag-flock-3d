@@ -112,13 +112,19 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         };
     }, []);
 
-    // Structure-of-Arrays High Performance Data Buffer
+    // Structure-of-Arrays High Performance Data Buffer & Worker Thread Link
     const swarm = useMemo(() => new BoidSwarmData(100000), []);
     const blobCentersRef = useRef<BlobCenter[]>([]);
     const lastSeed = useRef<number>(-1);
     const lastMode = useRef<number>(-1);
     const lastPaletteKey = useRef<string>('');
     const colorTransitionStartTime = useRef<number>(0);
+
+    const workerRef = useRef<Worker | null>(null);
+    const workerReady = useRef(false);
+    const lastCentroid = useRef({ x: 0, y: 0, z: 0, r70: 6.0 });
+    const pendingBuffer = useRef<Float32Array | null>(null);
+    const isStepPending = useRef(false);
 
     const startColors = useRef<THREE.Color[]>([
         new THREE.Color('#ff3b30'),
@@ -186,25 +192,39 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         };
     }, []);
 
-    // Initialize Blob Centers once
-    if (blobCentersRef.current.length === 0) {
-        for (let s = 0; s < 4; s++) {
-            const baseR = 2.0 + s * 1.8;
-            const nBlobs = 3;
-            for (let b = 0; b < nBlobs; b++) {
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(Math.random() * 2 - 1);
-                const x = baseR * Math.sin(phi) * Math.cos(theta);
-                const y = baseR * Math.cos(phi);
-                const z = baseR * Math.sin(phi) * Math.sin(theta);
-                blobCentersRef.current.push(new BlobCenter(x, y, z, s, baseR));
-            }
+    // Initialize Web Worker for Multi-Core Physics Simulation
+    useEffect(() => {
+        try {
+            const worker = new Worker(new URL('./boidWorker.ts', import.meta.url), { type: 'module' });
+            workerRef.current = worker;
+
+            worker.onmessage = (e) => {
+                const { type, buffer, centerX, centerY, centerZ, r70 } = e.data;
+                if (type === 'frame') {
+                    pendingBuffer.current = buffer;
+                    lastCentroid.current = { x: centerX, y: centerY, z: centerZ, r70 };
+                    isStepPending.current = false;
+                }
+            };
+
+            worker.postMessage({ type: 'init', count, state });
+            workerReady.current = true;
+
+            return () => {
+                worker.terminate();
+                workerRef.current = null;
+            };
+        } catch {
+            workerReady.current = false;
         }
-    }
+    }, []);
 
     // Initialize/Update Boid Swarm Population
     useMemo(() => {
         swarm.setPopulation(count, state);
+        if (workerRef.current) {
+            workerRef.current.postMessage({ type: 'init', count, state });
+        }
     }, [count]);
 
     // Attach Instanced aSpecies attribute to geometry whenever count or shape changes
@@ -228,209 +248,45 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         // 1. Advance Independent Clocks via ClockEngine
         clockEngine.update(time);
 
-        // 2. Advance Blob Centers on CPU (O(B^2) where B=12)
-        const centers = blobCentersRef.current;
-        const speed = state.attributes[0].maxSpeed * state.speedMultiplier;
-        for (const center of centers) {
-            center.update(centers, state.interactions, speed, time);
+        // 2. Dispatch Simulation Step to Background Worker Thread
+        if (workerRef.current && !isStepPending.current) {
+            isStepPending.current = true;
+            workerRef.current.postMessage({
+                type: 'step',
+                time,
+                count,
+                state: {
+                    speedMultiplier: state.speedMultiplier,
+                    sizeMultiplier: state.sizeMultiplier,
+                    formationMode: state.formationMode,
+                    formationSeed: state.formationSeed,
+                    prevFormationMode: state.prevFormationMode,
+                    prevFormationSeed: state.prevFormationSeed,
+                    transitionStartTime: state.transitionStartTime,
+                    transitionDuration: state.transitionDuration,
+                    microSurpriseType: state.microSurpriseType,
+                    currentTime: state.currentTime,
+                    microSurpriseEndTime: state.microSurpriseEndTime,
+                    attributes: state.attributes,
+                    interactions: state.interactions,
+                    proceduralGenome: state.proceduralGenome
+                }
+            });
         }
 
-        // 3. Physics & Formation Parameters
-        let speedMult = state ? state.speedMultiplier : 1.0;
-        if (state && state.microSurpriseType === 'speedSurge' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
-            speedMult *= 2.2;
+        // 3. Receive & Apply Worker Matrix Buffer with Zero-Copy Main Thread GPU Upload
+        if (pendingBuffer.current && meshRef.current) {
+            meshRef.current.instanceMatrix.array.set(pendingBuffer.current.subarray(0, boidCount * 16));
+            meshRef.current.instanceMatrix.needsUpdate = true;
+            
+            // Return buffer back to worker for zero-allocation recycling
+            if (workerRef.current) {
+                workerRef.current.postMessage({ returnedBuffer: pendingBuffer.current }, [pendingBuffer.current.buffer]);
+            }
+            pendingBuffer.current = null;
         }
 
-        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.Serpent;
-        const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
-
-        const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
-        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 9.0;
-        const elapsed = Math.max(0.0, time - startTime);
-        const p = Math.min(1.0, elapsed / duration);
-        const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
-
-        const activeLerpRate = (state && state.prevFormationMode !== undefined && p < 1.0)
-            ? 0.03 + 0.03 * sCurve
-            : 0.06;
-        const activeMaxDisp = (state && state.prevFormationMode !== undefined && p < 1.0)
-            ? (0.04 + 0.02 * sCurve) * speedMult
-            : 0.06 * speedMult;
-        const maxAccel = 0.0025 * speedMult;
-        const maxAccelSq = maxAccel * maxAccel;
-        const maxDispSq = activeMaxDisp * activeMaxDisp;
-
-        // 4. Direct Column-Major Matrix4 Composition directly into Float32Array (0ms Object3D overhead)
-        const matArray = meshRef.current.instanceMatrix.array;
-        const baseScale = state.sizeMultiplier * 0.5;
-
-        for (let i = 0; i < boidCount; i++) {
-            const prevX = swarm.posX[i];
-            const prevY = swarm.posY[i];
-            const prevZ = swarm.posZ[i];
-
-            const sp = swarm.species[i];
-            const sepWeight = (state && state.attributes && state.attributes[sp])
-                ? state.attributes[sp].separationWeight
-                : 3.5;
-
-            const total = swarm.totalInSpecies[i] > 0 ? swarm.totalInSpecies[i] : 100;
-            const rawU = swarm.indexInSpecies[i] / total;
-            const u = Math.sin(rawU * Math.PI * 0.5);
-
-            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, sp, swarm.indexInSpecies[i], sepWeight, speedMult, state);
-
-            if (swarm.isStray[i] === 1 && p > 0.8) {
-                const strayAngle = time * swarm.strayOrbitSpeed[i] + swarm.noiseSeed[i];
-                txCurr = swarm.strayOrbitRadius[i] * Math.cos(strayAngle);
-                tyCurr = Math.sin(strayAngle * 2.0) * 2.5 + (sp - 1.5) * 1.5;
-                tzCurr = swarm.strayOrbitRadius[i] * Math.sin(strayAngle);
-            }
-
-            let tx = txCurr, ty = tyCurr, tz = tzCurr;
-
-            if (state && state.prevFormationMode !== undefined && p <= 1.0) {
-                const prevSeed = state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed;
-                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(
-                    state.prevFormationMode,
-                    prevSeed,
-                    u,
-                    time,
-                    sp,
-                    swarm.indexInSpecies[i],
-                    sepWeight,
-                    speedMult,
-                    state
-                );
-                tx = txPrev + (txCurr - txPrev) * sCurve;
-                ty = tyPrev + (tyCurr - tyPrev) * sCurve;
-                tz = tzPrev + (tzCurr - tzPrev) * sCurve;
-            }
-
-            // Clamp spring target to R=14
-            const targetDistSq = tx * tx + ty * ty + tz * tz;
-            if (targetDistSq > 196.0 && targetDistSq > 1e-6) {
-                const invT = 14.0 / Math.sqrt(targetDistSq);
-                tx *= invT; ty *= invT; tz *= invT;
-            }
-
-            let dx = (tx - swarm.posX[i]) * activeLerpRate;
-            let dy = (ty - swarm.posY[i]) * activeLerpRate;
-            let dz = (tz - swarm.posZ[i]) * activeLerpRate;
-
-            if (swarm.isLeader[i] === 1) {
-                dx *= 1.12; dy *= 1.12; dz *= 1.12;
-            }
-
-            const nSeed = swarm.noiseSeed[i];
-            const driftX = Math.sin(time * 1.5 + nSeed) * 0.015 * speedMult;
-            const driftY = Math.cos(time * 1.2 + nSeed * 1.3) * 0.015 * speedMult;
-            const driftZ = Math.sin(time * 1.8 + nSeed * 0.7) * 0.015 * speedMult;
-
-            const targetVelX = dx + driftX;
-            const targetVelY = dy + driftY;
-            const targetVelZ = dz + driftZ;
-
-            let ax = targetVelX - swarm.velX[i];
-            let ay = targetVelY - swarm.velY[i];
-            let az = targetVelZ - swarm.velZ[i];
-
-            const accelMagSq = ax * ax + ay * ay + az * az;
-            if (accelMagSq > maxAccelSq && accelMagSq > 1e-6) {
-                const scale = maxAccel / Math.sqrt(accelMagSq);
-                ax *= scale; ay *= scale; az *= scale;
-            }
-
-            swarm.velX[i] += ax;
-            swarm.velY[i] += ay;
-            swarm.velZ[i] += az;
-
-            const speedSq = swarm.velX[i] * swarm.velX[i] + swarm.velY[i] * swarm.velY[i] + swarm.velZ[i] * swarm.velZ[i];
-            if (speedSq > maxDispSq && speedSq > 1e-6) {
-                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
-                swarm.velX[i] *= invSpd;
-                swarm.velY[i] *= invSpd;
-                swarm.velZ[i] *= invSpd;
-            }
-
-            swarm.posX[i] += swarm.velX[i];
-            swarm.posY[i] += swarm.velY[i];
-            swarm.posZ[i] += swarm.velZ[i];
-
-            const distFromCenterSq = swarm.posX[i] * swarm.posX[i] + swarm.posY[i] * swarm.posY[i] + swarm.posZ[i] * swarm.posZ[i];
-            if (distFromCenterSq > 196.0 && distFromCenterSq > 1e-6) {
-                const inv = 14.0 / Math.sqrt(distFromCenterSq);
-                swarm.posX[i] *= inv;
-                swarm.posY[i] *= inv;
-                swarm.posZ[i] *= inv;
-            }
-
-            const vx = swarm.posX[i] - prevX;
-            const vy = swarm.posY[i] - prevY;
-            const vz = swarm.posZ[i] - prevZ;
-            if (vx * vx + vy * vy + vz * vz > 1e-8) {
-                swarm.velX[i] += (vx - swarm.velX[i]) * 0.25;
-                swarm.velY[i] += (vy - swarm.velY[i]) * 0.25;
-                swarm.velZ[i] += (vz - swarm.velZ[i]) * 0.25;
-            }
-
-            // Inline Column-Major Orientation Matrix
-            const s = swarm.size[i] * baseScale;
-            const offset = i * 16;
-
-            let zx = -swarm.velX[i];
-            let zy = -swarm.velY[i];
-            let zz = -swarm.velZ[i];
-            let zLenSq = zx * zx + zy * zy + zz * zz;
-            if (zLenSq < 1e-8) {
-                zx = 0; zy = 0; zz = 1;
-            } else {
-                const invZ = 1.0 / Math.sqrt(zLenSq);
-                zx *= invZ; zy *= invZ; zz *= invZ;
-            }
-
-            let xx = -zz;
-            let xy = 0;
-            let xz = zx;
-            let xLenSq = xx * xx + xz * xz;
-            if (xLenSq < 1e-8) {
-                zx += 0.0001;
-                const invZ = 1.0 / Math.sqrt(zx * zx + zy * zy + zz * zz);
-                zx *= invZ; zy *= invZ; zz *= invZ;
-                xx = -zz; xz = zx;
-                xLenSq = xx * xx + xz * xz;
-            }
-            const invX = 1.0 / Math.sqrt(xLenSq);
-            xx *= invX; xz *= invX;
-
-            const yx = zy * xz;
-            const yy = zz * xx - zx * xz;
-            const yz = -zy * xx;
-
-            matArray[offset + 0] = xx * s;
-            matArray[offset + 1] = xy * s;
-            matArray[offset + 2] = xz * s;
-            matArray[offset + 3] = 0;
-
-            matArray[offset + 4] = yx * s;
-            matArray[offset + 5] = yy * s;
-            matArray[offset + 6] = yz * s;
-            matArray[offset + 7] = 0;
-
-            matArray[offset + 8] = zx * s;
-            matArray[offset + 9] = zy * s;
-            matArray[offset + 10] = zz * s;
-            matArray[offset + 11] = 0;
-
-            matArray[offset + 12] = swarm.posX[i];
-            matArray[offset + 13] = swarm.posY[i];
-            matArray[offset + 14] = swarm.posZ[i];
-            matArray[offset + 15] = 1;
-        }
-
-        meshRef.current.instanceMatrix.needsUpdate = true;
-
-        // 5. Liquid HSL Shortest-Arc Color Interpolation over 22.0 seconds
+        // 4. Liquid HSL Shortest-Arc Color Interpolation over 22.0 seconds
         const newPalette = state.speciesColors || SPECIES_COLORS;
         const paletteKey = newPalette.join(',');
 
@@ -444,12 +300,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
         }
 
-        if (lastSeed.current !== state.formationSeed || lastMode.current !== state.formationMode) {
-            lastSeed.current = state.formationSeed;
-            lastMode.current = state.formationMode;
-            state.transitionStartTime = time;
-        }
-
         const colorElapsed = Math.max(0.0, time - colorTransitionStartTime.current);
         const colorP = Math.min(1.0, colorElapsed / 22.0);
         const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
@@ -457,10 +307,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const hsl1 = { h: 0, s: 0, l: 0 };
         const hsl2 = { h: 0, s: 0, l: 0 };
 
-        let colorsChanged = false;
         for (let s = 0; s < 4; s++) {
-            const prevHex = currentColors.current[s].getHex();
-            
             startColors.current[s].getHSL(hsl1);
             targetColors.current[s].getHSL(hsl2);
 
@@ -474,10 +321,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const light = hsl1.l + (hsl2.l - hsl1.l) * colorEase;
 
             currentColors.current[s].setHSL(h, sat, light);
-
-            if (currentColors.current[s].getHex() !== prevHex) {
-                colorsChanged = true;
-            }
         }
 
         // Direct GPU Palette Uniform Upload (0ms CPU time)
@@ -488,30 +331,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         // 5. Formation-Aware Cinematic Camera Choreography
         if (boidCount > 0) {
-            let sumX = 0, sumY = 0, sumZ = 0;
-            const sampleStep = Math.max(1, Math.floor(boidCount / 100));
-            let samples = 0;
-            for (let i = 0; i < boidCount; i += sampleStep) {
-                sumX += swarm.posX[i];
-                sumY += swarm.posY[i];
-                sumZ += swarm.posZ[i];
-                samples++;
-            }
-            const centerX = samples > 0 ? sumX / samples : 0;
-            const centerY = samples > 0 ? sumY / samples : 0;
-            const centerZ = samples > 0 ? sumZ / samples : 0;
-
-            const dists: number[] = [];
-            for (let i = 0; i < boidCount; i += sampleStep) {
-                const dx = swarm.posX[i] - centerX;
-                const dy = swarm.posY[i] - centerY;
-                const dz = swarm.posZ[i] - centerZ;
-                dists.push(Math.sqrt(dx * dx + dy * dy + dz * dz));
-            }
-            dists.sort((a, b) => a - b);
-            const p70Index = Math.min(dists.length - 1, Math.floor(dists.length * 0.70));
-            const r70 = dists.length > 0 ? dists[p70Index] : 6.0;
-            const targetRadius = Math.max(3.0, r70);
+            const centerX = lastCentroid.current.x;
+            const centerY = lastCentroid.current.y;
+            const centerZ = lastCentroid.current.z;
+            const targetRadius = Math.max(3.0, lastCentroid.current.r70);
 
             const perspCam = stateContext.camera as THREE.PerspectiveCamera;
             const fovRad = (perspCam.fov || 75) * (Math.PI / 180);
