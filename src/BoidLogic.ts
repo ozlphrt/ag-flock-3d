@@ -75,7 +75,14 @@ export enum FormationMode {
     TrefoilKnot = 41,
     MurmurationFlow = 42,
     OuroborosSerpent = 43,
-    DancingRibbon = 44
+    DancingRibbon = 44,
+    // --- High-Order Sophisticated & Complex Mathematical Topologies ---
+    CalabiYauManifold = 45,
+    HopfFibration = 46,
+    LorenzAttractor = 47,
+    GyroidMinimalSurface = 48,
+    KleinBottle4D = 49,
+    CliffordTorus = 50
 }
 
 export interface ProceduralGenome {
@@ -882,6 +889,98 @@ export function computeFormationPoint(
         tx = rx + Math.cos(twistAngle) * ribbonWidth;
         ty = ry;
         tz = rz + Math.sin(twistAngle) * ribbonWidth;
+    } else if (formation === FormationMode.CalabiYauManifold) {
+        // --- 45. CalabiYauManifold: 6D String Theory Compactification Projection ---
+        const n = 5; // Quintic 3-fold
+        const alpha = u * Math.PI * 2.0;
+        const beta = ((indexInSpecies % 100) / 100.0) * Math.PI * 2.0;
+        const phaseT = time * 0.3 * speedMult + (species * Math.PI / 2);
+
+        const z1_r = Math.cos(alpha);
+        const z1_i = Math.sin(alpha);
+        const z2_r = Math.pow(Math.abs(Math.cos(n * alpha)), 1 / n) * Math.cos(beta + phaseT);
+        const z2_i = Math.pow(Math.abs(Math.sin(n * alpha)), 1 / n) * Math.sin(beta + phaseT);
+
+        const cx = (z1_r * Math.cos(phaseT) - z1_i * Math.sin(phaseT)) * 4.5;
+        const cy = (z2_r * 3.5) + (species - 1.5) * 0.8;
+        const cz = (z1_r * Math.sin(phaseT) + z2_i * Math.cos(phaseT)) * 4.5;
+
+        tx = cx; ty = cy; tz = cz;
+    } else if (formation === FormationMode.HopfFibration) {
+        // --- 46. HopfFibration: 4D 3-Sphere Villarceau Nested Fiber Bundle ---
+        const th = u * Math.PI * 2.0;
+        const ph = ((species + 0.5) / 4.0) * Math.PI;
+        const psi = ((indexInSpecies % 80) / 80.0) * Math.PI * 2.0 + time * 0.5 * speedMult;
+
+        const x4 = Math.cos((th + psi) * 0.5) * Math.sin(ph * 0.5);
+        const y4 = Math.sin((th + psi) * 0.5) * Math.sin(ph * 0.5);
+        const z4 = Math.cos((th - psi) * 0.5) * Math.cos(ph * 0.5);
+        const w4 = Math.sin((th - psi) * 0.5) * Math.cos(ph * 0.5);
+
+        // Conformal stereographic 4D->3D projection
+        const denom = Math.max(0.2, 1.4 - w4);
+        tx = (x4 / denom) * 4.0;
+        ty = (y4 / denom) * 4.0;
+        tz = (z4 / denom) * 4.0;
+    } else if (formation === FormationMode.LorenzAttractor) {
+        // --- 47. LorenzAttractor: Continuous Dual-Scroll Chaotic Attractor ---
+        const lobe = (indexInSpecies % 2 === 0) ? 1 : -1;
+        const tLor = (u * 16.0) + (species * 0.5) + (time * 0.4 * speedMult);
+        const rLor = Math.sqrt(Math.abs(tLor)) * 1.4 + 1.2;
+        const thetaLor = tLor * 2.2;
+
+        const lx = lobe * (rLor * Math.cos(thetaLor) + lobe * 3.2);
+        const ly = (Math.sin(tLor * 1.5) * 4.0) + (rLor * 0.6) - 2.0;
+        const lz = lobe * (rLor * Math.sin(thetaLor));
+
+        tx = lx * 0.85;
+        ty = ly * 0.85;
+        tz = lz * 0.85;
+    } else if (formation === FormationMode.GyroidMinimalSurface) {
+        // --- 48. GyroidMinimalSurface: Triply Periodic Infinite Nodal Sheet ---
+        const gx_u = (u - 0.5) * Math.PI * 3.0;
+        const gy_v = (((indexInSpecies % 60) / 60.0) - 0.5) * Math.PI * 3.0;
+        const gTime = time * 0.3 * speedMult + (species * 0.6);
+
+        // Parametric approximation on the gyroid zero-potential manifold
+        const gx = gx_u + Math.sin(gy_v + gTime) * 0.4;
+        const gy = gy_v + Math.cos(gx_u + gTime) * 0.4;
+        const gz = Math.atan2(Math.sin(gx) * Math.cos(gy), Math.cos(gx) * Math.sin(gy) + 0.01) * 1.8;
+
+        tx = gx * 1.3;
+        ty = gy * 1.3;
+        tz = gz * 1.4;
+    } else if (formation === FormationMode.KleinBottle4D) {
+        // --- 49. KleinBottle4D: Figure-8 Non-Orientable Immersion ---
+        const ku = u * Math.PI * 2.0;
+        const kv = (((indexInSpecies % 70) / 70.0) * Math.PI * 2.0) + (time * 0.4 * speedMult);
+        const rk = 3.6;
+
+        const kx = (rk + Math.cos(ku * 0.5) * Math.sin(kv) - Math.sin(ku * 0.5) * Math.sin(2.0 * kv)) * Math.cos(ku);
+        const ky = (rk + Math.cos(ku * 0.5) * Math.sin(kv) - Math.sin(ku * 0.5) * Math.sin(2.0 * kv)) * Math.sin(ku);
+        const kz = (Math.sin(ku * 0.5) * Math.sin(kv) + Math.cos(ku * 0.5) * Math.sin(2.0 * kv)) * 2.2;
+
+        tx = kx * 0.75;
+        ty = ky * 0.75;
+        tz = kz * 0.75;
+    } else if (formation === FormationMode.CliffordTorus) {
+        // --- 50. CliffordTorus: Flat 4D Torus with Hyper-Rotation Projection ---
+        const thC = u * Math.PI * 2.0;
+        const phiC = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0);
+        const tRot = time * 0.35 * speedMult;
+
+        const x1 = Math.cos(thC + tRot);
+        const y1 = Math.sin(thC + tRot);
+        const x2 = Math.cos(phiC + (species * Math.PI / 2));
+        const y2 = Math.sin(phiC + (species * Math.PI / 2));
+
+        // 4D isoclinic rotation
+        const wC = (x1 * Math.cos(tRot) - y2 * Math.sin(tRot));
+        const denomC = Math.max(0.3, 1.6 - wC * 0.5);
+
+        tx = ((y1) / denomC) * 3.8;
+        ty = ((x2) / denomC) * 3.8;
+        tz = ((x1 * Math.sin(tRot) + y2 * Math.cos(tRot)) / denomC) * 3.8;
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;

@@ -23,6 +23,7 @@ function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'o
         case FormationMode.BioMushroom:
         case FormationMode.CoralReef:
         case FormationMode.OuroborosSerpent:
+        case FormationMode.KleinBottle4D:
             return 'portrait';
         case FormationMode.DoubleHelix:
         case FormationMode.TripleHelix:
@@ -31,6 +32,7 @@ function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'o
         case FormationMode.DNALadder:
         case FormationMode.BlackHoleJet:
         case FormationMode.HourglassVortex:
+        case FormationMode.HopfFibration:
             return 'tunnel';
         case FormationMode.SpiderWeb:
         case FormationMode.GeologicStrata:
@@ -38,6 +40,7 @@ function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'o
         case FormationMode.StarPolygon:
         case FormationMode.AlienMothership:
         case FormationMode.BeehiveSwarm:
+        case FormationMode.GyroidMinimalSurface:
             return 'overhead';
         case FormationMode.Serpent:
         case FormationMode.TsunamiWave:
@@ -45,6 +48,7 @@ function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'o
         case FormationMode.DancingRibbon:
         case FormationMode.RiverDelta:
         case FormationMode.LightningBolt:
+        case FormationMode.LorenzAttractor:
             return 'cinematic_sweep';
         case FormationMode.SupernovaBurst:
         case FormationMode.BigBangExpansion:
@@ -55,6 +59,8 @@ function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'o
         case FormationMode.TorusKnot:
         case FormationMode.LissajousKnot:
         case FormationMode.TrefoilKnot:
+        case FormationMode.CalabiYauManifold:
+        case FormationMode.CliffordTorus:
             return 'orbit_wide';
         case FormationMode.VirusCapsid:
         case FormationMode.DodecahedronShield:
@@ -263,7 +269,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         meshRef.current.instanceMatrix.needsUpdate = true;
 
-        // 4. Liquid HSL Shortest-Arc Color Interpolation over 9.0 seconds
+        // 4. Liquid HSL Shortest-Arc Color Interpolation over 22.0 seconds (Super Smooth & Gradual)
         const newPalette = state.speciesColors || SPECIES_COLORS;
         const paletteKey = newPalette.join(',');
 
@@ -284,7 +290,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
 
         const colorElapsed = Math.max(0.0, time - colorTransitionStartTime.current);
-        const colorP = Math.min(1.0, colorElapsed / 9.0);
+        const colorP = Math.min(1.0, colorElapsed / 22.0);
         const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
 
         const hsl1 = { h: 0, s: 0, l: 0 };

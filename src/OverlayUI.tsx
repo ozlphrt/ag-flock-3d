@@ -119,7 +119,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         { id: FormationMode.TrefoilKnot, label: 'Trefoil Knot', icon: '🎗️', desc: 'Mathematical canonical (2,3) torus knot' },
         { id: FormationMode.MurmurationFlow, label: 'Murmuration Flow', icon: '🕊️', desc: 'Emergent fluid starling swarm cloud' },
         { id: FormationMode.OuroborosSerpent, label: 'Ouroboros Ring', icon: '🐉', desc: 'Planar serpent swallowing its own tail' },
-        { id: FormationMode.DancingRibbon, label: 'Dancing Ribbon', icon: '🎀', desc: 'Twisting undulating 3D kinetic ribbon' }
+        { id: FormationMode.DancingRibbon, label: 'Dancing Ribbon', icon: '🎀', desc: 'Twisting undulating 3D kinetic ribbon' },
+        // --- High-Order Sophisticated & Complex Mathematical Topologies ---
+        { id: FormationMode.CalabiYauManifold, label: 'Calabi-Yau 6D', icon: '🌌', desc: '6D String theory compactification projection' },
+        { id: FormationMode.HopfFibration, label: 'Hopf Fibration', icon: '🫧', desc: '4D 3-Sphere nested Villarceau fiber bundle' },
+        { id: FormationMode.LorenzAttractor, label: 'Lorenz Attractor', icon: '🦋', desc: 'Continuous dual-scroll chaotic butterfly attractor' },
+        { id: FormationMode.GyroidMinimalSurface, label: 'Gyroid Minimal Surface', icon: '🧬', desc: 'Triply periodic infinite nodal manifold' },
+        { id: FormationMode.KleinBottle4D, label: 'Klein Bottle 4D', icon: '♾️', desc: 'Figure-8 non-orientable topological immersion' },
+        { id: FormationMode.CliffordTorus, label: 'Clifford Torus 4D', icon: '💫', desc: 'Flat 4D torus with hyper-rotation projection' }
     ];
 
     const shapes = [

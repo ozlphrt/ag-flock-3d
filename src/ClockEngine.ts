@@ -101,9 +101,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                     activeArc = null; // Arc complete!
                 }
             } else {
-                // RL Softmax Selection across 45 formations with forbidden repeat buffer
+                // RL Softmax Selection across 51 formations with forbidden repeat buffer
                 nextMode = sampleRLAttribute(
-                    45,
+                    51,
                     prefs.formationLikes,
                     prefs.formationDislikes,
                     prefs.totalLikes,
@@ -113,7 +113,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             }
 
             if (nextMode === state.formationMode) {
-                nextMode = ((state.formationMode + 1) % 45) as FormationMode;
+                nextMode = ((state.formationMode + 1) % 51) as FormationMode;
             }
 
             recentFormations.push(nextMode);
