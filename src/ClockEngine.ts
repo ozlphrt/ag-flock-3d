@@ -222,11 +222,11 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         // 6. MICRO-SURPRISE TRANSIENT EVENTS (~15% chance check)
         if ((time - lastMicroCheckTime) >= microCheckInterval) {
             lastMicroCheckTime = time;
-            if (Math.random() < 0.25 && (!state.microSurpriseEndTime || time > state.microSurpriseEndTime)) {
-                const surprises = ['speedSurge', 'lightingFlash', 'materialPulse', 'cameraSnap'];
+            if (Math.random() < 0.22 && (!state.microSurpriseEndTime || time > state.microSurpriseEndTime)) {
+                const surprises = ['speedSurge', 'lightingFlash', 'materialPulse'];
                 const picked = surprises[Math.floor(Math.random() * surprises.length)];
                 state.microSurpriseType = picked;
-                state.microSurpriseEndTime = time + (picked === 'lightingFlash' ? 0.6 : (picked === 'speedSurge' ? 3.0 : 4.0));
+                state.microSurpriseEndTime = time + (picked === 'lightingFlash' ? 0.6 : (picked === 'speedSurge' ? 2.5 : 3.5));
             }
         }
     };

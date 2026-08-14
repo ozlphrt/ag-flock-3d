@@ -45,57 +45,104 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
-  background: rgba(12, 16, 26, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 24px;
-  padding: 10px 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  min-width: 175px;
+  background: rgba(12, 16, 26, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
   z-index: 999;
   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ephemeral-like-btn {
+.ephemeral-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 12px;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.ephemeral-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.dimension-label {
+  font-size: 13px;
   font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
   letter-spacing: 0.3px;
+}
+
+.thumb-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.thumb-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   outline: none;
-  white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ephemeral-like-btn:hover {
-  background: rgba(0, 255, 204, 0.15);
-  border-color: rgba(0, 255, 204, 0.4);
-  color: #00ffcc;
-  transform: translateY(-2px);
-}
-
-.ephemeral-like-btn:active {
-  transform: scale(0.95);
-}
-
-.ephemeral-like-btn.liked {
+.thumb-btn.like:hover {
   background: rgba(0, 255, 204, 0.25);
   border-color: #00ffcc;
-  color: #00ffcc;
-  box-shadow: 0 0 16px rgba(0, 255, 204, 0.3);
+  transform: scale(1.15);
 }
 
-.ephemeral-like-btn.disliked {
+.thumb-btn.dislike:hover {
   background: rgba(255, 59, 48, 0.25);
   border-color: #ff3b30;
-  color: #ff3b30;
+  transform: scale(1.15);
+}
+
+.thumb-btn:active {
+  transform: scale(0.92);
+}
+
+.save-full-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: rgba(255, 59, 48, 0.16);
+  border: 1px solid rgba(255, 59, 48, 0.45);
+  border-radius: 14px;
+  color: #ff4d4d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.save-full-btn:hover {
+  background: rgba(255, 59, 48, 0.32);
+  border-color: #ff3b30;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.4);
 }
 
 /* Toast feedback popup */

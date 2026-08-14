@@ -197,16 +197,25 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast(simState.current.autoMode ? 'Auto-Cycle Resumed' : 'Auto-Cycle Paused (Holding)');
     };
 
-    const handleLikeDimension = (dim: 'formation' | 'shape' | 'material' | 'palette' | 'lighting') => {
+    const handleLikeDimension = (dim: 'formation' | 'palette' | 'lighting') => {
         let id = 0;
         if (dim === 'formation') id = simState.current.formationMode;
-        if (dim === 'shape') id = simState.current.boidShape ?? 0;
-        if (dim === 'material') id = simState.current.materialPreset ?? 0;
         if (dim === 'palette') id = simState.current.paletteIndex ?? 0;
         if (dim === 'lighting') id = simState.current.lightingProfileIndex ?? 0;
 
         likeDimension(dim, id);
         showToast(`+1 ${dim.toUpperCase()} preference saved to Taste Profile!`);
+        setTick(t => t + 1);
+    };
+
+    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'lighting') => {
+        let id = 0;
+        if (dim === 'formation') id = simState.current.formationMode;
+        if (dim === 'palette') id = simState.current.paletteIndex ?? 0;
+        if (dim === 'lighting') id = simState.current.lightingProfileIndex ?? 0;
+
+        dislikeDimension(dim, id);
+        showToast(`-1 ${dim.toUpperCase()} excluded from Taste Profile`);
         setTick(t => t + 1);
     };
 
@@ -275,7 +284,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         {/* Floating Toast Message */}
         {toastMessage && <div className="rl-toast">{toastMessage}</div>}
 
-        {/* Ephemeral Granular Like Bar (Right Vertical) */}
+        {/* Ephemeral Granular Like/Dislike Bar (Right Vertical) */}
         <div
             className="ephemeral-like-bar"
             style={{
@@ -283,45 +292,73 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
             }}
         >
+            {/* Palette Row */}
+            <div className="ephemeral-row">
+                <span className="dimension-label">Palette</span>
+                <div className="thumb-btn-group">
+                    <button
+                        className="thumb-btn like"
+                        onClick={() => handleLikeDimension('palette')}
+                        title="Like this Color Palette"
+                    >
+                        👍
+                    </button>
+                    <button
+                        className="thumb-btn dislike"
+                        onClick={() => handleDislikeDimension('palette')}
+                        title="Dislike this Color Palette"
+                    >
+                        👎
+                    </button>
+                </div>
+            </div>
+
+            {/* Formation Row */}
+            <div className="ephemeral-row">
+                <span className="dimension-label">Formation</span>
+                <div className="thumb-btn-group">
+                    <button
+                        className="thumb-btn like"
+                        onClick={() => handleLikeDimension('formation')}
+                        title="Like this 3D Formation"
+                    >
+                        👍
+                    </button>
+                    <button
+                        className="thumb-btn dislike"
+                        onClick={() => handleDislikeDimension('formation')}
+                        title="Dislike this 3D Formation"
+                    >
+                        👎
+                    </button>
+                </div>
+            </div>
+
+            {/* Lighting Row */}
+            <div className="ephemeral-row">
+                <span className="dimension-label">Lighting</span>
+                <div className="thumb-btn-group">
+                    <button
+                        className="thumb-btn like"
+                        onClick={() => handleLikeDimension('lighting')}
+                        title="Like this Lighting Mood"
+                    >
+                        👍
+                    </button>
+                    <button
+                        className="thumb-btn dislike"
+                        onClick={() => handleDislikeDimension('lighting')}
+                        title="Dislike this Lighting Mood"
+                    >
+                        👎
+                    </button>
+                </div>
+            </div>
+
+            {/* Save Masterpiece Snapshot */}
             <button
-                className="ephemeral-like-btn"
-                onClick={() => handleLikeDimension('palette')}
-                title="Like this Color Palette (Biases future colors)"
-            >
-                <span>🎨</span> Palette
-            </button>
-            <button
-                className="ephemeral-like-btn"
-                onClick={() => handleLikeDimension('formation')}
-                title="Like this 3D Formation (Biases future shapes)"
-            >
-                <span>🌀</span> Formation
-            </button>
-            <button
-                className="ephemeral-like-btn"
-                onClick={() => handleLikeDimension('lighting')}
-                title="Like this Lighting Mood (Biases future lights)"
-            >
-                <span>💡</span> Lighting
-            </button>
-            <button
-                className="ephemeral-like-btn"
-                onClick={() => handleLikeDimension('material')}
-                title="Like this Specular Material (Biases future finishes)"
-            >
-                <span>🔷</span> Material
-            </button>
-            <button
-                className="ephemeral-like-btn"
-                onClick={() => handleLikeDimension('shape')}
-                title="Like this Boid Shard Shape"
-            >
-                <span>📐</span> Shape
-            </button>
-            <button
-                className="ephemeral-like-btn"
+                className="save-full-btn"
                 onClick={handleSaveFullCreation}
-                style={{ background: 'rgba(255, 59, 48, 0.2)', borderColor: '#ff3b30', color: '#ff3b30' }}
                 title="Save this entire Masterpiece Snapshot to Gallery"
             >
                 <span>❤️</span> Save

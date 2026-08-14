@@ -75,9 +75,9 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             flashBoost = 2.4;
         }
 
-        const targetAmb = profile.ambientIntensity * mult;
+        const targetAmb = (profile.ambientIntensity + 0.12) * mult;
         const targetK = profile.keyIntensity * mult * flashBoost;
-        const targetF = profile.fillIntensity * mult;
+        const targetF = (profile.fillIntensity + 0.25) * mult;
         const targetR = profile.rimIntensity * mult * flashBoost;
 
         targetKeyColor.current.set(profile.keyColor);
