@@ -243,6 +243,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         if (!meshRef.current) return;
         const boidCount = count;
         const time = stateContext.clock.getElapsedTime();
+        state.currentTime = time;
 
         // 1. Advance Independent Clocks via ClockEngine
         clockEngine.update(time);
@@ -466,8 +467,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
         }
 
+        const colorDuration = state.paletteTransitionDuration || 4.5;
         const colorElapsed = Math.max(0.0, time - colorTransitionStartTime.current);
-        const colorP = Math.min(1.0, colorElapsed / 22.0);
+        const colorP = Math.min(1.0, colorElapsed / colorDuration);
         const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
 
         const hsl1 = { h: 0, s: 0, l: 0 };

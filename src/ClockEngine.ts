@@ -246,7 +246,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     const skipDimension = (dim: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => {
         const prefs = getRLPreferences();
-        const time = state.currentTime || (performance.now() / 1000.0);
+        const time = (state.currentTime !== undefined) ? state.currentTime : 0.0;
 
         if (dim === 'formation') {
             lastFormationTime = time;
@@ -273,7 +273,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.formationMode = nextMode;
             state.formationSeed = Math.random() * 10000;
             state.transitionStartTime = time;
-            state.transitionDuration = 7.0;
+            state.transitionDuration = 5.0; // Snappy 5s morph right away
             state.isCameraLocked = false;
 
             if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
@@ -297,6 +297,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
             state.paletteIndex = nextPaletteIdx;
             state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
+            state.paletteTransitionDuration = 1.8; // Quick 1.8s fluid blend on skip
         } else if (dim === 'lighting') {
             lastLightingTime = time;
             lightingInterval = rndJitter(82.0, 0.25);

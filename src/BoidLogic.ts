@@ -386,6 +386,7 @@ export interface SimulationState {
     clockEngine?: any;
     isFormationLocked?: boolean;
     isPaletteLocked?: boolean;
+    paletteTransitionDuration?: number;
 }
 
 export function computeFormationPoint(
