@@ -196,10 +196,19 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         setIsSettingsOpen(false);
     };
 
-    const toggleAutoMode = () => {
-        simState.current.autoMode = !isAutoMode;
+    const handleNextComposition = () => {
+        simState.current.autoMode = true;
+
+        if (simState.current.clockEngine?.skipDimension) {
+            if (!simState.current.isFormationLocked) {
+                simState.current.clockEngine.skipDimension('formation');
+            }
+            if (!simState.current.isPaletteLocked) {
+                simState.current.clockEngine.skipDimension('palette');
+            }
+        }
         setTick(t => t + 1);
-        showToast(simState.current.autoMode ? 'Auto-Cycle Resumed' : 'Auto-Cycle Paused (Holding)');
+        showToast('Skipping to Next Composition ⏭️');
     };
 
     const handleLikeDimension = (dim: 'formation' | 'palette' | 'lighting') => {
@@ -467,11 +476,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </svg>
             </button>
 
-            {/* Auto Mode Toggle Button with Radial Timer Ring */}
+            {/* Auto Mode Advance Button with Radial Timer Ring */}
             <button
                 className={`defeat-selector-btn ${isAutoMode ? 'timer-active-pulse' : ''}`}
-                onClick={toggleAutoMode}
-                title={isAutoMode ? `Auto-cycle is ACTIVE (${countdown}s remaining) — Click to Pause & Hold` : "Auto-cycle is PAUSED — Click to Resume"}
+                onClick={handleNextComposition}
+                title={`Auto-cycle active (${countdown}s remaining) — Click to advance immediately to next composition ⏭️`}
                 style={{
                     position: 'relative',
                     width: '56px',
