@@ -1102,6 +1102,7 @@ export class BoidSwarmData {
     strayOrbitRadius: Float32Array;
     strayOrbitSpeed: Float32Array;
     isLeader: Uint8Array;
+    u: Float32Array;
 
     constructor(maxCapacity: number = 100000) {
         this.count = 0;
@@ -1120,6 +1121,7 @@ export class BoidSwarmData {
         this.strayOrbitRadius = new Float32Array(maxCapacity);
         this.strayOrbitSpeed = new Float32Array(maxCapacity);
         this.isLeader = new Uint8Array(maxCapacity);
+        this.u = new Float32Array(maxCapacity);
     }
 
     setPopulation(targetCount: number, state: SimulationState) {
@@ -1165,12 +1167,13 @@ export class BoidSwarmData {
 
         for (let i = 0; i < targetCount; i++) {
             const sp = this.species[i];
-            this.totalInSpecies[i] = speciesCounts[sp];
+            const tot = speciesCounts[sp] > 0 ? speciesCounts[sp] : 100;
+            this.totalInSpecies[i] = tot;
+            this.u[i] = Math.sin((this.indexInSpecies[i] / tot) * Math.PI * 0.5);
 
             // If newly initialized, snap to formation point
             if (i >= prevCount) {
-                const u = this.indexInSpecies[i] / (this.totalInSpecies[i] > 0 ? this.totalInSpecies[i] : 100);
-                const [tx, ty, tz] = computeFormationPoint(mode, seed, u, 0, sp, this.indexInSpecies[i], 3.5, state.speedMultiplier || 0.28, state);
+                const [tx, ty, tz] = computeFormationPoint(mode, seed, this.u[i], 0, sp, this.indexInSpecies[i], 3.5, state.speedMultiplier || 0.28, state);
                 this.posX[i] = tx;
                 this.posY[i] = ty;
                 this.posZ[i] = tz;

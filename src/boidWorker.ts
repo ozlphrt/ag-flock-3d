@@ -1,12 +1,12 @@
-import { BoidSwarmData, BlobCenter, SimulationState, computeFormationPoint } from './BoidLogic'
+import { BoidSwarmData, BlobCenter, computeFormationPoint } from './BoidLogic'
 
-let swarm = new BoidSwarmData(100000);
+const MAX_BOIDS = 100000;
+let swarm = new BoidSwarmData(MAX_BOIDS);
 let blobCenters: BlobCenter[] = [];
 let currentCount = 0;
-let isUpdating = false;
 
-// Double buffer for zero-allocation zero-copy transfers
-let matrixBuffer = new Float32Array(100000 * 16);
+// Reusable persistent buffers
+let outBuffer = new Float32Array(MAX_BOIDS * 16);
 
 // Initialize Blob Centers
 for (let s = 0; s < 4; s++) {
@@ -23,27 +23,31 @@ for (let s = 0; s < 4; s++) {
 }
 
 self.onmessage = (e: MessageEvent) => {
-    const { type, count, state, time, returnedBuffer } = e.data;
+    const data = e.data;
+    if (!data) return;
 
-    if (returnedBuffer && returnedBuffer.byteLength > 0) {
-        matrixBuffer = returnedBuffer;
+    if (data.returnedBuffer && data.returnedBuffer.byteLength === MAX_BOIDS * 16 * 4) {
+        outBuffer = data.returnedBuffer;
+        return;
     }
 
-    if (type === 'init' || (count && count !== currentCount)) {
-        currentCount = count;
-        swarm.setPopulation(count, state);
+    if (data.type === 'init' || (data.count && data.count !== currentCount)) {
+        currentCount = data.count;
+        swarm.setPopulation(currentCount, data.state);
+        return;
     }
 
-    if (type === 'step') {
-        if (!currentCount || isUpdating) return;
-        isUpdating = true;
+    if (data.type === 'step') {
+        const boidCount = currentCount || data.count;
+        if (!boidCount) return;
 
-        const boidCount = currentCount;
+        const time = data.time;
+        const state = data.state;
 
         // 1. Advance Blob Centers (O(B^2) where B=12)
         const speed = (state.attributes && state.attributes[0]) ? state.attributes[0].maxSpeed * state.speedMultiplier : 0.28;
-        for (const center of blobCenters) {
-            center.update(blobCenters, state.interactions, speed, time);
+        for (let b = 0; b < blobCenters.length; b++) {
+            blobCenters[b].update(blobCenters, state.interactions, speed, time);
         }
 
         // 2. Physics & Formation Parameters
@@ -61,68 +65,71 @@ self.onmessage = (e: MessageEvent) => {
         const p = Math.min(1.0, elapsed / duration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
-        const activeLerpRate = (state && state.prevFormationMode !== undefined && p < 1.0)
-            ? 0.03 + 0.03 * sCurve
-            : 0.06;
-        const activeMaxDisp = (state && state.prevFormationMode !== undefined && p < 1.0)
-            ? (0.04 + 0.02 * sCurve) * speedMult
-            : 0.06 * speedMult;
+        const isMorphing = (state && state.prevFormationMode !== undefined && p < 1.0);
+        const activeLerpRate = isMorphing ? (0.03 + 0.03 * sCurve) : 0.06;
+        const activeMaxDisp = isMorphing ? (0.04 + 0.02 * sCurve) * speedMult : 0.06 * speedMult;
         const maxAccel = 0.0025 * speedMult;
         const maxAccelSq = maxAccel * maxAccel;
         const maxDispSq = activeMaxDisp * activeMaxDisp;
 
         const baseScale = (state.sizeMultiplier || 1.0) * 0.5;
+        const prevMode = isMorphing ? state.prevFormationMode : undefined;
+        const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
         // Centroid sampling registers
         let sumX = 0, sumY = 0, sumZ = 0;
-        const sampleStep = Math.max(1, Math.floor(boidCount / 100));
-        let samples = 0;
+        const sampleStep = Math.max(1, Math.floor(boidCount / 128));
+        let sampleCount = 0;
+
+        const posX = swarm.posX;
+        const posY = swarm.posY;
+        const posZ = swarm.posZ;
+        const velX = swarm.velX;
+        const velY = swarm.velY;
+        const velZ = swarm.velZ;
+        const species = swarm.species;
+        const uArr = swarm.u;
+        const indexInSpecies = swarm.indexInSpecies;
+        const isStray = swarm.isStray;
+        const strayOrbitRadius = swarm.strayOrbitRadius;
+        const strayOrbitSpeed = swarm.strayOrbitSpeed;
+        const noiseSeed = swarm.noiseSeed;
+        const isLeader = swarm.isLeader;
+        const sizeArr = swarm.size;
+
+        const buf = outBuffer;
 
         for (let i = 0; i < boidCount; i++) {
-            const prevX = swarm.posX[i];
-            const prevY = swarm.posY[i];
-            const prevZ = swarm.posZ[i];
+            const px = posX[i];
+            const py = posY[i];
+            const pz = posZ[i];
 
             if (i % sampleStep === 0) {
-                sumX += prevX;
-                sumY += prevY;
-                sumZ += prevZ;
-                samples++;
+                sumX += px; sumY += py; sumZ += pz;
+                sampleCount++;
             }
 
-            const sp = swarm.species[i];
+            const sp = species[i];
             const sepWeight = (state && state.attributes && state.attributes[sp])
                 ? state.attributes[sp].separationWeight
                 : 3.5;
 
-            const total = swarm.totalInSpecies[i] > 0 ? swarm.totalInSpecies[i] : 100;
-            const rawU = swarm.indexInSpecies[i] / total;
-            const u = Math.sin(rawU * Math.PI * 0.5);
+            const u = uArr[i];
+            const idxSp = indexInSpecies[i];
 
-            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, sp, swarm.indexInSpecies[i], sepWeight, speedMult, state);
+            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state);
 
-            if (swarm.isStray[i] === 1 && p > 0.8) {
-                const strayAngle = time * swarm.strayOrbitSpeed[i] + swarm.noiseSeed[i];
-                txCurr = swarm.strayOrbitRadius[i] * Math.cos(strayAngle);
+            if (isStray[i] === 1 && p > 0.8) {
+                const strayAngle = time * strayOrbitSpeed[i] + noiseSeed[i];
+                txCurr = strayOrbitRadius[i] * Math.cos(strayAngle);
                 tyCurr = Math.sin(strayAngle * 2.0) * 2.5 + (sp - 1.5) * 1.5;
-                tzCurr = swarm.strayOrbitRadius[i] * Math.sin(strayAngle);
+                tzCurr = strayOrbitRadius[i] * Math.sin(strayAngle);
             }
 
             let tx = txCurr, ty = tyCurr, tz = tzCurr;
 
-            if (state && state.prevFormationMode !== undefined && p <= 1.0) {
-                const prevSeed = state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed;
-                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(
-                    state.prevFormationMode,
-                    prevSeed,
-                    u,
-                    time,
-                    sp,
-                    swarm.indexInSpecies[i],
-                    sepWeight,
-                    speedMult,
-                    state
-                );
+            if (isMorphing && prevMode !== undefined) {
+                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state);
                 tx = txPrev + (txCurr - txPrev) * sCurve;
                 ty = tyPrev + (tyCurr - tyPrev) * sCurve;
                 tz = tzPrev + (tzCurr - tzPrev) * sCurve;
@@ -135,15 +142,15 @@ self.onmessage = (e: MessageEvent) => {
                 tx *= invT; ty *= invT; tz *= invT;
             }
 
-            let dx = (tx - swarm.posX[i]) * activeLerpRate;
-            let dy = (ty - swarm.posY[i]) * activeLerpRate;
-            let dz = (tz - swarm.posZ[i]) * activeLerpRate;
+            let dx = (tx - px) * activeLerpRate;
+            let dy = (ty - py) * activeLerpRate;
+            let dz = (tz - pz) * activeLerpRate;
 
-            if (swarm.isLeader[i] === 1) {
+            if (isLeader[i] === 1) {
                 dx *= 1.12; dy *= 1.12; dz *= 1.12;
             }
 
-            const nSeed = swarm.noiseSeed[i];
+            const nSeed = noiseSeed[i];
             const driftX = Math.sin(time * 1.5 + nSeed) * 0.015 * speedMult;
             const driftY = Math.cos(time * 1.2 + nSeed * 1.3) * 0.015 * speedMult;
             const driftZ = Math.sin(time * 1.8 + nSeed * 0.7) * 0.015 * speedMult;
@@ -152,9 +159,9 @@ self.onmessage = (e: MessageEvent) => {
             const targetVelY = dy + driftY;
             const targetVelZ = dz + driftZ;
 
-            let ax = targetVelX - swarm.velX[i];
-            let ay = targetVelY - swarm.velY[i];
-            let az = targetVelZ - swarm.velZ[i];
+            let ax = targetVelX - velX[i];
+            let ay = targetVelY - velY[i];
+            let az = targetVelZ - velZ[i];
 
             const accelMagSq = ax * ax + ay * ay + az * az;
             if (accelMagSq > maxAccelSq && accelMagSq > 1e-6) {
@@ -162,46 +169,37 @@ self.onmessage = (e: MessageEvent) => {
                 ax *= scale; ay *= scale; az *= scale;
             }
 
-            swarm.velX[i] += ax;
-            swarm.velY[i] += ay;
-            swarm.velZ[i] += az;
+            velX[i] += ax;
+            velY[i] += ay;
+            velZ[i] += az;
 
-            const speedSq = swarm.velX[i] * swarm.velX[i] + swarm.velY[i] * swarm.velY[i] + swarm.velZ[i] * swarm.velZ[i];
+            const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
             if (speedSq > maxDispSq && speedSq > 1e-6) {
                 const invSpd = activeMaxDisp / Math.sqrt(speedSq);
-                swarm.velX[i] *= invSpd;
-                swarm.velY[i] *= invSpd;
-                swarm.velZ[i] *= invSpd;
+                velX[i] *= invSpd;
+                velY[i] *= invSpd;
+                velZ[i] *= invSpd;
             }
 
-            swarm.posX[i] += swarm.velX[i];
-            swarm.posY[i] += swarm.velY[i];
-            swarm.posZ[i] += swarm.velZ[i];
+            posX[i] += velX[i];
+            posY[i] += velY[i];
+            posZ[i] += velZ[i];
 
-            const distFromCenterSq = swarm.posX[i] * swarm.posX[i] + swarm.posY[i] * swarm.posY[i] + swarm.posZ[i] * swarm.posZ[i];
-            if (distFromCenterSq > 196.0 && distFromCenterSq > 1e-6) {
-                const inv = 14.0 / Math.sqrt(distFromCenterSq);
-                swarm.posX[i] *= inv;
-                swarm.posY[i] *= inv;
-                swarm.posZ[i] *= inv;
-            }
-
-            const vx = swarm.posX[i] - prevX;
-            const vy = swarm.posY[i] - prevY;
-            const vz = swarm.posZ[i] - prevZ;
-            if (vx * vx + vy * vy + vz * vz > 1e-8) {
-                swarm.velX[i] += (vx - swarm.velX[i]) * 0.25;
-                swarm.velY[i] += (vy - swarm.velY[i]) * 0.25;
-                swarm.velZ[i] += (vz - swarm.velZ[i]) * 0.25;
+            const distSq = posX[i] * posX[i] + posY[i] * posY[i] + posZ[i] * posZ[i];
+            if (distSq > 196.0 && distSq > 1e-6) {
+                const inv = 14.0 / Math.sqrt(distSq);
+                posX[i] *= inv;
+                posY[i] *= inv;
+                posZ[i] *= inv;
             }
 
             // Inline Column-Major Orientation Matrix
-            const s = swarm.size[i] * baseScale;
+            const s = sizeArr[i] * baseScale;
             const offset = i * 16;
 
-            let zx = -swarm.velX[i];
-            let zy = -swarm.velY[i];
-            let zz = -swarm.velZ[i];
+            let zx = -velX[i];
+            let zy = -velY[i];
+            let zz = -velZ[i];
             let zLenSq = zx * zx + zy * zy + zz * zz;
             if (zLenSq < 1e-8) {
                 zx = 0; zy = 0; zz = 1;
@@ -228,58 +226,55 @@ self.onmessage = (e: MessageEvent) => {
             const yy = zz * xx - zx * xz;
             const yz = -zy * xx;
 
-            matrixBuffer[offset + 0] = xx * s;
-            matrixBuffer[offset + 1] = xy * s;
-            matrixBuffer[offset + 2] = xz * s;
-            matrixBuffer[offset + 3] = 0;
+            buf[offset + 0] = xx * s;
+            buf[offset + 1] = xy * s;
+            buf[offset + 2] = xz * s;
+            buf[offset + 3] = 0;
 
-            matrixBuffer[offset + 4] = yx * s;
-            matrixBuffer[offset + 5] = yy * s;
-            matrixBuffer[offset + 6] = yz * s;
-            matrixBuffer[offset + 7] = 0;
+            buf[offset + 4] = yx * s;
+            buf[offset + 5] = yy * s;
+            buf[offset + 6] = yz * s;
+            buf[offset + 7] = 0;
 
-            matrixBuffer[offset + 8] = zx * s;
-            matrixBuffer[offset + 9] = zy * s;
-            matrixBuffer[offset + 10] = zz * s;
-            matrixBuffer[offset + 11] = 0;
+            buf[offset + 8] = zx * s;
+            buf[offset + 9] = zy * s;
+            buf[offset + 10] = zz * s;
+            buf[offset + 11] = 0;
 
-            matrixBuffer[offset + 12] = swarm.posX[i];
-            matrixBuffer[offset + 13] = swarm.posY[i];
-            matrixBuffer[offset + 14] = swarm.posZ[i];
-            matrixBuffer[offset + 15] = 1;
+            buf[offset + 12] = posX[i];
+            buf[offset + 13] = posY[i];
+            buf[offset + 14] = posZ[i];
+            buf[offset + 15] = 1;
         }
 
-        const centerX = samples > 0 ? sumX / samples : 0;
-        const centerY = samples > 0 ? sumY / samples : 0;
-        const centerZ = samples > 0 ? sumZ / samples : 0;
+        const centerX = sampleCount > 0 ? sumX / sampleCount : 0;
+        const centerY = sampleCount > 0 ? sumY / sampleCount : 0;
+        const centerZ = sampleCount > 0 ? sumZ / sampleCount : 0;
 
-        const dists: number[] = [];
+        let maxDistSq = 0;
         for (let i = 0; i < boidCount; i += sampleStep) {
-            const dx = swarm.posX[i] - centerX;
-            const dy = swarm.posY[i] - centerY;
-            const dz = swarm.posZ[i] - centerZ;
-            dists.push(Math.sqrt(dx * dx + dy * dy + dz * dz));
+            const dx = posX[i] - centerX;
+            const dy = posY[i] - centerY;
+            const dz = posZ[i] - centerZ;
+            const d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 > maxDistSq) maxDistSq = d2;
         }
-        dists.sort((a, b) => a - b);
-        const p70Index = Math.min(dists.length - 1, Math.floor(dists.length * 0.70));
-        const r70 = dists.length > 0 ? dists[p70Index] : 6.0;
+        const r70 = Math.sqrt(maxDistSq) * 0.72;
 
-        // Post zero-copy transferable back to main thread
+        // Post zero-copy transferable back to main thread (NO OBJECT ALLOCATIONS)
         (self as any).postMessage(
             {
                 type: 'frame',
-                buffer: matrixBuffer,
-                species: Array.from(swarm.species.subarray(0, boidCount)),
+                buffer: buf,
                 centerX,
                 centerY,
                 centerZ,
                 r70
             },
-            [matrixBuffer.buffer]
+            [buf.buffer]
         );
 
-        // Allocate fresh buffer if transferred away
-        matrixBuffer = new Float32Array(100000 * 16);
-        isUpdating = false;
+        // Prepare fresh buffer
+        outBuffer = new Float32Array(MAX_BOIDS * 16);
     }
 };
