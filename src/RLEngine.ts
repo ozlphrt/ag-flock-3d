@@ -474,7 +474,7 @@ export const EMOTIONAL_ARCS: EmotionalArc[] = [
     {
         name: 'Crystalline Synthesis',
         description: 'Imploding into diamond prism and multi-faceted platonic polyhedron',
-        modes: [FormationMode.CollapsingSphere, FormationMode.CrystalPrism, FormationMode.DodecahedronShield]
+        modes: [FormationMode.CollapsingSphere, FormationMode.StarPolygon, FormationMode.WireCube]
     },
     {
         name: 'Storm & Celestial Calm',

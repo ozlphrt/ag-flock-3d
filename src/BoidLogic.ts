@@ -314,48 +314,34 @@ export const MATERIAL_PRESETS = [
     },
     {
         id: 3,
-        label: 'Soft Bioluminescent Glow',
-        icon: '🌌',
-        desc: 'Bioluminescent ambient glow shining through specular facets',
-        settings: { roughness: 0.08, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.95 }
-    },
-    {
-        id: 4,
         label: 'Champagne Gold Mirror',
         icon: '🏆',
         desc: 'Polished golden mirror specularity with vivid studio highlights',
         settings: { roughness: 0.02, metalness: 0.96, wireframe: false, flatShading: true, emissiveIntensity: 0.65 }
     },
     {
-        id: 5,
+        id: 4,
         label: 'Frost Crystal Shard',
         icon: '❄️',
         desc: 'Ice-cold platinum mirror with vivid luminous reflections',
         settings: { roughness: 0.04, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
     },
     {
-        id: 6,
+        id: 5,
         label: 'Glowing Cyber Crystal',
         icon: '💎',
         desc: 'High-tech cyber gemstone with vivid glowing specular reflections',
         settings: { roughness: 0.03, metalness: 0.94, wireframe: false, flatShading: true, emissiveIntensity: 0.85 }
     },
     {
-        id: 7,
-        label: 'Translucent Candy Glass',
-        icon: '🍬',
-        desc: 'Tasteful glossy candy glass catching sparkling studio reflections',
-        settings: { roughness: 0.16, metalness: 0.72, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
-    },
-    {
-        id: 8,
+        id: 6,
         label: 'Liquid Ruby Chrome',
         icon: '🔴',
         desc: 'Deep crimson metallic reflection with rich satin highlights',
         settings: { roughness: 0.12, metalness: 0.84, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
     },
     {
-        id: 9,
+        id: 7,
         label: 'Emerald Satin Resin',
         icon: '🟢',
         desc: 'Refined emerald green metallic satin finish',
