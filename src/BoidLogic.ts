@@ -1131,7 +1131,7 @@ export class BoidSwarmData {
         const prevCount = this.count;
         this.count = targetCount;
 
-        const speciesBaseSizes = [0.45, 0.30, 0.18, 0.10];
+        const speciesBaseSizes = [0.25, 0.18, 0.12, 0.08];
         const speciesCounts = [0, 0, 0, 0];
 
         // If growing population, initialize new particles
@@ -1141,10 +1141,10 @@ export class BoidSwarmData {
                 this.species[i] = sp;
 
                 const baseSize = speciesBaseSizes[sp];
-                const sizeVariance = 0.4 + Math.pow(Math.random(), 2.0) * 0.5;
-                const isAlphaLeader = (i % 12 === 0);
-                const isTitanLeader = (i % 45 === 0);
-                const leaderMult = isTitanLeader ? 1.25 : (isAlphaLeader ? 1.1 : 1.0);
+                const sizeVariance = 0.5 + Math.pow(Math.random(), 2.0) * 0.4;
+                const isAlphaLeader = (i % 16 === 0);
+                const isTitanLeader = (i % 60 === 0);
+                const leaderMult = isTitanLeader ? 1.15 : (isAlphaLeader ? 1.08 : 1.0);
                 this.size[i] = baseSize * sizeVariance * leaderMult;
 
                 this.noiseSeed[i] = Math.random() * 1000.0;

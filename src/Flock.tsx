@@ -276,7 +276,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const maxAccelSq = maxAccel * maxAccel;
         const maxDispSq = activeMaxDisp * activeMaxDisp;
 
-        const baseScale = (state.sizeMultiplier || 1.0) * 0.5;
+        const baseScale = (state.sizeMultiplier || 1.0) * 0.36;
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
@@ -678,22 +678,22 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
     // 6 Ultra-Fast, Low-Poly, Hard-Edged 3D Geometries with Sharp Pointy Nose (+Z)
     const geometries = useMemo(() => {
-        const g0 = new THREE.ConeGeometry(0.16, 0.52, 3);
+        const g0 = new THREE.ConeGeometry(0.12, 0.40, 3);
         g0.rotateX(Math.PI / 2);
 
-        const g1 = new THREE.OctahedronGeometry(0.22, 0);
-        g1.scale(0.7, 0.7, 1.6);
+        const g1 = new THREE.OctahedronGeometry(0.16, 0);
+        g1.scale(0.7, 0.7, 1.5);
 
-        const g2 = new THREE.ConeGeometry(0.18, 0.50, 4);
+        const g2 = new THREE.ConeGeometry(0.13, 0.38, 4);
         g2.rotateX(Math.PI / 2);
 
-        const g3 = new THREE.ConeGeometry(0.20, 0.48, 6);
+        const g3 = new THREE.ConeGeometry(0.14, 0.36, 6);
         g3.rotateX(Math.PI / 2);
 
-        const g4 = new THREE.CylinderGeometry(0.01, 0.20, 0.52, 4);
+        const g4 = new THREE.CylinderGeometry(0.01, 0.14, 0.40, 4);
         g4.rotateX(Math.PI / 2);
 
-        const g5 = new THREE.ConeGeometry(0.15, 0.54, 5);
+        const g5 = new THREE.ConeGeometry(0.12, 0.40, 5);
         g5.rotateX(Math.PI / 2);
 
         return [g0, g1, g2, g3, g4, g5];
