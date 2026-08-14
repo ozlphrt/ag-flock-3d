@@ -605,30 +605,40 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             // 1. Continuous 360° Orbital Revolution with subtle multi-frequency harmonic flow
             const camAngle = (time * curSweepSpeed.current) + Math.sin(time * 0.065) * 0.35;
 
-            // 2. Full Formation Reveal Window (Guarantees user sees entire formation for 2.5-3.5 seconds)
+            // 2. Full Formation Reveal Window (Guarantees user sees entire formation for at least 3.5-4.5s for EVERY formation)
             const formElapsed = state.transitionStartTime ? Math.max(0, time - state.transitionStartTime) : 10.0;
             const transDur = state.transitionDuration || 9.0;
             
+            // Grand Overview reveal when morph completes (from transDur - 0.5s to transDur + 4.2s)
             let revealBoost = 1.0;
-            if (formElapsed >= transDur - 0.5 && formElapsed <= transDur + 3.5) {
-                const revealProgress = (formElapsed - (transDur - 0.5)) / 4.0;
-                revealBoost += Math.sin(revealProgress * Math.PI) * 0.45;
+            let overviewFactor = 0.0;
+            if (formElapsed >= transDur - 0.8 && formElapsed <= transDur + 4.2) {
+                const revealProgress = (formElapsed - (transDur - 0.8)) / 5.0; // 0 -> 1
+                overviewFactor = Math.sin(revealProgress * Math.PI);
+                revealBoost += overviewFactor * 0.85; // Majestic 1.0 -> 1.85 -> 1.0 full formation zoom-out!
             }
 
-            const periodicPhase = (time % 26.0);
-            if (periodicPhase < 3.2) {
-                const pProg = Math.sin((periodicPhase / 3.2) * Math.PI);
-                revealBoost = Math.max(revealBoost, 1.0 + pProg * 0.40);
+            // Periodic secondary overview reveal every ~28 seconds for 3.5s
+            const periodicPhase = (time % 28.0);
+            if (periodicPhase < 3.8 && overviewFactor < 0.1) {
+                const pProg = Math.sin((periodicPhase / 3.8) * Math.PI);
+                overviewFactor = Math.max(overviewFactor, pProg);
+                revealBoost = Math.max(revealBoost, 1.0 + pProg * 0.65);
             }
 
-            // 3. Engaging Vertical Swoop
+            // 3. Engaging Vertical Swoop (Centered & stabilized during full overview zoom-out)
             const verticalCycle = Math.sin(time * 0.125) + Math.sin(time * 0.055) * 0.40;
-            const yOffset = verticalCycle * (curYOffset.current / (revealBoost > 1.1 ? 1.5 : 1.0));
+            const yOffset = verticalCycle * (curYOffset.current * (1.0 - overviewFactor * 0.70));
             
-            const camPitch = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
+            // Pitch tilts down (+angle) when camera is high, tilts up (-angle) when camera is low, gently levelled during overview
+            const camPitch = THREE.MathUtils.lerp(
+                curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85),
+                0.28, // Optimal 3D angle looking at the whole formation
+                overviewFactor
+            );
 
             // 4. Dynamic Focal Distance Breathing with Full Formation Reveal
-            const zoomMod = 0.78 + Math.sin(time * 0.08) * 0.10 + Math.cos(time * 0.16) * 0.05;
+            const zoomMod = 0.80 + Math.sin(time * 0.08) * 0.08 + Math.cos(time * 0.16) * 0.04;
             const finalDist = smoothDistance.current * curDistScale.current * zoomMod * revealBoost;
 
             // 4. Spherical coordinates to 3D Cartesian space

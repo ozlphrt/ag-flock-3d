@@ -230,6 +230,20 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         setTick(t => t + 1);
     };
 
+    const toggleFixPalette = () => {
+        const isNowLocked = !simState.current.isPaletteLocked;
+        simState.current.isPaletteLocked = isNowLocked;
+        setTick(t => t + 1);
+        showToast(isNowLocked ? '🔒 Color Palette FIXED (all other dimensions continue)' : '🔓 Color Palette UNLOCKED (normal auto-cycle resumed)');
+    };
+
+    const toggleFixFormation = () => {
+        const isNowLocked = !simState.current.isFormationLocked;
+        simState.current.isFormationLocked = isNowLocked;
+        setTick(t => t + 1);
+        showToast(isNowLocked ? '🔒 3D Formation FIXED (all other dimensions continue)' : '🔓 3D Formation UNLOCKED (normal auto-cycle resumed)');
+    };
+
     const handleSaveFullCreation = () => {
         const state = simState.current;
         const currentMode = state.formationMode ?? 0;
@@ -361,7 +375,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
             }}
         >
-            {/* Palette Row: [ 👍  Palette  👎 ] */}
+            {/* Palette Row: [ 👍  Palette (Click to Fix / Unlock)  👎 ] */}
             <div className="ephemeral-row">
                 <button
                     className="thumb-btn like"
@@ -370,7 +384,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 >
                     👍
                 </button>
-                <span className="dimension-label">Palette</span>
+                <button
+                    className={`dimension-label-btn ${simState.current.isPaletteLocked ? 'dimension-locked' : ''}`}
+                    onClick={toggleFixPalette}
+                    title={simState.current.isPaletteLocked ? "Palette is FIXED — Click to unlock and resume auto-cycling" : "Click to FIX Palette (other dimensions will continue cycling)"}
+                >
+                    {simState.current.isPaletteLocked ? '🔒 Fixed' : 'Palette'}
+                </button>
                 <button
                     className="thumb-btn dislike"
                     onClick={() => handleDislikeDimension('palette')}
@@ -380,7 +400,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </button>
             </div>
 
-            {/* Formation Row: [ 👍  Formation  👎 ] */}
+            {/* Formation Row: [ 👍  Formation (Click to Fix / Unlock)  👎 ] */}
             <div className="ephemeral-row">
                 <button
                     className="thumb-btn like"
@@ -389,7 +409,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 >
                     👍
                 </button>
-                <span className="dimension-label">Formation</span>
+                <button
+                    className={`dimension-label-btn ${simState.current.isFormationLocked ? 'dimension-locked' : ''}`}
+                    onClick={toggleFixFormation}
+                    title={simState.current.isFormationLocked ? "Formation is FIXED — Click to unlock and resume auto-cycling" : "Click to FIX Formation (other dimensions will continue cycling)"}
+                >
+                    {simState.current.isFormationLocked ? '🔒 Fixed' : 'Formation'}
+                </button>
                 <button
                     className="thumb-btn dislike"
                     onClick={() => handleDislikeDimension('formation')}

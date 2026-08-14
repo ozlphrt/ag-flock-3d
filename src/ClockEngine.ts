@@ -83,7 +83,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // 1. FORMATION CLOCK (Every 28-40s or Emotional Arc step)
         const isFormationOverridden = (time - manualOverrides.formation) < 45.0;
-        if (!isFormationOverridden && (time - lastFormationTime) >= formationInterval) {
+        if (!isFormationOverridden && !state.isFormationLocked && (time - lastFormationTime) >= formationInterval) {
             lastFormationTime = time;
             formationInterval = rndJitter(activeArc ? 20.0 : 32.0, 0.2);
 
@@ -147,7 +147,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // 2. INDEPENDENT COLOR CLOCK (Every 45-70s, completely decoupled from formation!)
         const isColorOverridden = (time - manualOverrides.palette) < 45.0;
-        if (!isColorOverridden && (time - lastColorTime) >= colorInterval) {
+        if (!isColorOverridden && !state.isPaletteLocked && (time - lastColorTime) >= colorInterval) {
             lastColorTime = time;
             colorInterval = rndJitter(54.0, 0.25);
 

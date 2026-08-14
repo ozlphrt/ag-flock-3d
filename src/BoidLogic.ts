@@ -384,6 +384,8 @@ export interface SimulationState {
     microSurpriseType?: string;
     microSurpriseEndTime?: number;
     clockEngine?: any;
+    isFormationLocked?: boolean;
+    isPaletteLocked?: boolean;
 }
 
 export function computeFormationPoint(
