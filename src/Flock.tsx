@@ -1,7 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { BoidSwarmData, BlobCenter, SimulationState, SpeciesType, SPECIES_COLORS, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, computeFormationPoint } from './BoidLogic'
+import { BoidSwarmData, BlobCenter, SimulationState, SpeciesType, SPECIES_COLORS, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, computeFormationPoint } from './BoidLogic'
 import { createClockEngine, ClockEngine } from './ClockEngine'
 
 interface FlockProps {
@@ -10,11 +10,27 @@ interface FlockProps {
     setPopulation: (n: number | ((prev: number) => number)) => void;
 }
 
+// High-speed LUT for trigonometric noise & drift (0.1ms execution for 100k boids)
+const TABLE_SIZE = 1024;
+const SINE_LUT = new Float32Array(TABLE_SIZE);
+const RAD_TO_INDEX = TABLE_SIZE / (Math.PI * 2);
+for (let i = 0; i < TABLE_SIZE; i++) {
+    SINE_LUT[i] = Math.sin((i / TABLE_SIZE) * Math.PI * 2);
+}
+
+function fastSin(rad: number): number {
+    const idx = (rad * RAD_TO_INDEX) & (TABLE_SIZE - 1);
+    return SINE_LUT[idx | 0];
+}
+
+function fastCos(rad: number): number {
+    const idx = ((rad * RAD_TO_INDEX) + (TABLE_SIZE >> 2)) & (TABLE_SIZE - 1);
+    return SINE_LUT[idx | 0];
+}
+
 // Helper to categorize camera profiles by formation
 function getCameraCategory(formation: FormationMode): 'portrait' | 'tunnel' | 'overhead' | 'cinematic_sweep' | 'dynamic_burst' | 'orbit_wide' | 'intimate_close' | 'chaotic' {
     switch (formation) {
-        case FormationMode.PulsingHeart:
-        case FormationMode.PhoenixWings:
         case FormationMode.PulsingHeart:
         case FormationMode.PhoenixWings:
         case FormationMode.JellyfishPulse:
@@ -74,17 +90,16 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const meshRef = useRef<THREE.InstancedMesh>(null!);
     const { controls } = useThree();
     const smoothCenter = useRef(new THREE.Vector3(0, 0, 0));
-    const smoothDistance = useRef(14.0);
+    const smoothDistance = useRef(9.5);
     const smoothLookTarget = useRef(new THREE.Vector3(0, 0, 0));
-    const smoothCamTarget = useRef(new THREE.Vector3(12, 10, 16));
+    const smoothCamTarget = useRef(new THREE.Vector3(6.0, 4.0, 7.5));
     const lastInteractionTime = useRef(0);
 
     // Smooth continuous angle & pitch interpolation registers
-    const curPitchCenter = useRef(0.28);
-    const curPitchAmp = useRef(0.42);
-    const curDistScale = useRef(1.0);
-    const curSweepSpeed = useRef(0.045);
-    const curSweepRange = useRef(0.85);
+    const curPitchCenter = useRef(0.22);
+    const curPitchAmp = useRef(0.48);
+    const curDistScale = useRef(0.55);
+    const curSweepSpeed = useRef(0.15);
     const curYOffset = useRef(0.0);
 
     // Instantiate ClockEngine with decoupled independent timers
@@ -116,19 +131,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         };
     }, []);
 
-    // Structure-of-Arrays High Performance Data Buffer & Worker Thread Link
+    // Structure-of-Arrays High Performance Data Buffer
     const swarm = useMemo(() => new BoidSwarmData(100000), []);
     const blobCentersRef = useRef<BlobCenter[]>([]);
     const lastSeed = useRef<number>(-1);
     const lastMode = useRef<number>(-1);
     const lastPaletteKey = useRef<string>('');
     const colorTransitionStartTime = useRef<number>(0);
-
-    const workerRef = useRef<Worker | null>(null);
-    const workerReady = useRef(false);
-    const lastCentroid = useRef({ x: 0, y: 0, z: 0, r70: 6.0 });
-    const pendingBuffer = useRef<Float32Array | null>(null);
-    const isStepPending = useRef(false);
 
     const startColors = useRef<THREE.Color[]>([
         new THREE.Color('#ff3b30'),
@@ -196,39 +205,25 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         };
     }, []);
 
-    // Initialize Web Worker for Multi-Core Physics Simulation
-    useEffect(() => {
-        try {
-            const worker = new Worker(new URL('./boidWorker.ts', import.meta.url), { type: 'module' });
-            workerRef.current = worker;
-
-            worker.onmessage = (e) => {
-                const { type, buffer, centerX, centerY, centerZ, r70 } = e.data;
-                if (type === 'frame') {
-                    pendingBuffer.current = buffer;
-                    lastCentroid.current = { x: centerX, y: centerY, z: centerZ, r70 };
-                    isStepPending.current = false;
-                }
-            };
-
-            worker.postMessage({ type: 'init', count, state });
-            workerReady.current = true;
-
-            return () => {
-                worker.terminate();
-                workerRef.current = null;
-            };
-        } catch {
-            workerReady.current = false;
+    // Initialize Blob Centers once
+    if (blobCentersRef.current.length === 0) {
+        for (let s = 0; s < 4; s++) {
+            const baseR = 2.0 + s * 1.8;
+            const nBlobs = 3;
+            for (let b = 0; b < nBlobs; b++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(Math.random() * 2 - 1);
+                const x = baseR * Math.sin(phi) * Math.cos(theta);
+                const y = baseR * Math.cos(phi);
+                const z = baseR * Math.sin(phi) * Math.sin(theta);
+                blobCentersRef.current.push(new BlobCenter(x, y, z, s, baseR));
+            }
         }
-    }, []);
+    }
 
     // Initialize/Update Boid Swarm Population
     useMemo(() => {
         swarm.setPopulation(count, state);
-        if (workerRef.current) {
-            workerRef.current.postMessage({ type: 'init', count, state });
-        }
     }, [count]);
 
     // Attach Instanced aSpecies attribute to geometry whenever count or shape changes
@@ -252,43 +247,210 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         // 1. Advance Independent Clocks via ClockEngine
         clockEngine.update(time);
 
-        // 2. Dispatch Simulation Step to Background Worker Thread
-        if (workerRef.current && !isStepPending.current) {
-            isStepPending.current = true;
-            workerRef.current.postMessage({
-                type: 'step',
-                time,
-                count,
-                state: {
-                    speedMultiplier: state.speedMultiplier,
-                    sizeMultiplier: state.sizeMultiplier,
-                    formationMode: state.formationMode,
-                    formationSeed: state.formationSeed,
-                    prevFormationMode: state.prevFormationMode,
-                    prevFormationSeed: state.prevFormationSeed,
-                    transitionStartTime: state.transitionStartTime,
-                    transitionDuration: state.transitionDuration,
-                    microSurpriseType: state.microSurpriseType,
-                    currentTime: state.currentTime,
-                    microSurpriseEndTime: state.microSurpriseEndTime,
-                    attributes: state.attributes,
-                    interactions: state.interactions,
-                    proceduralGenome: state.proceduralGenome
-                }
-            });
+        // 2. Advance Blob Centers on CPU (O(B^2) where B=12)
+        const centers = blobCentersRef.current;
+        const speed = (state.attributes && state.attributes[0]) ? state.attributes[0].maxSpeed * state.speedMultiplier : 0.28;
+        for (let b = 0; b < centers.length; b++) {
+            centers[b].update(centers, state.interactions, speed, time);
         }
 
-        // 3. Receive & Apply Worker Matrix Buffer with Zero-Copy Main Thread GPU Upload
-        if (pendingBuffer.current && meshRef.current) {
-            meshRef.current.instanceMatrix.array.set(pendingBuffer.current.subarray(0, boidCount * 16));
-            meshRef.current.instanceMatrix.needsUpdate = true;
-            
-            // Return buffer back to worker for zero-allocation recycling
-            if (workerRef.current) {
-                workerRef.current.postMessage({ returnedBuffer: pendingBuffer.current }, [pendingBuffer.current.buffer]);
-            }
-            pendingBuffer.current = null;
+        // 3. Physics & Formation Parameters
+        let speedMult = state ? state.speedMultiplier : 1.0;
+        if (state && state.microSurpriseType === 'speedSurge' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+            speedMult *= 2.2;
         }
+
+        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.Serpent;
+        const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
+
+        const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
+        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 9.0;
+        const elapsed = Math.max(0.0, time - startTime);
+        const p = Math.min(1.0, elapsed / duration);
+        const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
+
+        const isMorphing = (state && state.prevFormationMode !== undefined && p < 1.0);
+        const activeLerpRate = isMorphing ? (0.03 + 0.03 * sCurve) : 0.06;
+        const activeMaxDisp = isMorphing ? (0.04 + 0.02 * sCurve) * speedMult : 0.06 * speedMult;
+        const maxAccel = 0.0025 * speedMult;
+        const maxAccelSq = maxAccel * maxAccel;
+        const maxDispSq = activeMaxDisp * activeMaxDisp;
+
+        const baseScale = (state.sizeMultiplier || 1.0) * 0.5;
+        const prevMode = isMorphing ? state.prevFormationMode : undefined;
+        const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
+
+        // Centroid sampling registers
+        let sumX = 0, sumY = 0, sumZ = 0;
+        const sampleStep = Math.max(1, Math.floor(boidCount / 128));
+        let sampleCount = 0;
+
+        const posX = swarm.posX;
+        const posY = swarm.posY;
+        const posZ = swarm.posZ;
+        const velX = swarm.velX;
+        const velY = swarm.velY;
+        const velZ = swarm.velZ;
+        const species = swarm.species;
+        const uArr = swarm.u;
+        const indexInSpecies = swarm.indexInSpecies;
+        const isStray = swarm.isStray;
+        const strayOrbitRadius = swarm.strayOrbitRadius;
+        const strayOrbitSpeed = swarm.strayOrbitSpeed;
+        const noiseSeed = swarm.noiseSeed;
+        const isLeader = swarm.isLeader;
+        const sizeArr = swarm.size;
+
+        const matArray = meshRef.current.instanceMatrix.array;
+
+        for (let i = 0; i < boidCount; i++) {
+            const px = posX[i];
+            const py = posY[i];
+            const pz = posZ[i];
+
+            if (i % sampleStep === 0) {
+                sumX += px; sumY += py; sumZ += pz;
+                sampleCount++;
+            }
+
+            const sp = species[i];
+            const sepWeight = (state && state.attributes && state.attributes[sp])
+                ? state.attributes[sp].separationWeight
+                : 3.5;
+
+            const u = uArr[i];
+            const idxSp = indexInSpecies[i];
+
+            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state);
+
+            if (isStray[i] === 1 && p > 0.8) {
+                const strayAngle = time * strayOrbitSpeed[i] + noiseSeed[i];
+                txCurr = strayOrbitRadius[i] * fastCos(strayAngle);
+                tyCurr = fastSin(strayAngle * 2.0) * 2.5 + (sp - 1.5) * 1.5;
+                tzCurr = strayOrbitRadius[i] * fastSin(strayAngle);
+            }
+
+            let tx = txCurr, ty = tyCurr, tz = tzCurr;
+
+            if (isMorphing && prevMode !== undefined) {
+                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state);
+                tx = txPrev + (txCurr - txPrev) * sCurve;
+                ty = tyPrev + (tyCurr - tyPrev) * sCurve;
+                tz = tzPrev + (tzCurr - tzPrev) * sCurve;
+            }
+
+            // Clamp spring target to R=14
+            const targetDistSq = tx * tx + ty * ty + tz * tz;
+            if (targetDistSq > 196.0 && targetDistSq > 1e-6) {
+                const invT = 14.0 / Math.sqrt(targetDistSq);
+                tx *= invT; ty *= invT; tz *= invT;
+            }
+
+            let dx = (tx - px) * activeLerpRate;
+            let dy = (ty - py) * activeLerpRate;
+            let dz = (tz - pz) * activeLerpRate;
+
+            if (isLeader[i] === 1) {
+                dx *= 1.12; dy *= 1.12; dz *= 1.12;
+            }
+
+            const nSeed = noiseSeed[i];
+            const driftX = fastSin(time * 1.5 + nSeed) * 0.015 * speedMult;
+            const driftY = fastCos(time * 1.2 + nSeed * 1.3) * 0.015 * speedMult;
+            const driftZ = fastSin(time * 1.8 + nSeed * 0.7) * 0.015 * speedMult;
+
+            const targetVelX = dx + driftX;
+            const targetVelY = dy + driftY;
+            const targetVelZ = dz + driftZ;
+
+            let ax = targetVelX - velX[i];
+            let ay = targetVelY - velY[i];
+            let az = targetVelZ - velZ[i];
+
+            const accelMagSq = ax * ax + ay * ay + az * az;
+            if (accelMagSq > maxAccelSq && accelMagSq > 1e-6) {
+                const scale = maxAccel / Math.sqrt(accelMagSq);
+                ax *= scale; ay *= scale; az *= scale;
+            }
+
+            velX[i] += ax;
+            velY[i] += ay;
+            velZ[i] += az;
+
+            const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
+            if (speedSq > maxDispSq && speedSq > 1e-6) {
+                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
+                velX[i] *= invSpd;
+                velY[i] *= invSpd;
+                velZ[i] *= invSpd;
+            }
+
+            posX[i] += velX[i];
+            posY[i] += velY[i];
+            posZ[i] += velZ[i];
+
+            const distSq = posX[i] * posX[i] + posY[i] * posY[i] + posZ[i] * posZ[i];
+            if (distSq > 196.0 && distSq > 1e-6) {
+                const inv = 14.0 / Math.sqrt(distSq);
+                posX[i] *= inv;
+                posY[i] *= inv;
+                posZ[i] *= inv;
+            }
+
+            // Inline Column-Major Orientation Matrix (Forward Z points along velocity vector +vel)
+            const s = sizeArr[i] * baseScale;
+            const offset = i * 16;
+
+            let zx = velX[i];
+            let zy = velY[i];
+            let zz = velZ[i];
+            let zLenSq = zx * zx + zy * zy + zz * zz;
+            if (zLenSq < 1e-8) {
+                zx = 0; zy = 0; zz = 1;
+            } else {
+                const invZ = 1.0 / Math.sqrt(zLenSq);
+                zx *= invZ; zy *= invZ; zz *= invZ;
+            }
+
+            // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
+            let xx = zz;
+            let xy = 0;
+            let xz = -zx;
+            let xLenSq = xx * xx + xz * xz;
+            if (xLenSq < 1e-6) {
+                xx = 0; xy = zz; xz = -zy;
+                xLenSq = xy * xy + xz * xz;
+            }
+            const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
+            xx *= invX; xy *= invX; xz *= invX;
+
+            // Up vector y = z x x
+            const yx = zy * xz - zz * xy;
+            const yy = zz * xx - zx * xz;
+            const yz = zx * xy - zy * xx;
+
+            matArray[offset + 0] = xx * s;
+            matArray[offset + 1] = xy * s;
+            matArray[offset + 2] = xz * s;
+            matArray[offset + 3] = 0;
+
+            matArray[offset + 4] = yx * s;
+            matArray[offset + 5] = yy * s;
+            matArray[offset + 6] = yz * s;
+            matArray[offset + 7] = 0;
+
+            matArray[offset + 8] = zx * s;
+            matArray[offset + 9] = zy * s;
+            matArray[offset + 10] = zz * s;
+            matArray[offset + 11] = 0;
+
+            matArray[offset + 12] = posX[i];
+            matArray[offset + 13] = posY[i];
+            matArray[offset + 14] = posZ[i];
+            matArray[offset + 15] = 1;
+        }
+
+        meshRef.current.instanceMatrix.needsUpdate = true;
 
         // 4. Liquid HSL Shortest-Arc Color Interpolation over 22.0 seconds
         const newPalette = state.speciesColors || SPECIES_COLORS;
@@ -335,10 +497,20 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         // 5. Formation-Aware Cinematic Camera Choreography
         if (boidCount > 0) {
-            const centerX = lastCentroid.current.x;
-            const centerY = lastCentroid.current.y;
-            const centerZ = lastCentroid.current.z;
-            const targetRadius = Math.max(3.0, lastCentroid.current.r70);
+            const centerX = sampleCount > 0 ? sumX / sampleCount : 0;
+            const centerY = sampleCount > 0 ? sumY / sampleCount : 0;
+            const centerZ = sampleCount > 0 ? sumZ / sampleCount : 0;
+
+            let maxDistSq = 0;
+            for (let i = 0; i < boidCount; i += sampleStep) {
+                const dx = posX[i] - centerX;
+                const dy = posY[i] - centerY;
+                const dz = posZ[i] - centerZ;
+                const d2 = dx * dx + dy * dy + dz * dz;
+                if (d2 > maxDistSq) maxDistSq = d2;
+            }
+            const r70 = Math.sqrt(maxDistSq) * 0.72;
+            const targetRadius = Math.max(3.0, r70);
 
             const perspCam = stateContext.camera as THREE.PerspectiveCamera;
             const fovRad = (perspCam.fov || 75) * (Math.PI / 180);
@@ -369,14 +541,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     break;
                 case 'tunnel':
                     targetOrbitSpeed = 0.18;
-                    targetPitchCenter = 0.42; // Vertical spiral & helical tunnel perspective
+                    targetPitchCenter = 0.42;
                     targetPitchAmp = 0.45;
                     targetDistScale = 0.54;
                     targetYOffsetAmp = 5.8;
                     break;
                 case 'overhead':
                     targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.52; // Plan view diving into layers
+                    targetPitchCenter = 0.52;
                     targetPitchAmp = 0.40;
                     targetDistScale = 0.62;
                     targetYOffsetAmp = 5.2;
@@ -437,25 +609,22 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const formElapsed = state.transitionStartTime ? Math.max(0, time - state.transitionStartTime) : 10.0;
             const transDur = state.transitionDuration || 9.0;
             
-            // Peak reveal when morph completes (from transDur to transDur + 3.5s)
             let revealBoost = 1.0;
             if (formElapsed >= transDur - 0.5 && formElapsed <= transDur + 3.5) {
-                const revealProgress = (formElapsed - (transDur - 0.5)) / 4.0; // 0 -> 1
-                revealBoost += Math.sin(revealProgress * Math.PI) * 0.45; // Smooth 1.0 -> 1.45 -> 1.0 reveal
+                const revealProgress = (formElapsed - (transDur - 0.5)) / 4.0;
+                revealBoost += Math.sin(revealProgress * Math.PI) * 0.45;
             }
 
-            // Periodic overview reveal every ~26 seconds for 3 seconds
             const periodicPhase = (time % 26.0);
             if (periodicPhase < 3.2) {
                 const pProg = Math.sin((periodicPhase / 3.2) * Math.PI);
                 revealBoost = Math.max(revealBoost, 1.0 + pProg * 0.40);
             }
 
-            // 3. Engaging Vertical Swoop (Going down looking up, climbing high looking down)
+            // 3. Engaging Vertical Swoop
             const verticalCycle = Math.sin(time * 0.125) + Math.sin(time * 0.055) * 0.40;
             const yOffset = verticalCycle * (curYOffset.current / (revealBoost > 1.1 ? 1.5 : 1.0));
             
-            // Pitch tilts down (+angle) when camera is high, tilts up (-angle) when camera is low!
             const camPitch = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
 
             // 4. Dynamic Focal Distance Breathing with Full Formation Reveal
