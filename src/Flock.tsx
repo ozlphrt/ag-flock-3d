@@ -448,16 +448,35 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             // 1. Continuous 360° Orbital Revolution with subtle multi-frequency harmonic flow
             const camAngle = (time * curSweepSpeed.current) + Math.sin(time * 0.035) * 0.25;
 
-            // 2. Engaging Vertical Swoop (Going down looking up, climbing high looking down)
+            // 2. Full Formation Reveal Window (Guarantees user sees entire formation for 2.5-3.5 seconds)
+            const formElapsed = state.transitionStartTime ? Math.max(0, time - state.transitionStartTime) : 10.0;
+            const transDur = state.transitionDuration || 9.0;
+            
+            // Peak reveal when morph completes (from transDur to transDur + 3.5s)
+            let revealBoost = 1.0;
+            if (formElapsed >= transDur - 0.5 && formElapsed <= transDur + 3.5) {
+                const revealProgress = (formElapsed - (transDur - 0.5)) / 4.0; // 0 -> 1
+                revealBoost += Math.sin(revealProgress * Math.PI) * 0.50; // Smooth 1.0 -> 1.50 -> 1.0 reveal
+            }
+
+            // Periodic overview reveal every ~26 seconds for 3 seconds
+            const periodicPhase = (time % 26.0);
+            if (periodicPhase < 3.2) {
+                const pProg = Math.sin((periodicPhase / 3.2) * Math.PI);
+                revealBoost = Math.max(revealBoost, 1.0 + pProg * 0.45);
+            }
+
+            // 3. Engaging Vertical Swoop (Going down looking up, climbing high looking down)
             const verticalCycle = Math.sin(time * 0.082) + Math.sin(time * 0.038) * 0.35;
-            const yOffset = verticalCycle * curYOffset.current;
+            // During full formation reveal, tone down vertical offset slightly so the full structure is centered
+            const yOffset = verticalCycle * (curYOffset.current / (revealBoost > 1.1 ? 1.6 : 1.0));
             
             // Pitch tilts down (+angle) when camera is high, tilts up (-angle) when camera is low!
             const camPitch = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
 
-            // 3. Dynamic Focal Distance Breathing (Closer intimate range)
+            // 4. Dynamic Focal Distance Breathing with Full Formation Reveal
             const zoomMod = 0.78 + Math.sin(time * 0.055) * 0.12 + Math.cos(time * 0.11) * 0.05;
-            const finalDist = smoothDistance.current * curDistScale.current * zoomMod;
+            const finalDist = smoothDistance.current * curDistScale.current * zoomMod * revealBoost;
 
             // 4. Spherical coordinates to 3D Cartesian space
             const targetCamX = smoothCenter.current.x + finalDist * Math.cos(camAngle) * Math.cos(camPitch);
