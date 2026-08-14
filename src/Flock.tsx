@@ -361,98 +361,102 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const cat = getCameraCategory(state.formationMode);
             state.cameraCategory = cat;
 
-            // Target camera parameter goals
-            let targetPitchCenter = 0.30;
-            let targetPitchAmp = 0.16;
+            // Target camera parameter goals per topology
+            let targetPitchCenter = 0.28;
+            let targetPitchAmp = 0.45; // Wide dramatic pitch sweep (-15° looking up to +50° looking down)
             let targetDistScale = 1.0;
-            let targetSweepSpeed = 0.035;
-            let targetSweepRange = 0.85; // ±48° sweep centered on Key Light
-            let targetYOffset = 0.0;
+            let targetOrbitSpeed = 0.045; // Majestic continuous 360° rotation speed
+            let targetYOffsetAmp = 7.5; // High/low vertical flight amplitude
 
             switch (cat) {
                 case 'portrait':
-                    targetSweepSpeed = 0.025;
-                    targetPitchCenter = 0.18;
-                    targetPitchAmp = 0.10;
-                    targetDistScale = 0.85;
-                    targetSweepRange = 0.65;
+                    targetOrbitSpeed = 0.035;
+                    targetPitchCenter = 0.15;
+                    targetPitchAmp = 0.35;
+                    targetDistScale = 0.88;
+                    targetYOffsetAmp = 6.0;
                     break;
                 case 'tunnel':
-                    targetSweepSpeed = 0.030;
-                    targetPitchCenter = 0.72; // Looking down vertical spiral axis with key lighting
-                    targetPitchAmp = 0.14;
-                    targetDistScale = 0.90;
-                    targetSweepRange = 0.80;
+                    targetOrbitSpeed = 0.055;
+                    targetPitchCenter = 0.55; // Vertical spiral & helical tunnel perspective
+                    targetPitchAmp = 0.40;
+                    targetDistScale = 0.92;
+                    targetYOffsetAmp = 9.0;
                     break;
                 case 'overhead':
-                    targetSweepSpeed = 0.025;
-                    targetPitchCenter = 0.65; // High isometric plan view
-                    targetPitchAmp = 0.15;
-                    targetDistScale = 1.10;
-                    targetSweepRange = 0.75;
+                    targetOrbitSpeed = 0.038;
+                    targetPitchCenter = 0.60; // Dramatic high plan view diving down into layers
+                    targetPitchAmp = 0.35;
+                    targetDistScale = 1.12;
+                    targetYOffsetAmp = 8.0;
                     break;
                 case 'cinematic_sweep':
-                    targetSweepSpeed = 0.035;
-                    targetPitchCenter = 0.22;
-                    targetPitchAmp = 0.15;
+                    targetOrbitSpeed = 0.048;
+                    targetPitchCenter = 0.20;
+                    targetPitchAmp = 0.45;
                     targetDistScale = 0.95;
-                    targetSweepRange = 1.05;
-                    targetYOffset = Math.sin(time * 0.08) * 1.8;
+                    targetYOffsetAmp = 8.5;
                     break;
                 case 'dynamic_burst':
-                    targetSweepSpeed = 0.035;
-                    targetPitchCenter = 0.28;
-                    targetPitchAmp = 0.16;
-                    targetDistScale = 0.88 + Math.sin(time * 0.25) * 0.22;
-                    targetSweepRange = 0.80;
+                    targetOrbitSpeed = 0.050;
+                    targetPitchCenter = 0.30;
+                    targetPitchAmp = 0.40;
+                    targetDistScale = 0.90;
+                    targetYOffsetAmp = 7.0;
                     break;
                 case 'orbit_wide':
-                    targetSweepSpeed = 0.028;
+                    targetOrbitSpeed = 0.042;
                     targetPitchCenter = 0.35;
-                    targetPitchAmp = 0.18;
-                    targetDistScale = 1.18;
-                    targetSweepRange = 0.95;
+                    targetPitchAmp = 0.35;
+                    targetDistScale = 1.20;
+                    targetYOffsetAmp = 6.5;
                     break;
                 case 'intimate_close':
-                    targetSweepSpeed = 0.022;
-                    targetPitchCenter = 0.24;
-                    targetPitchAmp = 0.10;
-                    targetDistScale = 0.78;
-                    targetSweepRange = 0.60;
+                    targetOrbitSpeed = 0.030;
+                    targetPitchCenter = 0.22;
+                    targetPitchAmp = 0.30;
+                    targetDistScale = 0.76;
+                    targetYOffsetAmp = 5.0;
                     break;
                 default: // chaotic
-                    targetSweepSpeed = 0.030;
+                    targetOrbitSpeed = 0.045;
                     targetPitchCenter = 0.30;
-                    targetPitchAmp = 0.18;
+                    targetPitchAmp = 0.42;
                     targetDistScale = 1.0;
-                    targetSweepRange = 0.85;
+                    targetYOffsetAmp = 7.5;
                     break;
             }
 
             // Camera Mood overlay modulation
-            if (state.cameraMood === 'intimate_close') targetDistScale *= 0.82;
-            if (state.cameraMood === 'orbit_wide') targetDistScale *= 1.22;
-            if (state.cameraMood === 'overhead_iso') targetPitchCenter = 0.75;
+            if (state.cameraMood === 'intimate_close') targetDistScale *= 0.80;
+            if (state.cameraMood === 'orbit_wide') targetDistScale *= 1.25;
+            if (state.cameraMood === 'overhead_iso') targetPitchCenter = 0.70;
 
-            // Silky smooth exponential parameter glide (0.01 factor = ~6-8s gradual transition, zero abrupt cuts)
+            // Silky smooth exponential parameter glide (~6-8s gradual transition, zero abrupt cuts)
             curPitchCenter.current = THREE.MathUtils.lerp(curPitchCenter.current, targetPitchCenter, 0.010);
             curPitchAmp.current = THREE.MathUtils.lerp(curPitchAmp.current, targetPitchAmp, 0.010);
             curDistScale.current = THREE.MathUtils.lerp(curDistScale.current, targetDistScale, 0.010);
-            curSweepSpeed.current = THREE.MathUtils.lerp(curSweepSpeed.current, targetSweepSpeed, 0.010);
-            curSweepRange.current = THREE.MathUtils.lerp(curSweepRange.current, targetSweepRange, 0.010);
-            curYOffset.current = THREE.MathUtils.lerp(curYOffset.current, targetYOffset, 0.010);
+            curSweepSpeed.current = THREE.MathUtils.lerp(curSweepSpeed.current, targetOrbitSpeed, 0.010);
+            curYOffset.current = THREE.MathUtils.lerp(curYOffset.current, targetYOffsetAmp, 0.010);
 
-            // Light-prioritized camera azimuth:
-            // Key Light is positioned at [35, 45, 30] -> azimuth ~ 0.709 rad (40.6°)
-            // The camera swings gently around this illuminated cone, keeping facets brilliantly lit!
-            const keyLightAzimuth = 0.709;
-            const sweepPhase = Math.sin(time * curSweepSpeed.current);
-            const camAngle = keyLightAzimuth + sweepPhase * curSweepRange.current + Math.sin(time * 0.02) * 0.12;
-            const camPitch = curPitchCenter.current + Math.cos(time * curSweepSpeed.current * 0.8) * curPitchAmp.current;
-            const finalDist = smoothDistance.current * curDistScale.current;
+            // 1. Continuous 360° Orbital Revolution with subtle multi-frequency harmonic flow
+            const camAngle = (time * curSweepSpeed.current) + Math.sin(time * 0.035) * 0.25;
 
+            // 2. Engaging Vertical Swoop (Going down looking up, climbing high looking down)
+            // Primary vertical cycle (period ~75s) + secondary harmonic
+            const verticalCycle = Math.sin(time * 0.082) + Math.sin(time * 0.038) * 0.35;
+            const yOffset = verticalCycle * curYOffset.current;
+            
+            // Pitch tilts down (+angle) when camera is high, tilts up (-angle) when camera is low!
+            const camPitch = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
+
+            // 3. Dynamic Focal Distance Breathing (Gliding between intimate close-ups and wide reveals)
+            const zoomMod = 0.90 + Math.sin(time * 0.055) * 0.22 + Math.cos(time * 0.11) * 0.08;
+            const finalDist = smoothDistance.current * curDistScale.current * zoomMod;
+
+            // 4. Spherical coordinates to 3D Cartesian space
             const targetCamX = smoothCenter.current.x + finalDist * Math.cos(camAngle) * Math.cos(camPitch);
-            const targetCamY = smoothCenter.current.y + curYOffset.current + finalDist * Math.sin(camPitch);
+            const targetCamY = smoothCenter.current.y + yOffset + finalDist * Math.sin(camPitch);
             const targetCamZ = smoothCenter.current.z + finalDist * Math.sin(camAngle) * Math.cos(camPitch);
 
             const activeControls = controls as any;
@@ -466,8 +470,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             if (!isUserOverriding) {
                 const rawGoal = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
-                smoothCamTarget.current.lerp(rawGoal, 0.012);
-                smoothLookTarget.current.lerp(smoothCenter.current, 0.015);
+                smoothCamTarget.current.lerp(rawGoal, 0.014);
+                smoothLookTarget.current.lerp(smoothCenter.current, 0.016);
 
                 stateContext.camera.position.copy(smoothCamTarget.current);
                 if (activeControls && activeControls.target) {

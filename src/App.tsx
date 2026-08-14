@@ -52,6 +52,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
     const keyRef = useRef<THREE.DirectionalLight>(null!);
     const fillRef = useRef<THREE.DirectionalLight>(null!);
     const rimRef = useRef<THREE.DirectionalLight>(null!);
+    const bounceRef = useRef<THREE.DirectionalLight>(null!);
 
     const curAmbient = useRef(0.55);
     const curKey = useRef(2.4);
@@ -106,6 +107,10 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             rimRef.current.intensity = curRim.current;
             rimRef.current.color.copy(curRimColor.current);
         }
+        if (bounceRef.current) {
+            bounceRef.current.intensity = curFill.current * 0.75;
+            bounceRef.current.color.copy(curFillColor.current);
+        }
     });
 
     return (
@@ -130,6 +135,12 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
                 ref={rimRef}
                 position={[0, 50, -45]}
                 intensity={1.6}
+                color="#ffffff"
+            />
+            <directionalLight
+                ref={bounceRef}
+                position={[15, -45, 20]}
+                intensity={0.6}
                 color="#ffffff"
             />
         </>
