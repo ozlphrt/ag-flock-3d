@@ -416,19 +416,25 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     width: '52px',
                     height: '52px',
                     borderRadius: '50%',
-                    background: isGalleryOpen ? 'rgba(255, 204, 0, 0.3)' : 'rgba(12, 16, 26, 0.85)',
-                    border: isGalleryOpen ? '1.5px solid #ffcc00' : '1.5px solid rgba(255, 255, 255, 0.18)',
-                    color: isGalleryOpen ? '#ffcc00' : '#ffffff',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    background: isGalleryOpen ? 'rgba(255, 204, 0, 0.25)' : 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: isGalleryOpen ? '1.5px solid #ffcc00' : '1.5px solid rgba(255, 255, 255, 0.16)',
+                    color: isGalleryOpen ? '#ffcc00' : '#e0e8ff',
+                    boxShadow: isGalleryOpen ? '0 0 20px rgba(255, 204, 0, 0.35)' : '0 4px 16px rgba(0,0,0,0.5)',
                     cursor: 'pointer',
-                    fontSize: '20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     transition: 'all 0.3s ease'
                 }}
             >
-                🖼️
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="7" y="3" width="14" height="14" rx="3" opacity="0.4" />
+                    <rect x="3" y="7" width="14" height="14" rx="3" fill="rgba(255, 204, 0, 0.12)" />
+                    <circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" stroke="none" />
+                    <path d="M3 18l4-4a1 1 0 0 1 1.4 0l4.6 4" />
+                </svg>
             </button>
 
             {/* Auto Mode Toggle Button with Radial Timer Ring */}
@@ -538,7 +544,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     height: '52px',
                     padding: 0,
                     borderRadius: '50%',
-                    fontSize: '20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -552,7 +557,24 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     cursor: 'pointer'
                 }}
             >
-                <span>{isSettingsOpen ? '✕' : '⚙️'}</span>
+                {isSettingsOpen ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                ) : (
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14" />
+                        <line x1="4" y1="10" x2="4" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12" y2="3" />
+                        <line x1="20" y1="21" x2="20" y2="16" />
+                        <line x1="20" y1="12" x2="20" y2="3" />
+                        <line x1="1" y1="14" x2="7" y2="14" />
+                        <line x1="9" y1="8" x2="15" y2="8" />
+                        <line x1="17" y1="16" x2="23" y2="16" />
+                    </svg>
+                )}
             </button>
         </div>
 
