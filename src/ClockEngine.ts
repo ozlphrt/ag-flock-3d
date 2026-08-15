@@ -4,7 +4,7 @@ import { getRLPreferences, sampleRLAttribute, generateProceduralGenome, getRando
 export interface ClockEngine {
     update: (time: number) => void;
     setManualOverride: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => void;
-    getCountdownProgress: () => { formationProgress: number; colorProgress: number; currentArcName?: string };
+    getCountdownProgress: () => { formationProgress: number; colorProgress: number; formationRemaining: number; currentArcName?: string };
     skipDimension: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => void;
 }
 
@@ -233,13 +233,15 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     };
 
     const getCountdownProgress = () => {
-        const now = state.currentTime || (performance.now() / 1000.0);
+        const now = (state.currentTime !== undefined) ? state.currentTime : (performance.now() / 1000.0);
         const formElapsed = Math.max(0, now - lastFormationTime);
         const colElapsed = Math.max(0, now - lastColorTime);
+        const formRem = Math.max(0, Math.ceil(formationInterval - formElapsed));
 
         return {
             formationProgress: Math.min(1.0, formElapsed / Math.max(1, formationInterval)),
             colorProgress: Math.min(1.0, colElapsed / Math.max(1, colorInterval)),
+            formationRemaining: formRem,
             currentArcName: activeArc ? activeArc.name : undefined
         };
     };

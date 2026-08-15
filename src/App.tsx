@@ -168,6 +168,7 @@ function App() {
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
         formationSeed: lastSaved ? lastSaved.formationSeed : Math.random() * 10000,
+        transitionStartTime: 0.0,
         proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
         paletteIndex: initialPaletteIdx,
         speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],

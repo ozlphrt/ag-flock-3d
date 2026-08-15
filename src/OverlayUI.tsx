@@ -28,14 +28,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         const interval = setInterval(() => {
             const state = simState.current;
             if (!state) return;
-            const now = state.currentTime ?? (performance.now() / 1000.0);
-            const start = state.transitionStartTime ?? now;
-            const elapsed = Math.max(0, now - start);
-            const totalCycle = 32.0;
-            const p = Math.min(1.0, elapsed / totalCycle);
-            setProgress(p);
-            const rem = Math.max(0, Math.ceil(totalCycle - elapsed));
-            setCountdown(rem);
+
+            if (state.clockEngine && state.clockEngine.getCountdownProgress) {
+                const info = state.clockEngine.getCountdownProgress();
+                setProgress(info.formationProgress);
+                setCountdown(info.formationRemaining ?? 30);
+            } else {
+                const now = (state.currentTime !== undefined) ? state.currentTime : (performance.now() / 1000.0);
+                const start = state.transitionStartTime ?? 0.0;
+                const elapsed = Math.max(0, now - start);
+                const totalCycle = 32.0;
+                const p = Math.min(1.0, elapsed / totalCycle);
+                setProgress(p);
+                const rem = Math.max(0, Math.ceil(totalCycle - elapsed));
+                setCountdown(rem);
+            }
         }, 100);
         return () => clearInterval(interval);
     }, [simState]);
