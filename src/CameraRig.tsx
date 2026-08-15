@@ -33,11 +33,11 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'giant',
         name: 'Giant Colossus',
         icon: '🗿',
-        description: 'Low-angle wide lens looking up into the towering murmuration',
-        fov: 72,
-        defaultPos: [0, -4.5, 14],
-        target: [0, 2.5, 0],
-        autoRotateSpeed: 0.6,
+        description: 'Placed at the bottom looking up into the sky with an ultra-wide angle lens',
+        fov: 82,
+        defaultPos: [0, -5.5, 8.8],
+        target: [0, 1.8, 0],
+        autoRotateSpeed: 0.7,
         type: 'orbit'
     },
     {
