@@ -22,6 +22,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     let lastLightingTime = -55.0;
     let lightingInterval = 82.0;
 
+    let lastCameraPresetTime = -15.0;
+    let cameraPresetInterval = 42.0;
+
     let lastCameraMoodTime = -10.0;
     let cameraMoodInterval = 28.0;
 
@@ -36,7 +39,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         palette: 0,
         material: 0,
         shape: 0,
-        lighting: 0
+        lighting: 0,
+        camera: 0
     };
 
     // Recent Histories for Forbidden Repeat Buffers
@@ -53,7 +57,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         return base * (1.0 + (Math.random() * 2 - 1) * percent);
     };
 
-    const setManualOverride = (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => {
+    const setManualOverride = (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera') => {
         manualOverrides[dimension] = performance.now() / 1000.0;
     };
 
@@ -208,7 +212,18 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.lightingProfile = LIGHTING_PROFILES[nextLightIdx];
         }
 
-        // 5. CAMERA MOOD CLOCK (Every 22-35s)
+        // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 38-52s in Auto Mode)
+        const isCameraOverridden = (time - (manualOverrides.camera || 0)) < 45.0;
+        if (!isCameraOverridden && (time - lastCameraPresetTime) >= cameraPresetInterval) {
+            lastCameraPresetTime = time;
+            cameraPresetInterval = rndJitter(42.0, 0.2);
+
+            const curIdx = state.cameraPresetIndex ?? 0;
+            const nextCamIdx = (curIdx + 1) % 6;
+            state.cameraPresetIndex = nextCamIdx;
+        }
+
+        // 6. CAMERA MOOD CLOCK (Every 22-35s)
         if ((time - lastCameraMoodTime) >= cameraMoodInterval) {
             lastCameraMoodTime = time;
             cameraMoodInterval = rndJitter(28.0, 0.2);

@@ -98,6 +98,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const lastInteractionTime = useRef(0);
     const { camera, size } = useThree();
 
+    // Seamless Transition Anchors (Quintic C2-Continuous Morphing)
+    const transitionStartTime = useRef(0);
+    const transitionDuration = 4.5; // 4.5s silky-smooth cinematic camera glide
+    const startCamPos = useRef(new THREE.Vector3(0, 4, 18));
+    const startLookTarget = useRef(new THREE.Vector3(0, 0, 0));
+    const startFov = useRef(55);
+    const curLookTarget = useRef(new THREE.Vector3(0, 0, 0));
+
     useEffect(() => {
         const onInteraction = () => {
             lastInteractionTime.current = performance.now();
@@ -112,7 +120,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         };
     }, []);
 
-    useFrame((_, delta) => {
+    useFrame((stateContext, delta) => {
+        const time = stateContext.clock.getElapsedTime();
         const state = simState.current;
         const presetIdx = (state && state.cameraPresetIndex !== undefined)
             ? Math.abs(state.cameraPresetIndex) % CAMERA_PRESETS.length
@@ -122,13 +131,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         // 1. Dynamic Viewport-Adaptive Framing Distance Calculation
         const perspCam = camera as THREE.PerspectiveCamera;
-        const vFovRad = (perspCam.fov || preset.fov) * (Math.PI / 180);
-        const aspect = size.width / Math.max(1, size.height);
-        const hFovRad = 2.0 * Math.atan(Math.tan(vFovRad * 0.5) * aspect);
-        const limitingHalfAngle = Math.min(vFovRad, hFovRad) * 0.5;
-
+        const vFovRad = (preset.fov) * (Math.PI / 180);
         const rBound = (state && state.formationRadius) ? state.formationRadius : 7.5;
-        // Immersive framing: the swarm dominates the viewport with outer boids dynamically bleeding past the edges
         const baseFramingDist = (rBound / Math.sin(Math.max(0.12, vFovRad * 0.5))) * 0.58;
 
         let presetDistMult = 1.0;
@@ -138,79 +142,105 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         const targetDistance = baseFramingDist * presetDistMult;
 
-        // 2. Smooth FOV Transition
-        if (perspCam && Math.abs(perspCam.fov - preset.fov) > 0.1) {
-            perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, preset.fov, 0.05);
-            perspCam.updateProjectionMatrix();
+        // 2. Trigger Smooth Transition on Preset Switch
+        if (lastPresetIdx.current !== presetIdx) {
+            if (lastPresetIdx.current === -1) {
+                // Initial load: snap immediately
+                transitionStartTime.current = -100;
+            } else {
+                transitionStartTime.current = time;
+                startCamPos.current.copy(camera.position);
+                startLookTarget.current.copy(curLookTarget.current);
+                startFov.current = perspCam.fov;
+            }
+            lastPresetIdx.current = presetIdx;
         }
 
-        // 3. On Preset Switch or Frame, synchronize OrbitControls active state
-        if (controlsRef.current) {
-            const isOrbitMode = (preset.type === 'orbit');
-            if (controlsRef.current.enabled !== isOrbitMode) {
-                controlsRef.current.enabled = isOrbitMode;
-                controlsRef.current.autoRotate = isOrbitMode;
-            }
+        const elapsed = Math.max(0.0, time - transitionStartTime.current);
+        const p = Math.min(1.0, elapsed / transitionDuration);
+        // Ultra-smooth C2-continuous Quintic Ease-In / Ease-Out: 6p^5 - 15p^4 + 10p^3
+        const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
-            if (lastPresetIdx.current !== presetIdx) {
-                lastPresetIdx.current = presetIdx;
-                if (isOrbitMode) {
-                    controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
-                    controlsRef.current.target.set(preset.target[0], preset.target[1], preset.target[2]);
-                    
-                    const dir = new THREE.Vector3(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
-                    camera.position.copy(controlsRef.current.target).addScaledVector(dir, targetDistance);
-                    controlsRef.current.update();
-                }
-            }
-        }
+        // 3. Compute Ideal Preset Trajectory / Position & LookTarget
+        const idealPos = new THREE.Vector3();
+        const idealTarget = new THREE.Vector3(preset.target[0], preset.target[1], preset.target[2]);
 
-        // 4. Custom Cinematic Motion Paths (Spaceship & Corkscrew)
+        const rScale = Math.max(0.65, (rBound / 7.5));
+
         if (preset.type === 'flythrough') {
-            // Calm, immersive pursuit dive flight
             flightTime.current += safeDelta * 0.20;
             const t = flightTime.current;
-            const rScale = Math.max(0.65, (rBound / 7.5));
-
-            // Smooth 3D figure-8 dive trajectory weaving through and around the swarm
-            const x = Math.sin(t) * (7.5 * rScale);
-            const y = Math.sin(t * 2.0) * (2.6 * rScale);
-            const z = Math.cos(t) * (8.5 * rScale);
-
-            camera.position.set(x, y, z);
-            camera.up.set(0, 1, 0);
-
-            // ALWAYS locked on the formation center — the swarm NEVER leaves the viewport
-            const lookTarget = new THREE.Vector3(0, Math.sin(t * 1.5) * 0.8, 0);
-            camera.lookAt(lookTarget);
+            idealPos.set(
+                Math.sin(t) * (7.5 * rScale),
+                Math.sin(t * 2.0) * (2.6 * rScale),
+                Math.cos(t) * (8.5 * rScale)
+            );
+            idealTarget.set(0, Math.sin(t * 1.5) * 0.8, 0);
         } else if (preset.type === 'corkscrew') {
-            // Calm helical spiral
             flightTime.current += safeDelta * 0.14;
             const t = flightTime.current;
-            const rScale = Math.max(0.65, (rBound / 7.5));
-
             const r = (5.5 + Math.sin(t * 0.6) * 3.0) * rScale;
-            const x = Math.cos(t) * r;
-            const z = Math.sin(t) * r;
-            const y = Math.sin(t * 0.8) * (5.5 * rScale);
-
-            camera.position.set(x, y, z);
-            camera.up.set(0, 1, 0);
-            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.2, 0);
-            camera.lookAt(lookTarget);
+            idealPos.set(
+                Math.cos(t) * r,
+                Math.sin(t * 0.8) * (5.5 * rScale),
+                Math.sin(t) * r
+            );
+            idealTarget.set(0, Math.sin(t * 0.8) * 1.2, 0);
         } else {
-            camera.up.set(0, 1, 0);
-            // Orbit Presets: Auto-adjust zoom distance when not actively dragging
-            const timeSinceUser = performance.now() - lastInteractionTime.current;
-            const isUserInteracting = timeSinceUser < 4000;
+            // Orbit Presets
+            const dir = new THREE.Vector3(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
+            idealPos.copy(idealTarget).addScaledVector(dir, targetDistance);
+        }
 
-            if (!isUserInteracting && controlsRef.current) {
-                const target = controlsRef.current.target;
-                const curDist = camera.position.distanceTo(target);
-                if (curDist > 0.1 && Math.abs(curDist - targetDistance) > 0.05) {
-                    const nextDist = THREE.MathUtils.lerp(curDist, targetDistance, 0.025);
-                    const dir = new THREE.Vector3().subVectors(camera.position, target).normalize();
-                    camera.position.copy(target).addScaledVector(dir, nextDist);
+        // 4. Smoothly Blend Position, LookTarget, and FOV
+        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 4000;
+
+        if (p < 1.0) {
+            // Actively Morphing
+            camera.position.lerpVectors(startCamPos.current, idealPos, sCurve);
+            curLookTarget.current.lerpVectors(startLookTarget.current, idealTarget, sCurve);
+            camera.up.set(0, 1, 0);
+            camera.lookAt(curLookTarget.current);
+
+            perspCam.fov = startFov.current + (preset.fov - startFov.current) * sCurve;
+            perspCam.updateProjectionMatrix();
+
+            if (controlsRef.current) {
+                controlsRef.current.enabled = false;
+                controlsRef.current.target.copy(curLookTarget.current);
+            }
+        } else {
+            // Settled in Preset Mode
+            perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, preset.fov, 0.05);
+            perspCam.updateProjectionMatrix();
+
+            if (preset.type === 'flythrough' || preset.type === 'corkscrew') {
+                camera.position.copy(idealPos);
+                curLookTarget.current.copy(idealTarget);
+                camera.up.set(0, 1, 0);
+                camera.lookAt(curLookTarget.current);
+
+                if (controlsRef.current) {
+                    controlsRef.current.enabled = false;
+                    controlsRef.current.target.copy(curLookTarget.current);
+                }
+            } else {
+                // Orbit mode
+                if (controlsRef.current) {
+                    controlsRef.current.enabled = true;
+                    controlsRef.current.autoRotate = true;
+                    controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
+
+                    if (!isUserInteracting) {
+                        const target = controlsRef.current.target;
+                        const curDist = camera.position.distanceTo(target);
+                        if (curDist > 0.1 && Math.abs(curDist - targetDistance) > 0.05) {
+                            const nextDist = THREE.MathUtils.lerp(curDist, targetDistance, 0.025);
+                            const dir = new THREE.Vector3().subVectors(camera.position, target).normalize();
+                            camera.position.copy(target).addScaledVector(dir, nextDist);
+                        }
+                    }
+                    curLookTarget.current.copy(controlsRef.current.target);
                 }
             }
         }

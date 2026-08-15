@@ -216,12 +216,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         const curIdx = simState.current.cameraPresetIndex ?? 0;
         const nextIdx = (curIdx + 1) % CAMERA_PRESETS.length;
         simState.current.cameraPresetIndex = nextIdx;
+        if (simState.current.clockEngine && simState.current.clockEngine.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('camera');
+        }
         setTick(t => t + 1);
         showToast(`🎥 Camera: ${CAMERA_PRESETS[nextIdx].name}`);
     };
 
     const selectCameraPreset = (idx: number) => {
         simState.current.cameraPresetIndex = idx;
+        if (simState.current.clockEngine && simState.current.clockEngine.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('camera');
+        }
         setTick(t => t + 1);
         showToast(`🎥 Camera: ${CAMERA_PRESETS[idx].name}`);
         setIsSettingsOpen(false);
