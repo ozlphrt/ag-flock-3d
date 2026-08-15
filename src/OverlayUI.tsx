@@ -351,6 +351,27 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast(isLocked ? `🔒 ${label} Locked (will remain constant)` : `🔓 ${label} Unlocked (autonomous cycling resumed)`);
     };
 
+    const isAllDimensionsLocked = !!(
+        simState.current.isFormationLocked &&
+        simState.current.isPaletteLocked &&
+        simState.current.isMaterialLocked &&
+        simState.current.isLightingLocked &&
+        simState.current.isShapeLocked &&
+        simState.current.isCameraLocked
+    );
+
+    const handleToggleGlobalLock = () => {
+        const nextLock = !isAllDimensionsLocked;
+        simState.current.isFormationLocked = nextLock;
+        simState.current.isPaletteLocked = nextLock;
+        simState.current.isMaterialLocked = nextLock;
+        simState.current.isLightingLocked = nextLock;
+        simState.current.isShapeLocked = nextLock;
+        simState.current.isCameraLocked = nextLock;
+        setTick(t => t + 1);
+        showToast(nextLock ? '🔒 All 6 Dimensions LOCKED (Total Freeze)' : '🔓 All Dimensions UNLOCKED (Full AI Flow)');
+    };
+
     const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
         const state = simState.current;
         let label = 'Trait';
@@ -631,14 +652,35 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </div>
             </div>
 
-            {/* Save Entire Masterpiece Snapshot & Heavily Train RL Synergy */}
-            <button
-                className="save-full-btn"
-                onClick={handleSaveFullCreation}
-                title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
-            >
-                <span>❤️</span> Save Masterpiece (+RL Training)
-            </button>
+            {/* Footer Actions: Save Masterpiece & Global Lock All */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                <button
+                    className="save-full-btn"
+                    onClick={handleSaveFullCreation}
+                    title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
+                    style={{ flex: 1, margin: 0 }}
+                >
+                    <span>❤️</span> Save (+RL)
+                </button>
+                <button
+                    className={`matrix-action-btn lock ${isAllDimensionsLocked ? 'is-locked' : ''}`}
+                    onClick={handleToggleGlobalLock}
+                    title={isAllDimensionsLocked ? "All 6 dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All 6 Dimensions (Freeze Entire Simulation)"}
+                    style={{
+                        width: 'auto',
+                        padding: '0 12px',
+                        height: '35px',
+                        gap: '5px',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap'
+                    }}
+                >
+                    <span>{isAllDimensionsLocked ? '🔒' : '🔓'}</span>
+                    <span>{isAllDimensionsLocked ? 'Locked' : 'Lock All'}</span>
+                </button>
+            </div>
         </div>
 
         {/* Floating Bottom Right Controls */}
@@ -801,7 +843,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </div>
             </button>
 
-            {/* Main Settings Toggle Button */}
+            {/* Main Settings Toggle Button with Settings Cog */}
             <button
                 className="defeat-selector-btn"
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -830,16 +872,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 ) : (
-                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="4" y1="21" x2="4" y2="14" />
-                        <line x1="4" y1="10" x2="4" y2="3" />
-                        <line x1="12" y1="21" x2="12" y2="12" />
-                        <line x1="12" y1="8" x2="12" y2="3" />
-                        <line x1="20" y1="21" x2="20" y2="16" />
-                        <line x1="20" y1="12" x2="20" y2="3" />
-                        <line x1="1" y1="14" x2="7" y2="14" />
-                        <line x1="9" y1="8" x2="15" y2="8" />
-                        <line x1="17" y1="16" x2="23" y2="16" />
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
                 )}
             </button>
