@@ -20,7 +20,7 @@ export interface CameraPreset {
 export const CAMERA_PRESETS: CameraPreset[] = [
     {
         id: 'standard',
-        name: 'Standard Orbit',
+        name: 'Orbit',
         icon: '🪐',
         description: 'Smooth 360° celestial orbit with natural depth',
         fov: 55,
@@ -31,7 +31,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
     },
     {
         id: 'giant',
-        name: 'Giant Colossus',
+        name: 'Low Angle',
         icon: '🗿',
         description: 'Placed at the bottom looking up into the sky with an ultra-wide angle lens',
         fov: 82,
@@ -42,7 +42,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
     },
     {
         id: 'action',
-        name: 'Action / Dynamic',
+        name: 'Action',
         icon: '⚡',
         description: 'Fast dynamic banking flyby with wave height oscillations',
         fov: 65,
@@ -53,7 +53,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
     },
     {
         id: 'spaceship',
-        name: 'Spaceship Fly-Through',
+        name: 'Fly-Through',
         icon: '🚀',
         description: 'Cockpit fly-through: dives straight through the heart and loops back',
         fov: 72,
@@ -64,7 +64,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
     },
     {
         id: 'celestial',
-        name: 'Celestial Top-Down',
+        name: 'Top-Down',
         icon: '🌌',
         description: 'Overhead bird\'s-eye view looking down on sacred spiral ripples',
         fov: 48,
@@ -75,7 +75,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
     },
     {
         id: 'corkscrew',
-        name: 'Vortex Corkscrew',
+        name: 'Corkscrew',
         icon: '🌀',
         description: 'Helical 3D corkscrew diving in and out along the central axis',
         fov: 62,

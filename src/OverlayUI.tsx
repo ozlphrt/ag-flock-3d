@@ -400,17 +400,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     FPS
                 </span>
             </div>
-
-            <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)' }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.85)' }}>
-                    {population.toLocaleString()}
-                </span>
-                <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)' }}>
-                    BOIDS
-                </span>
-            </div>
         </div>
 
         {/* Ephemeral Granular Like/Dislike Bar (Right Vertical) */}
