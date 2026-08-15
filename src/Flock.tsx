@@ -47,6 +47,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const lastMode = useRef<number>(-1);
     const lastPaletteKey = useRef<string>('');
     const colorTransitionStartTime = useRef<number>(0);
+    const smoothRadius = useRef<number>(8.0);
 
     const startColors = useRef<THREE.Color[]>([
         new THREE.Color('#ff3b30'),
@@ -192,8 +193,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
-        // Centroid sampling registers
+        // Centroid & Bounding Radius sampling registers
         let sumX = 0, sumY = 0, sumZ = 0;
+        let sumDistSq = 0;
         const sampleStep = Math.max(1, Math.floor(boidCount / 128));
         let sampleCount = 0;
 
@@ -219,6 +221,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             if (i % sampleStep === 0) {
                 sumX += px; sumY += py; sumZ += pz;
+                sumDistSq += (px * px + py * py + pz * pz);
                 sampleCount++;
             }
 
@@ -362,6 +365,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             matArray[offset + 13] = posY[i];
             matArray[offset + 14] = posZ[i];
             matArray[offset + 15] = 1;
+        }
+
+        if (sampleCount > 0) {
+            const meanRadius = Math.sqrt(sumDistSq / sampleCount);
+            const estimatedBoundingRadius = Math.max(3.5, meanRadius * 1.35);
+            smoothRadius.current = THREE.MathUtils.lerp(smoothRadius.current, estimatedBoundingRadius, 0.04);
+            state.formationRadius = smoothRadius.current;
         }
 
         meshRef.current.instanceMatrix.needsUpdate = true;

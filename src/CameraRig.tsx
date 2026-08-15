@@ -95,7 +95,22 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const cameraRef = useRef<THREE.PerspectiveCamera>(null!);
     const lastPresetIdx = useRef<number>(-1);
     const flightTime = useRef(0);
-    const { camera } = useThree();
+    const lastInteractionTime = useRef(0);
+    const { camera, size } = useThree();
+
+    useEffect(() => {
+        const onInteraction = () => {
+            lastInteractionTime.current = performance.now();
+        };
+        window.addEventListener('pointerdown', onInteraction);
+        window.addEventListener('wheel', onInteraction, { passive: true });
+        window.addEventListener('touchstart', onInteraction, { passive: true });
+        return () => {
+            window.removeEventListener('pointerdown', onInteraction);
+            window.removeEventListener('wheel', onInteraction);
+            window.removeEventListener('touchstart', onInteraction);
+        };
+    }, []);
 
     useFrame((_, delta) => {
         const state = simState.current;
@@ -105,14 +120,31 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const preset = CAMERA_PRESETS[presetIdx];
         const safeDelta = Math.min(delta, 0.05);
 
-        // Smooth FOV Transition
+        // 1. Dynamic Viewport-Adaptive Framing Distance Calculation
         const perspCam = camera as THREE.PerspectiveCamera;
+        const vFovRad = (perspCam.fov || preset.fov) * (Math.PI / 180);
+        const aspect = size.width / Math.max(1, size.height);
+        const hFovRad = 2.0 * Math.atan(Math.tan(vFovRad * 0.5) * aspect);
+        const limitingHalfAngle = Math.min(vFovRad, hFovRad) * 0.5;
+
+        const rBound = (state && state.formationRadius) ? state.formationRadius : 7.5;
+        // Aesthetic framing: includes 90%+ of the formation with breathing room on desktop & mobile
+        const baseFramingDist = (rBound / Math.sin(Math.max(0.12, limitingHalfAngle))) * 1.10;
+
+        let presetDistMult = 1.0;
+        if (preset.id === 'giant') presetDistMult = 0.88;
+        else if (preset.id === 'action') presetDistMult = 0.72;
+        else if (preset.id === 'celestial') presetDistMult = 1.18;
+
+        const targetDistance = baseFramingDist * presetDistMult;
+
+        // 2. Smooth FOV Transition
         if (perspCam && Math.abs(perspCam.fov - preset.fov) > 0.1) {
             perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, preset.fov, 0.05);
             perspCam.updateProjectionMatrix();
         }
 
-        // On Preset Switch, smooth snap to default vantage
+        // 3. On Preset Switch, smooth snap to default vantage
         if (lastPresetIdx.current !== presetIdx) {
             lastPresetIdx.current = presetIdx;
             if (controlsRef.current) {
@@ -120,26 +152,29 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                     controlsRef.current.autoRotate = true;
                     controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
                     controlsRef.current.target.set(preset.target[0], preset.target[1], preset.target[2]);
-                    camera.position.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]);
+                    
+                    const dir = new THREE.Vector3(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
+                    camera.position.copy(controlsRef.current.target).addScaledVector(dir, targetDistance);
                     controlsRef.current.update();
                 }
             }
         }
 
-        // Custom Cinematic Motion Paths (Spaceship & Corkscrew)
+        // 4. Custom Cinematic Motion Paths (Spaceship & Corkscrew)
         if (preset.type === 'flythrough') {
             flightTime.current += safeDelta * 0.45;
             const t = flightTime.current;
+            const rScale = (rBound / 7.5);
 
             // Longitudinal dive through the formation (+Z -> -Z) with banking loop turn
-            const z = Math.cos(t) * 24.0;
-            const x = Math.sin(t * 2.0) * 5.5;
-            const y = Math.sin(t) * 3.2;
+            const z = Math.cos(t) * (24.0 * rScale);
+            const x = Math.sin(t * 2.0) * (5.5 * rScale);
+            const y = Math.sin(t) * (3.2 * rScale);
 
             // Velocity tangent vector for forward look-at
-            const vz = -Math.sin(t) * 24.0;
-            const vx = Math.cos(t * 2.0) * 11.0;
-            const vy = Math.cos(t) * 3.2;
+            const vz = -Math.sin(t) * (24.0 * rScale);
+            const vx = Math.cos(t * 2.0) * (11.0 * rScale);
+            const vy = Math.cos(t) * (3.2 * rScale);
 
             camera.position.set(x, y, z);
             const lookTarget = new THREE.Vector3(x + vx * 0.2, y + vy * 0.2, z + vz * 0.2);
@@ -151,11 +186,12 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         } else if (preset.type === 'corkscrew') {
             flightTime.current += safeDelta * 0.40;
             const t = flightTime.current;
+            const rScale = (rBound / 7.5);
 
-            const r = 11.0 + Math.sin(t * 0.6) * 5.0;
+            const r = (11.0 + Math.sin(t * 0.6) * 5.0) * rScale;
             const x = Math.cos(t) * r;
             const z = Math.sin(t) * r;
-            const y = Math.sin(t * 0.8) * 6.5;
+            const y = Math.sin(t * 0.8) * (6.5 * rScale);
 
             camera.position.set(x, y, z);
             const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.5, 0);
@@ -163,6 +199,20 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
             if (controlsRef.current) {
                 controlsRef.current.target.copy(lookTarget);
+            }
+        } else {
+            // Orbit Presets: Auto-adjust zoom distance when not actively dragging
+            const timeSinceUser = performance.now() - lastInteractionTime.current;
+            const isUserInteracting = timeSinceUser < 4000;
+
+            if (!isUserInteracting && controlsRef.current) {
+                const target = controlsRef.current.target;
+                const curDist = camera.position.distanceTo(target);
+                if (curDist > 0.1 && Math.abs(curDist - targetDistance) > 0.05) {
+                    const nextDist = THREE.MathUtils.lerp(curDist, targetDistance, 0.025);
+                    const dir = new THREE.Vector3().subVectors(camera.position, target).normalize();
+                    camera.position.copy(target).addScaledVector(dir, nextDist);
+                }
             }
         }
     });

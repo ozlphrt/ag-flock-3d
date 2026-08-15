@@ -388,6 +388,7 @@ export interface SimulationState {
     isPaletteLocked?: boolean;
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
+    formationRadius?: number;
 }
 
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
