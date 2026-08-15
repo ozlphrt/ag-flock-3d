@@ -214,6 +214,28 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         const matArray = meshRef.current.instanceMatrix.array;
 
+        // 1 to 4 Local Dynamic Vortex Centers (min 1, max 4)
+        const numVortices = Math.min(4, Math.max(1, state.localVortexCount ?? 2));
+        const vxArr = [0, 0, 0, 0];
+        const vyArr = [0, 0, 0, 0];
+        const vzArr = [0, 0, 0, 0];
+        const vAxisX = [0, 0, 0, 0];
+        const vAxisY = [1, 1, 1, 1];
+        const vAxisZ = [0, 0, 0, 0];
+
+        for (let v = 0; v < numVortices; v++) {
+            const vPhase = time * (0.65 + v * 0.22) * speedMult + (v * Math.PI * 2.0 / numVortices);
+            const vRad = 3.6 + fastSin(time * 0.4 + v * 1.5) * 1.6;
+            vxArr[v] = fastCos(vPhase) * vRad;
+            vyArr[v] = fastSin(vPhase * 1.4) * 2.4 + (v - (numVortices - 1) * 0.5) * 1.2;
+            vzArr[v] = fastSin(vPhase) * vRad;
+
+            // Dynamic tilted vorticity orientation
+            vAxisX[v] = fastSin(vPhase * 0.7) * 0.35;
+            vAxisY[v] = (v % 2 === 0 ? 1.0 : -1.0) * (0.8 + fastCos(vPhase * 0.5) * 0.2);
+            vAxisZ[v] = fastCos(vPhase * 0.7) * 0.35;
+        }
+
         for (let i = 0; i < boidCount; i++) {
             const px = posX[i];
             const py = posY[i];
@@ -266,6 +288,24 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 tx = prevPt[0] + (tx - prevPt[0]) * sCurve;
                 ty = prevPt[1] + (ty - prevPt[1]) * sCurve;
                 tz = prevPt[2] + (tz - prevPt[2]) * sCurve;
+            }
+
+            // Local Vortex Swirl Forces (1 to 4 localized dynamic vortex eddies)
+            for (let v = 0; v < numVortices; v++) {
+                const dx = tx - vxArr[v];
+                const dy = ty - vyArr[v];
+                const dz = tz - vzArr[v];
+                const distSq = dx * dx + dy * dy + dz * dz;
+                if (distSq < 36.0) {
+                    const w = Math.exp(-distSq * 0.08) * 0.85;
+                    const crossX = vAxisY[v] * dz - vAxisZ[v] * dy;
+                    const crossY = vAxisZ[v] * dx - vAxisX[v] * dz;
+                    const crossZ = vAxisX[v] * dy - vAxisY[v] * dx;
+
+                    tx += crossX * w;
+                    ty += crossY * w - Math.sign(vAxisY[v]) * (0.25 * w);
+                    tz += crossZ * w;
+                }
             }
 
             // Clamp spring target to R=14
