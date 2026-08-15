@@ -428,6 +428,8 @@ export interface SimulationState {
     isShapeLocked?: boolean;
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
+    isReady?: boolean;
+    onInitialLoadComplete?: () => void;
     formationRadius?: number;
 }
 

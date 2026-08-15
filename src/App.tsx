@@ -262,8 +262,10 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 }
 
 function App() {
-    const [population, setPopulation] = useState(100000)
-    const [fps, setFps] = useState(0)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const [population, setPopulation] = useState(isMobile ? 25000 : 100000);
+    const [fps, setFps] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Hydrate from persisted last active state if available with full index bounds safety
     const lastSaved = getLastState();
@@ -299,12 +301,15 @@ function App() {
         autoShape: true,
         autoMaterial: true,
         lightingProfileIndex: initialLightIdx,
-        lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0]
+        lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0],
+        onInitialLoadComplete: () => {
+            setIsLoading(false);
+        }
     });
 
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-            <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
+            <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} isLoading={isLoading} />
             <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
                 <color attach="background" args={['#1a233a']} />
                 <fog attach="fog" args={['#1a233a', 160, 480]} />

@@ -498,6 +498,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         customUniforms.current.uSpeciesColors.value[1].copy(currentColors.current[1]);
         customUniforms.current.uSpeciesColors.value[2].copy(currentColors.current[2]);
         customUniforms.current.uSpeciesColors.value[3].copy(currentColors.current[3]);
+
+        if (!state.isReady) {
+            state.isReady = true;
+            if (state.onInitialLoadComplete) {
+                state.onInitialLoadComplete();
+            }
+        }
     });
 
     // 6 Ultra-Fast, Low-Poly, Hard-Edged 3D Geometries with Sharp Pointy Nose (+Z)

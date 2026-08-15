@@ -9,9 +9,10 @@ interface OverlayUIProps {
     population: number;
     setPopulation: (n: number | ((prev: number) => number)) => void;
     fps: number;
+    isLoading?: boolean;
 }
 
-export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setPopulation, fps }) => {
+export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setPopulation, fps, isLoading }) => {
     const [, setTick] = useState(0);
     useEffect(() => {
         const interval = setInterval(() => setTick(t => t + 1), 200);
@@ -476,6 +477,135 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         <>
         {/* Floating Toast Message */}
         {toastMessage && <div className="rl-toast">{toastMessage}</div>}
+
+        {/* Initial Swarm Topology Synthesis Modal */}
+        <div
+            className="topology-loading-modal"
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'radial-gradient(circle at center, rgba(16, 24, 40, 0.94) 0%, rgba(6, 10, 18, 0.98) 100%)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                zIndex: 2000,
+                opacity: isLoading ? 1 : 0,
+                pointerEvents: isLoading ? 'auto' : 'none',
+                transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                userSelect: 'none'
+            }}
+        >
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '20px',
+                    padding: '36px 32px',
+                    borderRadius: '24px',
+                    background: 'rgba(12, 18, 30, 0.75)',
+                    border: '1px solid rgba(0, 255, 204, 0.25)',
+                    boxShadow: '0 0 50px rgba(0, 255, 204, 0.15), 0 20px 40px rgba(0,0,0,0.6)',
+                    maxWidth: '90vw',
+                    width: '360px',
+                    textAlign: 'center'
+                }}
+            >
+                {/* Futuristic Dual-Ring Spinner */}
+                <div style={{ position: 'relative', width: '64px', height: '64px' }}>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            border: '3px solid rgba(0, 255, 204, 0.15)',
+                            borderTop: '3px solid #00ffcc',
+                            borderRadius: '50%',
+                            animation: 'spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite'
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: '8px',
+                            border: '2.5px solid rgba(255, 204, 0, 0.15)',
+                            borderBottom: '2.5px solid #ffcc00',
+                            borderRadius: '50%',
+                            animation: 'spin-reverse 1.8s cubic-bezier(0.5, 0, 0.5, 1) infinite'
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '18px'
+                        }}
+                    >
+                        ✨
+                    </div>
+                </div>
+
+                {/* Title & Status */}
+                <div>
+                    <div
+                        style={{
+                            fontSize: '15px',
+                            fontWeight: 900,
+                            color: '#e0e8ff',
+                            letterSpacing: '2px',
+                            textTransform: 'uppercase',
+                            fontFamily: 'Inter, system-ui, sans-serif'
+                        }}
+                    >
+                        Synthesizing Swarm
+                    </div>
+                    <div
+                        style={{
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: '#00ffcc',
+                            marginTop: '6px',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        Populating Initial 3D Topology...
+                    </div>
+                </div>
+
+                {/* Progress Bar Animation */}
+                <div
+                    style={{
+                        width: '100%',
+                        height: '4px',
+                        borderRadius: '2px',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        overflow: 'hidden',
+                        position: 'relative'
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute',
+                            height: '100%',
+                            width: '45%',
+                            background: 'linear-gradient(90deg, transparent, #00ffcc, #ffcc00, transparent)',
+                            animation: 'progress-shimmer 1.5s ease-in-out infinite'
+                        }}
+                    />
+                </div>
+
+                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', fontWeight: 500 }}>
+                    Calibrating Quantum Spatial Matrices
+                </div>
+            </div>
+        </div>
 
         {/* Top-Left Telemetry & FPS Badge */}
         <div
