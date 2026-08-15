@@ -8,7 +8,6 @@ import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLO
 import { OverlayUI } from './OverlayUI'
 import { CameraRig } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
-import { VortexBeacons } from './VortexBeacons'
 
 const INITIAL_ATTRIBUTES: SpeciesAttributes = {
     separationWeight: 3.5,
@@ -199,8 +198,6 @@ function App() {
                 <Environment preset="city" environmentIntensity={3.8} />
 
                 <DynamicStudioLighting simState={simState} />
-
-                <VortexBeacons simState={simState} />
 
                 <Flock count={population} state={simState.current} setPopulation={setPopulation} />
 

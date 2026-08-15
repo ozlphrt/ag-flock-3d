@@ -217,14 +217,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast(`🎥 Camera: ${CAMERA_PRESETS[nextIdx].name}`);
     };
 
-    const handleCycleVortices = () => {
-        const cur = simState.current.localVortexCount ?? 2;
-        const next = cur >= 4 ? 1 : cur + 1;
-        simState.current.localVortexCount = next;
-        setTick(t => t + 1);
-        showToast(`🌀 Active Local Vortices: ${next} (Max 4, Min 1)`);
-    };
-
     const selectCameraPreset = (idx: number) => {
         simState.current.cameraPresetIndex = idx;
         setTick(t => t + 1);
@@ -510,37 +502,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 <span style={{ fontSize: '18px' }}>{CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.icon || '🎥'}</span>
                 <span style={{ color: '#00ffcc', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
                     {CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name || 'Camera'}
-                </span>
-            </button>
-
-            {/* Local Vortices Quick Cycle Toggle (Min 1, Max 4) */}
-            <button
-                className="defeat-selector-btn"
-                onClick={handleCycleVortices}
-                title={`Active Local Vortices: ${simState.current.localVortexCount ?? 2} (Min 1, Max 4) — Click to cycle local vortex eddies`}
-                style={{
-                    height: '52px',
-                    padding: '0 14px',
-                    borderRadius: '26px',
-                    background: 'rgba(12, 16, 26, 0.85)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
-                    border: '1.5px solid rgba(0, 255, 204, 0.35)',
-                    color: '#e0e8ff',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    transition: 'all 0.3s ease'
-                }}
-            >
-                <span style={{ fontSize: '16px' }}>🌀</span>
-                <span style={{ color: '#00ffcc', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
-                    {simState.current.localVortexCount ?? 2} Vortices
                 </span>
             </button>
 
@@ -1121,53 +1082,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         </div>
 
                         <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                                <span>LOCAL VORTICES</span>
-                                <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{simState.current.localVortexCount ?? 2} ACTIVE (MAX 4, MIN 1)</span>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                                {[1, 2, 3, 4].map(vCount => {
-                                    const isSel = (simState.current.localVortexCount ?? 2) === vCount;
-                                    return (
-                                        <button
-                                            key={vCount}
-                                            onClick={() => {
-                                                simState.current.localVortexCount = vCount;
-                                                showToast(`🌀 Local Vortices set to ${vCount}`);
-                                                setTick(t => t + 1);
-                                            }}
-                                            style={{
-                                                padding: '8px 4px',
-                                                borderRadius: '10px',
-                                                fontSize: '11px',
-                                                fontWeight: 700,
-                                                border: isSel ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.1)',
-                                                background: isSel ? 'rgba(0, 255, 204, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                                                color: isSel ? '#00ffcc' : '#fff',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s ease'
-                                            }}
-                                        >
-                                            🌀 {vCount} {vCount === 1 ? 'Vortex' : 'Vortices'}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-                                <span>VORTEX TURBULENCE STRENGTH</span>
-                                <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{((simState.current.vortexStrength ?? 2.5) * 100 / 2.5).toFixed(0)}%</span>
+                                <span>LOCAL FLUID CURRENTS</span>
+                                <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{((simState.current.localCurrentsStrength ?? 1.0) * 100).toFixed(0)}%</span>
                             </div>
                             <input
                                 type="range"
-                                min="0.5"
-                                max="5.0"
+                                min="0.0"
+                                max="3.0"
                                 step="0.1"
-                                value={simState.current.vortexStrength ?? 2.5}
+                                value={simState.current.localCurrentsStrength ?? 1.0}
                                 onChange={(e) => {
-                                    simState.current.vortexStrength = parseFloat(e.target.value);
+                                    simState.current.localCurrentsStrength = parseFloat(e.target.value);
                                     setTick(t => t + 1);
                                 }}
                                 style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}

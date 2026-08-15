@@ -214,28 +214,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         const matArray = meshRef.current.instanceMatrix.array;
 
-        // 1 to 4 Local Dynamic Vortex Centers (min 1, max 4)
-        const numVortices = Math.min(4, Math.max(1, state.localVortexCount ?? 2));
-        const vxArr = [0, 0, 0, 0];
-        const vyArr = [0, 0, 0, 0];
-        const vzArr = [0, 0, 0, 0];
-        const vAxisX = [0, 0, 0, 0];
-        const vAxisY = [1, 1, 1, 1];
-        const vAxisZ = [0, 0, 0, 0];
-
-        for (let v = 0; v < numVortices; v++) {
-            const vPhase = time * (0.65 + v * 0.22) * speedMult + (v * Math.PI * 2.0 / numVortices);
-            const vRad = 3.6 + fastSin(time * 0.4 + v * 1.5) * 1.6;
-            vxArr[v] = fastCos(vPhase) * vRad;
-            vyArr[v] = fastSin(vPhase * 1.4) * 2.4 + (v - (numVortices - 1) * 0.5) * 1.2;
-            vzArr[v] = fastSin(vPhase) * vRad;
-
-            // Dynamic tilted vorticity orientation
-            vAxisX[v] = fastSin(vPhase * 0.7) * 0.35;
-            vAxisY[v] = (v % 2 === 0 ? 1.0 : -1.0) * (0.8 + fastCos(vPhase * 0.5) * 0.2);
-            vAxisZ[v] = fastCos(vPhase * 0.7) * 0.35;
-        }
-
         for (let i = 0; i < boidCount; i++) {
             const px = posX[i];
             const py = posY[i];
@@ -290,33 +268,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 tz = prevPt[2] + (tz - prevPt[2]) * sCurve;
             }
 
-            // Local Vortex Swirl Forces (1 to 4 localized dynamic vortex eddies)
-            for (let v = 0; v < numVortices; v++) {
-                const vdx = tx - vxArr[v];
-                const vdy = ty - vyArr[v];
-                const vdz = tz - vzArr[v];
-                const distSq = vdx * vdx + vdy * vdy + vdz * vdz;
-                if (distSq < 72.0) { // Radius 8.5 units
-                    const dist = Math.sqrt(distSq) + 0.001;
-                    const falloff = 1.0 - (dist / 8.5);
-                    const w = falloff * falloff * 1.85;
-
-                    // Tangential rotational swirl velocity
-                    const swirlX = (vAxisY[v] * vdz - vAxisZ[v] * vdy) / dist;
-                    const swirlY = (vAxisZ[v] * vdx - vAxisX[v] * vdz) / dist;
-                    const swirlZ = (vAxisX[v] * vdy - vAxisY[v] * vdx) / dist;
-
-                    // Inward core suction
-                    const suction = -0.45 * w;
-                    // Upward/downward helical tornado spiral lift
-                    const lift = vAxisY[v] * Math.sin(time * 3.5 + dist * 1.8) * (w * 1.4);
-
-                    tx += swirlX * (w * 4.2) + (vdx / dist) * suction;
-                    ty += swirlY * (w * 4.2) + lift;
-                    tz += swirlZ * (w * 4.2) + (vdz / dist) * suction;
-                }
-            }
-
             // Clamp spring target to R=14
             const targetDistSq = tx * tx + ty * ty + tz * tz;
             if (targetDistSq > 196.0 && targetDistSq > 1e-6) {
@@ -338,9 +289,29 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const driftY = fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
             const driftZ = fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
 
-            const targetVelX = dx + driftX;
-            const targetVelY = dy + driftY;
-            const targetVelZ = dz + driftZ;
+            // 3D Hydrodynamic Local Currents (Laminar Jetstreams & Flow Corridors)
+            const curStrength = (state.localCurrentsStrength !== undefined ? state.localCurrentsStrength : 1.0);
+            let currentX = 0, currentY = 0, currentZ = 0;
+            if (curStrength > 0.001) {
+                const cx = px * 0.24;
+                const cy = py * 0.30;
+                const cz = pz * 0.24;
+                const cTime = time * 0.55 * speedMult;
+
+                // Continuous 3D divergence-free harmonic flow streamlines
+                const flowX = fastSin(cy * 1.6 + cTime) + fastCos(cz * 1.3 + cTime * 0.8);
+                const flowY = fastCos(cx * 1.4 + cTime * 0.9) * fastSin(cz * 1.5 + cTime * 0.7);
+                const flowZ = fastSin(cx * 1.3 - cTime * 1.1) + fastCos(cy * 1.7 + cTime * 0.6);
+
+                const cMult = 0.016 * curStrength * speedMult;
+                currentX = flowX * cMult;
+                currentY = flowY * cMult;
+                currentZ = flowZ * cMult;
+            }
+
+            const targetVelX = dx + driftX + currentX;
+            const targetVelY = dy + driftY + currentY;
+            const targetVelZ = dz + driftZ + currentZ;
 
             let ax = targetVelX - velX[i];
             let ay = targetVelY - velY[i];
@@ -356,47 +327,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             velY[i] += ay;
             velZ[i] += az;
 
-            // Direct Vortex Dynamic Velocity Impulse (Tight Core with Rapid Distance Reduction)
-            const vPower = (state.vortexStrength !== undefined ? state.vortexStrength : 2.5);
-            let isNearVortex = false;
-            const vRadius = 4.2; // Compact localized vortex core
-            const vRadiusSq = 17.64; // 4.2^2
-
-            for (let v = 0; v < numVortices; v++) {
-                const vdx = px - vxArr[v];
-                const vdy = py - vyArr[v];
-                const vdz = pz - vzArr[v];
-                const distSq = vdx * vdx + vdy * vdy + vdz * vdz;
-                if (distSq < vRadiusSq) {
-                    isNearVortex = true;
-                    const dist = Math.sqrt(distSq) + 0.001;
-                    const normDist = dist / vRadius;
-                    const linearFalloff = 1.0 - normDist;
-                    // Steep cubic falloff: effect drops off dramatically fast with distance!
-                    const w = (linearFalloff * linearFalloff * linearFalloff) * (0.075 * vPower);
-
-                    // Pure single horizontal rotation around vertical Y axis
-                    const spinDir = (v % 2 === 0 ? 1.0 : -1.0);
-                    const swirlX = spinDir * (vdz / dist);
-                    const swirlZ = -spinDir * (vdx / dist);
-
-                    // Centripetal inward suction pull (also concentrated tightly at core)
-                    const suctionX = -(vdx / dist) * (w * 0.35);
-                    const suctionY = -(vdy / dist) * (w * 0.35);
-                    const suctionZ = -(vdz / dist) * (w * 0.35);
-
-                    velX[i] += swirlX * w + suctionX;
-                    velY[i] += suctionY;
-                    velZ[i] += swirlZ * w + suctionZ;
-                }
-            }
-
-            const curMaxDispSq = isNearVortex ? (maxDispSq * 5.0) : maxDispSq;
-            const curMaxDisp = isNearVortex ? (activeMaxDisp * 2.25) : activeMaxDisp;
-
             const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
-            if (speedSq > curMaxDispSq && speedSq > 1e-6) {
-                const invSpd = curMaxDisp / Math.sqrt(speedSq);
+            if (speedSq > maxDispSq && speedSq > 1e-6) {
+                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
                 velX[i] *= invSpd;
                 velY[i] *= invSpd;
                 velZ[i] *= invSpd;

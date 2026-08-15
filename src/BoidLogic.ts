@@ -394,8 +394,7 @@ export interface SimulationState {
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
     formationRadius?: number;
-    localVortexCount?: number; // 1 to 4 (min 1, max 4)
-    vortexStrength?: number; // 0.5 to 4.0 (strength multiplier)
+    localCurrentsStrength?: number; // 0.0 to 3.0 (default 1.0)
 }
 
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
