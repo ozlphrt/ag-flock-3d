@@ -167,29 +167,21 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         // 4. Custom Cinematic Motion Paths (Spaceship & Corkscrew)
         if (preset.type === 'flythrough') {
-            // Calm, immersive cockpit flight
-            flightTime.current += safeDelta * 0.22;
+            // Calm, immersive pursuit dive flight
+            flightTime.current += safeDelta * 0.20;
             const t = flightTime.current;
-            const rScale = Math.max(0.7, (rBound / 7.5));
+            const rScale = Math.max(0.65, (rBound / 7.5));
 
-            // Pierces directly through the interior heart of the crystal swarm along Z (+15 -> 0 -> -15)
-            const z = Math.cos(t) * (15.0 * rScale);
-            const x = Math.sin(t * 2.0) * (2.8 * rScale);
-            const y = Math.sin(t) * (1.8 * rScale);
+            // Smooth 3D figure-8 dive trajectory weaving through and around the swarm
+            const x = Math.sin(t) * (7.5 * rScale);
+            const y = Math.sin(t * 2.0) * (2.6 * rScale);
+            const z = Math.cos(t) * (8.5 * rScale);
 
             camera.position.set(x, y, z);
+            camera.up.set(0, 1, 0);
 
-            // Forward velocity vector for true spaceship cockpit view looking along flight direction
-            const vz = -Math.sin(t) * (15.0 * rScale);
-            const vx = Math.cos(t * 2.0) * (5.6 * rScale);
-            const vy = Math.cos(t) * (1.8 * rScale);
-
-            const forwardDir = new THREE.Vector3(vx, vy, vz).normalize();
-            const lookTarget = new THREE.Vector3(x, y, z).addScaledVector(forwardDir, 5.0);
-
-            // Natural aerodynamic banking roll
-            const bankRoll = -vx * 0.05;
-            camera.up.set(bankRoll, 1.0, 0).normalize();
+            // ALWAYS locked on the formation center — the swarm NEVER leaves the viewport
+            const lookTarget = new THREE.Vector3(0, Math.sin(t * 1.5) * 0.8, 0);
             camera.lookAt(lookTarget);
         } else if (preset.type === 'corkscrew') {
             // Calm helical spiral
