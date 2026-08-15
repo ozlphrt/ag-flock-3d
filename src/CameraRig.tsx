@@ -167,20 +167,29 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         // 4. Custom Cinematic Motion Paths (Spaceship & Corkscrew)
         if (preset.type === 'flythrough') {
-            // Calm, majestic cinematic flight speed
-            flightTime.current += safeDelta * 0.18;
+            // Calm, immersive cockpit flight
+            flightTime.current += safeDelta * 0.22;
             const t = flightTime.current;
-            const rScale = Math.max(0.65, (rBound / 7.5));
+            const rScale = Math.max(0.7, (rBound / 7.5));
 
-            // Silky smooth perimeter & interior banking pass (maintains safe clearance from singular 0,0,0)
-            const x = Math.cos(t) * (11.0 * rScale);
-            const y = Math.sin(t * 1.5) * (3.8 * rScale);
-            const z = Math.sin(t) * (13.5 * rScale);
+            // Pierces directly through the interior heart of the crystal swarm along Z (+15 -> 0 -> -15)
+            const z = Math.cos(t) * (15.0 * rScale);
+            const x = Math.sin(t * 2.0) * (2.8 * rScale);
+            const y = Math.sin(t) * (1.8 * rScale);
 
             camera.position.set(x, y, z);
 
-            // Gaze stably into the dynamic heart of the formation
-            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.5) * 1.2, 0);
+            // Forward velocity vector for true spaceship cockpit view looking along flight direction
+            const vz = -Math.sin(t) * (15.0 * rScale);
+            const vx = Math.cos(t * 2.0) * (5.6 * rScale);
+            const vy = Math.cos(t) * (1.8 * rScale);
+
+            const forwardDir = new THREE.Vector3(vx, vy, vz).normalize();
+            const lookTarget = new THREE.Vector3(x, y, z).addScaledVector(forwardDir, 5.0);
+
+            // Natural aerodynamic banking roll
+            const bankRoll = -vx * 0.05;
+            camera.up.set(bankRoll, 1.0, 0).normalize();
             camera.lookAt(lookTarget);
         } else if (preset.type === 'corkscrew') {
             // Calm helical spiral
@@ -188,15 +197,17 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             const t = flightTime.current;
             const rScale = Math.max(0.65, (rBound / 7.5));
 
-            const r = (9.5 + Math.sin(t * 0.6) * 3.5) * rScale;
+            const r = (5.5 + Math.sin(t * 0.6) * 3.0) * rScale;
             const x = Math.cos(t) * r;
             const z = Math.sin(t) * r;
             const y = Math.sin(t * 0.8) * (5.5 * rScale);
 
             camera.position.set(x, y, z);
+            camera.up.set(0, 1, 0);
             const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.2, 0);
             camera.lookAt(lookTarget);
         } else {
+            camera.up.set(0, 1, 0);
             // Orbit Presets: Auto-adjust zoom distance when not actively dragging
             const timeSinceUser = performance.now() - lastInteractionTime.current;
             const isUserInteracting = timeSinceUser < 4000;
