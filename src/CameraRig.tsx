@@ -63,17 +63,6 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         type: 'flythrough'
     },
     {
-        id: 'celestial',
-        name: 'Top-Down',
-        icon: '🌌',
-        description: 'Overhead bird\'s-eye view looking down on sacred spiral ripples',
-        fov: 48,
-        defaultPos: [0, 26, 0.1],
-        target: [0, 0, 0],
-        autoRotateSpeed: 0.5,
-        type: 'orbit'
-    },
-    {
         id: 'corkscrew',
         name: 'Corkscrew',
         icon: '🌀',
