@@ -515,15 +515,15 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const d2 = dx * dx + dy * dy + dz * dz;
                 if (d2 > maxDistSq) maxDistSq = d2;
             }
-            const r70 = Math.sqrt(maxDistSq) * 0.85;
-            const targetRadius = Math.max(5.0, r70);
+            const r70 = Math.sqrt(maxDistSq) * 0.75;
+            const targetRadius = Math.max(4.0, r70);
 
             const perspCam = stateContext.camera as THREE.PerspectiveCamera;
             const fovRad = (perspCam.fov || 75) * (Math.PI / 180);
             
-            // Comfortably frame the entire formation inside the viewport
-            const requiredDist = (targetRadius / Math.sin(fovRad / 2)) * 1.18;
-            const baseDist = THREE.MathUtils.clamp(requiredDist, 14.0, 42.0);
+            // Balanced distance: reveals the full formation while keeping rich boid detail and dynamic motion
+            const requiredDist = (targetRadius / Math.sin(fovRad / 2)) * 0.85;
+            const baseDist = THREE.MathUtils.clamp(requiredDist, 7.5, 20.0);
 
             smoothCenter.current.lerp(new THREE.Vector3(centerX, centerY, centerZ), 0.035);
             smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, baseDist, 0.030);
@@ -533,74 +533,74 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             state.cameraCategory = cat;
 
             // Target camera parameter goals per topology (Framed to reveal the entire formation)
-            let targetPitchCenter = 0.30;
-            let targetPitchAmp = 0.38;
-            let targetDistScale = 1.15;
-            let targetOrbitSpeed = 0.14; // Smooth continuous 360° rotation speed
-            let targetYOffsetAmp = 4.0;
+            let targetPitchCenter = 0.26;
+            let targetPitchAmp = 0.40;
+            let targetDistScale = 0.90;
+            let targetOrbitSpeed = 0.16; // Vibrant continuous 360° rotation speed
+            let targetYOffsetAmp = 4.2;
 
             switch (cat) {
                 case 'portrait':
-                    targetOrbitSpeed = 0.13;
-                    targetPitchCenter = 0.22;
-                    targetPitchAmp = 0.35;
-                    targetDistScale = 1.10;
-                    targetYOffsetAmp = 3.5;
+                    targetOrbitSpeed = 0.14;
+                    targetPitchCenter = 0.20;
+                    targetPitchAmp = 0.36;
+                    targetDistScale = 0.86;
+                    targetYOffsetAmp = 3.6;
                     break;
                 case 'tunnel':
-                    targetOrbitSpeed = 0.17;
-                    targetPitchCenter = 0.45;
-                    targetPitchAmp = 0.38;
-                    targetDistScale = 1.18;
-                    targetYOffsetAmp = 4.5;
+                    targetOrbitSpeed = 0.18;
+                    targetPitchCenter = 0.40;
+                    targetPitchAmp = 0.42;
+                    targetDistScale = 0.92;
+                    targetYOffsetAmp = 4.6;
                     break;
                 case 'overhead':
-                    targetOrbitSpeed = 0.13;
-                    targetPitchCenter = 0.58;
-                    targetPitchAmp = 0.32;
-                    targetDistScale = 1.25;
-                    targetYOffsetAmp = 4.0;
+                    targetOrbitSpeed = 0.14;
+                    targetPitchCenter = 0.54;
+                    targetPitchAmp = 0.36;
+                    targetDistScale = 0.98;
+                    targetYOffsetAmp = 4.2;
                     break;
                 case 'cinematic_sweep':
-                    targetOrbitSpeed = 0.15;
-                    targetPitchCenter = 0.26;
-                    targetPitchAmp = 0.40;
-                    targetDistScale = 1.15;
-                    targetYOffsetAmp = 4.0;
+                    targetOrbitSpeed = 0.16;
+                    targetPitchCenter = 0.24;
+                    targetPitchAmp = 0.42;
+                    targetDistScale = 0.90;
+                    targetYOffsetAmp = 4.2;
                     break;
                 case 'dynamic_burst':
-                    targetOrbitSpeed = 0.16;
-                    targetPitchCenter = 0.30;
-                    targetPitchAmp = 0.38;
-                    targetDistScale = 1.22;
-                    targetYOffsetAmp = 4.0;
+                    targetOrbitSpeed = 0.18;
+                    targetPitchCenter = 0.28;
+                    targetPitchAmp = 0.40;
+                    targetDistScale = 0.94;
+                    targetYOffsetAmp = 4.2;
                     break;
                 case 'orbit_wide':
-                    targetOrbitSpeed = 0.13;
-                    targetPitchCenter = 0.32;
-                    targetPitchAmp = 0.35;
-                    targetDistScale = 1.30;
-                    targetYOffsetAmp = 3.8;
+                    targetOrbitSpeed = 0.14;
+                    targetPitchCenter = 0.30;
+                    targetPitchAmp = 0.36;
+                    targetDistScale = 1.05;
+                    targetYOffsetAmp = 4.0;
                     break;
                 case 'intimate_close':
-                    targetOrbitSpeed = 0.12;
-                    targetPitchCenter = 0.24;
-                    targetPitchAmp = 0.30;
-                    targetDistScale = 1.02;
-                    targetYOffsetAmp = 3.0;
+                    targetOrbitSpeed = 0.13;
+                    targetPitchCenter = 0.20;
+                    targetPitchAmp = 0.32;
+                    targetDistScale = 0.78;
+                    targetYOffsetAmp = 3.2;
                     break;
                 default: // chaotic
-                    targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.28;
-                    targetPitchAmp = 0.36;
-                    targetDistScale = 1.15;
-                    targetYOffsetAmp = 4.0;
+                    targetOrbitSpeed = 0.15;
+                    targetPitchCenter = 0.26;
+                    targetPitchAmp = 0.38;
+                    targetDistScale = 0.90;
+                    targetYOffsetAmp = 4.2;
                     break;
             }
 
             // Camera Mood overlay modulation
-            if (state.cameraMood === 'intimate_close') targetDistScale *= 0.88;
-            if (state.cameraMood === 'orbit_wide') targetDistScale *= 1.20;
+            if (state.cameraMood === 'intimate_close') targetDistScale *= 0.85;
+            if (state.cameraMood === 'orbit_wide') targetDistScale *= 1.15;
             if (state.cameraMood === 'overhead_iso') targetPitchCenter = 0.70;
 
             // Silky smooth exponential parameter glide
@@ -666,19 +666,18 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
 
             const timeSinceInteraction = performance.now() - lastInteractionTime.current;
-            const isUserOverriding = timeSinceInteraction < 10000;
+            const isUserOverriding = timeSinceInteraction < 6000;
 
             if (!isUserOverriding) {
                 const rawGoal = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
-                smoothCamTarget.current.lerp(rawGoal, 0.035);
-                smoothLookTarget.current.lerp(smoothCenter.current, 0.040);
+                smoothCamTarget.current.lerp(rawGoal, 0.045);
+                smoothLookTarget.current.lerp(smoothCenter.current, 0.050);
 
                 stateContext.camera.position.copy(smoothCamTarget.current);
+                stateContext.camera.lookAt(smoothLookTarget.current);
+
                 if (activeControls && activeControls.target) {
                     activeControls.target.copy(smoothLookTarget.current);
-                    activeControls.update();
-                } else {
-                    stateContext.camera.lookAt(smoothLookTarget.current);
                 }
             } else {
                 smoothCamTarget.current.copy(stateContext.camera.position);
