@@ -144,12 +144,17 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             perspCam.updateProjectionMatrix();
         }
 
-        // 3. On Preset Switch, smooth snap to default vantage
-        if (lastPresetIdx.current !== presetIdx) {
-            lastPresetIdx.current = presetIdx;
-            if (controlsRef.current) {
-                if (preset.type === 'orbit') {
-                    controlsRef.current.autoRotate = true;
+        // 3. On Preset Switch or Frame, synchronize OrbitControls active state
+        if (controlsRef.current) {
+            const isOrbitMode = (preset.type === 'orbit');
+            if (controlsRef.current.enabled !== isOrbitMode) {
+                controlsRef.current.enabled = isOrbitMode;
+                controlsRef.current.autoRotate = isOrbitMode;
+            }
+
+            if (lastPresetIdx.current !== presetIdx) {
+                lastPresetIdx.current = presetIdx;
+                if (isOrbitMode) {
                     controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
                     controlsRef.current.target.set(preset.target[0], preset.target[1], preset.target[2]);
                     
@@ -163,42 +168,34 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         // 4. Custom Cinematic Motion Paths (Spaceship & Corkscrew)
         if (preset.type === 'flythrough') {
             // Calm, majestic cinematic flight speed
-            flightTime.current += safeDelta * 0.16;
+            flightTime.current += safeDelta * 0.18;
             const t = flightTime.current;
-            const rScale = Math.max(0.6, (rBound / 7.5));
+            const rScale = Math.max(0.65, (rBound / 7.5));
 
-            // Smooth longitudinal dive through the formation (+Z -> -Z) and looping back
-            const z = Math.cos(t) * (14.0 * rScale);
-            const x = Math.sin(t * 2.0) * (4.2 * rScale);
-            const y = Math.sin(t) * (2.4 * rScale);
+            // Silky smooth perimeter & interior banking pass (maintains safe clearance from singular 0,0,0)
+            const x = Math.cos(t) * (11.0 * rScale);
+            const y = Math.sin(t * 1.5) * (3.8 * rScale);
+            const z = Math.sin(t) * (13.5 * rScale);
 
             camera.position.set(x, y, z);
 
-            // Always target the active formation center — never empty outer space
-            const lookTarget = new THREE.Vector3(0, 0, 0);
+            // Gaze stably into the dynamic heart of the formation
+            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.5) * 1.2, 0);
             camera.lookAt(lookTarget);
-
-            if (controlsRef.current) {
-                controlsRef.current.target.copy(lookTarget);
-            }
         } else if (preset.type === 'corkscrew') {
             // Calm helical spiral
             flightTime.current += safeDelta * 0.14;
             const t = flightTime.current;
-            const rScale = Math.max(0.6, (rBound / 7.5));
+            const rScale = Math.max(0.65, (rBound / 7.5));
 
-            const r = (8.5 + Math.sin(t * 0.6) * 3.5) * rScale;
+            const r = (9.5 + Math.sin(t * 0.6) * 3.5) * rScale;
             const x = Math.cos(t) * r;
             const z = Math.sin(t) * r;
-            const y = Math.sin(t * 0.8) * (4.5 * rScale);
+            const y = Math.sin(t * 0.8) * (5.5 * rScale);
 
             camera.position.set(x, y, z);
-            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.0, 0);
+            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.2, 0);
             camera.lookAt(lookTarget);
-
-            if (controlsRef.current) {
-                controlsRef.current.target.copy(lookTarget);
-            }
         } else {
             // Orbit Presets: Auto-adjust zoom distance when not actively dragging
             const timeSinceUser = performance.now() - lastInteractionTime.current;
