@@ -134,7 +134,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         { id: FormationMode.LorenzAttractor, label: 'Lorenz Butterfly', icon: '🦋', desc: 'Continuous dual-scroll chaotic wings' },
         { id: FormationMode.GyroidMinimalSurface, label: 'Gyroid Flow', icon: '🧬', desc: 'Triply periodic minimal surface streamline' },
         { id: FormationMode.KleinBottle4D, label: 'Klein Bottle Loop', icon: '♾️', desc: 'Continuous self-intersecting topological immersion' },
-        { id: FormationMode.CliffordTorus, label: 'Clifford Torus', icon: '💫', desc: 'Flat 4D hyper-torus projection' }
+        { id: FormationMode.CliffordTorus, label: 'Clifford Torus', icon: '💫', desc: 'Flat 4D hyper-torus projection' },
+        // --- Intertwined Multi-Helix & Braided Vortex Formations ---
+        { id: FormationMode.QuadHelixBraid, label: 'Quad Helix Braid', icon: '🧬', desc: '4-Strand species intertwined helix with cross-ladder rungs' },
+        { id: FormationMode.MobiusHelixBraid, label: 'Mobius Helix Braid', icon: '🎗️', desc: 'Continuous 3D Mobius ribbon with 3 braided sub-currents' },
+        { id: FormationMode.CaduceusVortex, label: 'Caduceus Vortex', icon: '⚕️', desc: 'Dual intertwined serpents ascending around central spine' },
+        { id: FormationMode.ToroidalHelixBraid, label: 'Toroidal Helix Braid', icon: '🍩', desc: 'Closed continuous 4-strand braided torus ring' }
     ];
 
     const shapes = [

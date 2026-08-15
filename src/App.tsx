@@ -154,7 +154,7 @@ function App() {
 
     // Hydrate from persisted last active state if available
     const lastSaved = getLastState();
-    const initialMode = lastSaved ? (lastSaved.formationMode as FormationMode) : (Math.floor(Math.random() * 51) as FormationMode);
+    const initialMode = lastSaved ? (lastSaved.formationMode as FormationMode) : (Math.floor(Math.random() * 55) as FormationMode);
     const initialPaletteIdx = lastSaved ? lastSaved.paletteIndex : (initialMode % COLOR_PALETTES.length);
     const initialMatIdx = lastSaved ? lastSaved.materialPreset : 0;
     const initialLightIdx = lastSaved ? lastSaved.lightingProfileIndex : 0;
@@ -187,15 +187,15 @@ function App() {
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
             <Canvas shadows gl={{ antialias: false }}>
-                <color attach="background" args={['#141a29']} />
-                <fog attach="fog" args={['#141a29', 140, 420]} />
+                <color attach="background" args={['#1a233a']} />
+                <fog attach="fog" args={['#1a233a', 160, 480]} />
                 <CameraRig simState={simState} />
 
                 <FPSUpdater onChange={setFps} />
 
-                <Stars radius={180} depth={70} count={4500} factor={4.5} saturation={0.5} fade speed={0.8} />
+                <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
 
-                <Environment preset="city" environmentIntensity={3.2} />
+                <Environment preset="city" environmentIntensity={3.8} />
 
                 <DynamicStudioLighting simState={simState} />
 

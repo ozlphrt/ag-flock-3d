@@ -189,7 +189,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const maxAccelSq = maxAccel * maxAccel;
         const maxDispSq = activeMaxDisp * activeMaxDisp;
 
-        const baseScale = (state.sizeMultiplier || 1.0) * 0.72;
+        const baseScale = (state.sizeMultiplier || 1.0) * 1.35;
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 

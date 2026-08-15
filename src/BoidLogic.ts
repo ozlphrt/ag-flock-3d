@@ -82,7 +82,12 @@ export enum FormationMode {
     LorenzAttractor = 47,
     GyroidMinimalSurface = 48,
     KleinBottle4D = 49,
-    CliffordTorus = 50
+    CliffordTorus = 50,
+    // --- Intertwined Multi-Helix & Braided Vortex Formations ---
+    QuadHelixBraid = 51,
+    MobiusHelixBraid = 52,
+    CaduceusVortex = 53,
+    ToroidalHelixBraid = 54
 }
 
 export interface ProceduralGenome {
@@ -428,14 +433,25 @@ export function computeFormationPoint(
         ty = height + (species - 1.5) * 0.6;
         tz = radius * Math.sin(theta);
     } else if (formation === FormationMode.DoubleHelix) {
-        // --- 2. Double Helix: Intertwined Bio-Macromolecule Stream ---
-        const strand = indexInSpecies % 2;
-        const theta = u * 8.0 * Math.PI + time * 0.6 * speedMult + (strand * Math.PI) + (species * Math.PI / 6);
-        const h = (u - 0.5) * 11.0;
-        const r = 3.4 + Math.sin(h * 0.3 + time * 0.5) * 0.4;
-        tx = r * Math.cos(theta);
-        ty = h;
-        tz = r * Math.sin(theta);
+        // --- 2. Double Helix: Intertwined Bio-Macromolecule Stream with Base-Pair Rungs ---
+        const h = (u - 0.5) * 11.5;
+        const theta = u * 8.0 * Math.PI + time * 0.6 * speedMult;
+        const isRung = (indexInSpecies % 5 === 0);
+        if (isRung) {
+            // Horizontal bridging rung connecting the dual strands
+            const rungT = ((indexInSpecies % 20) / 20.0 - 0.5) * 2.0; // [-1, 1]
+            tx = (3.4 * rungT) * Math.cos(theta);
+            ty = h;
+            tz = (3.4 * rungT) * Math.sin(theta);
+        } else {
+            // Outer intertwined spiral sugar-phosphate backbones
+            const strand = (species % 2 === 0) ? 0 : 1;
+            const strandAngle = theta + (strand * Math.PI) + (species * 0.1);
+            const r = 3.6 + Math.sin(h * 0.4 + time * 0.5) * 0.4;
+            tx = r * Math.cos(strandAngle);
+            ty = h;
+            tz = r * Math.sin(strandAngle);
+        }
     } else if (formation === FormationMode.TorusKnot) {
         // --- 3. Torus Knot Stream: Continuous Seamless Bio-Ring Flow ---
         const p = 2, q = 3;
@@ -782,15 +798,16 @@ export function computeFormationPoint(
         ty = vortexRoll * 2.8 + shearLayer * (0.8 + Math.cos(wavePhase) * 0.4);
         tz = Math.cos(wavePhase * 1.4) * 1.4 + (species - 1.5) * 0.5;
     } else if (formation === FormationMode.DNALadder) {
-        // --- 36. Braided Stream: Silky Parallel Streamlined Fluid Currents ---
-        const strand = indexInSpecies % 3;
-        const strandAngle = strand * (Math.PI * 2.0 / 3.0);
+        // --- 36. Triple Braid Helix: 3-Strand Interlocking Chiral Braid Stream ---
+        const strand = species % 3;
+        const strandAngle = (strand * Math.PI * 2.0 / 3.0);
         const s = (u - 0.5) * 11.5;
-        const braidPhase = s * 0.75 - time * 1.0 * speedMult + strandAngle;
-        const braidR = 2.6 + Math.sin(s * 0.35 + time * 0.5) * 0.8;
-        tx = braidR * Math.cos(braidPhase);
+        const braidPhase = s * 0.85 - time * 0.7 * speedMult + strandAngle;
+        const braidR = 3.2 + Math.sin(s * 0.5 + time * 0.8) * 0.6;
+        const crossKnot = Math.sin(braidPhase * 2.0) * 0.7;
+        tx = (braidR + crossKnot) * Math.cos(braidPhase);
         ty = s * 1.1;
-        tz = braidR * Math.sin(braidPhase);
+        tz = (braidR + crossKnot) * Math.sin(braidPhase);
     } else if (formation === FormationMode.StarPolygon) {
         // --- 37. Manta Ray Glide: Majestic Oceanic Ray Wings with Undulating Wave Flap ---
         const spanX = (u - 0.5) * 12.0;
@@ -936,6 +953,55 @@ export function computeFormationPoint(
         tx = ((y1) / denomC) * 3.8;
         ty = ((x2) / denomC) * 3.8;
         tz = ((x1 * Math.sin(tRot) + y2 * Math.cos(tRot)) / denomC) * 3.8;
+    } else if (formation === FormationMode.QuadHelixBraid) {
+        // --- 51. Quad Helix Braid: 4 Intertwined Species Helical Strands with Harmonic Cross-Ladders ---
+        const strandOffset = species * (Math.PI * 0.5);
+        const theta = u * 10.0 * Math.PI + time * 0.65 * speedMult + strandOffset;
+        const h = (u - 0.5) * 11.5;
+        const helixR = 3.6 + Math.sin(h * 0.4 + time * 0.6) * 0.5;
+        const isRung = (indexInSpecies % 8 === 0);
+        const rungFactor = isRung ? ((indexInSpecies % 32) / 32.0 - 0.5) : 0.0;
+        tx = (helixR + rungFactor * 1.8) * Math.cos(theta);
+        ty = h;
+        tz = (helixR + rungFactor * 1.8) * Math.sin(theta);
+    } else if (formation === FormationMode.MobiusHelixBraid) {
+        // --- 52. Mobius Helix Braid: Continuous 3D Mobius Ribbon with 3 Braided Helical Sub-Currents ---
+        const tMob = u * Math.PI * 2.0 + time * 0.35 * speedMult;
+        const strand = indexInSpecies % 3;
+        const strandPhase = strand * (Math.PI * 2.0 / 3.0) + (species * 0.25);
+        const braidTwist = Math.sin(tMob * 3.0 + strandPhase) * 1.2;
+        const rMob = 4.5 + Math.cos(tMob * 0.5) * (1.6 + braidTwist);
+        tx = rMob * Math.cos(tMob);
+        ty = Math.sin(tMob * 0.5) * (2.2 + braidTwist) + (species - 1.5) * 0.4;
+        tz = rMob * Math.sin(tMob);
+    } else if (formation === FormationMode.CaduceusVortex) {
+        // --- 53. Caduceus Vortex: Dual Intertwined Helical Serpents with Ascending Central Spine ---
+        if (u < 0.22) {
+            const spineT = (u / 0.22 - 0.5) * 11.0;
+            tx = Math.sin(spineT * 2.0 + time) * 0.35;
+            ty = spineT;
+            tz = Math.cos(spineT * 2.0 + time) * 0.35;
+        } else {
+            const helixU = (u - 0.22) / 0.78;
+            const strand = (indexInSpecies % 2 === 0) ? 0 : 1;
+            const theta = helixU * 8.0 * Math.PI + time * 0.8 * speedMult + (strand * Math.PI) + (species * 0.2);
+            const h = (helixU - 0.5) * 11.0;
+            const loopScale = Math.sin(helixU * Math.PI * 3.0) * 1.8 + 2.6;
+            tx = loopScale * Math.cos(theta);
+            ty = h;
+            tz = loopScale * Math.sin(theta);
+        }
+    } else if (formation === FormationMode.ToroidalHelixBraid) {
+        // --- 54. Toroidal Helix Braid: Closed Continuous 4-Strand Braided Torus Ring ---
+        const R_maj = 4.8;
+        const r_min = 1.8;
+        const tRing = u * Math.PI * 2.0 + time * 0.3 * speedMult;
+        const strandOffset = species * (Math.PI * 0.5);
+        const tTwist = u * 8.0 * Math.PI + strandOffset + time * 0.7 * speedMult;
+        const rLocal = r_min + Math.sin(tTwist * 2.0) * 0.3;
+        tx = (R_maj + rLocal * Math.cos(tTwist)) * Math.cos(tRing);
+        ty = rLocal * Math.sin(tTwist) * 1.4;
+        tz = (R_maj + rLocal * Math.cos(tTwist)) * Math.sin(tRing);
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;
