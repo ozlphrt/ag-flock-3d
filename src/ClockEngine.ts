@@ -213,7 +213,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             lastCameraMoodTime = time;
             cameraMoodInterval = rndJitter(28.0, 0.2);
 
-            const moods = ['orbit_wide', 'intimate_close', 'cinematic_sweep', 'dramatic_pitch', 'overhead_iso'];
+            const moods = ['orbit_wide', 'intimate_close', 'cinematic_sweep', 'dramatic_pitch', 'overhead_iso', 'hero_low_lookup'];
             state.cameraMood = moods[Math.floor(Math.random() * moods.length)];
         }
 

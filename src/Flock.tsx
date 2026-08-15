@@ -521,76 +521,84 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const cat = getCameraCategory(state.formationMode);
             state.cameraCategory = cat;
 
-            // Target camera parameter goals per topology
-            let targetPitchCenter = 0.24;
-            let targetPitchAmp = 0.38;
-            let targetDistScale = 0.90;
+            // Target camera parameter goals per topology (Optimized for dramatic wide lens 68° perspective)
+            let targetPitchCenter = 0.18;
+            let targetPitchAmp = 0.42;
+            let targetDistScale = 0.82;
             let targetOrbitSpeed = 0.15; // Vibrant continuous 360° rotation speed
-            let targetYOffsetAmp = 3.8;
+            let targetYOffsetAmp = 3.6;
 
             switch (cat) {
                 case 'portrait':
                     targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.20;
-                    targetPitchAmp = 0.34;
-                    targetDistScale = 0.86;
-                    targetYOffsetAmp = 3.4;
+                    targetPitchCenter = 0.12;
+                    targetPitchAmp = 0.38;
+                    targetDistScale = 0.78;
+                    targetYOffsetAmp = 3.2;
                     break;
                 case 'tunnel':
                     targetOrbitSpeed = 0.16;
-                    targetPitchCenter = 0.38;
-                    targetPitchAmp = 0.38;
-                    targetDistScale = 0.92;
-                    targetYOffsetAmp = 4.2;
+                    targetPitchCenter = 0.32;
+                    targetPitchAmp = 0.42;
+                    targetDistScale = 0.84;
+                    targetYOffsetAmp = 4.0;
                     break;
                 case 'overhead':
                     targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.50;
-                    targetPitchAmp = 0.34;
-                    targetDistScale = 0.96;
-                    targetYOffsetAmp = 3.8;
+                    targetPitchCenter = 0.46;
+                    targetPitchAmp = 0.36;
+                    targetDistScale = 0.88;
+                    targetYOffsetAmp = 3.6;
                     break;
                 case 'cinematic_sweep':
                     targetOrbitSpeed = 0.15;
-                    targetPitchCenter = 0.24;
-                    targetPitchAmp = 0.38;
-                    targetDistScale = 0.90;
+                    targetPitchCenter = 0.18;
+                    targetPitchAmp = 0.44;
+                    targetDistScale = 0.82;
                     targetYOffsetAmp = 3.8;
                     break;
                 case 'dynamic_burst':
                     targetOrbitSpeed = 0.16;
-                    targetPitchCenter = 0.26;
-                    targetPitchAmp = 0.38;
-                    targetDistScale = 0.94;
-                    targetYOffsetAmp = 4.0;
+                    targetPitchCenter = 0.20;
+                    targetPitchAmp = 0.42;
+                    targetDistScale = 0.86;
+                    targetYOffsetAmp = 3.8;
                     break;
                 case 'orbit_wide':
                     targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.28;
-                    targetPitchAmp = 0.34;
-                    targetDistScale = 1.02;
-                    targetYOffsetAmp = 3.8;
+                    targetPitchCenter = 0.22;
+                    targetPitchAmp = 0.36;
+                    targetDistScale = 0.94;
+                    targetYOffsetAmp = 3.6;
                     break;
                 case 'intimate_close':
                     targetOrbitSpeed = 0.13;
-                    targetPitchCenter = 0.20;
-                    targetPitchAmp = 0.30;
-                    targetDistScale = 0.80;
-                    targetYOffsetAmp = 3.0;
+                    targetPitchCenter = 0.10;
+                    targetPitchAmp = 0.36;
+                    targetDistScale = 0.72;
+                    targetYOffsetAmp = 2.8;
                     break;
                 default: // chaotic
                     targetOrbitSpeed = 0.15;
-                    targetPitchCenter = 0.24;
-                    targetPitchAmp = 0.36;
-                    targetDistScale = 0.90;
-                    targetYOffsetAmp = 3.8;
+                    targetPitchCenter = 0.18;
+                    targetPitchAmp = 0.40;
+                    targetDistScale = 0.82;
+                    targetYOffsetAmp = 3.6;
                     break;
             }
 
             // Camera Mood overlay modulation
-            if (state.cameraMood === 'intimate_close') targetDistScale *= 0.85;
-            if (state.cameraMood === 'orbit_wide') targetDistScale *= 1.15;
-            if (state.cameraMood === 'overhead_iso') targetPitchCenter = 0.70;
+            if (state.cameraMood === 'hero_low_lookup') {
+                targetPitchCenter = -0.32; // Dramatic low-angle looking up into the giant swarm
+                targetDistScale *= 0.80;
+                targetYOffsetAmp = -3.2;
+            } else if (state.cameraMood === 'intimate_close') {
+                targetDistScale *= 0.82;
+            } else if (state.cameraMood === 'orbit_wide') {
+                targetDistScale *= 1.15;
+            } else if (state.cameraMood === 'overhead_iso') {
+                targetPitchCenter = 0.65;
+            }
 
             // Silky smooth exponential parameter glide
             curPitchCenter.current = THREE.MathUtils.lerp(curPitchCenter.current, targetPitchCenter, 0.015);
@@ -603,7 +611,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             camAzimuthRef.current += safeDelta * curSweepSpeed.current;
             const camAzimuth = camAzimuthRef.current;
 
-            // 2. Exact 60% Close-Up / 40% Far View Choreography with Smooth Hermite Far Blend
+            // 2. Multi-Pass Cinematic Choreography (Hero Low-Angle -> Intimate Orbit -> Grand Far Overview)
             const formElapsed = (state.transitionStartTime !== undefined) ? Math.max(0, time - state.transitionStartTime) : 0.0;
             const cycleDuration = 32.0;
             const cycleProgress = (formElapsed % cycleDuration) / cycleDuration; // 0.0 -> 1.0
@@ -625,21 +633,26 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             smoothFarBlend.current = THREE.MathUtils.lerp(smoothFarBlend.current, targetFarBlend, 0.025);
             const farBlend = smoothFarBlend.current;
 
-            // Close-up scale (0.52) vs Far view scale (1.28)
-            const dynamicScale = THREE.MathUtils.lerp(0.52, 1.28, farBlend);
+            // Close-up scale (0.50) vs Far view scale (1.25)
+            const dynamicScale = THREE.MathUtils.lerp(0.50, 1.25, farBlend);
 
-            // 3. Continuous Vertical Polar Elevation
+            // 3. Heroic Low-Angle "Giant Effect" Polar Elevation Pass
+            // In the first half of the cycle, sweep from bottom-up worm's eye view (-0.38 rad / looking up) to level flight
+            const heroPhase = (cycleProgress < 0.32) ? Math.cos((cycleProgress / 0.32) * Math.PI) : 0.0; // 1.0 -> 0.0
+            const heroPitchBias = heroPhase * -0.42; // Low angle looking up
+            const heroYBias = heroPhase * -3.6;       // Sitting down at the bottom
+
             const verticalCycle = Math.sin(time * 0.10) + Math.cos(time * 0.04) * 0.35;
-            const yOffset = verticalCycle * (curYOffset.current * (1.0 - farBlend * 0.65));
+            const yOffset = (verticalCycle * (curYOffset.current * (1.0 - farBlend * 0.65))) + (heroYBias * (1.0 - farBlend));
             
-            const rawElevation = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
+            const rawElevation = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85) + (heroPitchBias * (1.0 - farBlend));
             const camElevation = THREE.MathUtils.lerp(
-                THREE.MathUtils.clamp(rawElevation, -0.35, 1.05),
-                0.28,
+                THREE.MathUtils.clamp(rawElevation, -0.50, 1.05),
+                0.26,
                 farBlend
             );
 
-            // 4. Focal Distance
+            // 4. Focal Distance with wide-angle breathing
             const zoomMod = 0.96 + Math.sin(time * 0.06) * 0.04;
             const finalDist = smoothDistance.current * curDistScale.current * dynamicScale * zoomMod;
 
@@ -652,6 +665,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const targetCamX = smoothCenter.current.x + finalDist * cosElev * cosAzim;
             const targetCamY = smoothCenter.current.y + yOffset + finalDist * sinElev;
             const targetCamZ = smoothCenter.current.z + finalDist * cosElev * sinAzim;
+
+            // Look target: slightly elevated during low-angle hero shots for dramatic upward gaze
+            const lookUpYOffset = (1.0 - farBlend) * Math.max(0, -rawElevation * 2.2);
+            const targetLookCenter = new THREE.Vector3(
+                smoothCenter.current.x,
+                smoothCenter.current.y + lookUpYOffset,
+                smoothCenter.current.z
+            );
 
             const activeControls = controls as any;
             const isDraggingNow = activeControls?.state !== undefined && activeControls?.state !== -1;
@@ -674,7 +695,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 smoothCamTarget.current.add(deltaPos.multiplyScalar(0.035));
 
                 // Smooth look-at target
-                const deltaLook = smoothCenter.current.clone().sub(smoothLookTarget.current);
+                const deltaLook = targetLookCenter.clone().sub(smoothLookTarget.current);
                 const maxLookStep = 0.12;
                 if (deltaLook.length() > maxLookStep) {
                     deltaLook.setLength(maxLookStep);
