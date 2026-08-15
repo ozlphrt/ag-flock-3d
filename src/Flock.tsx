@@ -85,7 +85,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const meshRef1 = useRef<THREE.InstancedMesh>(null!);
     const meshRef2 = useRef<THREE.InstancedMesh>(null!);
     const meshRef3 = useRef<THREE.InstancedMesh>(null!);
-    const meshRefs = [meshRef0, meshRef1, meshRef2, meshRef3];
+    const meshRef4 = useRef<THREE.InstancedMesh>(null!);
+    const meshRef5 = useRef<THREE.InstancedMesh>(null!);
+    const meshRefs = [meshRef0, meshRef1, meshRef2, meshRef3, meshRef4, meshRef5];
 
     // Instantiate ClockEngine with decoupled independent timers
     const clockEngine = useMemo<ClockEngine>(() => {
@@ -107,28 +109,34 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         new THREE.Color(SPECIES_COLORS[0]),
         new THREE.Color(SPECIES_COLORS[1]),
         new THREE.Color(SPECIES_COLORS[2]),
-        new THREE.Color(SPECIES_COLORS[3])
+        new THREE.Color(SPECIES_COLORS[3]),
+        new THREE.Color(SPECIES_COLORS[4]),
+        new THREE.Color(SPECIES_COLORS[5])
     ]);
     const targetColors = useRef<THREE.Color[]>([
         new THREE.Color(SPECIES_COLORS[0]),
         new THREE.Color(SPECIES_COLORS[1]),
         new THREE.Color(SPECIES_COLORS[2]),
-        new THREE.Color(SPECIES_COLORS[3])
+        new THREE.Color(SPECIES_COLORS[3]),
+        new THREE.Color(SPECIES_COLORS[4]),
+        new THREE.Color(SPECIES_COLORS[5])
     ]);
     const currentColors = useRef<THREE.Color[]>([
         new THREE.Color(SPECIES_COLORS[0]),
         new THREE.Color(SPECIES_COLORS[1]),
         new THREE.Color(SPECIES_COLORS[2]),
-        new THREE.Color(SPECIES_COLORS[3])
+        new THREE.Color(SPECIES_COLORS[3]),
+        new THREE.Color(SPECIES_COLORS[4]),
+        new THREE.Color(SPECIES_COLORS[5])
     ]);
 
-    const speciesStartTimes = useRef<number[]>([0, 0, 0, 0]);
-    const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2]);
+    const speciesStartTimes = useRef<number[]>([0, 0, 0, 0, 0, 0]);
+    const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2, 3.2, 3.2]);
 
-    // Initialize Blob Centers once (4 species x 3 centers = 12 centers)
+    // Initialize Blob Centers once (6 species x 3 centers = 18 centers)
     if (blobCentersRef.current.length === 0) {
-        for (let s = 0; s < 4; s++) {
-            const baseR = 2.0 + s * 1.8;
+        for (let s = 0; s < 6; s++) {
+            const baseR = 2.0 + s * 1.3;
             const nBlobs = 3;
             for (let b = 0; b < nBlobs; b++) {
                 const theta = Math.random() * Math.PI * 2;
@@ -169,20 +177,20 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         return [g0, g1, g2, g3, g4, g5];
     }, []);
 
-    const getSpeciesShapes = (): [number, number, number, number] => {
+    const getSpeciesShapes = (): [number, number, number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
         if (state.boidShape === 99) {
-            // Multi-Species Diverse: 4 distinct geometric archetypes
-            return [0, 1, 2, 4]; // Stealth Arrowhead (sp0), Faceted Gemstone (sp1), Pyramid (sp2), Swept Delta Wing (sp3)
+            // Multi-Species Diverse: 6 distinct geometric archetypes
+            return [0, 1, 2, 3, 4, 5]; // 0: Arrowhead, 1: Gemstone, 2: Pyramid, 3: Hex Shield, 4: Delta Wing, 5: Tetrahedral Shard
         }
         const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % 6) : 0;
-        return [s, s, s, s];
+        return [s, s, s, s, s, s];
     };
 
     useFrame((stateContext, delta) => {
         const boidCount = count;
-        const speciesCount = Math.floor(boidCount / 4);
-        if (!meshRef0.current || !meshRef1.current || !meshRef2.current || !meshRef3.current) return;
+        const speciesCount = Math.floor(boidCount / 6);
+        if (!meshRef0.current || !meshRef1.current || !meshRef2.current || !meshRef3.current || !meshRef4.current || !meshRef5.current) return;
         const time = stateContext.clock.getElapsedTime();
         const safeDelta = Math.min(delta, 0.05);
         state.currentTime = time;
@@ -247,7 +255,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             meshRef0.current.instanceMatrix.array as Float32Array,
             meshRef1.current.instanceMatrix.array as Float32Array,
             meshRef2.current.instanceMatrix.array as Float32Array,
-            meshRef3.current.instanceMatrix.array as Float32Array
+            meshRef3.current.instanceMatrix.array as Float32Array,
+            meshRef4.current.instanceMatrix.array as Float32Array,
+            meshRef5.current.instanceMatrix.array as Float32Array
         ];
 
         for (let i = 0; i < boidCount; i++) {
@@ -430,11 +440,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         if (lastPaletteKey.current !== paletteKey) {
             lastPaletteKey.current = paletteKey;
 
-            // Generate randomized order of the 4 species
-            const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+            // Generate randomized order of the 6 species
+            const order = [0, 1, 2, 3, 4, 5].sort(() => Math.random() - 0.5);
 
             let accumulatedLag = 0.0;
-            for (let idx = 0; idx < 4; idx++) {
+            for (let idx = 0; idx < 6; idx++) {
                 const s = order[idx];
                 startColors.current[s].copy(currentColors.current[s]);
                 targetColors.current[s].set(newPalette[s] || SPECIES_COLORS[s]);
@@ -447,7 +457,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
         }
 
-        for (let s = 0; s < 4; s++) {
+        for (let s = 0; s < 6; s++) {
             const sStart = speciesStartTimes.current[s];
             const sDur = speciesDurations.current[s];
 
@@ -475,7 +485,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             currentColors.current[s].setRGB(r, g, b_rgb);
         }
 
-        for (let sp = 0; sp < 4; sp++) {
+        for (let sp = 0; sp < 6; sp++) {
             const mesh = meshRefs[sp].current;
             if (mesh) {
                 mesh.instanceMatrix.needsUpdate = true;
@@ -494,7 +504,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     });
 
     const activeSpeciesShapes = getSpeciesShapes();
-    const speciesCount = Math.floor(count / 4);
+    const speciesCount = Math.floor(count / 6);
     const mat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };
 
     // Check for transient material pulse micro-surprise
@@ -505,7 +515,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
     return (
         <group>
-            {[0, 1, 2, 3].map(sp => {
+            {[0, 1, 2, 3, 4, 5].map(sp => {
                 const shapeId = activeSpeciesShapes[sp] % geometries.length;
                 const activeGeometry = geometries[shapeId];
                 return (
