@@ -162,39 +162,38 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         // 4. Custom Cinematic Motion Paths (Spaceship & Corkscrew)
         if (preset.type === 'flythrough') {
-            flightTime.current += safeDelta * 0.45;
+            // Calm, majestic cinematic flight speed
+            flightTime.current += safeDelta * 0.16;
             const t = flightTime.current;
-            const rScale = (rBound / 7.5);
+            const rScale = Math.max(0.6, (rBound / 7.5));
 
-            // Longitudinal dive through the formation (+Z -> -Z) with banking loop turn
-            const z = Math.cos(t) * (24.0 * rScale);
-            const x = Math.sin(t * 2.0) * (5.5 * rScale);
-            const y = Math.sin(t) * (3.2 * rScale);
-
-            // Velocity tangent vector for forward look-at
-            const vz = -Math.sin(t) * (24.0 * rScale);
-            const vx = Math.cos(t * 2.0) * (11.0 * rScale);
-            const vy = Math.cos(t) * (3.2 * rScale);
+            // Smooth longitudinal dive through the formation (+Z -> -Z) and looping back
+            const z = Math.cos(t) * (14.0 * rScale);
+            const x = Math.sin(t * 2.0) * (4.2 * rScale);
+            const y = Math.sin(t) * (2.4 * rScale);
 
             camera.position.set(x, y, z);
-            const lookTarget = new THREE.Vector3(x + vx * 0.2, y + vy * 0.2, z + vz * 0.2);
+
+            // Always target the active formation center — never empty outer space
+            const lookTarget = new THREE.Vector3(0, 0, 0);
             camera.lookAt(lookTarget);
 
             if (controlsRef.current) {
                 controlsRef.current.target.copy(lookTarget);
             }
         } else if (preset.type === 'corkscrew') {
-            flightTime.current += safeDelta * 0.40;
+            // Calm helical spiral
+            flightTime.current += safeDelta * 0.14;
             const t = flightTime.current;
-            const rScale = (rBound / 7.5);
+            const rScale = Math.max(0.6, (rBound / 7.5));
 
-            const r = (11.0 + Math.sin(t * 0.6) * 5.0) * rScale;
+            const r = (8.5 + Math.sin(t * 0.6) * 3.5) * rScale;
             const x = Math.cos(t) * r;
             const z = Math.sin(t) * r;
-            const y = Math.sin(t * 0.8) * (6.5 * rScale);
+            const y = Math.sin(t * 0.8) * (4.5 * rScale);
 
             camera.position.set(x, y, z);
-            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.5, 0);
+            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.0, 0);
             camera.lookAt(lookTarget);
 
             if (controlsRef.current) {
