@@ -236,10 +236,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state, curPt);
             let tx = curPt[0], ty = curPt[1], tz = curPt[2];
 
-            // Volumetric Cross-Section Sheaf Dispersion (Anti-Clump 3D Cloud Envelope)
+            // Volumetric Cross-Section Sheaf Dispersion (Crisp Strands vs Atmospheric Sheath)
             const phi = (idxSp * 2.3999632) + (u * 13.7) + (sp * 1.5707963);
             const rNorm = Math.sqrt((idxSp % 41) / 40.0);
-            const volThickness = 0.85;
+            const volThickness = profile.volThickness;
             tx += fastCos(phi) * (rNorm * volThickness);
             ty += fastSin(phi) * (rNorm * volThickness * 0.75);
             tz += fastSin(phi * 1.33) * (rNorm * volThickness * 0.65);

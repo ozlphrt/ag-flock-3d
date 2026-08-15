@@ -154,7 +154,7 @@ function App() {
 
     // Hydrate from persisted last active state if available
     const lastSaved = getLastState();
-    const initialMode = lastSaved ? (lastSaved.formationMode as FormationMode) : (Math.floor(Math.random() * 55) as FormationMode);
+    const initialMode = lastSaved ? (lastSaved.formationMode as FormationMode) : FormationMode.QuadHelixBraid;
     const initialPaletteIdx = lastSaved ? lastSaved.paletteIndex : (initialMode % COLOR_PALETTES.length);
     const initialMatIdx = lastSaved ? lastSaved.materialPreset : 0;
     const initialLightIdx = lastSaved ? lastSaved.lightingProfileIndex : 0;

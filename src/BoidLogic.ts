@@ -83,11 +83,15 @@ export enum FormationMode {
     GyroidMinimalSurface = 48,
     KleinBottle4D = 49,
     CliffordTorus = 50,
-    // --- Intertwined Multi-Helix & Braided Vortex Formations ---
+    // --- Intertwined Multi-Helix & Braided Formations ---
     QuadHelixBraid = 51,
-    MobiusHelixBraid = 52,
+    ConcentricDualHelixSheath = 52,
     CaduceusVortex = 53,
-    ToroidalHelixBraid = 54
+    ToroidalHelixBraid = 54,
+    TrefoilBraidedRibbon = 55,
+    HexaHelixVortexTower = 56,
+    MobiusHelixBraid = 57,
+    LissajousIntertwinedKnot = 58
 }
 
 export interface ProceduralGenome {
@@ -1316,9 +1320,9 @@ export class Boid {
                 state
             );
 
-            tx = txPrev + (txCurr - txPrev) * sCurve;
-            ty = tyPrev + (tyCurr - tyPrev) * sCurve;
-            tz = tzPrev + (tzCurr - tzPrev) * sCurve;
+            tx = prevX + (txCurr - txPrev) * sCurve;
+            ty = prevY + (tyCurr - tyPrev) * sCurve;
+            tz = prevZ + (tzCurr - tzPrev) * sCurve;
         }
 
         // Clamp the spring target to R=14
@@ -1427,20 +1431,23 @@ export interface FormationPhysicsProfile {
     noiseDrift: number;    // Subtle alive turbulence
     strayRatio: number;    // Percentage of loose aura particles (0.0 to 0.02)
     maxSpeedCap: number;   // Max displacement per tick
+    volThickness: number;  // Volumetric sheaf thickness (0.18 for sharp strands, 0.55 for cloud)
 }
 
 export function getFormationPhysicsProfile(formation: FormationMode): FormationPhysicsProfile {
     switch (formation) {
-        // 1. ULTRA-TIGHT GEOMETRIC & CRYSTALLINE (0% Strays, Razor-Sharp Structure)
-        case FormationMode.WireCube:
-        case FormationMode.Tesseract4D:
-        case FormationMode.DodecahedronShield:
-        case FormationMode.StarPolygon:
-        case FormationMode.DNALadder:
-        case FormationMode.SaturnRings:
-        case FormationMode.PulsingHeart:
+        // 1. ULTRA-TIGHT INTERTWINED HELICES, BRAIDS & GEOMETRIC (0% Strays, Razor-Sharp Woven Strands)
+        case FormationMode.QuadHelixBraid:
+        case FormationMode.ConcentricDualHelixSheath:
+        case FormationMode.CaduceusVortex:
+        case FormationMode.ToroidalHelixBraid:
+        case FormationMode.TrefoilBraidedRibbon:
+        case FormationMode.HexaHelixVortexTower:
+        case FormationMode.MobiusHelixBraid:
+        case FormationMode.LissajousIntertwinedKnot:
         case FormationMode.DoubleHelix:
         case FormationMode.TripleHelix:
+        case FormationMode.DNALadder:
         case FormationMode.TrefoilKnot:
         case FormationMode.TorusKnot:
         case FormationMode.LissajousKnot:
@@ -1448,10 +1455,16 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.CalabiYauManifold:
         case FormationMode.CliffordTorus:
         case FormationMode.GyroidMinimalSurface:
+        case FormationMode.WireCube:
+        case FormationMode.Tesseract4D:
+        case FormationMode.DodecahedronShield:
+        case FormationMode.StarPolygon:
+        case FormationMode.SaturnRings:
+        case FormationMode.PulsingHeart:
         case FormationMode.FerrisWheel:
         case FormationMode.HopfFibration:
         case FormationMode.AlienMothership:
-            return { lerpRate: 0.12, noiseDrift: 0.003, strayRatio: 0.0, maxSpeedCap: 0.08 };
+            return { lerpRate: 0.12, noiseDrift: 0.002, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.20 };
 
         // 2. ORGANIC BALANCED (Crisp silhouette with graceful aerodynamic breathing)
         case FormationMode.PhoenixWings:
@@ -1467,7 +1480,7 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.GeologicStrata:
         case FormationMode.TreeBranch:
         case FormationMode.Procedural:
-            return { lerpRate: 0.08, noiseDrift: 0.008, strayRatio: 0.006, maxSpeedCap: 0.065 };
+            return { lerpRate: 0.08, noiseDrift: 0.008, strayRatio: 0.006, maxSpeedCap: 0.065, volThickness: 0.40 };
 
         // 3. FLUID / DYNAMIC LOOSE (Expansive cosmic & turbulent flow)
         case FormationMode.MurmurationFlow:
@@ -1482,7 +1495,6 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.RiverDelta:
         case FormationMode.LorenzAttractor:
         default:
-            return { lerpRate: 0.06, noiseDrift: 0.015, strayRatio: 0.018, maxSpeedCap: 0.06 };
+            return { lerpRate: 0.06, noiseDrift: 0.015, strayRatio: 0.018, maxSpeedCap: 0.06, volThickness: 0.65 };
     }
 }
-
