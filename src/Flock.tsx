@@ -81,7 +81,13 @@ const curPt = new Float32Array(3);
 const prevPt = new Float32Array(3);
 
 export function Flock({ count, state, setPopulation }: FlockProps) {
-    const meshRef = useRef<THREE.InstancedMesh>(null!);
+    const meshRef0 = useRef<THREE.InstancedMesh>(null!);
+    const meshRef1 = useRef<THREE.InstancedMesh>(null!);
+    const meshRef2 = useRef<THREE.InstancedMesh>(null!);
+    const meshRef3 = useRef<THREE.InstancedMesh>(null!);
+    const meshRef4 = useRef<THREE.InstancedMesh>(null!);
+    const meshRef5 = useRef<THREE.InstancedMesh>(null!);
+    const meshRefs = [meshRef0, meshRef1, meshRef2, meshRef3, meshRef4, meshRef5];
 
     // Instantiate ClockEngine with decoupled independent timers
     const clockEngine = useMemo<ClockEngine>(() => {
@@ -100,78 +106,37 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const smoothRadius = useRef<number>(8.0);
 
     const startColors = useRef<THREE.Color[]>([
-        new THREE.Color('#ff3b30'),
-        new THREE.Color('#34c759'),
-        new THREE.Color('#007aff'),
-        new THREE.Color('#ffcc00')
+        new THREE.Color(SPECIES_COLORS[0]),
+        new THREE.Color(SPECIES_COLORS[1]),
+        new THREE.Color(SPECIES_COLORS[2]),
+        new THREE.Color(SPECIES_COLORS[3]),
+        new THREE.Color(SPECIES_COLORS[4]),
+        new THREE.Color(SPECIES_COLORS[5])
     ]);
     const targetColors = useRef<THREE.Color[]>([
-        new THREE.Color('#ff3b30'),
-        new THREE.Color('#34c759'),
-        new THREE.Color('#007aff'),
-        new THREE.Color('#ffcc00')
+        new THREE.Color(SPECIES_COLORS[0]),
+        new THREE.Color(SPECIES_COLORS[1]),
+        new THREE.Color(SPECIES_COLORS[2]),
+        new THREE.Color(SPECIES_COLORS[3]),
+        new THREE.Color(SPECIES_COLORS[4]),
+        new THREE.Color(SPECIES_COLORS[5])
     ]);
     const currentColors = useRef<THREE.Color[]>([
-        new THREE.Color('#ff3b30'),
-        new THREE.Color('#34c759'),
-        new THREE.Color('#007aff'),
-        new THREE.Color('#ffcc00')
+        new THREE.Color(SPECIES_COLORS[0]),
+        new THREE.Color(SPECIES_COLORS[1]),
+        new THREE.Color(SPECIES_COLORS[2]),
+        new THREE.Color(SPECIES_COLORS[3]),
+        new THREE.Color(SPECIES_COLORS[4]),
+        new THREE.Color(SPECIES_COLORS[5])
     ]);
 
-    const speciesStartTimes = useRef<number[]>([0, 0, 0, 0]);
-    const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2]);
+    const speciesStartTimes = useRef<number[]>([0, 0, 0, 0, 0, 0]);
+    const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2, 3.2, 3.2]);
 
-    // Custom Shader Uniforms for Zero-CPU GPU-Direct Palette Coloring
-    const customUniforms = useRef({
-        uSpeciesColors: {
-            value: [
-                new THREE.Color('#ff3b30'),
-                new THREE.Color('#34c759'),
-                new THREE.Color('#007aff'),
-                new THREE.Color('#ffcc00')
-            ]
-        }
-    });
-
-    const onBeforeCompile = useMemo(() => {
-        return (shader: THREE.WebGLProgramParametersWithUniforms) => {
-            shader.uniforms.uSpeciesColors = customUniforms.current.uSpeciesColors;
-
-            shader.vertexShader = `
-                attribute float aSpecies;
-                uniform vec3 uSpeciesColors[4];
-                varying vec3 vBoidColor;
-                ${shader.vertexShader}
-            `;
-
-            shader.vertexShader = shader.vertexShader.replace(
-                '#include <color_vertex>',
-                `
-                #include <color_vertex>
-                int spId = int(clamp(aSpecies, 0.0, 3.0));
-                vBoidColor = uSpeciesColors[spId];
-                `
-            );
-
-            shader.fragmentShader = `
-                varying vec3 vBoidColor;
-                ${shader.fragmentShader}
-            `;
-
-            shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <color_fragment>',
-                `
-                #include <color_fragment>
-                diffuseColor.rgb *= vBoidColor;
-                `
-            );
-        };
-    }, []);
-
-    // Initialize Blob Centers once
+    // Initialize Blob Centers once (6 species x 3 centers = 18 centers)
     if (blobCentersRef.current.length === 0) {
-        for (let s = 0; s < 4; s++) {
-            const baseR = 2.0 + s * 1.8;
+        for (let s = 0; s < 6; s++) {
+            const baseR = 2.0 + s * 1.3;
             const nBlobs = 3;
             for (let b = 0; b < nBlobs; b++) {
                 const theta = Math.random() * Math.PI * 2;
@@ -189,22 +154,43 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         swarm.setPopulation(count, state);
     }, [count]);
 
-    // Attach Instanced aSpecies attribute to geometry whenever count or shape changes
-    const activeShapeIdx = state.boidShape !== undefined ? Math.abs(state.boidShape) % 6 : 0;
-    useEffect(() => {
-        if (!meshRef.current) return;
-        meshRef.current.count = count;
+    // 6 Ultra-Fast, Low-Poly, Hard-Edged 3D Geometries with Sharp Pointy Nose (+Z)
+    const geometries = useMemo(() => {
+        const g0 = new THREE.ConeGeometry(0.12, 0.40, 3);
+        g0.rotateX(Math.PI / 2);
 
-        const specArr = new Float32Array(count);
-        for (let i = 0; i < count; i++) {
-            specArr[i] = swarm.species[i];
+        const g1 = new THREE.OctahedronGeometry(0.16, 0);
+        g1.scale(0.7, 0.7, 1.5);
+
+        const g2 = new THREE.ConeGeometry(0.13, 0.38, 4);
+        g2.rotateX(Math.PI / 2);
+
+        const g3 = new THREE.ConeGeometry(0.14, 0.36, 6);
+        g3.rotateX(Math.PI / 2);
+
+        const g4 = new THREE.CylinderGeometry(0.01, 0.14, 0.40, 4);
+        g4.rotateX(Math.PI / 2);
+
+        const g5 = new THREE.ConeGeometry(0.12, 0.40, 5);
+        g5.rotateX(Math.PI / 2);
+
+        return [g0, g1, g2, g3, g4, g5];
+    }, []);
+
+    const getSpeciesShapes = (): [number, number, number, number, number, number] => {
+        if (state.speciesShapes) return state.speciesShapes;
+        if (state.boidShape === 99) {
+            // Multi-Species Diverse: 6 distinct geometric archetypes
+            return [0, 1, 2, 3, 4, 5]; // 0: Arrowhead, 1: Gemstone, 2: Pyramid, 3: Hex Shield, 4: Delta Wing, 5: Tetrahedral Shard
         }
-        meshRef.current.geometry.setAttribute('aSpecies', new THREE.InstancedBufferAttribute(specArr, 1));
-    }, [count, activeShapeIdx]);
+        const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % 6) : 0;
+        return [s, s, s, s, s, s];
+    };
 
     useFrame((stateContext, delta) => {
-        if (!meshRef.current) return;
         const boidCount = count;
+        const speciesCount = Math.floor(boidCount / 6);
+        if (!meshRef0.current || !meshRef1.current || !meshRef2.current || !meshRef3.current || !meshRef4.current || !meshRef5.current) return;
         const time = stateContext.clock.getElapsedTime();
         const safeDelta = Math.min(delta, 0.05);
         state.currentTime = time;
@@ -265,7 +251,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const isLeader = swarm.isLeader;
         const sizeArr = swarm.size;
 
-        const matArray = meshRef.current.instanceMatrix.array;
+        const matArrays = [
+            meshRef0.current.instanceMatrix.array as Float32Array,
+            meshRef1.current.instanceMatrix.array as Float32Array,
+            meshRef2.current.instanceMatrix.array as Float32Array,
+            meshRef3.current.instanceMatrix.array as Float32Array,
+            meshRef4.current.instanceMatrix.array as Float32Array,
+            meshRef5.current.instanceMatrix.array as Float32Array
+        ];
 
         for (let i = 0; i < boidCount; i++) {
             const px = posX[i];
@@ -279,19 +272,21 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
 
             const sp = species[i];
+            const spIdx = indexInSpecies[i];
+            if (spIdx >= speciesCount) continue;
+
             const sepWeight = (state && state.attributes && state.attributes[sp])
                 ? state.attributes[sp].separationWeight
                 : 3.5;
 
             const u = uArr[i];
-            const idxSp = indexInSpecies[i];
 
-            computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state, curPt);
+            computeFormationPoint(formation, seed, u, time, sp, spIdx, sepWeight, speedMult, state, curPt);
             let tx = curPt[0], ty = curPt[1], tz = curPt[2];
 
             // Volumetric Cross-Section Sheaf Dispersion (Crisp Strands vs Atmospheric Sheath)
-            const phi = (idxSp * 2.3999632) + (u * 13.7) + (sp * 1.5707963);
-            const rNorm = Math.sqrt((idxSp % 41) / 40.0);
+            const phi = (spIdx * 2.3999632) + (u * 13.7) + (sp * 1.5707963);
+            const rNorm = Math.sqrt((spIdx % 41) / 40.0);
             const volThickness = profile.volThickness;
             tx += fastCos(phi) * (rNorm * volThickness);
             ty += fastSin(phi) * (rNorm * volThickness * 0.75);
@@ -310,7 +305,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
 
             if (isMorphing && prevMode !== undefined) {
-                computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state, prevPt);
+                computeFormationPoint(prevMode, prevSeed, u, time, sp, spIdx, sepWeight, speedMult, state, prevPt);
                 // Apply volumetric sheath to previous point as well during morph
                 prevPt[0] += fastCos(phi) * (rNorm * volThickness);
                 prevPt[1] += fastSin(phi) * (rNorm * volThickness * 0.75);
@@ -321,110 +316,108 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 tz = prevPt[2] + (tz - prevPt[2]) * sCurve;
             }
 
-            // Clamp spring target to R=14
-            const targetDistSq = tx * tx + ty * ty + tz * tz;
-            if (targetDistSq > 196.0 && targetDistSq > 1e-6) {
-                const invT = 14.0 / Math.sqrt(targetDistSq);
-                tx *= invT; ty *= invT; tz *= invT;
+            // Organic Aerodynamic Spring Smoothing:
+            const toTx = tx - px;
+            const toTy = ty - py;
+            const toTz = tz - pz;
+            const distToTargetSq = toTx * toTx + toTy * toTy + toTz * toTz;
+
+            let vx = velX[i];
+            let vy = velY[i];
+            let vz = velZ[i];
+
+            if (distToTargetSq > 1e-6) {
+                let accelX = toTx * activeLerpRate;
+                let accelY = toTy * activeLerpRate;
+                let accelZ = toTz * activeLerpRate;
+
+                const accelSq = accelX * accelX + accelY * accelY + accelZ * accelZ;
+                if (accelSq > maxAccelSq) {
+                    const invAccel = maxAccel / Math.sqrt(accelSq);
+                    accelX *= invAccel;
+                    accelY *= invAccel;
+                    accelZ *= invAccel;
+                }
+
+                vx += accelX;
+                vy += accelY;
+                vz += accelZ;
             }
 
-            let dx = (tx - px) * activeLerpRate;
-            let dy = (ty - py) * activeLerpRate;
-            let dz = (tz - pz) * activeLerpRate;
-
-            if (isLeader[i] === 1) {
-                dx *= 1.08; dy *= 1.08; dz *= 1.08;
+            // Noise Drift & Aerodynamic Damping
+            if (profile.noiseDrift > 0) {
+                const nTime = time * 0.7 + noiseSeed[i];
+                vx += fastSin(nTime * 1.7 + pz * 0.2) * profile.noiseDrift;
+                vy += fastCos(nTime * 1.3 + px * 0.2) * profile.noiseDrift;
+                vz += fastSin(nTime * 1.5 + py * 0.2) * profile.noiseDrift;
             }
 
-            const nSeed = noiseSeed[i];
-            const dAmp = profile.noiseDrift * speedMult;
-            const driftX = fastSin(time * 1.5 + nSeed) * dAmp;
-            const driftY = fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
-            const driftZ = fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
+            // Aerodynamic Drag
+            vx *= 0.94;
+            vy *= 0.94;
+            vz *= 0.94;
 
-            const targetVelX = dx + driftX;
-            const targetVelY = dy + driftY;
-            const targetVelZ = dz + driftZ;
-
-            let ax = targetVelX - velX[i];
-            let ay = targetVelY - velY[i];
-            let az = targetVelZ - velZ[i];
-
-            const accelMagSq = ax * ax + ay * ay + az * az;
-            if (accelMagSq > maxAccelSq && accelMagSq > 1e-6) {
-                const scale = maxAccel / Math.sqrt(accelMagSq);
-                ax *= scale; ay *= scale; az *= scale;
+            const speedSq = vx * vx + vy * vy + vz * vz;
+            if (speedSq > maxDispSq) {
+                const invSpeed = activeMaxDisp / Math.sqrt(speedSq);
+                vx *= invSpeed;
+                vy *= invSpeed;
+                vz *= invSpeed;
             }
 
-            velX[i] += ax;
-            velY[i] += ay;
-            velZ[i] += az;
+            posX[i] = px + vx;
+            posY[i] = py + vy;
+            posZ[i] = pz + vz;
+            velX[i] = vx;
+            velY[i] = vy;
+            velZ[i] = vz;
 
-            const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
-            if (speedSq > maxDispSq && speedSq > 1e-6) {
-                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
-                velX[i] *= invSpd;
-                velY[i] *= invSpd;
-                velZ[i] *= invSpd;
-            }
+            // Direct Instanced Transformation Matrix Computation (0 allocations)
+            let zx = vx;
+            let zy = vy;
+            let zz = vz;
+            const currentSpeedSq = zx * zx + zy * zy + zz * zz;
 
-            posX[i] += velX[i];
-            posY[i] += velY[i];
-            posZ[i] += velZ[i];
-
-            const distSq = posX[i] * posX[i] + posY[i] * posY[i] + posZ[i] * posZ[i];
-            if (distSq > 196.0 && distSq > 1e-6) {
-                const inv = 14.0 / Math.sqrt(distSq);
-                posX[i] *= inv;
-                posY[i] *= inv;
-                posZ[i] *= inv;
-            }
-
-            // Inline Column-Major Orientation Matrix (Forward Z points along velocity vector +vel)
-            const s = sizeArr[i] * baseScale;
-            const offset = i * 16;
-
-            let zx = velX[i];
-            let zy = velY[i];
-            let zz = velZ[i];
-            let zLenSq = zx * zx + zy * zy + zz * zz;
-            if (zLenSq < 1e-8) {
+            if (currentSpeedSq < 1e-8) {
                 zx = 0; zy = 0; zz = 1;
             } else {
-                const invZ = 1.0 / Math.sqrt(zLenSq);
-                zx *= invZ; zy *= invZ; zz *= invZ;
+                const invLen = 1.0 / Math.sqrt(currentSpeedSq);
+                zx *= invLen; zy *= invLen; zz *= invLen;
             }
 
-            // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
-            let xx = zz;
-            let xy = 0;
-            let xz = -zx;
-            let xLenSq = xx * xx + xz * xz;
-            if (xLenSq < 1e-6) {
-                xx = 0; xy = zz; xz = -zy;
-                xLenSq = xy * xy + xz * xz;
+            let upX = 0, upY = 1, upZ = 0;
+            if (Math.abs(zy) > 0.96) {
+                upX = 1; upY = 0; upZ = 0;
             }
-            const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
-            xx *= invX; xy *= invX; xz *= invX;
 
-            // Up vector y = z x x
+            let xx = upY * zz - upZ * zy;
+            let xy = upZ * zx - upX * zz;
+            let xz = upX * zy - upY * zx;
+            const invRightLen = 1.0 / Math.sqrt(xx * xx + xy * xy + xz * xz);
+            xx *= invRightLen; xy *= invRightLen; xz *= invRightLen;
+
             const yx = zy * xz - zz * xy;
             const yy = zz * xx - zx * xz;
             const yz = zx * xy - zy * xx;
 
-            matArray[offset + 0] = xx * s;
-            matArray[offset + 1] = xy * s;
-            matArray[offset + 2] = xz * s;
+            const boidScale = sizeArr[i] * baseScale;
+
+            const matArray = matArrays[sp];
+            const offset = spIdx * 16;
+
+            matArray[offset + 0] = xx * boidScale;
+            matArray[offset + 1] = xy * boidScale;
+            matArray[offset + 2] = xz * boidScale;
             matArray[offset + 3] = 0;
 
-            matArray[offset + 4] = yx * s;
-            matArray[offset + 5] = yy * s;
-            matArray[offset + 6] = yz * s;
+            matArray[offset + 4] = yx * boidScale;
+            matArray[offset + 5] = yy * boidScale;
+            matArray[offset + 6] = yz * boidScale;
             matArray[offset + 7] = 0;
 
-            matArray[offset + 8] = zx * s;
-            matArray[offset + 9] = zy * s;
-            matArray[offset + 10] = zz * s;
+            matArray[offset + 8] = zx * boidScale;
+            matArray[offset + 9] = zy * boidScale;
+            matArray[offset + 10] = zz * boidScale;
             matArray[offset + 11] = 0;
 
             matArray[offset + 12] = posX[i];
@@ -440,8 +433,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             state.formationRadius = smoothRadius.current;
         }
 
-        meshRef.current.instanceMatrix.needsUpdate = true;
-
         // 4. Perceptual Oklab Asynchronous Species Color Morphing with Random Staggered Lag
         const newPalette = state.speciesColors || SPECIES_COLORS;
         const paletteKey = newPalette.join(',');
@@ -449,24 +440,24 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         if (lastPaletteKey.current !== paletteKey) {
             lastPaletteKey.current = paletteKey;
 
-            // Generate randomized order of the 4 species: e.g. [2, 0, 3, 1]
-            const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+            // Generate randomized order of the 6 species
+            const order = [0, 1, 2, 3, 4, 5].sort(() => Math.random() - 0.5);
 
             let accumulatedLag = 0.0;
-            for (let idx = 0; idx < 4; idx++) {
+            for (let idx = 0; idx < 6; idx++) {
                 const s = order[idx];
                 startColors.current[s].copy(currentColors.current[s]);
-                targetColors.current[s].set(newPalette[s]);
+                targetColors.current[s].set(newPalette[s] || SPECIES_COLORS[s]);
 
                 speciesStartTimes.current[s] = time + accumulatedLag;
                 speciesDurations.current[s] = 4.5 + Math.random() * 1.5; // 4.5s - 6.0s super smooth morph
 
-                // Random lag between 1.5s and 3.0s before the NEXT species starts its transition
-                accumulatedLag += 1.5 + Math.random() * 1.5;
+                // Random lag between 1.2s and 2.5s before the NEXT species starts its transition
+                accumulatedLag += 1.2 + Math.random() * 1.3;
             }
         }
 
-        for (let s = 0; s < 4; s++) {
+        for (let s = 0; s < 6; s++) {
             const sStart = speciesStartTimes.current[s];
             const sDur = speciesDurations.current[s];
 
@@ -483,7 +474,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             // Perceptually Uniform Oklab Interpolation: zero muddy colors, zero brightness dips
             const [L1, a1, b1] = rgbToOklab(startColors.current[s].r, startColors.current[s].g, startColors.current[s].b);
-            const [L2, a2, b2] = rgbToOklab(targetColors.current[s].r, targetColors.current[s].g, targetColors.current[s].b);
+            const targetCol = targetColors.current[s];
+            const [L2, a2, b2] = rgbToOklab(targetCol.r, targetCol.g, targetCol.b);
 
             const L = L1 + (L2 - L1) * colorEase;
             const a = a1 + (a2 - a1) * colorEase;
@@ -493,11 +485,15 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             currentColors.current[s].setRGB(r, g, b_rgb);
         }
 
-        // Direct GPU Palette Uniform Upload (0ms CPU time)
-        customUniforms.current.uSpeciesColors.value[0].copy(currentColors.current[0]);
-        customUniforms.current.uSpeciesColors.value[1].copy(currentColors.current[1]);
-        customUniforms.current.uSpeciesColors.value[2].copy(currentColors.current[2]);
-        customUniforms.current.uSpeciesColors.value[3].copy(currentColors.current[3]);
+        for (let sp = 0; sp < 6; sp++) {
+            const mesh = meshRefs[sp].current;
+            if (mesh) {
+                mesh.instanceMatrix.needsUpdate = true;
+                if (mesh.material) {
+                    (mesh.material as THREE.MeshStandardMaterial).color.copy(currentColors.current[sp]);
+                }
+            }
+        }
 
         if (!state.isReady) {
             state.isReady = true;
@@ -507,31 +503,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
     });
 
-    // 6 Ultra-Fast, Low-Poly, Hard-Edged 3D Geometries with Sharp Pointy Nose (+Z)
-    const geometries = useMemo(() => {
-        const g0 = new THREE.ConeGeometry(0.12, 0.40, 3);
-        g0.rotateX(Math.PI / 2);
-
-        const g1 = new THREE.OctahedronGeometry(0.16, 0);
-        g1.scale(0.7, 0.7, 1.5);
-
-        const g2 = new THREE.ConeGeometry(0.13, 0.38, 4);
-        g2.rotateX(Math.PI / 2);
-
-        const g3 = new THREE.ConeGeometry(0.14, 0.36, 6);
-        g3.rotateX(Math.PI / 2);
-
-        const g4 = new THREE.CylinderGeometry(0.01, 0.14, 0.40, 4);
-        g4.rotateX(Math.PI / 2);
-
-        const g5 = new THREE.ConeGeometry(0.12, 0.40, 5);
-        g5.rotateX(Math.PI / 2);
-
-        return [g0, g1, g2, g3, g4, g5];
-    }, []);
-
+    const activeSpeciesShapes = getSpeciesShapes();
+    const speciesCount = Math.floor(count / 6);
     const mat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };
-    const activeGeometry = geometries[activeShapeIdx];
 
     // Check for transient material pulse micro-surprise
     let emissiveInt = mat.emissiveIntensity;
@@ -540,18 +514,28 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     }
 
     return (
-        <instancedMesh key={`${activeShapeIdx}-${count}`} ref={meshRef} args={[activeGeometry, undefined, count]}>
-            <meshStandardMaterial
-                key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
-                roughness={mat.roughness}
-                metalness={mat.metalness}
-                wireframe={false}
-                flatShading={mat.flatShading}
-                emissiveIntensity={emissiveInt}
-                toneMapped={true}
-                onBeforeCompile={onBeforeCompile}
-                customProgramCacheKey={() => 'boid_instanced_pbr_v2'}
-            />
-        </instancedMesh>
+        <group>
+            {[0, 1, 2, 3, 4, 5].map(sp => {
+                const shapeId = activeSpeciesShapes[sp] % geometries.length;
+                const activeGeometry = geometries[shapeId];
+                return (
+                    <instancedMesh
+                        key={`sp-${sp}-${shapeId}-${speciesCount}`}
+                        ref={meshRefs[sp]}
+                        args={[activeGeometry, undefined, speciesCount]}
+                    >
+                        <meshStandardMaterial
+                            key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
+                            roughness={mat.roughness}
+                            metalness={mat.metalness}
+                            wireframe={false}
+                            flatShading={mat.flatShading}
+                            emissiveIntensity={emissiveInt}
+                            toneMapped={true}
+                        />
+                    </instancedMesh>
+                );
+            })}
+        </group>
     );
 }

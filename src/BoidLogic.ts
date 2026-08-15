@@ -1,17 +1,21 @@
 import * as THREE from 'three';
 
 export enum SpeciesType {
-    Red = 0,
-    Green = 1,
-    Blue = 2,
-    Yellow = 3
+    Alpha = 0,
+    Beta = 1,
+    Gamma = 2,
+    Delta = 3,
+    Epsilon = 4,
+    Zeta = 5
 }
 
 export const SPECIES_COLORS = [
-    '#ff4444', // Red
-    '#44ff44', // Green
-    '#4444ff', // Blue
-    '#ffff44'  // Yellow
+    '#2e5a44',
+    '#768a75',
+    '#b38b4d',
+    '#3e2a22',
+    '#1c3b2b',
+    '#d4a373'
 ];
 
 export interface SpeciesAttributes {
@@ -273,30 +277,30 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
 ];
 
 export const COLOR_PALETTES = [
-    ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22'], // 1. Organic Forest & Moss
-    ['#1b4965', '#5fa8d3', '#c86d51', '#bee9e8'], // 2. Deep Ocean Ecosystem
-    ['#2b5c5e', '#1c3b2b', '#c48044', '#d8c8b8'], // 3. Nordic Fjord & Autumn Birch
-    ['#2d3142', '#bf573f', '#e09f67', '#7d8597'], // 4. Volcanic Basalt & Warm Terracotta
-    ['#a0522d', '#8a9a86', '#d4a373', '#e9d8a6'], // 5. Desert Canyon & Clay Sage
-    ['#5c5470', '#3a5a40', '#7189bf', '#b5c99a'], // 6. Alpine Meadow & Wild Violet
-    ['#134074', '#2d6a4f', '#d4a373', '#8d99ae'], // 7. Bioluminescent Deep Reef
-    ['#4a5759', '#dedbd2', '#cc8b65', '#253d44'], // 8. Sandstone & Coastal Mineral
-    ['#4a154b', '#6b2d5c', '#e0a96d', '#9c3d54'], // 9. Cosmic Amethyst & Rose Gold
-    ['#0b2545', '#134074', '#8da9c4', '#ee6c4d'], // 10. Deep Cobalt & Coral Sunset
-    ['#2a9d8f', '#e76f51', '#f4a261', '#264653'], // 11. Terracotta & Emerald Lagoon
-    ['#483c46', '#3c6e71', '#d9bbf9', '#70ae6e'], // 12. Twilight Lavender & Sage
-    ['#1e3888', '#47a8bd', '#f5e663', '#ffad60'], // 13. Solar Flare & Electric Sapphire
-    ['#355070', '#6d597a', '#b5e2fa', '#e56b6f'], // 14. Icelandic Glacial Fiord
-    ['#05668d', '#028090', '#00a896', '#f0f3bd'], // 15. Bioluminescent Mint Reef
-    ['#3d314a', '#684756', '#96705b', '#ab876d'], // 16. Earthy Obsidian & Smoked Amber
-    ['#143642', '#0f8b8d', '#ec9a29', '#a8201a'], // 17. Volcanic Copper & Patina
-    ['#582f0e', '#7f4f24', '#936639', '#c2956e'], // 18. Ancient Teak & Sandstone
-    ['#283618', '#606c38', '#fefae0', '#dda15e'], // 19. Olive Grove & Golden Barley
-    ['#220901', '#621708', '#941b0c', '#bc3908'], // 20. Magma Obsidian & Crimson Amber
-    ['#2b2d42', '#8d99ae', '#edf2f4', '#ef233c'], // 21. Nordic Winter & Ruby Spark
-    ['#003049', '#d62828', '#f77f00', '#fcbf49'], // 22. Celestial Sunspot & Midnight
-    ['#10002b', '#240046', '#5a189a', '#e0aaff'], // 23. Imperial Violet & Pearl Nebula
-    ['#004b23', '#007200', '#38b000', '#ccff33']  // 24. Hyper-Emerald & Lime Moss
+    ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22', '#1c3b2b', '#d4a373'], // 1. Organic Forest & Moss
+    ['#1b4965', '#5fa8d3', '#c86d51', '#bee9e8', '#0b2545', '#f4a261'], // 2. Deep Ocean Ecosystem
+    ['#2b5c5e', '#1c3b2b', '#c48044', '#d8c8b8', '#3a5a40', '#e09f67'], // 3. Nordic Fjord & Autumn Birch
+    ['#2d3142', '#bf573f', '#e09f67', '#7d8597', '#4f5d75', '#ef233c'], // 4. Volcanic Basalt & Warm Terracotta
+    ['#a0522d', '#8a9a86', '#d4a373', '#e9d8a6', '#6c584c', '#adc178'], // 5. Desert Canyon & Clay Sage
+    ['#5c5470', '#3a5a40', '#7189bf', '#b5c99a', '#283618', '#9c8eb9'], // 6. Alpine Meadow & Wild Violet
+    ['#134074', '#2d6a4f', '#d4a373', '#8d99ae', '#0077b6', '#f3c68f'], // 7. Bioluminescent Deep Reef
+    ['#4a5759', '#dedbd2', '#cc8b65', '#253d44', '#70797b', '#b07d62'], // 8. Sandstone & Coastal Mineral
+    ['#4a154b', '#6b2d5c', '#e0a96d', '#9c3d54', '#240046', '#f4a261'], // 9. Cosmic Amethyst & Rose Gold
+    ['#0b2545', '#134074', '#8da9c4', '#ee6c4d', '#001845', '#ff9f1c'], // 10. Deep Cobalt & Coral Sunset
+    ['#2a9d8f', '#e76f51', '#f4a261', '#264653', '#287271', '#e9c46a'], // 11. Terracotta & Emerald Lagoon
+    ['#483c46', '#3c6e71', '#d9bbf9', '#70ae6e', '#284b63', '#b8c0ff'], // 12. Twilight Lavender & Sage
+    ['#1e3888', '#47a8bd', '#f5e663', '#ffad60', '#00296b', '#ff6b6b'], // 13. Solar Flare & Electric Sapphire
+    ['#355070', '#6d597a', '#b5e2fa', '#e56b6f', '#1d3557', '#eaac8b'], // 14. Icelandic Glacial Fiord
+    ['#05668d', '#028090', '#00a896', '#f0f3bd', '#02c39a', '#0582ca'], // 15. Bioluminescent Mint Reef
+    ['#3d314a', '#684756', '#96705b', '#ab876d', '#251b2e', '#cbb29b'], // 16. Earthy Obsidian & Smoked Amber
+    ['#143642', '#0f8b8d', '#ec9a29', '#a8201a', '#082531', '#f4a261'], // 17. Volcanic Copper & Patina
+    ['#582f0e', '#7f4f24', '#936639', '#c2956e', '#3f1d0b', '#ddb892'], // 18. Ancient Teak & Sandstone
+    ['#283618', '#606c38', '#fefae0', '#dda15e', '#bc6c25', '#588157'], // 19. Olive Grove & Golden Barley
+    ['#220901', '#621708', '#941b0c', '#bc3908', '#f6aa1c', '#370617'], // 20. Magma Obsidian & Crimson Amber
+    ['#2b2d42', '#8d99ae', '#edf2f4', '#ef233c', '#d90429', '#1a1a24'], // 21. Nordic Winter & Ruby Spark
+    ['#003049', '#d62828', '#f77f00', '#fcbf49', '#001e2e', '#eae2b7'], // 22. Celestial Sunspot & Midnight
+    ['#10002b', '#240046', '#5a189a', '#e0aaff', '#7b2cbf', '#c77dff'], // 23. Imperial Violet & Pearl Nebula
+    ['#004b23', '#007200', '#38b000', '#ccff33', '#003314', '#70e000']  // 24. Hyper-Emerald & Lime Moss
 ];
 
 export const MATERIAL_PRESETS = [
@@ -431,6 +435,7 @@ export interface SimulationState {
     isReady?: boolean;
     onInitialLoadComplete?: () => void;
     formationRadius?: number;
+    speciesShapes?: [number, number, number, number, number, number];
 }
 
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
@@ -1219,13 +1224,13 @@ export class BoidSwarmData {
         const prevCount = this.count;
         this.count = targetCount;
 
-        const speciesBaseSizes = [0.25, 0.18, 0.12, 0.08];
-        const speciesCounts = [0, 0, 0, 0];
+        const speciesBaseSizes = [0.28, 0.22, 0.17, 0.13, 0.10, 0.075];
+        const speciesCounts = [0, 0, 0, 0, 0, 0];
 
         // If growing population, initialize new particles
         if (targetCount > prevCount) {
             for (let i = prevCount; i < targetCount; i++) {
-                const sp = Math.floor(Math.random() * 4) as SpeciesType;
+                const sp = (i % 6) as SpeciesType;
                 this.species[i] = sp;
 
                 const baseSize = speciesBaseSizes[sp];
