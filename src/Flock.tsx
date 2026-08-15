@@ -522,11 +522,17 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const fovRad = (perspCam.fov || 75) * (Math.PI / 180);
             
             // Balanced distance: reveals the full formation while keeping rich boid detail and dynamic motion
-            const requiredDist = (targetRadius / Math.sin(fovRad / 2)) * 0.85;
-            const baseDist = THREE.MathUtils.clamp(requiredDist, 7.5, 20.0);
+            const clampedRadius = THREE.MathUtils.clamp(targetRadius, 4.5, 9.0);
+            const requiredDist = (clampedRadius / Math.sin(fovRad / 2)) * 0.82;
+            const baseDist = THREE.MathUtils.clamp(requiredDist, 7.5, 16.0);
 
-            smoothCenter.current.lerp(new THREE.Vector3(centerX, centerY, centerZ), 0.035);
-            smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, baseDist, 0.030);
+            // Smooth Centroid tracking with velocity clamp to avoid morph scatter shake
+            const centerGoal = new THREE.Vector3(centerX, centerY, centerZ);
+            const centerDelta = centerGoal.clone().sub(smoothCenter.current);
+            if (centerDelta.length() > 0.12) centerDelta.setLength(0.12);
+            smoothCenter.current.add(centerDelta.multiplyScalar(0.025));
+
+            smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, baseDist, 0.018);
 
             // Formation category driven angle and pitch
             const cat = getCameraCategory(state.formationMode);
@@ -604,11 +610,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             if (state.cameraMood === 'overhead_iso') targetPitchCenter = 0.70;
 
             // Silky smooth exponential parameter glide
-            curPitchCenter.current = THREE.MathUtils.lerp(curPitchCenter.current, targetPitchCenter, 0.025);
-            curPitchAmp.current = THREE.MathUtils.lerp(curPitchAmp.current, targetPitchAmp, 0.025);
-            curDistScale.current = THREE.MathUtils.lerp(curDistScale.current, targetDistScale, 0.025);
-            curSweepSpeed.current = THREE.MathUtils.lerp(curSweepSpeed.current, targetOrbitSpeed, 0.025);
-            curYOffset.current = THREE.MathUtils.lerp(curYOffset.current, targetYOffsetAmp, 0.025);
+            curPitchCenter.current = THREE.MathUtils.lerp(curPitchCenter.current, targetPitchCenter, 0.020);
+            curPitchAmp.current = THREE.MathUtils.lerp(curPitchAmp.current, targetPitchAmp, 0.020);
+            curDistScale.current = THREE.MathUtils.lerp(curDistScale.current, targetDistScale, 0.020);
+            curSweepSpeed.current = THREE.MathUtils.lerp(curSweepSpeed.current, targetOrbitSpeed, 0.020);
+            curYOffset.current = THREE.MathUtils.lerp(curYOffset.current, targetYOffsetAmp, 0.020);
 
             // 1. True 360° Continuous Multi-Axis Azimuth Revolution
             const camAzimuth = (time * curSweepSpeed.current);
@@ -676,8 +682,22 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             if (!isUserOverriding) {
                 const rawGoal = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
-                smoothCamTarget.current.lerp(rawGoal, 0.045);
-                smoothLookTarget.current.lerp(smoothCenter.current, 0.050);
+                
+                // STRICT SPEED CAP & ANTI-SHAKE DAMPING: Camera never exceeds smooth cinematic max velocity
+                const deltaPos = rawGoal.clone().sub(smoothCamTarget.current);
+                const maxStep = 0.22; // Maximum linear camera step per frame
+                if (deltaPos.length() > maxStep) {
+                    deltaPos.setLength(maxStep);
+                }
+                smoothCamTarget.current.add(deltaPos.multiplyScalar(0.040));
+
+                // Smooth look-at target damping
+                const deltaLook = smoothCenter.current.clone().sub(smoothLookTarget.current);
+                const maxLookStep = 0.14;
+                if (deltaLook.length() > maxLookStep) {
+                    deltaLook.setLength(maxLookStep);
+                }
+                smoothLookTarget.current.add(deltaLook.multiplyScalar(0.045));
 
                 stateContext.camera.position.copy(smoothCamTarget.current);
                 stateContext.camera.lookAt(smoothLookTarget.current);
