@@ -289,29 +289,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const driftY = fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
             const driftZ = fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
 
-            // 3D Hydrodynamic Local Currents (Laminar Jetstreams & Flow Corridors)
-            const curStrength = (state.localCurrentsStrength !== undefined ? state.localCurrentsStrength : 1.0);
-            let currentX = 0, currentY = 0, currentZ = 0;
-            if (curStrength > 0.001) {
-                const cx = px * 0.24;
-                const cy = py * 0.30;
-                const cz = pz * 0.24;
-                const cTime = time * 0.55 * speedMult;
-
-                // Continuous 3D divergence-free harmonic flow streamlines
-                const flowX = fastSin(cy * 1.6 + cTime) + fastCos(cz * 1.3 + cTime * 0.8);
-                const flowY = fastCos(cx * 1.4 + cTime * 0.9) * fastSin(cz * 1.5 + cTime * 0.7);
-                const flowZ = fastSin(cx * 1.3 - cTime * 1.1) + fastCos(cy * 1.7 + cTime * 0.6);
-
-                const cMult = 0.016 * curStrength * speedMult;
-                currentX = flowX * cMult;
-                currentY = flowY * cMult;
-                currentZ = flowZ * cMult;
-            }
-
-            const targetVelX = dx + driftX + currentX;
-            const targetVelY = dy + driftY + currentY;
-            const targetVelZ = dz + driftZ + currentZ;
+            const targetVelX = dx + driftX;
+            const targetVelY = dy + driftY;
+            const targetVelZ = dz + driftZ;
 
             let ax = targetVelX - velX[i];
             let ay = targetVelY - velY[i];

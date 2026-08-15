@@ -1080,25 +1080,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
                             />
                         </div>
-
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-                                <span>LOCAL FLUID CURRENTS</span>
-                                <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{((simState.current.localCurrentsStrength ?? 1.0) * 100).toFixed(0)}%</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.0"
-                                max="3.0"
-                                step="0.1"
-                                value={simState.current.localCurrentsStrength ?? 1.0}
-                                onChange={(e) => {
-                                    simState.current.localCurrentsStrength = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
-                        </div>
                     </div>
                 )}
             </div>

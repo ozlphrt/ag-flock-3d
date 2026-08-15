@@ -394,7 +394,6 @@ export interface SimulationState {
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
     formationRadius?: number;
-    localCurrentsStrength?: number; // 0.0 to 3.0 (default 1.0)
 }
 
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
