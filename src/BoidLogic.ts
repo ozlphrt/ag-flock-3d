@@ -1149,7 +1149,7 @@ export class BoidSwarmData {
                 this.size[i] = baseSize * sizeVariance * leaderMult;
 
                 this.noiseSeed[i] = Math.random() * 1000.0;
-                this.isStray[i] = (Math.random() < 0.05) ? 1 : 0;
+                this.isStray[i] = 0;
                 this.strayOrbitRadius[i] = 6.0 + Math.random() * 6.0;
                 this.strayOrbitSpeed[i] = (0.2 + Math.random() * 0.4) * (Math.random() > 0.5 ? 1 : -1);
 
@@ -1386,3 +1386,68 @@ export class Boid {
         }
     }
 }
+
+export interface FormationPhysicsProfile {
+    lerpRate: number;      // How quickly boids snap to target curve
+    noiseDrift: number;    // Subtle alive turbulence
+    strayRatio: number;    // Percentage of loose aura particles (0.0 to 0.02)
+    maxSpeedCap: number;   // Max displacement per tick
+}
+
+export function getFormationPhysicsProfile(formation: FormationMode): FormationPhysicsProfile {
+    switch (formation) {
+        // 1. ULTRA-TIGHT GEOMETRIC & CRYSTALLINE (0% Strays, Razor-Sharp Structure)
+        case FormationMode.WireCube:
+        case FormationMode.Tesseract4D:
+        case FormationMode.DodecahedronShield:
+        case FormationMode.StarPolygon:
+        case FormationMode.DNALadder:
+        case FormationMode.SaturnRings:
+        case FormationMode.PulsingHeart:
+        case FormationMode.DoubleHelix:
+        case FormationMode.TripleHelix:
+        case FormationMode.TrefoilKnot:
+        case FormationMode.TorusKnot:
+        case FormationMode.LissajousKnot:
+        case FormationMode.KleinBottle4D:
+        case FormationMode.CalabiYauManifold:
+        case FormationMode.CliffordTorus:
+        case FormationMode.GyroidMinimalSurface:
+        case FormationMode.FerrisWheel:
+        case FormationMode.HopfFibration:
+        case FormationMode.AlienMothership:
+            return { lerpRate: 0.12, noiseDrift: 0.003, strayRatio: 0.0, maxSpeedCap: 0.08 };
+
+        // 2. ORGANIC BALANCED (Crisp silhouette with graceful aerodynamic breathing)
+        case FormationMode.PhoenixWings:
+        case FormationMode.JellyfishPulse:
+        case FormationMode.BioMushroom:
+        case FormationMode.CoralReef:
+        case FormationMode.OuroborosSerpent:
+        case FormationMode.DancingRibbon:
+        case FormationMode.NautilusShell:
+        case FormationMode.SpiderWeb:
+        case FormationMode.HourglassVortex:
+        case FormationMode.Spiral:
+        case FormationMode.GeologicStrata:
+        case FormationMode.TreeBranch:
+        case FormationMode.Procedural:
+            return { lerpRate: 0.08, noiseDrift: 0.008, strayRatio: 0.006, maxSpeedCap: 0.065 };
+
+        // 3. FLUID / DYNAMIC LOOSE (Expansive cosmic & turbulent flow)
+        case FormationMode.MurmurationFlow:
+        case FormationMode.LightningBolt:
+        case FormationMode.SupernovaBurst:
+        case FormationMode.BigBangExpansion:
+        case FormationMode.CollapsingSphere:
+        case FormationMode.TornadoFunnel:
+        case FormationMode.TsunamiWave:
+        case FormationMode.KelvinHelmholtz:
+        case FormationMode.BlackHoleJet:
+        case FormationMode.RiverDelta:
+        case FormationMode.LorenzAttractor:
+        default:
+            return { lerpRate: 0.06, noiseDrift: 0.015, strayRatio: 0.018, maxSpeedCap: 0.06 };
+    }
+}
+
