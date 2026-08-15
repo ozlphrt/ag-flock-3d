@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { Flock } from './Flock'
 import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
+import { CameraRig } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
 
 const INITIAL_ATTRIBUTES: SpeciesAttributes = {
@@ -188,19 +189,7 @@ function App() {
             <Canvas shadows gl={{ antialias: false }}>
                 <color attach="background" args={['#0d111a']} />
                 <fog attach="fog" args={['#0d111a', 120, 360]} />
-                <PerspectiveCamera makeDefault fov={55} position={[0, 4, 18]} />
-                <OrbitControls
-                    makeDefault
-                    enableDamping
-                    dampingFactor={0.05}
-                    autoRotate
-                    autoRotateSpeed={0.8}
-                    minDistance={2}
-                    maxDistance={250}
-                    minPolarAngle={0}
-                    maxPolarAngle={Math.PI}
-                    target={[0, 0, 0]}
-                />
+                <CameraRig simState={simState} />
 
                 <FPSUpdater onChange={setFps} />
 

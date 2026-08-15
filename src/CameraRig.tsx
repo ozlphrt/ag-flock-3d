@@ -1,0 +1,188 @@
+import * as React from 'react';
+import { useRef, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import * as THREE from 'three';
+import { SimulationState } from './BoidLogic';
+
+export interface CameraPreset {
+    id: string;
+    name: string;
+    icon: string;
+    description: string;
+    fov: number;
+    defaultPos: [number, number, number];
+    target: [number, number, number];
+    autoRotateSpeed: number;
+    type: 'orbit' | 'flythrough' | 'corkscrew';
+}
+
+export const CAMERA_PRESETS: CameraPreset[] = [
+    {
+        id: 'standard',
+        name: 'Standard Orbit',
+        icon: '🪐',
+        description: 'Smooth 360° celestial orbit with natural depth',
+        fov: 55,
+        defaultPos: [0, 4, 18],
+        target: [0, 0, 0],
+        autoRotateSpeed: 0.8,
+        type: 'orbit'
+    },
+    {
+        id: 'giant',
+        name: 'Giant Colossus',
+        icon: '🗿',
+        description: 'Low-angle wide lens looking up into the towering murmuration',
+        fov: 72,
+        defaultPos: [0, -4.5, 14],
+        target: [0, 2.5, 0],
+        autoRotateSpeed: 0.6,
+        type: 'orbit'
+    },
+    {
+        id: 'action',
+        name: 'Action / Dynamic',
+        icon: '⚡',
+        description: 'Fast dynamic banking flyby with wave height oscillations',
+        fov: 65,
+        defaultPos: [0, 2, 11],
+        target: [0, 0, 0],
+        autoRotateSpeed: 2.2,
+        type: 'orbit'
+    },
+    {
+        id: 'spaceship',
+        name: 'Spaceship Fly-Through',
+        icon: '🚀',
+        description: 'Cockpit fly-through: dives straight through the heart and loops back',
+        fov: 72,
+        defaultPos: [0, 0, 24],
+        target: [0, 0, 0],
+        autoRotateSpeed: 0.0,
+        type: 'flythrough'
+    },
+    {
+        id: 'celestial',
+        name: 'Celestial Top-Down',
+        icon: '🌌',
+        description: 'Overhead bird\'s-eye view looking down on sacred spiral ripples',
+        fov: 48,
+        defaultPos: [0, 26, 0.1],
+        target: [0, 0, 0],
+        autoRotateSpeed: 0.5,
+        type: 'orbit'
+    },
+    {
+        id: 'corkscrew',
+        name: 'Vortex Corkscrew',
+        icon: '🌀',
+        description: 'Helical 3D corkscrew diving in and out along the central axis',
+        fov: 62,
+        defaultPos: [0, 0, 16],
+        target: [0, 0, 0],
+        autoRotateSpeed: 1.2,
+        type: 'corkscrew'
+    }
+];
+
+interface CameraRigProps {
+    simState: React.MutableRefObject<SimulationState>;
+}
+
+export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
+    const controlsRef = useRef<any>(null);
+    const cameraRef = useRef<THREE.PerspectiveCamera>(null!);
+    const lastPresetIdx = useRef<number>(-1);
+    const flightTime = useRef(0);
+    const { camera } = useThree();
+
+    useFrame((_, delta) => {
+        const state = simState.current;
+        const presetIdx = (state && state.cameraPresetIndex !== undefined)
+            ? Math.abs(state.cameraPresetIndex) % CAMERA_PRESETS.length
+            : 0;
+        const preset = CAMERA_PRESETS[presetIdx];
+        const safeDelta = Math.min(delta, 0.05);
+
+        // Smooth FOV Transition
+        const perspCam = camera as THREE.PerspectiveCamera;
+        if (perspCam && Math.abs(perspCam.fov - preset.fov) > 0.1) {
+            perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, preset.fov, 0.05);
+            perspCam.updateProjectionMatrix();
+        }
+
+        // On Preset Switch, smooth snap to default vantage
+        if (lastPresetIdx.current !== presetIdx) {
+            lastPresetIdx.current = presetIdx;
+            if (controlsRef.current) {
+                if (preset.type === 'orbit') {
+                    controlsRef.current.autoRotate = true;
+                    controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
+                    controlsRef.current.target.set(preset.target[0], preset.target[1], preset.target[2]);
+                    camera.position.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]);
+                    controlsRef.current.update();
+                }
+            }
+        }
+
+        // Custom Cinematic Motion Paths (Spaceship & Corkscrew)
+        if (preset.type === 'flythrough') {
+            flightTime.current += safeDelta * 0.45;
+            const t = flightTime.current;
+
+            // Longitudinal dive through the formation (+Z -> -Z) with banking loop turn
+            const z = Math.cos(t) * 24.0;
+            const x = Math.sin(t * 2.0) * 5.5;
+            const y = Math.sin(t) * 3.2;
+
+            // Velocity tangent vector for forward look-at
+            const vz = -Math.sin(t) * 24.0;
+            const vx = Math.cos(t * 2.0) * 11.0;
+            const vy = Math.cos(t) * 3.2;
+
+            camera.position.set(x, y, z);
+            const lookTarget = new THREE.Vector3(x + vx * 0.2, y + vy * 0.2, z + vz * 0.2);
+            camera.lookAt(lookTarget);
+
+            if (controlsRef.current) {
+                controlsRef.current.target.copy(lookTarget);
+            }
+        } else if (preset.type === 'corkscrew') {
+            flightTime.current += safeDelta * 0.40;
+            const t = flightTime.current;
+
+            const r = 11.0 + Math.sin(t * 0.6) * 5.0;
+            const x = Math.cos(t) * r;
+            const z = Math.sin(t) * r;
+            const y = Math.sin(t * 0.8) * 6.5;
+
+            camera.position.set(x, y, z);
+            const lookTarget = new THREE.Vector3(0, Math.sin(t * 0.8) * 1.5, 0);
+            camera.lookAt(lookTarget);
+
+            if (controlsRef.current) {
+                controlsRef.current.target.copy(lookTarget);
+            }
+        }
+    });
+
+    return (
+        <>
+            <PerspectiveCamera ref={cameraRef} makeDefault fov={55} position={[0, 4, 18]} />
+            <OrbitControls
+                ref={controlsRef}
+                makeDefault
+                enableDamping
+                dampingFactor={0.05}
+                autoRotate
+                autoRotateSpeed={0.8}
+                minDistance={1.5}
+                maxDistance={250}
+                minPolarAngle={0}
+                maxPolarAngle={Math.PI}
+                target={[0, 0, 0]}
+            />
+        </>
+    );
+};

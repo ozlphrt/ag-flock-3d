@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
 import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome } from './RLEngine';
+import { CAMERA_PRESETS } from './CameraRig';
 
 interface OverlayUIProps {
     simState: React.MutableRefObject<SimulationState>;
@@ -19,7 +20,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'topology' | 'geometry' | 'material' | 'lighting' | 'physics'>('topology');
+    const [activeTab, setActiveTab] = useState<'topology' | 'geometry' | 'material' | 'lighting' | 'camera' | 'physics'>('topology');
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
@@ -200,6 +201,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.lightingProfileIndex = id;
         simState.current.lightingProfile = LIGHTING_PROFILES[id];
         setTick(t => t + 1);
+        setIsSettingsOpen(false);
+    };
+
+    const handleCycleCameraPreset = () => {
+        const curIdx = simState.current.cameraPresetIndex ?? 0;
+        const nextIdx = (curIdx + 1) % CAMERA_PRESETS.length;
+        simState.current.cameraPresetIndex = nextIdx;
+        setTick(t => t + 1);
+        showToast(`🎥 Camera: ${CAMERA_PRESETS[nextIdx].name}`);
+    };
+
+    const selectCameraPreset = (idx: number) => {
+        simState.current.cameraPresetIndex = idx;
+        setTick(t => t + 1);
+        showToast(`🎥 Camera: ${CAMERA_PRESETS[idx].name}`);
         setIsSettingsOpen(false);
     };
 
@@ -452,7 +468,38 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         </div>
 
         {/* Floating Bottom Right Controls */}
-        <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
+        <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1000 }}>
+            {/* Camera Preset Fast Cycling Pill */}
+            <button
+                className="defeat-selector-btn"
+                onClick={handleCycleCameraPreset}
+                title={`Active Camera: ${CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name} — Click to cycle presets (Standard, Giant, Action, Spaceship, etc.)`}
+                style={{
+                    height: '52px',
+                    padding: '0 16px',
+                    borderRadius: '26px',
+                    background: 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: '1.5px solid rgba(0, 255, 204, 0.35)',
+                    color: '#e0e8ff',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    transition: 'all 0.3s ease'
+                }}
+            >
+                <span style={{ fontSize: '18px' }}>{CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.icon || '🎥'}</span>
+                <span style={{ color: '#00ffcc', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
+                    {CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name || 'Camera'}
+                </span>
+            </button>
+
             {/* Gallery Slide-up Drawer Toggle */}
             <button
                 className="defeat-selector-btn"
@@ -773,6 +820,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         { id: 'geometry', label: 'GEOMETRY' },
                         { id: 'material', label: 'MATERIAL' },
                         { id: 'lighting', label: 'LIGHTING' },
+                        { id: 'camera', label: 'CAMERA' },
                         { id: 'physics', label: 'PHYSICS' }
                     ].map(tab => (
                         <button
@@ -919,7 +967,64 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 5: Physics & Population Controls */}
+                {/* Tab 5: Cinematic Camera Presets Grid */}
+                {activeTab === 'camera' && (
+                    <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>
+                            Choose an artistic camera vantage or use the quick cycle button on the bottom bar:
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
+                            {CAMERA_PRESETS.map((cp, idx) => {
+                                const isSelected = (simState.current.cameraPresetIndex ?? 0) === idx;
+                                return (
+                                    <button
+                                        key={cp.id}
+                                        onClick={() => selectCameraPreset(idx)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '12px 14px',
+                                            borderRadius: '12px',
+                                            background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                            border: isSelected ? '1.5px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                            color: isSelected ? '#00ffcc' : '#fff',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            transition: 'all 0.2s ease',
+                                            gap: '12px'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ fontSize: '22px' }}>{cp.icon}</span>
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
+                                                    {cp.name}
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: isSelected ? 'rgba(0, 255, 204, 0.8)' : 'rgba(255, 255, 255, 0.5)', marginTop: '2px', lineHeight: 1.3 }}>
+                                                    {cp.description}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            fontSize: '9px',
+                                            fontWeight: 900,
+                                            letterSpacing: '0.5px',
+                                            background: isSelected ? '#00ffcc' : 'rgba(255,255,255,0.08)',
+                                            color: isSelected ? '#000' : 'rgba(255,255,255,0.4)'
+                                        }}>
+                                            {isSelected ? 'ACTIVE' : 'SELECT'}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Tab 6: Physics & Population Controls */}
                 {activeTab === 'physics' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
