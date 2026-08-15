@@ -61,25 +61,25 @@ export const VortexBeacons: React.FC<{ simState: React.MutableRefObject<Simulati
                     >
                         {/* 1. Luminous Central Vortex Eye */}
                         <mesh>
-                            <sphereGeometry args={[0.22, 16, 16]} />
+                            <sphereGeometry args={[0.20, 16, 16]} />
                             <meshBasicMaterial color={colorSet.core} transparent opacity={0.9} />
                         </mesh>
 
                         {/* 2. Inner Horizontal Whirlpool Ring */}
                         <mesh rotation={[Math.PI / 2, 0, 0]}>
-                            <torusGeometry args={[0.85, 0.035, 6, 32]} />
+                            <torusGeometry args={[0.65, 0.03, 6, 32]} />
                             <meshBasicMaterial color={colorSet.glow} wireframe transparent opacity={0.8} />
                         </mesh>
 
                         {/* 3. Middle Horizontal Whirlpool Ring */}
-                        <mesh position={[0, 0.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                            <torusGeometry args={[1.5, 0.035, 6, 32]} />
+                        <mesh position={[0, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                            <torusGeometry args={[1.15, 0.03, 6, 32]} />
                             <meshBasicMaterial color={colorSet.ring} wireframe transparent opacity={0.65} />
                         </mesh>
 
                         {/* 4. Outer Horizontal Whirlpool Ring */}
-                        <mesh position={[0, 0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                            <torusGeometry args={[2.2, 0.03, 6, 32]} />
+                        <mesh position={[0, 0.25, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                            <torusGeometry args={[1.75, 0.025, 6, 32]} />
                             <meshBasicMaterial color={colorSet.core} wireframe transparent opacity={0.45} />
                         </mesh>
                     </group>

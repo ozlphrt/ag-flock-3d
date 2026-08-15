@@ -356,28 +356,31 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             velY[i] += ay;
             velZ[i] += az;
 
-            // Direct Vortex Dynamic Velocity Impulse (Single-Axis Smooth Horizontal Whirlpool)
+            // Direct Vortex Dynamic Velocity Impulse (Tight Core with Rapid Distance Reduction)
             const vPower = (state.vortexStrength !== undefined ? state.vortexStrength : 2.5);
             let isNearVortex = false;
+            const vRadius = 4.2; // Compact localized vortex core
+            const vRadiusSq = 17.64; // 4.2^2
 
             for (let v = 0; v < numVortices; v++) {
                 const vdx = px - vxArr[v];
                 const vdy = py - vyArr[v];
                 const vdz = pz - vzArr[v];
                 const distSq = vdx * vdx + vdy * vdy + vdz * vdz;
-                if (distSq < 64.0) { // Radius 8.0 units
+                if (distSq < vRadiusSq) {
                     isNearVortex = true;
                     const dist = Math.sqrt(distSq) + 0.001;
-                    const falloff = 1.0 - (dist / 8.0);
-                    const w = falloff * falloff * (0.028 * vPower);
+                    const normDist = dist / vRadius;
+                    const linearFalloff = 1.0 - normDist;
+                    // Steep cubic falloff: effect drops off dramatically fast with distance!
+                    const w = (linearFalloff * linearFalloff * linearFalloff) * (0.075 * vPower);
 
                     // Pure single horizontal rotation around vertical Y axis
                     const spinDir = (v % 2 === 0 ? 1.0 : -1.0);
                     const swirlX = spinDir * (vdz / dist);
-                    const swirlY = 0;
                     const swirlZ = -spinDir * (vdx / dist);
 
-                    // Gentle centripetal inward suction pull
+                    // Centripetal inward suction pull (also concentrated tightly at core)
                     const suctionX = -(vdx / dist) * (w * 0.35);
                     const suctionY = -(vdy / dist) * (w * 0.35);
                     const suctionZ = -(vdz / dist) * (w * 0.35);
