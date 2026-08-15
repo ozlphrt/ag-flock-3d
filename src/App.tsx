@@ -48,6 +48,66 @@ function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
     return null
 }
 
+// Perceptual Oklab Color Space Interpolation for Flawless Lighting Transitions
+function srgbToLinear(c: number): number {
+    return c > 0.04045 ? Math.pow((c + 0.055) / 1.055, 2.4) : c / 12.92;
+}
+
+function linearToSrgb(c: number): number {
+    const clamped = Math.max(0, Math.min(1, c));
+    return clamped > 0.0031308 ? 1.055 * Math.pow(clamped, 1.0 / 2.4) - 0.055 : 12.92 * clamped;
+}
+
+function rgbToOklab(r: number, g: number, b: number): [number, number, number] {
+    const lr = srgbToLinear(r);
+    const lg = srgbToLinear(g);
+    const lb = srgbToLinear(b);
+
+    const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb;
+    const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb;
+    const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb;
+
+    const l_ = Math.cbrt(Math.max(0, l));
+    const m_ = Math.cbrt(Math.max(0, m));
+    const s_ = Math.cbrt(Math.max(0, s));
+
+    return [
+        0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+        1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+        0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
+    ];
+}
+
+function oklabToRgb(L: number, a: number, b: number): [number, number, number] {
+    const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+
+    const l = l_ * l_ * l_;
+    const m = m_ * m_ * m_;
+    const s = s_ * s_ * s_;
+
+    const lr = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    const lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+
+    return [
+        linearToSrgb(lr),
+        linearToSrgb(lg),
+        linearToSrgb(lb)
+    ];
+}
+
+function lerpOklabColor(c1: THREE.Color, c2: THREE.Color, t: number, out: THREE.Color) {
+    const [L1, a1, b1] = rgbToOklab(c1.r, c1.g, c1.b);
+    const [L2, a2, b2] = rgbToOklab(c2.r, c2.g, c2.b);
+    const L = L1 + (L2 - L1) * t;
+    const a = a1 + (a2 - a1) * t;
+    const b = b1 + (b2 - b1) * t;
+    const [r, g, b_rgb] = oklabToRgb(L, a, b);
+    out.setRGB(r, g, b_rgb);
+}
+
 function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const ambientRef = useRef<THREE.AmbientLight>(null!);
     const keyRef = useRef<THREE.DirectionalLight>(null!);
@@ -55,19 +115,41 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
     const rimRef = useRef<THREE.DirectionalLight>(null!);
     const bounceRef = useRef<THREE.DirectionalLight>(null!);
 
+    const lastProfileId = useRef<number>(-1);
+    const transitionStartTime = useRef<number>(0);
+    const transitionDuration = 6.0; // 6.0s luxurious, cinematic lighting transitions
+
+    // Physical state anchors
+    const startAmbient = useRef(0.95);
+    const targetAmbient = useRef(0.95);
     const curAmbient = useRef(0.95);
-    const curKey = useRef(3.0);
-    const curFill = useRef(1.2);
-    const curRim = useRef(2.2);
+
+    const startKeyInt = useRef(3.0);
+    const targetKeyInt = useRef(3.0);
+    const curKeyInt = useRef(3.0);
+
+    const startFillInt = useRef(1.2);
+    const targetFillInt = useRef(1.2);
+    const curFillInt = useRef(1.2);
+
+    const startRimInt = useRef(2.2);
+    const targetRimInt = useRef(2.2);
+    const curRimInt = useRef(2.2);
+
+    const startKeyColor = useRef(new THREE.Color('#ffffff'));
+    const targetKeyColor = useRef(new THREE.Color('#ffffff'));
     const curKeyColor = useRef(new THREE.Color('#ffffff'));
+
+    const startFillColor = useRef(new THREE.Color('#e8f0fe'));
+    const targetFillColor = useRef(new THREE.Color('#e8f0fe'));
     const curFillColor = useRef(new THREE.Color('#e8f0fe'));
+
+    const startRimColor = useRef(new THREE.Color('#e0e8ff'));
+    const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
     const curRimColor = useRef(new THREE.Color('#e0e8ff'));
 
-    const targetKeyColor = useRef(new THREE.Color('#ffffff'));
-    const targetFillColor = useRef(new THREE.Color('#e8f0fe'));
-    const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
-
     useFrame((stateContext) => {
+        const time = stateContext.clock.getElapsedTime();
         const state = simState.current;
         const profile = state.lightingProfile || LIGHTING_PROFILES[0];
         const mult = state.lightIntensityMultiplier ?? 1.0;
@@ -77,39 +159,73 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             flashBoost = 2.4;
         }
 
-        const targetAmb = (profile.ambientIntensity + 0.45) * mult;
-        const targetK = (profile.keyIntensity * 1.25) * mult * flashBoost;
-        const targetF = (profile.fillIntensity + 0.65) * mult;
-        const targetR = (profile.rimIntensity * 1.35) * mult * flashBoost;
+        const tAmb = (profile.ambientIntensity + 0.45) * mult;
+        const tKey = (profile.keyIntensity * 1.25) * mult * flashBoost;
+        const tFill = (profile.fillIntensity + 0.65) * mult;
+        const tRim = (profile.rimIntensity * 1.35) * mult * flashBoost;
 
-        targetKeyColor.current.set(profile.keyColor);
-        targetFillColor.current.set(profile.fillColor);
-        targetRimColor.current.set(profile.rimColor);
+        if (lastProfileId.current !== profile.id) {
+            lastProfileId.current = profile.id;
+            transitionStartTime.current = time;
 
-        curAmbient.current = THREE.MathUtils.lerp(curAmbient.current, targetAmb, 0.04);
-        curKey.current = THREE.MathUtils.lerp(curKey.current, targetK, 0.05);
-        curFill.current = THREE.MathUtils.lerp(curFill.current, targetF, 0.04);
-        curRim.current = THREE.MathUtils.lerp(curRim.current, targetR, 0.04);
+            // Capture exact current values as seamless transition origin
+            startAmbient.current = curAmbient.current;
+            startKeyInt.current = curKeyInt.current;
+            startFillInt.current = curFillInt.current;
+            startRimInt.current = curRimInt.current;
 
-        curKeyColor.current.lerp(targetKeyColor.current, 0.03);
-        curFillColor.current.lerp(targetFillColor.current, 0.03);
-        curRimColor.current.lerp(targetRimColor.current, 0.03);
+            startKeyColor.current.copy(curKeyColor.current);
+            startFillColor.current.copy(curFillColor.current);
+            startRimColor.current.copy(curRimColor.current);
 
-        if (ambientRef.current) ambientRef.current.intensity = curAmbient.current;
+            targetAmbient.current = tAmb;
+            targetKeyInt.current = tKey;
+            targetFillInt.current = tFill;
+            targetRimInt.current = tRim;
+
+            targetKeyColor.current.set(profile.keyColor);
+            targetFillColor.current.set(profile.fillColor);
+            targetRimColor.current.set(profile.rimColor);
+        } else {
+            // Continuously update targets for live slider/flash changes
+            targetAmbient.current = tAmb;
+            targetKeyInt.current = tKey;
+            targetFillInt.current = tFill;
+            targetRimInt.current = tRim;
+        }
+
+        const elapsed = Math.max(0.0, time - transitionStartTime.current);
+        const p = Math.min(1.0, elapsed / transitionDuration);
+        // Ultra-smooth C2-continuous Quintic Ease-In / Ease-Out S-Curve: 6p^5 - 15p^4 + 10p^3
+        const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
+
+        curAmbient.current = startAmbient.current + (targetAmbient.current - startAmbient.current) * sCurve;
+        curKeyInt.current = startKeyInt.current + (targetKeyInt.current - startKeyInt.current) * sCurve;
+        curFillInt.current = startFillInt.current + (targetFillInt.current - startFillInt.current) * sCurve;
+        curRimInt.current = startRimInt.current + (targetRimInt.current - startRimInt.current) * sCurve;
+
+        lerpOklabColor(startKeyColor.current, targetKeyColor.current, sCurve, curKeyColor.current);
+        lerpOklabColor(startFillColor.current, targetFillColor.current, sCurve, curFillColor.current);
+        lerpOklabColor(startRimColor.current, targetRimColor.current, sCurve, curRimColor.current);
+
+        if (ambientRef.current) {
+            ambientRef.current.intensity = curAmbient.current;
+            ambientRef.current.color.copy(curFillColor.current);
+        }
         if (keyRef.current) {
-            keyRef.current.intensity = curKey.current;
+            keyRef.current.intensity = curKeyInt.current;
             keyRef.current.color.copy(curKeyColor.current);
         }
         if (fillRef.current) {
-            fillRef.current.intensity = curFill.current;
+            fillRef.current.intensity = curFillInt.current;
             fillRef.current.color.copy(curFillColor.current);
         }
         if (rimRef.current) {
-            rimRef.current.intensity = curRim.current;
+            rimRef.current.intensity = curRimInt.current;
             rimRef.current.color.copy(curRimColor.current);
         }
         if (bounceRef.current) {
-            bounceRef.current.intensity = curFill.current * 0.85;
+            bounceRef.current.intensity = curFillInt.current * 0.85;
             bounceRef.current.color.copy(curFillColor.current);
         }
     });
