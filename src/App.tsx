@@ -188,8 +188,19 @@ function App() {
             <Canvas shadows gl={{ antialias: false }}>
                 <color attach="background" args={['#0d111a']} />
                 <fog attach="fog" args={['#0d111a', 120, 360]} />
-                <PerspectiveCamera makeDefault fov={68} position={[8.0, 5.0, 10.0]} />
-                <OrbitControls makeDefault enableDamping dampingFactor={0.03} minDistance={3} maxDistance={150} />
+                <PerspectiveCamera makeDefault fov={55} position={[0, 4, 18]} />
+                <OrbitControls
+                    makeDefault
+                    enableDamping
+                    dampingFactor={0.05}
+                    autoRotate
+                    autoRotateSpeed={0.8}
+                    minDistance={2}
+                    maxDistance={250}
+                    minPolarAngle={0}
+                    maxPolarAngle={Math.PI}
+                    target={[0, 0, 0]}
+                />
 
                 <FPSUpdater onChange={setFps} />
 
