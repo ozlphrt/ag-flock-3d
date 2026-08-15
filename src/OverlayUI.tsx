@@ -48,7 +48,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         return () => clearInterval(interval);
     }, [simState]);
 
-    // Ephemeral Like Bar Visibility state
+    // Ephemeral Like Bar Visibility state (disappears after 3 seconds of inactivity)
     const [isLikeBarVisible, setIsLikeBarVisible] = useState(true);
     const lastUserActivity = useRef(Date.now());
 
@@ -61,10 +61,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         window.addEventListener('touchstart', onActivity);
 
         const checkFade = setInterval(() => {
-            if (Date.now() - lastUserActivity.current > 12000 && !isSettingsOpen && !isGalleryOpen) {
+            if (Date.now() - lastUserActivity.current > 3000 && !isSettingsOpen && !isGalleryOpen) {
                 setIsLikeBarVisible(false);
             }
-        }, 1000);
+        }, 200);
 
         return () => {
             window.removeEventListener('pointermove', onActivity);
@@ -410,6 +410,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         {/* Ephemeral Granular Like/Dislike Bar (Right Vertical) */}
         <div
             className="ephemeral-like-bar"
+            onPointerEnter={() => { lastUserActivity.current = Date.now(); }}
+            onPointerMove={() => { lastUserActivity.current = Date.now(); }}
             style={{
                 opacity: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 1 : 0,
                 pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
