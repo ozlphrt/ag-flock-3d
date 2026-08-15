@@ -187,7 +187,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             if (recentMaterials.length > 3) recentMaterials.shift();
 
             state.materialPreset = nextMatIdx;
-            state.materialSettings = { ...MATERIAL_PRESETS[nextMatIdx].settings };
+            state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
         }
 
         // 4. INDEPENDENT LIGHTING CLOCK (Every 70-110s)
@@ -209,7 +209,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             if (recentLighting.length > 3) recentLighting.shift();
 
             state.lightingProfileIndex = nextLightIdx;
-            state.lightingProfile = LIGHTING_PROFILES[nextLightIdx];
+            state.lightingProfile = LIGHTING_PROFILES[nextLightIdx] || LIGHTING_PROFILES[0];
         }
 
         // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 38-52s in Auto Mode)
@@ -326,7 +326,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             if (recentLighting.length > 3) recentLighting.shift();
 
             state.lightingProfileIndex = nextLightIdx;
-            state.lightingProfile = LIGHTING_PROFILES[nextLightIdx];
+            state.lightingProfile = LIGHTING_PROFILES[nextLightIdx] || LIGHTING_PROFILES[0];
         } else if (dim === 'material') {
             lastMaterialTime = time;
             materialInterval = rndJitter(72.0, 0.2);
@@ -344,7 +344,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             if (recentMaterials.length > 3) recentMaterials.shift();
 
             state.materialPreset = nextMatIdx;
-            state.materialSettings = { ...MATERIAL_PRESETS[nextMatIdx].settings };
+            state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
         }
     };
 

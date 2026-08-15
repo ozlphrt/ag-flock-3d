@@ -197,17 +197,19 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         if (id === -1) {
             simState.current.autoMaterial = true;
         } else {
+            const mat = MATERIAL_PRESETS[id] || MATERIAL_PRESETS[0];
             simState.current.autoMaterial = false;
             simState.current.materialPreset = id;
-            simState.current.materialSettings = { ...MATERIAL_PRESETS[id].settings };
+            simState.current.materialSettings = { ...mat.settings };
         }
         setTick(t => t + 1);
         setIsSettingsOpen(false);
     };
 
     const selectLighting = (id: number) => {
+        const light = LIGHTING_PROFILES[id] || LIGHTING_PROFILES[0];
         simState.current.lightingProfileIndex = id;
-        simState.current.lightingProfile = LIGHTING_PROFILES[id];
+        simState.current.lightingProfile = light;
         setTick(t => t + 1);
         setIsSettingsOpen(false);
     };
@@ -320,22 +322,36 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     };
 
     const restoreCreation = (creation: LikedCreation) => {
+        if (!creation) return;
         const state = simState.current;
         state.prevFormationMode = state.formationMode;
         state.prevFormationSeed = state.formationSeed;
-        state.formationMode = creation.formationMode as FormationMode;
+        state.formationMode = (creation.formationMode !== undefined) ? (creation.formationMode as FormationMode) : FormationMode.QuadHelixBraid;
         state.formationSeed = Math.random() * 10000;
-        state.boidShape = creation.boidShape;
+        state.boidShape = creation.boidShape ?? 0;
         state.autoShape = false;
-        state.materialPreset = creation.materialPreset;
+
+        const matIdx = (creation.materialPreset !== undefined && MATERIAL_PRESETS[creation.materialPreset])
+            ? creation.materialPreset
+            : 0;
+        state.materialPreset = matIdx;
         state.autoMaterial = false;
-        state.materialSettings = { ...MATERIAL_PRESETS[creation.materialPreset].settings };
-        state.paletteIndex = creation.paletteIndex ?? 0;
-        state.speciesColors = [...creation.colors];
-        if (creation.lightingProfileIndex !== undefined) {
-            state.lightingProfileIndex = creation.lightingProfileIndex;
-            state.lightingProfile = LIGHTING_PROFILES[creation.lightingProfileIndex];
-        }
+        state.materialSettings = { ...(MATERIAL_PRESETS[matIdx]?.settings || MATERIAL_PRESETS[0].settings) };
+
+        const palIdx = (creation.paletteIndex !== undefined && COLOR_PALETTES[creation.paletteIndex])
+            ? creation.paletteIndex
+            : 0;
+        state.paletteIndex = palIdx;
+        state.speciesColors = (creation.colors && creation.colors.length >= 4)
+            ? [...creation.colors]
+            : [...COLOR_PALETTES[palIdx]];
+
+        const lightIdx = (creation.lightingProfileIndex !== undefined && LIGHTING_PROFILES[creation.lightingProfileIndex])
+            ? creation.lightingProfileIndex
+            : 0;
+        state.lightingProfileIndex = lightIdx;
+        state.lightingProfile = LIGHTING_PROFILES[lightIdx] || LIGHTING_PROFILES[0];
+
         if (creation.genome) {
             state.proceduralGenome = creation.genome;
         }
@@ -344,7 +360,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
         setIsGalleryOpen(false);
         setTick(t => t + 1);
-        showToast(`Restored: ${creation.formationLabel}`);
+        showToast(`✨ Restored: ${creation.formationLabel || 'Masterpiece'}`);
     };
 
     const activePreset = formations.find(f => f.id === currentFormation) || formations[0];

@@ -265,13 +265,19 @@ function App() {
     const [population, setPopulation] = useState(100000)
     const [fps, setFps] = useState(0)
 
-    // Hydrate from persisted last active state if available
+    // Hydrate from persisted last active state if available with full index bounds safety
     const lastSaved = getLastState();
-    const initialMode = lastSaved ? (lastSaved.formationMode as FormationMode) : FormationMode.QuadHelixBraid;
-    const initialPaletteIdx = lastSaved ? lastSaved.paletteIndex : (initialMode % COLOR_PALETTES.length);
-    const initialMatIdx = lastSaved ? lastSaved.materialPreset : 0;
-    const initialLightIdx = lastSaved ? lastSaved.lightingProfileIndex : 0;
-    const initialShape = lastSaved ? lastSaved.boidShape : 0;
+    const initialMode = (lastSaved && lastSaved.formationMode !== undefined) ? (lastSaved.formationMode as FormationMode) : FormationMode.QuadHelixBraid;
+    const initialPaletteIdx = (lastSaved && lastSaved.paletteIndex !== undefined && COLOR_PALETTES[lastSaved.paletteIndex])
+        ? lastSaved.paletteIndex
+        : 0;
+    const initialMatIdx = (lastSaved && lastSaved.materialPreset !== undefined && MATERIAL_PRESETS[lastSaved.materialPreset])
+        ? lastSaved.materialPreset
+        : 0;
+    const initialLightIdx = (lastSaved && lastSaved.lightingProfileIndex !== undefined && LIGHTING_PROFILES[lastSaved.lightingProfileIndex])
+        ? lastSaved.lightingProfileIndex
+        : 0;
+    const initialShape = (lastSaved && lastSaved.boidShape !== undefined) ? lastSaved.boidShape : 0;
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -286,14 +292,14 @@ function App() {
         proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
         paletteIndex: initialPaletteIdx,
         speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],
-        materialSettings: { ...MATERIAL_PRESETS[initialMatIdx].settings },
+        materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
         materialPreset: initialMatIdx,
         boidShape: initialShape,
         autoMode: true,
         autoShape: true,
         autoMaterial: true,
         lightingProfileIndex: initialLightIdx,
-        lightingProfile: LIGHTING_PROFILES[initialLightIdx]
+        lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0]
     });
 
     return (
