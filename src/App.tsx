@@ -55,16 +55,16 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
     const rimRef = useRef<THREE.DirectionalLight>(null!);
     const bounceRef = useRef<THREE.DirectionalLight>(null!);
 
-    const curAmbient = useRef(0.55);
-    const curKey = useRef(2.4);
-    const curFill = useRef(0.65);
-    const curRim = useRef(1.6);
+    const curAmbient = useRef(0.95);
+    const curKey = useRef(3.0);
+    const curFill = useRef(1.2);
+    const curRim = useRef(2.2);
     const curKeyColor = useRef(new THREE.Color('#ffffff'));
-    const curFillColor = useRef(new THREE.Color('#ffffff'));
+    const curFillColor = useRef(new THREE.Color('#e8f0fe'));
     const curRimColor = useRef(new THREE.Color('#e0e8ff'));
 
     const targetKeyColor = useRef(new THREE.Color('#ffffff'));
-    const targetFillColor = useRef(new THREE.Color('#ffffff'));
+    const targetFillColor = useRef(new THREE.Color('#e8f0fe'));
     const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
 
     useFrame((stateContext) => {
@@ -77,18 +77,18 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             flashBoost = 2.4;
         }
 
-        const targetAmb = (profile.ambientIntensity + 0.12) * mult;
-        const targetK = profile.keyIntensity * mult * flashBoost;
-        const targetF = (profile.fillIntensity + 0.25) * mult;
-        const targetR = profile.rimIntensity * mult * flashBoost;
+        const targetAmb = (profile.ambientIntensity + 0.45) * mult;
+        const targetK = (profile.keyIntensity * 1.25) * mult * flashBoost;
+        const targetF = (profile.fillIntensity + 0.65) * mult;
+        const targetR = (profile.rimIntensity * 1.35) * mult * flashBoost;
 
         targetKeyColor.current.set(profile.keyColor);
         targetFillColor.current.set(profile.fillColor);
         targetRimColor.current.set(profile.rimColor);
 
-        curAmbient.current = THREE.MathUtils.lerp(curAmbient.current, targetAmb, 0.03);
+        curAmbient.current = THREE.MathUtils.lerp(curAmbient.current, targetAmb, 0.04);
         curKey.current = THREE.MathUtils.lerp(curKey.current, targetK, 0.05);
-        curFill.current = THREE.MathUtils.lerp(curFill.current, targetF, 0.03);
+        curFill.current = THREE.MathUtils.lerp(curFill.current, targetF, 0.04);
         curRim.current = THREE.MathUtils.lerp(curRim.current, targetR, 0.04);
 
         curKeyColor.current.lerp(targetKeyColor.current, 0.03);
@@ -109,18 +109,18 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             rimRef.current.color.copy(curRimColor.current);
         }
         if (bounceRef.current) {
-            bounceRef.current.intensity = curFill.current * 0.75;
+            bounceRef.current.intensity = curFill.current * 0.85;
             bounceRef.current.color.copy(curFillColor.current);
         }
     });
 
     return (
         <>
-            <ambientLight ref={ambientRef} intensity={0.55} color="#ffffff" />
+            <ambientLight ref={ambientRef} intensity={0.95} color="#e8f0fe" />
             <directionalLight
                 ref={keyRef}
                 position={[35, 45, 30]}
-                intensity={2.4}
+                intensity={3.0}
                 color="#ffffff"
                 castShadow
                 shadow-mapSize={[2048, 2048]}
@@ -129,20 +129,20 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             <directionalLight
                 ref={fillRef}
                 position={[-40, 25, -25]}
-                intensity={0.65}
-                color="#ffffff"
+                intensity={1.2}
+                color="#e8f0fe"
             />
             <directionalLight
                 ref={rimRef}
                 position={[0, 50, -45]}
-                intensity={1.6}
+                intensity={2.2}
                 color="#ffffff"
             />
             <directionalLight
                 ref={bounceRef}
                 position={[15, -45, 20]}
-                intensity={0.6}
-                color="#ffffff"
+                intensity={1.0}
+                color="#e8f0fe"
             />
         </>
     );
@@ -187,15 +187,15 @@ function App() {
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
             <Canvas shadows gl={{ antialias: false }}>
-                <color attach="background" args={['#0d111a']} />
-                <fog attach="fog" args={['#0d111a', 120, 360]} />
+                <color attach="background" args={['#141a29']} />
+                <fog attach="fog" args={['#141a29', 140, 420]} />
                 <CameraRig simState={simState} />
 
                 <FPSUpdater onChange={setFps} />
 
-                <Stars radius={160} depth={60} count={3000} factor={3} saturation={0.3} fade speed={0.5} />
+                <Stars radius={180} depth={70} count={4500} factor={4.5} saturation={0.5} fade speed={0.8} />
 
-                <Environment preset="city" environmentIntensity={2.0} />
+                <Environment preset="city" environmentIntensity={3.2} />
 
                 <DynamicStudioLighting simState={simState} />
 
