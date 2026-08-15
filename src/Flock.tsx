@@ -68,6 +68,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         new THREE.Color('#ffcc00')
     ]);
 
+    const speciesStartTimes = useRef<number[]>([0, 0, 0, 0]);
+    const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2]);
+
     // Custom Shader Uniforms for Zero-CPU GPU-Direct Palette Coloring
     const customUniforms = useRef({
         uSpeciesColors: {
@@ -389,29 +392,48 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
         meshRef.current.instanceMatrix.needsUpdate = true;
 
-        // 4. Liquid HSL Shortest-Arc Color Interpolation over 22.0 seconds
+        // 4. Asynchronous One-at-a-Time Species Color Morphing with Random Lag
         const newPalette = state.speciesColors || SPECIES_COLORS;
         const paletteKey = newPalette.join(',');
 
         if (lastPaletteKey.current !== paletteKey) {
             lastPaletteKey.current = paletteKey;
-            colorTransitionStartTime.current = time;
 
-            for (let s = 0; s < 4; s++) {
+            // Generate randomized order of the 4 species: e.g. [2, 0, 3, 1]
+            const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+
+            let accumulatedLag = 0.0;
+            for (let idx = 0; idx < 4; idx++) {
+                const s = order[idx];
                 startColors.current[s].copy(currentColors.current[s]);
                 targetColors.current[s].set(newPalette[s]);
+
+                speciesStartTimes.current[s] = time + accumulatedLag;
+                speciesDurations.current[s] = 3.0 + Math.random() * 1.5; // 3.0s - 4.5s individual smooth morph
+
+                // Random lag between 1.2s and 2.6s before the NEXT species starts its transition
+                accumulatedLag += 1.2 + Math.random() * 1.4;
             }
         }
-
-        const colorDuration = state.paletteTransitionDuration || 4.5;
-        const colorElapsed = Math.max(0.0, time - colorTransitionStartTime.current);
-        const colorP = Math.min(1.0, colorElapsed / colorDuration);
-        const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
 
         const hsl1 = { h: 0, s: 0, l: 0 };
         const hsl2 = { h: 0, s: 0, l: 0 };
 
         for (let s = 0; s < 4; s++) {
+            const sStart = speciesStartTimes.current[s];
+            const sDur = speciesDurations.current[s];
+
+            if (time < sStart) {
+                // Not yet reached its staggered turn: maintain its start color
+                currentColors.current[s].copy(startColors.current[s]);
+                continue;
+            }
+
+            const colorElapsed = time - sStart;
+            const colorP = Math.min(1.0, colorElapsed / sDur);
+            // Smooth Quintic Ease-In / Ease-Out: 6p^5 - 15p^4 + 10p^3
+            const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
+
             startColors.current[s].getHSL(hsl1);
             targetColors.current[s].getHSL(hsl2);
 
