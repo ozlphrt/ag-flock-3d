@@ -102,6 +102,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const curSweepSpeed = useRef(0.15);
     const curYOffset = useRef(0.0);
 
+    // Continuous integrated azimuth & blend registers (Prevents ANY phase jump or shake on speed change)
+    const camAzimuthRef = useRef(0.0);
+    const smoothFarBlend = useRef(0.0);
+    const smoothTargetRadius = useRef(6.0);
+
     // Instantiate ClockEngine with decoupled independent timers
     const clockEngine = useMemo<ClockEngine>(() => {
         const engine = createClockEngine(state);
@@ -239,10 +244,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         meshRef.current.geometry.setAttribute('aSpecies', new THREE.InstancedBufferAttribute(specArr, 1));
     }, [count, activeShapeIdx]);
 
-    useFrame((stateContext) => {
+    useFrame((stateContext, delta) => {
         if (!meshRef.current) return;
         const boidCount = count;
         const time = stateContext.clock.getElapsedTime();
+        const safeDelta = Math.min(delta, 0.05);
         state.currentTime = time;
 
         // 1. Advance Independent Clocks via ClockEngine
@@ -501,106 +507,83 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         customUniforms.current.uSpeciesColors.value[2].copy(currentColors.current[2]);
         customUniforms.current.uSpeciesColors.value[3].copy(currentColors.current[3]);
 
-        // 5. Formation-Aware Cinematic Camera Choreography
+        // 5. Silky Smooth Cinematic Camera Choreography
         if (boidCount > 0) {
-            const centerX = sampleCount > 0 ? sumX / sampleCount : 0;
-            const centerY = sampleCount > 0 ? sumY / sampleCount : 0;
-            const centerZ = sampleCount > 0 ? sumZ / sampleCount : 0;
-
-            let maxDistSq = 0;
-            for (let i = 0; i < boidCount; i += sampleStep) {
-                const dx = posX[i] - centerX;
-                const dy = posY[i] - centerY;
-                const dz = posZ[i] - centerZ;
-                const d2 = dx * dx + dy * dy + dz * dz;
-                if (d2 > maxDistSq) maxDistSq = d2;
-            }
-            const r70 = Math.sqrt(maxDistSq) * 0.75;
-            const targetRadius = Math.max(4.0, r70);
-
             const perspCam = stateContext.camera as THREE.PerspectiveCamera;
             const fovRad = (perspCam.fov || 75) * (Math.PI / 180);
             
-            // Balanced distance: reveals the full formation while keeping rich boid detail and dynamic motion
-            const clampedRadius = THREE.MathUtils.clamp(targetRadius, 4.5, 9.0);
-            const requiredDist = (clampedRadius / Math.sin(fovRad / 2)) * 0.82;
-            const baseDist = THREE.MathUtils.clamp(requiredDist, 7.5, 16.0);
-
-            // Smooth Centroid tracking with velocity clamp to avoid morph scatter shake
-            const centerGoal = new THREE.Vector3(centerX, centerY, centerZ);
-            const centerDelta = centerGoal.clone().sub(smoothCenter.current);
-            if (centerDelta.length() > 0.12) centerDelta.setLength(0.12);
-            smoothCenter.current.add(centerDelta.multiplyScalar(0.025));
-
-            smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, baseDist, 0.018);
+            // Stable baseline distance
+            const baseDist = 11.5;
+            smoothDistance.current = THREE.MathUtils.lerp(smoothDistance.current, baseDist, 0.015);
+            smoothCenter.current.lerp(new THREE.Vector3(0, 0, 0), 0.015);
 
             // Formation category driven angle and pitch
             const cat = getCameraCategory(state.formationMode);
             state.cameraCategory = cat;
 
-            // Target camera parameter goals per topology (Framed to reveal the entire formation)
-            let targetPitchCenter = 0.26;
-            let targetPitchAmp = 0.40;
+            // Target camera parameter goals per topology
+            let targetPitchCenter = 0.24;
+            let targetPitchAmp = 0.38;
             let targetDistScale = 0.90;
-            let targetOrbitSpeed = 0.16; // Vibrant continuous 360° rotation speed
-            let targetYOffsetAmp = 4.2;
+            let targetOrbitSpeed = 0.15; // Vibrant continuous 360° rotation speed
+            let targetYOffsetAmp = 3.8;
 
             switch (cat) {
                 case 'portrait':
                     targetOrbitSpeed = 0.14;
                     targetPitchCenter = 0.20;
-                    targetPitchAmp = 0.36;
+                    targetPitchAmp = 0.34;
                     targetDistScale = 0.86;
-                    targetYOffsetAmp = 3.6;
+                    targetYOffsetAmp = 3.4;
                     break;
                 case 'tunnel':
-                    targetOrbitSpeed = 0.18;
-                    targetPitchCenter = 0.40;
-                    targetPitchAmp = 0.42;
+                    targetOrbitSpeed = 0.16;
+                    targetPitchCenter = 0.38;
+                    targetPitchAmp = 0.38;
                     targetDistScale = 0.92;
-                    targetYOffsetAmp = 4.6;
+                    targetYOffsetAmp = 4.2;
                     break;
                 case 'overhead':
                     targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.54;
-                    targetPitchAmp = 0.36;
-                    targetDistScale = 0.98;
-                    targetYOffsetAmp = 4.2;
+                    targetPitchCenter = 0.50;
+                    targetPitchAmp = 0.34;
+                    targetDistScale = 0.96;
+                    targetYOffsetAmp = 3.8;
                     break;
                 case 'cinematic_sweep':
-                    targetOrbitSpeed = 0.16;
+                    targetOrbitSpeed = 0.15;
                     targetPitchCenter = 0.24;
-                    targetPitchAmp = 0.42;
+                    targetPitchAmp = 0.38;
                     targetDistScale = 0.90;
-                    targetYOffsetAmp = 4.2;
+                    targetYOffsetAmp = 3.8;
                     break;
                 case 'dynamic_burst':
-                    targetOrbitSpeed = 0.18;
-                    targetPitchCenter = 0.28;
-                    targetPitchAmp = 0.40;
+                    targetOrbitSpeed = 0.16;
+                    targetPitchCenter = 0.26;
+                    targetPitchAmp = 0.38;
                     targetDistScale = 0.94;
-                    targetYOffsetAmp = 4.2;
+                    targetYOffsetAmp = 4.0;
                     break;
                 case 'orbit_wide':
                     targetOrbitSpeed = 0.14;
-                    targetPitchCenter = 0.30;
-                    targetPitchAmp = 0.36;
-                    targetDistScale = 1.05;
-                    targetYOffsetAmp = 4.0;
+                    targetPitchCenter = 0.28;
+                    targetPitchAmp = 0.34;
+                    targetDistScale = 1.02;
+                    targetYOffsetAmp = 3.8;
                     break;
                 case 'intimate_close':
                     targetOrbitSpeed = 0.13;
                     targetPitchCenter = 0.20;
-                    targetPitchAmp = 0.32;
-                    targetDistScale = 0.78;
-                    targetYOffsetAmp = 3.2;
+                    targetPitchAmp = 0.30;
+                    targetDistScale = 0.80;
+                    targetYOffsetAmp = 3.0;
                     break;
                 default: // chaotic
                     targetOrbitSpeed = 0.15;
-                    targetPitchCenter = 0.26;
-                    targetPitchAmp = 0.38;
+                    targetPitchCenter = 0.24;
+                    targetPitchAmp = 0.36;
                     targetDistScale = 0.90;
-                    targetYOffsetAmp = 4.2;
+                    targetYOffsetAmp = 3.8;
                     break;
             }
 
@@ -610,58 +593,57 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             if (state.cameraMood === 'overhead_iso') targetPitchCenter = 0.70;
 
             // Silky smooth exponential parameter glide
-            curPitchCenter.current = THREE.MathUtils.lerp(curPitchCenter.current, targetPitchCenter, 0.020);
-            curPitchAmp.current = THREE.MathUtils.lerp(curPitchAmp.current, targetPitchAmp, 0.020);
-            curDistScale.current = THREE.MathUtils.lerp(curDistScale.current, targetDistScale, 0.020);
-            curSweepSpeed.current = THREE.MathUtils.lerp(curSweepSpeed.current, targetOrbitSpeed, 0.020);
-            curYOffset.current = THREE.MathUtils.lerp(curYOffset.current, targetYOffsetAmp, 0.020);
+            curPitchCenter.current = THREE.MathUtils.lerp(curPitchCenter.current, targetPitchCenter, 0.015);
+            curPitchAmp.current = THREE.MathUtils.lerp(curPitchAmp.current, targetPitchAmp, 0.015);
+            curDistScale.current = THREE.MathUtils.lerp(curDistScale.current, targetDistScale, 0.015);
+            curSweepSpeed.current = THREE.MathUtils.lerp(curSweepSpeed.current, targetOrbitSpeed, 0.015);
+            curYOffset.current = THREE.MathUtils.lerp(curYOffset.current, targetYOffsetAmp, 0.015);
 
-            // 1. True 360° Continuous Multi-Axis Azimuth Revolution
-            const camAzimuth = (time * curSweepSpeed.current);
+            // 1. Continuous Integrated Azimuth (ZERO Phase Jump on Speed Changes)
+            camAzimuthRef.current += safeDelta * curSweepSpeed.current;
+            const camAzimuth = camAzimuthRef.current;
 
-            // 2. Exact 60% Close-Up / 40% Far View Choreography for Every Formation
+            // 2. Exact 60% Close-Up / 40% Far View Choreography with Smooth Hermite Far Blend
             const formElapsed = (state.transitionStartTime !== undefined) ? Math.max(0, time - state.transitionStartTime) : 0.0;
             const cycleDuration = 32.0;
             const cycleProgress = (formElapsed % cycleDuration) / cycleDuration; // 0.0 -> 1.0
 
-            // 60% of the formation cycle is Close-Up (0.0 -> 0.60)
-            // 40% of the formation cycle is Far View   (0.60 -> 1.00)
-            let farBlend = 0.0;
+            let targetFarBlend = 0.0;
             if (cycleProgress < 0.52) {
-                // Pure intimate Close-Up (0.0 -> 0.52)
-                farBlend = 0.0;
+                targetFarBlend = 0.0;
             } else if (cycleProgress < 0.60) {
-                // Silky smooth pull-back transition (0.52 -> 0.60)
                 const t = (cycleProgress - 0.52) / 0.08;
-                farBlend = t * t * (3.0 - 2.0 * t); // Smooth Hermite 0 -> 1
+                targetFarBlend = t * t * (3.0 - 2.0 * t);
             } else if (cycleProgress < 0.94) {
-                // Pure grand Panoramic Far Overview (0.60 -> 0.94, full 40% wide display)
-                farBlend = 1.0;
+                targetFarBlend = 1.0;
             } else {
-                // Silky smooth dive-in transition back to close-up for next cycle (0.94 -> 1.00)
                 const t = (cycleProgress - 0.94) / 0.06;
-                farBlend = 1.0 - t * t * (3.0 - 2.0 * t); // Smooth Hermite 1 -> 0
+                targetFarBlend = 1.0 - t * t * (3.0 - 2.0 * t);
             }
 
-            // Close-up scale (0.50) vs Far view scale (1.28)
-            const dynamicScale = THREE.MathUtils.lerp(0.50, 1.28, farBlend);
+            // Smoothly lerp farBlend to eliminate any jump when cycle resets
+            smoothFarBlend.current = THREE.MathUtils.lerp(smoothFarBlend.current, targetFarBlend, 0.025);
+            const farBlend = smoothFarBlend.current;
 
-            // 3. Dynamic Vertical Polar Elevation (Sweeping smoothly from -20° up to +55° in 3D space)
-            const verticalCycle = Math.sin(time * 0.12) + Math.cos(time * 0.05) * 0.35;
+            // Close-up scale (0.52) vs Far view scale (1.28)
+            const dynamicScale = THREE.MathUtils.lerp(0.52, 1.28, farBlend);
+
+            // 3. Continuous Vertical Polar Elevation
+            const verticalCycle = Math.sin(time * 0.10) + Math.cos(time * 0.04) * 0.35;
             const yOffset = verticalCycle * (curYOffset.current * (1.0 - farBlend * 0.65));
             
             const rawElevation = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
             const camElevation = THREE.MathUtils.lerp(
-                THREE.MathUtils.clamp(rawElevation, -0.40, 1.10),
-                0.28, // Optimal 3D angle looking at the whole formation during overview
+                THREE.MathUtils.clamp(rawElevation, -0.35, 1.05),
+                0.28,
                 farBlend
             );
 
-            // 4. Dynamic Focal Distance Breathing
-            const zoomMod = 0.96 + Math.sin(time * 0.08) * 0.05;
+            // 4. Focal Distance
+            const zoomMod = 0.96 + Math.sin(time * 0.06) * 0.04;
             const finalDist = smoothDistance.current * curDistScale.current * dynamicScale * zoomMod;
 
-            // 5. Full 360-Degree Spherical 3D Coordinates
+            // 5. Spherical 3D Coordinates
             const cosElev = Math.cos(camElevation);
             const sinElev = Math.sin(camElevation);
             const cosAzim = Math.cos(camAzimuth);
@@ -683,21 +665,21 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             if (!isUserOverriding) {
                 const rawGoal = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
                 
-                // STRICT SPEED CAP & ANTI-SHAKE DAMPING: Camera never exceeds smooth cinematic max velocity
+                // Silky smooth exponential lerp with speed cap
                 const deltaPos = rawGoal.clone().sub(smoothCamTarget.current);
-                const maxStep = 0.22; // Maximum linear camera step per frame
+                const maxStep = 0.18; // Maximum camera step per frame
                 if (deltaPos.length() > maxStep) {
                     deltaPos.setLength(maxStep);
                 }
-                smoothCamTarget.current.add(deltaPos.multiplyScalar(0.040));
+                smoothCamTarget.current.add(deltaPos.multiplyScalar(0.035));
 
-                // Smooth look-at target damping
+                // Smooth look-at target
                 const deltaLook = smoothCenter.current.clone().sub(smoothLookTarget.current);
-                const maxLookStep = 0.14;
+                const maxLookStep = 0.12;
                 if (deltaLook.length() > maxLookStep) {
                     deltaLook.setLength(maxLookStep);
                 }
-                smoothLookTarget.current.add(deltaLook.multiplyScalar(0.045));
+                smoothLookTarget.current.add(deltaLook.multiplyScalar(0.040));
 
                 stateContext.camera.position.copy(smoothCamTarget.current);
                 stateContext.camera.lookAt(smoothLookTarget.current);
