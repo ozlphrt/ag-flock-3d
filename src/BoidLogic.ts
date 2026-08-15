@@ -1151,29 +1151,33 @@ export class BlobCenter {
         }
 
         // 4. Pairwise interactions with other blob centers
-        const spAvg = Array.from({ length: 4 }, () => new THREE.Vector3());
-        const spCount = new Array(4).fill(0);
+        const spAvg = Array.from({ length: 6 }, () => new THREE.Vector3());
+        const spCount = new Array(6).fill(0);
         for (const other of activeBlobs) {
-            spAvg[other.species].add(other.position);
-            spCount[other.species]++;
+            if (other.species >= 0 && other.species < 6) {
+                spAvg[other.species].add(other.position);
+                spCount[other.species]++;
+            }
         }
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 6; i++) {
             if (spCount[i] > 0) spAvg[i].divideScalar(spCount[i]);
         }
 
-        for (let j = 0; j < 4; j++) {
-            if (spCount[j] === 0) continue;
-            const coeff = interactions[this.species][j];
-            if (Math.abs(coeff) < 0.01) continue;
+        if (interactions && interactions[this.species]) {
+            for (let j = 0; j < 6; j++) {
+                if (spCount[j] === 0 || interactions[this.species][j] === undefined) continue;
+                const coeff = interactions[this.species][j];
+                if (Math.abs(coeff) < 0.01) continue;
 
-            const diff = new THREE.Vector3().subVectors(spAvg[j], this.position);
-            const distSq = diff.lengthSq();
-            if (distSq < 1e-4) continue;
+                const diff = new THREE.Vector3().subVectors(spAvg[j], this.position);
+                const distSq = diff.lengthSq();
+                if (distSq < 1e-4) continue;
 
-            const dist = Math.sqrt(distSq);
-            const dir = diff.divideScalar(dist);
-            const mag = (coeff / 10.0) * 0.03 * speed;
-            this.velocity.addScaledVector(dir, mag);
+                const dist = Math.sqrt(distSq);
+                const dir = diff.divideScalar(dist);
+                const mag = (coeff / 10.0) * 0.03 * speed;
+                this.velocity.addScaledVector(dir, mag);
+            }
         }
 
         this.position.add(this.velocity);

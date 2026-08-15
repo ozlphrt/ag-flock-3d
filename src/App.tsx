@@ -19,17 +19,21 @@ const INITIAL_ATTRIBUTES: SpeciesAttributes = {
 };
 
 const SPECIES_CONFIG: SpeciesAttributes[] = [
-    { ...INITIAL_ATTRIBUTES, separationWeight: 4.0, maxSpeed: 0.6, perceptionRadius: 6.0 }, // Red (Hunter)
-    { ...INITIAL_ATTRIBUTES, separationWeight: 3.5, maxSpeed: 0.5, perceptionRadius: 5.0 }, // Green
-    { ...INITIAL_ATTRIBUTES, separationWeight: 3.2, maxSpeed: 0.4, perceptionRadius: 4.0 }, // Blue
-    { ...INITIAL_ATTRIBUTES, separationWeight: 3.8, maxSpeed: 0.55, perceptionRadius: 5.5 } // Yellow
+    { ...INITIAL_ATTRIBUTES, separationWeight: 4.0, maxSpeed: 0.60, perceptionRadius: 6.0 }, // Sp 0 (Titan Leader)
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.6, maxSpeed: 0.52, perceptionRadius: 5.2 }, // Sp 1 (Gemstone)
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.4, maxSpeed: 0.48, perceptionRadius: 4.8 }, // Sp 2 (Pyramid)
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.8, maxSpeed: 0.55, perceptionRadius: 5.5 }, // Sp 3 (Hex Guard)
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.2, maxSpeed: 0.45, perceptionRadius: 4.2 }, // Sp 4 (Delta Wing)
+    { ...INITIAL_ATTRIBUTES, separationWeight: 3.0, maxSpeed: 0.40, perceptionRadius: 3.8 }  // Sp 5 (Scout Shard)
 ];
 
 const INITIAL_MATRIX = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0]
 ];
 
 function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
