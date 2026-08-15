@@ -613,41 +613,47 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             // 1. True 360° Continuous Multi-Axis Azimuth Revolution
             const camAzimuth = (time * curSweepSpeed.current);
 
-            // 2. Full Formation Reveal Window (Guarantees user sees entire formation for at least 3.5-4.5s for EVERY formation)
-            const formElapsed = state.transitionStartTime ? Math.max(0, time - state.transitionStartTime) : 10.0;
-            const transDur = state.transitionDuration || 9.0;
-            
-            // Grand Overview reveal when morph completes (from transDur - 0.8s to transDur + 4.2s)
-            let revealBoost = 1.0;
-            let overviewFactor = 0.0;
-            if (formElapsed >= transDur - 0.8 && formElapsed <= transDur + 4.2) {
-                const revealProgress = (formElapsed - (transDur - 0.8)) / 5.0; // 0 -> 1
-                overviewFactor = Math.sin(revealProgress * Math.PI);
-                revealBoost += overviewFactor * 0.45; // Smooth expansive wide view
+            // 2. Exact 60% Close-Up / 40% Far View Choreography for Every Formation
+            const formElapsed = (state.transitionStartTime !== undefined) ? Math.max(0, time - state.transitionStartTime) : 0.0;
+            const cycleDuration = 32.0;
+            const cycleProgress = (formElapsed % cycleDuration) / cycleDuration; // 0.0 -> 1.0
+
+            // 60% of the formation cycle is Close-Up (0.0 -> 0.60)
+            // 40% of the formation cycle is Far View   (0.60 -> 1.00)
+            let farBlend = 0.0;
+            if (cycleProgress < 0.52) {
+                // Pure intimate Close-Up (0.0 -> 0.52)
+                farBlend = 0.0;
+            } else if (cycleProgress < 0.60) {
+                // Silky smooth pull-back transition (0.52 -> 0.60)
+                const t = (cycleProgress - 0.52) / 0.08;
+                farBlend = t * t * (3.0 - 2.0 * t); // Smooth Hermite 0 -> 1
+            } else if (cycleProgress < 0.94) {
+                // Pure grand Panoramic Far Overview (0.60 -> 0.94, full 40% wide display)
+                farBlend = 1.0;
+            } else {
+                // Silky smooth dive-in transition back to close-up for next cycle (0.94 -> 1.00)
+                const t = (cycleProgress - 0.94) / 0.06;
+                farBlend = 1.0 - t * t * (3.0 - 2.0 * t); // Smooth Hermite 1 -> 0
             }
 
-            // Periodic secondary overview reveal every ~28 seconds for 3.5s
-            const periodicPhase = (time % 28.0);
-            if (periodicPhase < 3.8 && overviewFactor < 0.1) {
-                const pProg = Math.sin((periodicPhase / 3.8) * Math.PI);
-                overviewFactor = Math.max(overviewFactor, pProg);
-                revealBoost = Math.max(revealBoost, 1.0 + pProg * 0.35);
-            }
+            // Close-up scale (0.50) vs Far view scale (1.28)
+            const dynamicScale = THREE.MathUtils.lerp(0.50, 1.28, farBlend);
 
             // 3. Dynamic Vertical Polar Elevation (Sweeping smoothly from -20° up to +55° in 3D space)
-            const verticalCycle = Math.sin(time * 0.11) + Math.cos(time * 0.045) * 0.35;
-            const yOffset = verticalCycle * (curYOffset.current * (1.0 - overviewFactor * 0.70));
+            const verticalCycle = Math.sin(time * 0.12) + Math.cos(time * 0.05) * 0.35;
+            const yOffset = verticalCycle * (curYOffset.current * (1.0 - farBlend * 0.65));
             
-            const rawElevation = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.75);
+            const rawElevation = curPitchCenter.current + (verticalCycle * curPitchAmp.current * 0.85);
             const camElevation = THREE.MathUtils.lerp(
-                THREE.MathUtils.clamp(rawElevation, -0.35, 1.05),
-                0.32, // Optimal 3D angle looking at the whole formation during overview
-                overviewFactor
+                THREE.MathUtils.clamp(rawElevation, -0.40, 1.10),
+                0.28, // Optimal 3D angle looking at the whole formation during overview
+                farBlend
             );
 
             // 4. Dynamic Focal Distance Breathing
-            const zoomMod = 0.95 + Math.sin(time * 0.07) * 0.06 + Math.cos(time * 0.14) * 0.03;
-            const finalDist = smoothDistance.current * curDistScale.current * zoomMod * revealBoost;
+            const zoomMod = 0.96 + Math.sin(time * 0.08) * 0.05;
+            const finalDist = smoothDistance.current * curDistScale.current * dynamicScale * zoomMod;
 
             // 5. Full 360-Degree Spherical 3D Coordinates
             const cosElev = Math.cos(camElevation);
