@@ -1,5 +1,5 @@
 import { SimulationState, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
-import { getRLPreferences, sampleRLAttribute, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
+import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
 export interface ClockEngine {
     update: (time: number) => void;
@@ -81,7 +81,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         const prefs = getRLPreferences();
 
-        // 1. FORMATION CLOCK (Every 28-40s or Emotional Arc step)
+        // 1. FORMATION CLOCK (Every 28-40s or Harmonic Suite step)
         const isFormationOverridden = (time - manualOverrides.formation) < 45.0;
         if (!isFormationOverridden && !state.isFormationLocked && (time - lastFormationTime) >= formationInterval) {
             lastFormationTime = time;
@@ -102,13 +102,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                     activeArc = null; // Arc complete!
                 }
             } else {
-                // RL Softmax Selection across 51 formations with forbidden repeat buffer
-                nextMode = sampleRLAttribute(
-                    51,
-                    prefs.formationLikes,
-                    prefs.formationDislikes,
-                    prefs.totalLikes,
-                    prefs.totalDislikes,
+                // Curated Organic Harmonic Suite Selection with forbidden repeat buffer
+                nextMode = sampleHarmonicFormation(
+                    state.formationMode,
+                    prefs,
                     recentFormations
                 ) as FormationMode;
             }
@@ -254,12 +251,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             lastFormationTime = time;
             formationInterval = rndJitter(32.0, 0.2);
 
-            let nextMode = sampleRLAttribute(
-                51,
-                prefs.formationLikes,
-                prefs.formationDislikes,
-                prefs.totalLikes,
-                prefs.totalDislikes,
+            let nextMode = sampleHarmonicFormation(
+                state.formationMode,
+                prefs,
                 recentFormations
             ) as FormationMode;
 

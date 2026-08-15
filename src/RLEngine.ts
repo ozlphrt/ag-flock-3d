@@ -311,6 +311,152 @@ export function getLastState(): PersistedLastState | null {
     }
 }
 
+// 5 Curated Organic Aesthetic Symphony Suites
+export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
+    // Suite 1: Ocean Aerodynamics & Sovereign Flight
+    [
+        FormationMode.MurmurationFlow,    // Starling Murmuration (42)
+        FormationMode.StarPolygon,        // Manta Ray Glide (37)
+        FormationMode.PhoenixWings,       // Phoenix Wings (6)
+        FormationMode.JellyfishPulse,     // Jellyfish Veil (4)
+        FormationMode.OuroborosSerpent,   // Ouroboros Dragon (43)
+        FormationMode.DancingRibbon,      // Dancing Ribbon (44)
+        FormationMode.NautilusShell,      // Nautilus Spiral (12)
+        FormationMode.Serpent,            // Serpent Stream (0)
+        FormationMode.TsunamiWave         // Tsunami Wave (18)
+    ],
+    // Suite 2: Aurora & Celestial Luminescence
+    [
+        FormationMode.WireCube,           // Aurora Borealis Curtain (31)
+        FormationMode.Spiral,             // Galactic Spiral (1)
+        FormationMode.FerrisWheel,        // Galaxy Vortex (27)
+        FormationMode.NebulaCloud,        // Cosmic Nebula (29)
+        FormationMode.SaturnRings,        // Saturn Rings (16)
+        FormationMode.BlackHoleJet,       // Celestial Vortex (7)
+        FormationMode.SupernovaBurst,     // Supernova Nebula (19)
+        FormationMode.BigBangExpansion,   // Cosmic Expansion (39)
+        FormationMode.AlienMothership     // Cosmic Disk (25)
+    ],
+    // Suite 3: Sacred Botanical & Living Growth
+    [
+        FormationMode.VirusCapsid,        // Lotus Bloom (21)
+        FormationMode.CoralReef,          // Coral Fan (23)
+        FormationMode.BioMushroom,        // Bio Mushroom (13)
+        FormationMode.BeehiveSwarm,       // Kelp Forest (14)
+        FormationMode.TreeBranch,         // Tree of Life (32)
+        FormationMode.RiverDelta,         // River Delta (34)
+        FormationMode.PulsingHeart,       // Pulsing Heart (17)
+        FormationMode.SpiderWeb           // Dewdrop Web (28)
+    ],
+    // Suite 4: Resonant Harmonic Manifolds & Sacred Geometry
+    [
+        FormationMode.DoubleHelix,        // Double Helix (2)
+        FormationMode.TorusKnot,          // Torus Knot Stream (3)
+        FormationMode.TrefoilKnot,        // Trefoil Harmonics (41)
+        FormationMode.CalabiYauManifold,  // Calabi-Yau Bloom (45)
+        FormationMode.HopfFibration,      // Hopf Fiber Bundle (46)
+        FormationMode.LorenzAttractor,    // Lorenz Butterfly (47)
+        FormationMode.GyroidMinimalSurface,// Gyroid Flow (48)
+        FormationMode.CliffordTorus,      // Clifford Torus (50)
+        FormationMode.KleinBottle4D,      // Klein Bottle Loop (49)
+        FormationMode.TripleHelix,        // Triple Helix (26)
+        FormationMode.LissajousKnot,      // Lissajous Ribbon (9)
+        FormationMode.HourglassVortex,    // Hyperboloid Vortex (8)
+        FormationMode.QuantumAtom,        // Orbital Resonance (5)
+        FormationMode.CrystalPrism,       // Mobius Ribbon (20)
+        FormationMode.DNALadder,          // Braided Stream (36)
+        FormationMode.KelvinHelmholtz,    // Kelvin-Helmholtz Billows (35)
+        FormationMode.CollapsingSphere,   // Singularity Breath (38)
+        FormationMode.GeologicStrata      // Laminar Wave Sheets (40)
+    ],
+    // Suite 5: Infinite Algorithmic DNA
+    [
+        FormationMode.Procedural          // Infinite Procedural (30)
+    ]
+];
+
+// Harmonic Curated Symphony Sequencer (Eliminates disjointed "dice-roll" jumps)
+export function sampleHarmonicFormation(
+    currentMode: number,
+    prefs: RLPreferences,
+    excludeList: number[] = []
+): number {
+    const likeCounts = prefs.formationLikes || {};
+    const dislikeCounts = prefs.formationDislikes || {};
+
+    // 1. Find which harmonic suite the current formation belongs to
+    let currentSuiteIdx = 0;
+    let indexInSuite = 0;
+    for (let sIdx = 0; sIdx < HARMONIC_FORMATION_SUITES.length; sIdx++) {
+        const suite = HARMONIC_FORMATION_SUITES[sIdx];
+        const found = suite.indexOf(currentMode as FormationMode);
+        if (found !== -1) {
+            currentSuiteIdx = sIdx;
+            indexInSuite = found;
+            break;
+        }
+    }
+
+    const currentSuite = HARMONIC_FORMATION_SUITES[currentSuiteIdx];
+
+    // 2. Build candidate pool prioritized by:
+    // a) Next organic form within current suite (smooth thematic continuity)
+    // b) Aesthetically complementary sister suite
+    const suiteCandidates: number[] = [];
+
+    // Look ahead in current suite
+    for (let offset = 1; offset < currentSuite.length; offset++) {
+        const nextId = currentSuite[(indexInSuite + offset) % currentSuite.length];
+        const likes = likeCounts[nextId] || 0;
+        const dislikes = dislikeCounts[nextId] || 0;
+        if (dislikes > likes) continue; // Hard blacklist disliked items
+        if (excludeList.includes(nextId)) continue;
+        suiteCandidates.push(nextId);
+    }
+
+    // Look in adjacent harmonic sister suite (30% chance to evolve to next theme suite)
+    const nextSuiteIdx = (currentSuiteIdx + 1) % HARMONIC_FORMATION_SUITES.length;
+    const nextSuite = HARMONIC_FORMATION_SUITES[nextSuiteIdx];
+    const sisterCandidates: number[] = [];
+    for (const id of nextSuite) {
+        const likes = likeCounts[id] || 0;
+        const dislikes = dislikeCounts[id] || 0;
+        if (dislikes > likes) continue;
+        if (excludeList.includes(id)) continue;
+        sisterCandidates.push(id);
+    }
+
+    // 3. Score candidates with RL feedback
+    const pool = (Math.random() < 0.65 && suiteCandidates.length > 0)
+        ? suiteCandidates
+        : (sisterCandidates.length > 0 ? sisterCandidates : suiteCandidates);
+
+    if (pool.length === 0) {
+        // Fallback to global valid pool with strict dislike filter
+        return sampleRLAttribute(51, likeCounts, dislikeCounts, prefs.totalLikes, prefs.totalDislikes, excludeList);
+    }
+
+    // Weighted selection inside harmonious pool
+    let totalWeight = 0;
+    const scored: { id: number; weight: number }[] = [];
+    for (const id of pool) {
+        const likes = likeCounts[id] || 0;
+        const dislikes = dislikeCounts[id] || 0;
+        const netScore = Math.max(0, likes - dislikes);
+        const weight = Math.min(15.0, Math.pow(netScore + 1, 1.4));
+        scored.push({ id, weight });
+        totalWeight += weight;
+    }
+
+    let rnd = Math.random() * totalWeight;
+    for (const item of scored) {
+        if (rnd < item.weight) return item.id;
+        rnd -= item.weight;
+    }
+
+    return pool[0];
+}
+
 // Softmax Weighted Sampling with Anti-Saturation, Hard Dislike Blacklisting & Novelty Exploration
 export function sampleRLAttribute(
     totalOptions: number,
