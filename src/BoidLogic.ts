@@ -302,59 +302,87 @@ export const COLOR_PALETTES = [
 export const MATERIAL_PRESETS = [
     {
         id: 0,
-        label: 'Polished Titanium Specular',
+        label: 'Titanium Mirror',
         icon: '✨',
         desc: 'Refined metallic specular mirror with strong glowing highlights',
         settings: { roughness: 0.03, metalness: 0.94, wireframe: false, flatShading: true, emissiveIntensity: 0.75 }
     },
     {
         id: 1,
-        label: 'Faceted Diamond Crystal',
-        icon: '💎',
-        desc: 'Faceted gemstone catching vivid key and rim studio lights',
-        settings: { roughness: 0.02, metalness: 0.92, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
+        label: 'Origami Matte Paper',
+        icon: '📄',
+        desc: 'Crisp geometric folded matte paper with soft diffuse shadows',
+        settings: { roughness: 0.92, metalness: 0.02, wireframe: false, flatShading: true, emissiveIntensity: 0.05 }
     },
     {
         id: 2,
-        label: 'Satin Cyber Metal',
-        icon: '⚡',
-        desc: 'Smooth satin chrome finish with strong glowing edge definition',
-        settings: { roughness: 0.06, metalness: 0.90, wireframe: false, flatShading: true, emissiveIntensity: 0.72 }
+        label: 'Glossy Molded Plastic',
+        icon: '🧩',
+        desc: 'Vibrant glossy injection-molded polymer with sharp specular glints',
+        settings: { roughness: 0.16, metalness: 0.08, wireframe: false, flatShading: false, emissiveIntensity: 0.15 }
     },
     {
         id: 3,
-        label: 'Champagne Gold Mirror',
+        label: 'Champagne Gold',
         icon: '🏆',
         desc: 'Polished golden mirror specularity with vivid studio highlights',
         settings: { roughness: 0.02, metalness: 0.96, wireframe: false, flatShading: true, emissiveIntensity: 0.65 }
     },
     {
         id: 4,
+        label: 'Ceramic Porcelain',
+        icon: '🏺',
+        desc: 'Fine faceted porcelain with a brilliant glassy glazed reflection',
+        settings: { roughness: 0.10, metalness: 0.04, wireframe: false, flatShading: true, emissiveIntensity: 0.20 }
+    },
+    {
+        id: 5,
+        label: 'Soft-Touch Polymer',
+        icon: '🧸',
+        desc: 'Silky matte elastomer with velvety ambient light diffusion',
+        settings: { roughness: 0.75, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
+    },
+    {
+        id: 6,
+        label: 'Diamond Crystal',
+        icon: '💎',
+        desc: 'Faceted gemstone catching vivid key and rim studio lights',
+        settings: { roughness: 0.02, metalness: 0.92, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
+    },
+    {
+        id: 7,
+        label: 'Frosted Wax Resin',
+        icon: '🕯️',
+        desc: 'Warm translucent candle wax resin with soft inner glow',
+        settings: { roughness: 0.45, metalness: 0.03, wireframe: false, flatShading: false, emissiveIntensity: 0.35 }
+    },
+    {
+        id: 8,
+        label: 'Satin Cyber Metal',
+        icon: '⚡',
+        desc: 'Smooth satin chrome finish with strong glowing edge definition',
+        settings: { roughness: 0.06, metalness: 0.90, wireframe: false, flatShading: true, emissiveIntensity: 0.72 }
+    },
+    {
+        id: 9,
+        label: 'Carbon Obsidian',
+        icon: '🖤',
+        desc: 'Stealth dark composite with crisp directional anisotropic sheen',
+        settings: { roughness: 0.28, metalness: 0.45, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
+    },
+    {
+        id: 10,
         label: 'Frost Crystal Shard',
         icon: '❄️',
         desc: 'Ice-cold platinum mirror with vivid luminous reflections',
         settings: { roughness: 0.04, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
     },
     {
-        id: 5,
+        id: 11,
         label: 'Glowing Cyber Crystal',
-        icon: '💎',
+        icon: '🔮',
         desc: 'High-tech cyber gemstone with vivid glowing specular reflections',
         settings: { roughness: 0.03, metalness: 0.94, wireframe: false, flatShading: true, emissiveIntensity: 0.85 }
-    },
-    {
-        id: 6,
-        label: 'Liquid Ruby Chrome',
-        icon: '🔴',
-        desc: 'Deep crimson metallic reflection with rich satin highlights',
-        settings: { roughness: 0.12, metalness: 0.84, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
-    },
-    {
-        id: 7,
-        label: 'Emerald Satin Resin',
-        icon: '🟢',
-        desc: 'Refined emerald green metallic satin finish',
-        settings: { roughness: 0.18, metalness: 0.78, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
     }
 ];
 
