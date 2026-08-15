@@ -128,13 +128,13 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const limitingHalfAngle = Math.min(vFovRad, hFovRad) * 0.5;
 
         const rBound = (state && state.formationRadius) ? state.formationRadius : 7.5;
-        // Aesthetic framing: includes 90%+ of the formation with breathing room on desktop & mobile
-        const baseFramingDist = (rBound / Math.sin(Math.max(0.12, limitingHalfAngle))) * 1.10;
+        // Immersive framing: the swarm dominates the viewport with outer boids dynamically bleeding past the edges
+        const baseFramingDist = (rBound / Math.sin(Math.max(0.12, vFovRad * 0.5))) * 0.58;
 
         let presetDistMult = 1.0;
-        if (preset.id === 'giant') presetDistMult = 0.88;
-        else if (preset.id === 'action') presetDistMult = 0.72;
-        else if (preset.id === 'celestial') presetDistMult = 1.18;
+        if (preset.id === 'giant') presetDistMult = 0.85;
+        else if (preset.id === 'action') presetDistMult = 0.68;
+        else if (preset.id === 'celestial') presetDistMult = 1.10;
 
         const targetDistance = baseFramingDist * presetDistMult;
 
