@@ -4,18 +4,14 @@ export enum SpeciesType {
     Alpha = 0,
     Beta = 1,
     Gamma = 2,
-    Delta = 3,
-    Epsilon = 4,
-    Zeta = 5
+    Delta = 3
 }
 
 export const SPECIES_COLORS = [
     '#2e5a44',
     '#768a75',
     '#b38b4d',
-    '#3e2a22',
-    '#1c3b2b',
-    '#d4a373'
+    '#3e2a22'
 ];
 
 export interface SpeciesAttributes {
@@ -198,55 +194,55 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyColor: '#9040ff',
         fillIntensity: 0.60,
         fillColor: '#401080',
-        rimIntensity: 2.0,
-        rimColor: '#40ff90',
-        fogDensity: 0.004
-    },
-    {
-        id: 6,
-        label: 'Moonlight',
-        ambientIntensity: 0.25,
-        keyIntensity: 2.0,
-        keyColor: '#d0e0ff',
-        fillIntensity: 0.40,
-        fillColor: '#102030',
         rimIntensity: 2.2,
-        rimColor: '#204020',
-        fogDensity: 0.004
-    },
-    {
-        id: 7,
-        label: 'Sunrise',
-        ambientIntensity: 0.45,
-        keyIntensity: 2.7,
-        keyColor: '#ffb080',
-        fillIntensity: 0.60,
-        fillColor: '#ffd0b0',
-        rimIntensity: 1.8,
-        rimColor: '#6080c0',
-        fogDensity: 0.0035
-    },
-    {
-        id: 8,
-        label: 'Neon Cyber',
-        ambientIntensity: 0.35,
-        keyIntensity: 2.8,
-        keyColor: '#00ffcc',
-        fillIntensity: 0.50,
-        fillColor: '#200040',
-        rimIntensity: 2.6,
-        rimColor: '#ff0080',
+        rimColor: '#ff40c0',
         fogDensity: 0.0045
     },
     {
+        id: 6,
+        label: 'Cyberpunk Neon',
+        ambientIntensity: 0.30,
+        keyIntensity: 2.8,
+        keyColor: '#00ffea',
+        fillIntensity: 0.70,
+        fillColor: '#ff0077',
+        rimIntensity: 2.6,
+        rimColor: '#ffee00',
+        fogDensity: 0.005
+    },
+    {
+        id: 7,
+        label: 'Sunset Horizon',
+        ambientIntensity: 0.40,
+        keyIntensity: 2.6,
+        keyColor: '#ff7733',
+        fillIntensity: 0.60,
+        fillColor: '#992266',
+        rimIntensity: 2.0,
+        rimColor: '#331144',
+        fogDensity: 0.004
+    },
+    {
+        id: 8,
+        label: 'Forest Canopy',
+        ambientIntensity: 0.45,
+        keyIntensity: 2.3,
+        keyColor: '#d4ffaa',
+        fillIntensity: 0.55,
+        fillColor: '#225522',
+        rimIntensity: 1.7,
+        rimColor: '#88cc44',
+        fogDensity: 0.004
+    },
+    {
         id: 9,
-        label: 'Overcast',
-        ambientIntensity: 0.65,
-        keyIntensity: 1.8,
-        keyColor: '#c8c8d8',
-        fillIntensity: 0.80,
-        fillColor: '#d8c8c8',
-        rimIntensity: 1.2,
+        label: 'Monochrome Dramatic',
+        ambientIntensity: 0.25,
+        keyIntensity: 3.2,
+        keyColor: '#ffffff',
+        fillIntensity: 0.30,
+        fillColor: '#404040',
+        rimIntensity: 2.8,
         rimColor: '#b0b0c0',
         fogDensity: 0.005
     },
@@ -277,30 +273,30 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
 ];
 
 export const COLOR_PALETTES = [
-    ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22', '#1c3b2b', '#d4a373'], // 1. Organic Forest & Moss
-    ['#1b4965', '#5fa8d3', '#c86d51', '#bee9e8', '#0b2545', '#f4a261'], // 2. Deep Ocean Ecosystem
-    ['#2b5c5e', '#1c3b2b', '#c48044', '#d8c8b8', '#3a5a40', '#e09f67'], // 3. Nordic Fjord & Autumn Birch
-    ['#2d3142', '#bf573f', '#e09f67', '#7d8597', '#4f5d75', '#ef233c'], // 4. Volcanic Basalt & Warm Terracotta
-    ['#a0522d', '#8a9a86', '#d4a373', '#e9d8a6', '#6c584c', '#adc178'], // 5. Desert Canyon & Clay Sage
-    ['#5c5470', '#3a5a40', '#7189bf', '#b5c99a', '#283618', '#9c8eb9'], // 6. Alpine Meadow & Wild Violet
-    ['#134074', '#2d6a4f', '#d4a373', '#8d99ae', '#0077b6', '#f3c68f'], // 7. Bioluminescent Deep Reef
-    ['#4a5759', '#dedbd2', '#cc8b65', '#253d44', '#70797b', '#b07d62'], // 8. Sandstone & Coastal Mineral
-    ['#4a154b', '#6b2d5c', '#e0a96d', '#9c3d54', '#240046', '#f4a261'], // 9. Cosmic Amethyst & Rose Gold
-    ['#0b2545', '#134074', '#8da9c4', '#ee6c4d', '#001845', '#ff9f1c'], // 10. Deep Cobalt & Coral Sunset
-    ['#2a9d8f', '#e76f51', '#f4a261', '#264653', '#287271', '#e9c46a'], // 11. Terracotta & Emerald Lagoon
-    ['#483c46', '#3c6e71', '#d9bbf9', '#70ae6e', '#284b63', '#b8c0ff'], // 12. Twilight Lavender & Sage
-    ['#1e3888', '#47a8bd', '#f5e663', '#ffad60', '#00296b', '#ff6b6b'], // 13. Solar Flare & Electric Sapphire
-    ['#355070', '#6d597a', '#b5e2fa', '#e56b6f', '#1d3557', '#eaac8b'], // 14. Icelandic Glacial Fiord
-    ['#05668d', '#028090', '#00a896', '#f0f3bd', '#02c39a', '#0582ca'], // 15. Bioluminescent Mint Reef
-    ['#3d314a', '#684756', '#96705b', '#ab876d', '#251b2e', '#cbb29b'], // 16. Earthy Obsidian & Smoked Amber
-    ['#143642', '#0f8b8d', '#ec9a29', '#a8201a', '#082531', '#f4a261'], // 17. Volcanic Copper & Patina
-    ['#582f0e', '#7f4f24', '#936639', '#c2956e', '#3f1d0b', '#ddb892'], // 18. Ancient Teak & Sandstone
-    ['#283618', '#606c38', '#fefae0', '#dda15e', '#bc6c25', '#588157'], // 19. Olive Grove & Golden Barley
-    ['#220901', '#621708', '#941b0c', '#bc3908', '#f6aa1c', '#370617'], // 20. Magma Obsidian & Crimson Amber
-    ['#2b2d42', '#8d99ae', '#edf2f4', '#ef233c', '#d90429', '#1a1a24'], // 21. Nordic Winter & Ruby Spark
-    ['#003049', '#d62828', '#f77f00', '#fcbf49', '#001e2e', '#eae2b7'], // 22. Celestial Sunspot & Midnight
-    ['#10002b', '#240046', '#5a189a', '#e0aaff', '#7b2cbf', '#c77dff'], // 23. Imperial Violet & Pearl Nebula
-    ['#004b23', '#007200', '#38b000', '#ccff33', '#003314', '#70e000']  // 24. Hyper-Emerald & Lime Moss
+    ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22'], // 1. Organic Forest & Moss
+    ['#1b4965', '#5fa8d3', '#c86d51', '#bee9e8'], // 2. Deep Ocean Ecosystem
+    ['#2b5c5e', '#1c3b2b', '#c48044', '#d8c8b8'], // 3. Nordic Fjord & Autumn Birch
+    ['#2d3142', '#bf573f', '#e09f67', '#7d8597'], // 4. Volcanic Basalt & Warm Terracotta
+    ['#a0522d', '#8a9a86', '#d4a373', '#e9d8a6'], // 5. Desert Canyon & Clay Sage
+    ['#5c5470', '#3a5a40', '#7189bf', '#b5c99a'], // 6. Alpine Meadow & Wild Violet
+    ['#134074', '#2d6a4f', '#d4a373', '#8d99ae'], // 7. Bioluminescent Deep Reef
+    ['#4a5759', '#dedbd2', '#cc8b65', '#253d44'], // 8. Sandstone & Coastal Mineral
+    ['#4a154b', '#6b2d5c', '#e0a96d', '#9c3d54'], // 9. Cosmic Amethyst & Rose Gold
+    ['#0b2545', '#134074', '#8da9c4', '#ee6c4d'], // 10. Deep Cobalt & Coral Sunset
+    ['#2a9d8f', '#e76f51', '#f4a261', '#264653'], // 11. Terracotta & Emerald Lagoon
+    ['#483c46', '#3c6e71', '#d9bbf9', '#70ae6e'], // 12. Twilight Lavender & Sage
+    ['#1e3888', '#47a8bd', '#f5e663', '#ffad60'], // 13. Solar Flare & Electric Sapphire
+    ['#355070', '#6d597a', '#b5e2fa', '#e56b6f'], // 14. Icelandic Glacial Fiord
+    ['#05668d', '#028090', '#00a896', '#f0f3bd'], // 15. Bioluminescent Mint Reef
+    ['#3d314a', '#684756', '#96705b', '#ab876d'], // 16. Earthy Obsidian & Smoked Amber
+    ['#143642', '#0f8b8d', '#ec9a29', '#a8201a'], // 17. Volcanic Copper & Patina
+    ['#582f0e', '#7f4f24', '#936639', '#c2956e'], // 18. Ancient Teak & Sandstone
+    ['#283618', '#606c38', '#fefae0', '#dda15e'], // 19. Olive Grove & Golden Barley
+    ['#220901', '#621708', '#941b0c', '#bc3908'], // 20. Magma Obsidian & Crimson Amber
+    ['#2b2d42', '#8d99ae', '#edf2f4', '#ef233c'], // 21. Nordic Winter & Ruby Spark
+    ['#003049', '#d62828', '#f77f00', '#fcbf49'], // 22. Celestial Sunspot & Midnight
+    ['#10002b', '#240046', '#5a189a', '#e0aaff'], // 23. Imperial Violet & Pearl Nebula
+    ['#004b23', '#007200', '#38b000', '#ccff33']  // 24. Hyper-Emerald & Lime Moss
 ];
 
 export const MATERIAL_PRESETS = [
@@ -435,7 +431,7 @@ export interface SimulationState {
     isReady?: boolean;
     onInitialLoadComplete?: () => void;
     formationRadius?: number;
-    speciesShapes?: [number, number, number, number, number, number];
+    speciesShapes?: [number, number, number, number];
 }
 
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
@@ -454,9 +450,9 @@ export function computeFormationPoint(
 ): [number, number, number] | Float32Array | number[] {
     let tx = 0, ty = 0, tz = 0;
     const freqMult = 1.0;
-    const spNorm = (species - 2.5) * 0.6; // Maps 6 species [0..5] to [-1.5, +1.5]
-    const spPhase = species * (Math.PI / 3.0); // 6-way phase distribution around 2PI
-    const spLag = species * 0.12;
+    const spNorm = species - 1.5; // Maps 4 species [0..3] to [-1.5, -0.5, +0.5, +1.5]
+    const spPhase = species * (Math.PI / 2.0); // 4-way orthogonal phase distribution
+    const spLag = species * 0.2;
     
     if (formation === FormationMode.Serpent) {
         // --- 0. Serpent Stream: Sleek Aerodynamic 3D Serpentine Ribbon ---
@@ -958,7 +954,7 @@ export function computeFormationPoint(
     } else if (formation === FormationMode.HopfFibration) {
         // --- 46. Hopf Fiber Bundle: Nested Villarceau Circular Fiber Streams ---
         const th = u * Math.PI * 2.0;
-        const ph = ((species + 0.5) / 6.0) * Math.PI;
+        const ph = ((species + 0.5) / 4.0) * Math.PI;
         const psi = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0) + time * 0.5 * speedMult;
         const x4 = Math.cos((th + psi) * 0.5) * Math.sin(ph * 0.5);
         const y4 = Math.sin((th + psi) * 0.5) * Math.sin(ph * 0.5);
@@ -1014,8 +1010,8 @@ export function computeFormationPoint(
         ty = ((x2) / denomC) * 3.8;
         tz = ((x1 * Math.sin(tRot) + y2 * Math.cos(tRot)) / denomC) * 3.8;
     } else if (formation === FormationMode.QuadHelixBraid) {
-        // --- 51. Quad Helix Braid: 6 Intertwined Species Helical Strands with Harmonic Cross-Ladders ---
-        const strandOffset = species * (Math.PI * 2.0 / 6.0);
+        // --- 51. Quad Helix Braid: 4 Intertwined Species Helical Strands with Harmonic Cross-Ladders ---
+        const strandOffset = species * (Math.PI * 0.5);
         const theta = u * 10.0 * Math.PI + time * 0.65 * speedMult + strandOffset;
         const h = (u - 0.5) * 11.5;
         const helixR = 3.6 + Math.sin(h * 0.4 + time * 0.6) * 0.5;
@@ -1052,11 +1048,11 @@ export function computeFormationPoint(
             tz = loopScale * Math.sin(theta);
         }
     } else if (formation === FormationMode.ToroidalHelixBraid) {
-        // --- 54. Toroidal Helix Braid: Closed Continuous 6-Strand Braided Torus Ring ---
+        // --- 54. Toroidal Helix Braid: Closed Continuous 4-Strand Braided Torus Ring ---
         const R_maj = 4.8;
         const r_min = 1.8;
         const tRing = u * Math.PI * 2.0 + time * 0.3 * speedMult;
-        const strandOffset = species * (Math.PI * 2.0 / 6.0);
+        const strandOffset = species * (Math.PI * 0.5);
         const tTwist = u * 8.0 * Math.PI + strandOffset + time * 0.7 * speedMult;
         const rLocal = r_min + Math.sin(tTwist * 2.0) * 0.3;
         tx = (R_maj + rLocal * Math.cos(tTwist)) * Math.cos(tRing);
@@ -1154,20 +1150,20 @@ export class BlobCenter {
         }
 
         // 4. Pairwise interactions with other blob centers
-        const spAvg = Array.from({ length: 6 }, () => new THREE.Vector3());
-        const spCount = new Array(6).fill(0);
+        const spAvg = Array.from({ length: 4 }, () => new THREE.Vector3());
+        const spCount = new Array(4).fill(0);
         for (const other of activeBlobs) {
-            if (other.species >= 0 && other.species < 6) {
+            if (other.species >= 0 && other.species < 4) {
                 spAvg[other.species].add(other.position);
                 spCount[other.species]++;
             }
         }
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 4; i++) {
             if (spCount[i] > 0) spAvg[i].divideScalar(spCount[i]);
         }
 
         if (interactions && interactions[this.species]) {
-            for (let j = 0; j < 6; j++) {
+            for (let j = 0; j < 4; j++) {
                 if (spCount[j] === 0 || interactions[this.species][j] === undefined) continue;
                 const coeff = interactions[this.species][j];
                 if (Math.abs(coeff) < 0.01) continue;
@@ -1231,13 +1227,13 @@ export class BoidSwarmData {
         const prevCount = this.count;
         this.count = targetCount;
 
-        const speciesBaseSizes = [0.28, 0.22, 0.17, 0.13, 0.10, 0.075];
-        const speciesCounts = [0, 0, 0, 0, 0, 0];
+        const speciesBaseSizes = [0.25, 0.18, 0.12, 0.08];
+        const speciesCounts = [0, 0, 0, 0];
 
         // If growing population, initialize new particles
         if (targetCount > prevCount) {
             for (let i = prevCount; i < targetCount; i++) {
-                const sp = (i % 6) as SpeciesType;
+                const sp = (i % 4) as SpeciesType;
                 this.species[i] = sp;
 
                 const baseSize = speciesBaseSizes[sp];
@@ -1362,7 +1358,7 @@ export class Boid {
         if (this.isStray && p > 0.8) {
             const strayAngle = time * this.strayOrbitSpeed + this.noiseSeed;
             txCurr = this.strayOrbitRadius * Math.cos(strayAngle);
-            tyCurr = Math.sin(strayAngle * 2.0) * 2.5 + ((this.species - 2.5) * 0.6) * 1.5;
+            tyCurr = Math.sin(strayAngle * 2.0) * 2.5 + (this.species - 1.5) * 1.5;
             tzCurr = this.strayOrbitRadius * Math.sin(strayAngle);
         }
 
