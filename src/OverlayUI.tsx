@@ -129,7 +129,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         { id: FormationMode.VolcanicColumn, label: 'Thermal Plume', icon: '🌋', desc: 'Ascending turbulent thermal vortex plume' },
         { id: FormationMode.AlienMothership, label: 'Cosmic Disk', icon: '🛸', desc: 'Undulating galactic disc with central energy core' },
         { id: FormationMode.FerrisWheel, label: 'Galaxy Vortex', icon: '🌌', desc: '4-arm logarithmic spiral galaxy with density waves' },
-        { id: FormationMode.SpiderWeb, label: 'Dewdrop Web', icon: '🕸️', desc: 'Logarithmic radial web with spiral strands' },
+        { id: FormationMode.SpiderWeb, label: 'Intertwined Loops', icon: '♾️', desc: 'Dual intertwined continuous ribbon loops threading through each other' },
         { id: FormationMode.NebulaCloud, label: 'Cosmic Nebula', icon: '🌌', desc: 'Organic interstellar gas and dust cloud' },
         { id: FormationMode.Procedural, label: 'Infinite Procedural', icon: '✨', desc: 'Harmonic Fourier superformula manifold' },
         { id: FormationMode.WireCube, label: 'Aurora Borealis Curtain', icon: '✨', desc: 'Billowing 3D shimmering light curtains' },

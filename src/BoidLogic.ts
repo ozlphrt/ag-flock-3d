@@ -755,14 +755,29 @@ export function computeFormationPoint(
         ty = coreH + Math.sin(spiralTheta * 3.0 + time) * 0.35;
         tz = (spiralR + densityWave) * Math.sin(spiralTheta);
     } else if (formation === FormationMode.SpiderWeb) {
-        // --- 28. Dewdrop Web: Logarithmic Radial Web with Spiral Strands ---
-        const ring = Math.floor(u * 6.0) + 1;
-        const spoke = (indexInSpecies % 8);
-        const spokeAngle = (spoke / 8.0) * Math.PI * 2.0 + (time * 0.1);
-        const webR = ring * 0.85;
-        tx = webR * Math.cos(spokeAngle);
-        ty = (species - 1.5) * 0.6 + Math.sin(spokeAngle * 3.0 + time) * 0.35;
-        tz = webR * Math.sin(spokeAngle);
+        // --- 28. Intertwined Infinity Loops: Dual Interlocking 3D Continuous Ribbon Orbits ---
+        const loopChoice = species % 2; // Split species into 2 intertwined intersecting loops
+        const loopPhase = u * Math.PI * 2.0 + (time * 0.45 * speedMult);
+        const crossRadius = 0.35 + (species === 1 || species === 3 ? 0.15 : 0.0);
+        const tubeOffset = ((indexInSpecies % 12) / 12.0) * Math.PI * 2.0;
+
+        if (loopChoice === 0) {
+            // Loop A: Flowing Primary Figure-8 Trefoil Ribbon
+            const cx = Math.sin(loopPhase) * 3.4 + Math.sin(loopPhase * 2.0) * 1.6;
+            const cy = Math.cos(loopPhase * 3.0) * 1.5;
+            const cz = Math.cos(loopPhase) * 3.0 - Math.cos(loopPhase * 2.0) * 1.4;
+            tx = cx + Math.cos(tubeOffset) * crossRadius;
+            ty = cy + Math.sin(tubeOffset) * crossRadius;
+            tz = cz + Math.sin(tubeOffset * 2.0) * crossRadius * 0.5;
+        } else {
+            // Loop B: Interlocking Orthogonal Ribbon threading through Loop A's center
+            const cx = Math.cos(loopPhase) * 3.0 - Math.cos(loopPhase * 2.0) * 1.4;
+            const cy = Math.sin(loopPhase * 3.0) * 1.5;
+            const cz = Math.sin(loopPhase) * 3.4 + Math.sin(loopPhase * 2.0) * 1.6;
+            tx = cx + Math.cos(tubeOffset) * crossRadius;
+            ty = cy + Math.sin(tubeOffset) * crossRadius;
+            tz = cz + Math.sin(tubeOffset * 2.0) * crossRadius * 0.5;
+        }
     } else if (formation === FormationMode.NebulaCloud) {
         // --- 29. Cosmic Nebula: Organic Interstellar Gas Cloud ---
         const cloudRadius = 1.6 + u * 4.0;
