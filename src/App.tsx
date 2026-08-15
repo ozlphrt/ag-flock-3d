@@ -122,9 +122,6 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
                 position={[35, 45, 30]}
                 intensity={3.0}
                 color="#ffffff"
-                castShadow
-                shadow-mapSize={[2048, 2048]}
-                shadow-bias={-0.0001}
             />
             <directionalLight
                 ref={fillRef}
@@ -186,7 +183,7 @@ function App() {
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} />
-            <Canvas shadows gl={{ antialias: false }}>
+            <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
                 <color attach="background" args={['#1a233a']} />
                 <fog attach="fog" args={['#1a233a', 160, 480]} />
                 <CameraRig simState={simState} />

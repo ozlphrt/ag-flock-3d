@@ -533,7 +533,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     }
 
     return (
-        <instancedMesh key={`${activeShapeIdx}-${count}`} ref={meshRef} args={[activeGeometry, undefined, count]} castShadow receiveShadow>
+        <instancedMesh key={`${activeShapeIdx}-${count}`} ref={meshRef} args={[activeGeometry, undefined, count]}>
             <meshStandardMaterial
                 key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
                 roughness={mat.roughness}
