@@ -250,46 +250,123 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast('Skipping to Next Composition ⏭️');
     };
 
-    const handleLikeDimension = (dim: 'formation' | 'palette' | 'lighting') => {
-        let id = 0;
-        if (dim === 'formation') id = simState.current.formationMode;
-        if (dim === 'palette') id = simState.current.paletteIndex ?? 0;
-        if (dim === 'lighting') id = simState.current.lightingProfileIndex ?? 0;
+    const handleLikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+        const state = simState.current;
+        let id: number | string = 0;
+        let label = 'Trait';
+
+        if (dim === 'formation') {
+            id = state.formationMode;
+            label = formations.find(f => f.id === id)?.label || 'Topology';
+        } else if (dim === 'palette') {
+            id = state.paletteIndex ?? 0;
+            label = `Palette #${id + 1}`;
+        } else if (dim === 'material') {
+            id = state.materialPreset ?? 0;
+            label = MATERIAL_PRESETS[id]?.label || 'Material';
+        } else if (dim === 'lighting') {
+            id = state.lightingProfileIndex ?? 0;
+            label = LIGHTING_PROFILES[id]?.label || 'Lighting';
+        } else if (dim === 'shape') {
+            id = state.boidShape ?? 0;
+            label = shapes.find(s => s.id === id)?.label || 'Shape';
+        } else if (dim === 'camera') {
+            id = state.cameraPresetIndex ?? 0;
+            label = CAMERA_PRESETS[Number(id)]?.name || 'Camera';
+        }
 
         likeDimension(dim, id);
-        showToast(`+1 ${dim.toUpperCase()} preference saved to Taste Profile!`);
+        showToast(`+1 ${label} added to Taste Profile! 👍`);
         setTick(t => t + 1);
     };
 
-    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'lighting') => {
-        let id = 0;
-        if (dim === 'formation') id = simState.current.formationMode;
-        if (dim === 'palette') id = simState.current.paletteIndex ?? 0;
-        if (dim === 'lighting') id = simState.current.lightingProfileIndex ?? 0;
+    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+        const state = simState.current;
+        let id: number | string = 0;
+        let label = 'Trait';
+
+        if (dim === 'formation') {
+            id = state.formationMode;
+            label = 'Topology';
+        } else if (dim === 'palette') {
+            id = state.paletteIndex ?? 0;
+            label = 'Color Palette';
+        } else if (dim === 'material') {
+            id = state.materialPreset ?? 0;
+            label = 'Material';
+        } else if (dim === 'lighting') {
+            id = state.lightingProfileIndex ?? 0;
+            label = 'Lighting Setup';
+        } else if (dim === 'shape') {
+            id = state.boidShape ?? 0;
+            label = 'Boid Shape';
+        } else if (dim === 'camera') {
+            id = state.cameraPresetIndex ?? 0;
+            label = 'Camera Preset';
+        }
 
         dislikeDimension(dim, id);
 
-        // Immediately advance to a fresh AI-selected creation without waiting for timer!
-        if (simState.current.clockEngine?.skipDimension) {
-            simState.current.clockEngine.skipDimension(dim);
+        // Immediately morph to a fresh AI-selected creation without waiting for timer!
+        if (state.clockEngine?.skipDimension) {
+            state.clockEngine.skipDimension(dim);
         }
 
-        showToast(`Skipped! Excluded from Taste Profile`);
+        showToast(`Disliked ${label} 👎 — Morphing to new variant...`);
         setTick(t => t + 1);
     };
 
-    const toggleFixPalette = () => {
-        const isNowLocked = !simState.current.isPaletteLocked;
-        simState.current.isPaletteLocked = isNowLocked;
+    const handleToggleLockDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+        const state = simState.current;
+        let isLocked = false;
+        let label = 'Trait';
+
+        if (dim === 'formation') {
+            state.isFormationLocked = !state.isFormationLocked;
+            isLocked = !!state.isFormationLocked;
+            label = 'Topology';
+        } else if (dim === 'palette') {
+            state.isPaletteLocked = !state.isPaletteLocked;
+            isLocked = !!state.isPaletteLocked;
+            label = 'Color Palette';
+        } else if (dim === 'material') {
+            state.isMaterialLocked = !state.isMaterialLocked;
+            isLocked = !!state.isMaterialLocked;
+            label = 'Material Finish';
+        } else if (dim === 'lighting') {
+            state.isLightingLocked = !state.isLightingLocked;
+            isLocked = !!state.isLightingLocked;
+            label = 'Lighting Setup';
+        } else if (dim === 'shape') {
+            state.isShapeLocked = !state.isShapeLocked;
+            isLocked = !!state.isShapeLocked;
+            label = 'Boid Shape';
+        } else if (dim === 'camera') {
+            state.isCameraLocked = !state.isCameraLocked;
+            isLocked = !!state.isCameraLocked;
+            label = 'Camera Angle';
+        }
+
         setTick(t => t + 1);
-        showToast(isNowLocked ? '🔒 Color Palette FIXED (all other dimensions continue)' : '🔓 Color Palette UNLOCKED (normal auto-cycle resumed)');
+        showToast(isLocked ? `🔒 ${label} Locked (will remain constant)` : `🔓 ${label} Unlocked (autonomous cycling resumed)`);
     };
 
-    const toggleFixFormation = () => {
-        const isNowLocked = !simState.current.isFormationLocked;
-        simState.current.isFormationLocked = isNowLocked;
+    const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+        const state = simState.current;
+        let label = 'Trait';
+
+        if (dim === 'formation') label = 'Topology';
+        else if (dim === 'palette') label = 'Color Palette';
+        else if (dim === 'material') label = 'Material';
+        else if (dim === 'lighting') label = 'Lighting';
+        else if (dim === 'shape') label = 'Boid Shape';
+        else if (dim === 'camera') label = 'Camera View';
+
+        if (state.clockEngine?.skipDimension) {
+            state.clockEngine.skipDimension(dim);
+        }
+        showToast(`🎲 Rerolling ${label}...`);
         setTick(t => t + 1);
-        showToast(isNowLocked ? '🔒 3D Formation FIXED (all other dimensions continue)' : '🔓 3D Formation UNLOCKED (normal auto-cycle resumed)');
     };
 
     const handleSaveFullCreation = () => {
@@ -300,6 +377,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         const shapeObj = shapes.find(s => s.id === shapeId) || shapes[1];
         const matId = state.materialPreset ?? 0;
         const matObj = MATERIAL_PRESETS[matId] || MATERIAL_PRESETS[0];
+        const camIdx = state.cameraPresetIndex ?? 0;
+        const camObj = CAMERA_PRESETS[camIdx] || CAMERA_PRESETS[0];
 
         const item: LikedCreation = {
             id: `creation_${Date.now()}`,
@@ -312,12 +391,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             materialLabel: matObj.label,
             paletteIndex: state.paletteIndex ?? 0,
             lightingProfileIndex: state.lightingProfileIndex ?? 0,
+            cameraPresetIndex: camIdx,
+            cameraLabel: camObj.name,
             colors: state.speciesColors ? [...state.speciesColors] : [...SPECIES_COLORS],
             genome: state.proceduralGenome
         };
 
         saveLikedCreation(item);
-        showToast(`Masterpiece Snapshot saved to Gallery! ❤️`);
+        showToast(`Masterpiece Snapshot saved to Gallery & RL AI Trained! ❤️`);
         setTick(t => t + 1);
     };
 
@@ -351,6 +432,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             : 0;
         state.lightingProfileIndex = lightIdx;
         state.lightingProfile = LIGHTING_PROFILES[lightIdx] || LIGHTING_PROFILES[0];
+
+        if (creation.cameraPresetIndex !== undefined) {
+            state.cameraPresetIndex = creation.cameraPresetIndex;
+        }
 
         if (creation.genome) {
             state.proceduralGenome = creation.genome;
@@ -418,7 +503,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
-        {/* Ephemeral Granular Like/Dislike Bar (Right Vertical) */}
+        {/* Aesthetic Matrix Studio (Right Vertical Deck) */}
         <div
             className="ephemeral-like-bar"
             onPointerEnter={() => { lastUserActivity.current = Date.now(); }}
@@ -428,63 +513,131 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
             }}
         >
-            {/* Palette Row: [ 👍  Palette (Click to Fix / Unlock)  👎 ] */}
-            <div className="ephemeral-row">
-                <button
-                    className="thumb-btn like"
-                    onClick={() => handleLikeDimension('palette')}
-                    title="Like this Color Palette"
-                >
-                    👍
-                </button>
-                <button
-                    className={`dimension-label-btn ${simState.current.isPaletteLocked ? 'dimension-locked' : ''}`}
-                    onClick={toggleFixPalette}
-                    title={simState.current.isPaletteLocked ? "Palette is FIXED — Click to unlock and resume auto-cycling" : "Click to FIX Palette (other dimensions will continue cycling)"}
-                >
-                    {simState.current.isPaletteLocked ? '🔒 Fixed' : 'Palette'}
-                </button>
-                <button
-                    className="thumb-btn dislike"
-                    onClick={() => handleDislikeDimension('palette')}
-                    title="Dislike this Color Palette"
-                >
-                    👎
-                </button>
+            <div className="matrix-header">
+                <span className="matrix-title">🎛️ Aesthetic Matrix</span>
+                <span style={{ fontSize: '9px', color: 'rgba(0, 255, 204, 0.7)', fontWeight: 700 }}>AI RL Engine</span>
             </div>
 
-            {/* Formation Row: [ 👍  Formation (Click to Fix / Unlock)  👎 ] */}
+            {/* 1. Topology Row */}
             <div className="ephemeral-row">
-                <button
-                    className="thumb-btn like"
-                    onClick={() => handleLikeDimension('formation')}
-                    title="Like this 3D Formation"
-                >
-                    👍
-                </button>
-                <button
-                    className={`dimension-label-btn ${simState.current.isFormationLocked ? 'dimension-locked' : ''}`}
-                    onClick={toggleFixFormation}
-                    title={simState.current.isFormationLocked ? "Formation is FIXED — Click to unlock and resume auto-cycling" : "Click to FIX Formation (other dimensions will continue cycling)"}
-                >
-                    {simState.current.isFormationLocked ? '🔒 Fixed' : 'Formation'}
-                </button>
-                <button
-                    className="thumb-btn dislike"
-                    onClick={() => handleDislikeDimension('formation')}
-                    title="Dislike this 3D Formation"
-                >
-                    👎
-                </button>
+                <div className="dimension-info">
+                    <span className="dimension-name">🌀 Topology</span>
+                    <span className="dimension-value" title={formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
+                        {formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label || 'Topology'}
+                    </span>
+                </div>
+                <div className="matrix-actions">
+                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('formation')} title="Like Topology (+1 RL Weight)">👍</button>
+                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('formation')} title="Dislike Topology (-1 & Morph Next)">👎</button>
+                    <button className={`matrix-action-btn lock ${simState.current.isFormationLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('formation')} title={simState.current.isFormationLocked ? "Topology is LOCKED — Click to Unlock" : "Click to LOCK Topology"}>
+                        {simState.current.isFormationLocked ? '🔒' : '🔓'}
+                    </button>
+                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('formation')} title="Reroll Topology (Instant Smooth Morph)">🎲</button>
+                </div>
             </div>
 
-            {/* Save Masterpiece Snapshot */}
+            {/* 2. Palette Row */}
+            <div className="ephemeral-row">
+                <div className="dimension-info">
+                    <span className="dimension-name">🎨 Palette</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                        <div style={{ display: 'flex', height: '8px', width: '48px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+                            {(simState.current.speciesColors || SPECIES_COLORS).map((c, i) => (
+                                <div key={i} style={{ flex: 1, background: c }} />
+                            ))}
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#e0e8ff' }}>#{(simState.current.paletteIndex ?? 0) + 1}</span>
+                    </div>
+                </div>
+                <div className="matrix-actions">
+                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('palette')} title="Like Palette (+1 RL Weight)">👍</button>
+                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('palette')} title="Dislike Palette (-1 & Morph Next)">👎</button>
+                    <button className={`matrix-action-btn lock ${simState.current.isPaletteLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('palette')} title={simState.current.isPaletteLocked ? "Palette is LOCKED — Click to Unlock" : "Click to LOCK Palette"}>
+                        {simState.current.isPaletteLocked ? '🔒' : '🔓'}
+                    </button>
+                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('palette')} title="Reroll Palette (Instant Fluid Morph)">🎲</button>
+                </div>
+            </div>
+
+            {/* 3. Material Row */}
+            <div className="ephemeral-row">
+                <div className="dimension-info">
+                    <span className="dimension-name">✨ Material</span>
+                    <span className="dimension-value" title={MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label}>
+                        {MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label || 'Titanium'}
+                    </span>
+                </div>
+                <div className="matrix-actions">
+                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('material')} title="Like Material (+1 RL Weight)">👍</button>
+                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('material')} title="Dislike Material (-1 & Morph Next)">👎</button>
+                    <button className={`matrix-action-btn lock ${simState.current.isMaterialLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('material')} title={simState.current.isMaterialLocked ? "Material is LOCKED — Click to Unlock" : "Click to LOCK Material"}>
+                        {simState.current.isMaterialLocked ? '🔒' : '🔓'}
+                    </button>
+                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('material')} title="Reroll Material">🎲</button>
+                </div>
+            </div>
+
+            {/* 4. Lighting Row */}
+            <div className="ephemeral-row">
+                <div className="dimension-info">
+                    <span className="dimension-name">💡 Lighting</span>
+                    <span className="dimension-value" title={LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label}>
+                        {LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label || 'Studio White'}
+                    </span>
+                </div>
+                <div className="matrix-actions">
+                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('lighting')} title="Like Lighting (+1 RL Weight)">👍</button>
+                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('lighting')} title="Dislike Lighting (-1 & Morph Next)">👎</button>
+                    <button className={`matrix-action-btn lock ${simState.current.isLightingLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('lighting')} title={simState.current.isLightingLocked ? "Lighting is LOCKED — Click to Unlock" : "Click to LOCK Lighting"}>
+                        {simState.current.isLightingLocked ? '🔒' : '🔓'}
+                    </button>
+                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('lighting')} title="Reroll Lighting (Smooth Quintic S-Curve)">🎲</button>
+                </div>
+            </div>
+
+            {/* 5. Shape Row */}
+            <div className="ephemeral-row">
+                <div className="dimension-info">
+                    <span className="dimension-name">📐 Shape</span>
+                    <span className="dimension-value" title={shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label}>
+                        {shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Dart'}
+                    </span>
+                </div>
+                <div className="matrix-actions">
+                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('shape')} title="Like Shape (+1 RL Weight)">👍</button>
+                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('shape')} title="Dislike Shape (-1 & Morph Next)">👎</button>
+                    <button className={`matrix-action-btn lock ${simState.current.isShapeLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('shape')} title={simState.current.isShapeLocked ? "Shape is LOCKED — Click to Unlock" : "Click to LOCK Shape"}>
+                        {simState.current.isShapeLocked ? '🔒' : '🔓'}
+                    </button>
+                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('shape')} title="Reroll Shape">🎲</button>
+                </div>
+            </div>
+
+            {/* 6. Camera Row */}
+            <div className="ephemeral-row">
+                <div className="dimension-info">
+                    <span className="dimension-name">🎥 Camera</span>
+                    <span className="dimension-value" title={CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name}>
+                        {CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name || 'Orbit'}
+                    </span>
+                </div>
+                <div className="matrix-actions">
+                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('camera')} title="Like Camera (+1 RL Weight)">👍</button>
+                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('camera')} title="Dislike Camera (-1 & Morph Next)">👎</button>
+                    <button className={`matrix-action-btn lock ${simState.current.isCameraLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('camera')} title={simState.current.isCameraLocked ? "Camera is LOCKED — Click to Unlock" : "Click to LOCK Camera"}>
+                        {simState.current.isCameraLocked ? '🔒' : '🔓'}
+                    </button>
+                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('camera')} title="Reroll Camera (Silky Smooth Glide)">🎲</button>
+                </div>
+            </div>
+
+            {/* Save Entire Masterpiece Snapshot & Heavily Train RL Synergy */}
             <button
                 className="save-full-btn"
                 onClick={handleSaveFullCreation}
-                title="Save this entire Masterpiece Snapshot to Gallery"
+                title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
             >
-                <span>❤️</span> Save
+                <span>❤️</span> Save Masterpiece (+RL Training)
             </button>
         </div>
 

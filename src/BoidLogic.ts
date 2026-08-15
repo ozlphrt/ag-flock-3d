@@ -395,6 +395,9 @@ export interface SimulationState {
     clockEngine?: any;
     isFormationLocked?: boolean;
     isPaletteLocked?: boolean;
+    isMaterialLocked?: boolean;
+    isLightingLocked?: boolean;
+    isShapeLocked?: boolean;
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
     formationRadius?: number;

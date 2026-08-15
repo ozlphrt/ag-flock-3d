@@ -146,7 +146,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             }
         }
 
-        // 2. INDEPENDENT COLOR CLOCK (Every 45-70s, completely decoupled from formation!)
+        // 2. PALETTE CLOCK (Every 45-65s)
         const isColorOverridden = (time - manualOverrides.palette) < 45.0;
         if (!isColorOverridden && !state.isPaletteLocked && (time - lastColorTime) >= colorInterval) {
             lastColorTime = time;
@@ -170,7 +170,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // 3. INDEPENDENT MATERIAL CLOCK (Every 60-90s)
         const isMaterialOverridden = (time - manualOverrides.material) < 45.0;
-        if (!isMaterialOverridden && (time - lastMaterialTime) >= materialInterval && state.autoMaterial !== false) {
+        if (!isMaterialOverridden && !state.isMaterialLocked && (time - lastMaterialTime) >= materialInterval && state.autoMaterial !== false) {
             lastMaterialTime = time;
             materialInterval = rndJitter(72.0, 0.2);
 
@@ -192,7 +192,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // 4. INDEPENDENT LIGHTING CLOCK (Every 70-110s)
         const isLightingOverridden = (time - manualOverrides.lighting) < 45.0;
-        if (!isLightingOverridden && (time - lastLightingTime) >= lightingInterval) {
+        if (!isLightingOverridden && !state.isLightingLocked && (time - lastLightingTime) >= lightingInterval) {
             lastLightingTime = time;
             lightingInterval = rndJitter(82.0, 0.25);
 
@@ -214,7 +214,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 38-52s in Auto Mode)
         const isCameraOverridden = (time - (manualOverrides.camera || 0)) < 45.0;
-        if (!isCameraOverridden && (time - lastCameraPresetTime) >= cameraPresetInterval) {
+        if (!isCameraOverridden && !state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
             lastCameraPresetTime = time;
             cameraPresetInterval = rndJitter(42.0, 0.2);
 
@@ -258,7 +258,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         };
     };
 
-    const skipDimension = (dim: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => {
+    const skipDimension = (dim: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera') => {
         const prefs = getRLPreferences();
         const time = (state.currentTime !== undefined) ? state.currentTime : 0.0;
 
@@ -345,6 +345,21 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
             state.materialPreset = nextMatIdx;
             state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
+        } else if (dim === 'shape') {
+            const nextShape = sampleRLAttribute(
+                5,
+                prefs.shapeLikes,
+                prefs.shapeDislikes,
+                prefs.totalLikes,
+                prefs.totalDislikes,
+                [state.boidShape ?? 0]
+            );
+            state.boidShape = nextShape;
+        } else if (dim === 'camera') {
+            lastCameraPresetTime = time;
+            cameraPresetInterval = rndJitter(42.0, 0.2);
+            const curIdx = state.cameraPresetIndex ?? 0;
+            state.cameraPresetIndex = (curIdx + 1) % 6;
         }
     };
 

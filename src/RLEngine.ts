@@ -11,6 +11,8 @@ export interface LikedCreation {
     materialLabel: string;
     paletteIndex?: number;
     lightingProfileIndex?: number;
+    cameraPresetIndex?: number;
+    cameraLabel?: string;
     colors: string[];
     genome?: ProceduralGenome;
 }
@@ -23,6 +25,7 @@ export interface DislikedCreation {
     materialPreset: number;
     paletteIndex?: number;
     lightingProfileIndex?: number;
+    cameraPresetIndex?: number;
 }
 
 export interface RLPreferences {
@@ -144,25 +147,28 @@ function persistPrefs(prefs: RLPreferences) {
 }
 
 // Granular Like/Dislike Functions per Aesthetic Dimension
-export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting', id: number): { totalLikes: number } {
+export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string): { totalLikes: number } {
     const prefs = getRLPreferences();
     prefs.totalLikes = (prefs.totalLikes || 0) + 1;
 
     switch (dimension) {
         case 'formation':
-            prefs.formationLikes[id] = (prefs.formationLikes[id] || 0) + 1;
+            prefs.formationLikes[Number(id)] = (prefs.formationLikes[Number(id)] || 0) + 1;
             break;
         case 'shape':
-            prefs.shapeLikes[id] = (prefs.shapeLikes[id] || 0) + 1;
+            prefs.shapeLikes[Number(id)] = (prefs.shapeLikes[Number(id)] || 0) + 1;
             break;
         case 'material':
-            prefs.materialLikes[id] = (prefs.materialLikes[id] || 0) + 1;
+            prefs.materialLikes[Number(id)] = (prefs.materialLikes[Number(id)] || 0) + 1;
             break;
         case 'palette':
-            prefs.paletteLikes[id] = (prefs.paletteLikes[id] || 0) + 1;
+            prefs.paletteLikes[Number(id)] = (prefs.paletteLikes[Number(id)] || 0) + 1;
             break;
         case 'lighting':
-            prefs.lightingLikes[id] = (prefs.lightingLikes[id] || 0) + 1;
+            prefs.lightingLikes[Number(id)] = (prefs.lightingLikes[Number(id)] || 0) + 1;
+            break;
+        case 'camera':
+            prefs.cameraLikes[String(id)] = (prefs.cameraLikes[String(id)] || 0) + 1;
             break;
     }
 
@@ -170,25 +176,28 @@ export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'p
     return { totalLikes: prefs.totalLikes };
 }
 
-export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting', id: number): { totalDislikes: number } {
+export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string): { totalDislikes: number } {
     const prefs = getRLPreferences();
     prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
 
     switch (dimension) {
         case 'formation':
-            prefs.formationDislikes[id] = (prefs.formationDislikes[id] || 0) + 1;
+            prefs.formationDislikes[Number(id)] = (prefs.formationDislikes[Number(id)] || 0) + 1;
             break;
         case 'shape':
-            prefs.shapeDislikes[id] = (prefs.shapeDislikes[id] || 0) + 1;
+            prefs.shapeDislikes[Number(id)] = (prefs.shapeDislikes[Number(id)] || 0) + 1;
             break;
         case 'material':
-            prefs.materialDislikes[id] = (prefs.materialDislikes[id] || 0) + 1;
+            prefs.materialDislikes[Number(id)] = (prefs.materialDislikes[Number(id)] || 0) + 1;
             break;
         case 'palette':
-            prefs.paletteDislikes[id] = (prefs.paletteDislikes[id] || 0) + 1;
+            prefs.paletteDislikes[Number(id)] = (prefs.paletteDislikes[Number(id)] || 0) + 1;
             break;
         case 'lighting':
-            prefs.lightingDislikes[id] = (prefs.lightingDislikes[id] || 0) + 1;
+            prefs.lightingDislikes[Number(id)] = (prefs.lightingDislikes[Number(id)] || 0) + 1;
+            break;
+        case 'camera':
+            prefs.cameraDislikes[String(id)] = (prefs.cameraDislikes[String(id)] || 0) + 1;
             break;
     }
 
@@ -211,16 +220,20 @@ export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; to
         likes.unshift(creation);
         isNew = true;
 
-        prefs.formationLikes[creation.formationMode] = (prefs.formationLikes[creation.formationMode] || 0) + 1;
-        prefs.shapeLikes[creation.boidShape] = (prefs.shapeLikes[creation.boidShape] || 0) + 1;
-        prefs.materialLikes[creation.materialPreset] = (prefs.materialLikes[creation.materialPreset] || 0) + 1;
+        // Heavily weight whole-setup saves (+3 RL points each) to train future AI generations
+        prefs.formationLikes[creation.formationMode] = (prefs.formationLikes[creation.formationMode] || 0) + 3;
+        prefs.shapeLikes[creation.boidShape] = (prefs.shapeLikes[creation.boidShape] || 0) + 3;
+        prefs.materialLikes[creation.materialPreset] = (prefs.materialLikes[creation.materialPreset] || 0) + 3;
         if (creation.paletteIndex !== undefined) {
-            prefs.paletteLikes[creation.paletteIndex] = (prefs.paletteLikes[creation.paletteIndex] || 0) + 1;
+            prefs.paletteLikes[creation.paletteIndex] = (prefs.paletteLikes[creation.paletteIndex] || 0) + 3;
         }
         if (creation.lightingProfileIndex !== undefined) {
-            prefs.lightingLikes[creation.lightingProfileIndex] = (prefs.lightingLikes[creation.lightingProfileIndex] || 0) + 1;
+            prefs.lightingLikes[creation.lightingProfileIndex] = (prefs.lightingLikes[creation.lightingProfileIndex] || 0) + 3;
         }
-        prefs.totalLikes = (prefs.totalLikes || 0) + 1;
+        if (creation.cameraPresetIndex !== undefined) {
+            prefs.cameraLikes[String(creation.cameraPresetIndex)] = (prefs.cameraLikes[String(creation.cameraPresetIndex)] || 0) + 3;
+        }
+        prefs.totalLikes = (prefs.totalLikes || 0) + 3;
 
         if (creation.genome) {
             prefs.likedGenomes.push(creation.genome);
