@@ -1261,7 +1261,7 @@ export class BoidSwarmData {
             const sp = this.species[i];
             const tot = speciesCounts[sp] > 0 ? speciesCounts[sp] : 100;
             this.totalInSpecies[i] = tot;
-            this.u[i] = Math.sin((this.indexInSpecies[i] / tot) * Math.PI * 0.5);
+            this.u[i] = this.indexInSpecies[i] / tot;
 
             // If newly initialized, snap to formation point
             if (i >= prevCount) {

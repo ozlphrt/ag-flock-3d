@@ -306,91 +306,95 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 tz = prevPt[2] + (tz - prevPt[2]) * sCurve;
             }
 
-            // Organic Aerodynamic Spring Smoothing:
-            const toTx = tx - px;
-            const toTy = ty - py;
-            const toTz = tz - pz;
-            const distToTargetSq = toTx * toTx + toTy * toTy + toTz * toTz;
-
-            let vx = velX[i];
-            let vy = velY[i];
-            let vz = velZ[i];
-
-            if (distToTargetSq > 1e-6) {
-                let accelX = toTx * activeLerpRate;
-                let accelY = toTy * activeLerpRate;
-                let accelZ = toTz * activeLerpRate;
-
-                const accelSq = accelX * accelX + accelY * accelY + accelZ * accelZ;
-                if (accelSq > maxAccelSq) {
-                    const invAccel = maxAccel / Math.sqrt(accelSq);
-                    accelX *= invAccel;
-                    accelY *= invAccel;
-                    accelZ *= invAccel;
-                }
-
-                vx += accelX;
-                vy += accelY;
-                vz += accelZ;
+            // Clamp spring target to R=14
+            const targetDistSq = tx * tx + ty * ty + tz * tz;
+            if (targetDistSq > 196.0 && targetDistSq > 1e-6) {
+                const invT = 14.0 / Math.sqrt(targetDistSq);
+                tx *= invT; ty *= invT; tz *= invT;
             }
 
-            // Noise Drift & Aerodynamic Damping
-            if (profile.noiseDrift > 0) {
-                const nTime = time * 0.7 + noiseSeed[i];
-                vx += fastSin(nTime * 1.7 + pz * 0.2) * profile.noiseDrift;
-                vy += fastCos(nTime * 1.3 + px * 0.2) * profile.noiseDrift;
-                vz += fastSin(nTime * 1.5 + py * 0.2) * profile.noiseDrift;
+            let dx = (tx - px) * activeLerpRate;
+            let dy = (ty - py) * activeLerpRate;
+            let dz = (tz - pz) * activeLerpRate;
+
+            if (isLeader[i] === 1) {
+                dx *= 1.08; dy *= 1.08; dz *= 1.08;
             }
 
-            // Aerodynamic Drag
-            vx *= 0.94;
-            vy *= 0.94;
-            vz *= 0.94;
+            const nSeed = noiseSeed[i];
+            const dAmp = profile.noiseDrift * speedMult;
+            const driftX = fastSin(time * 1.5 + nSeed) * dAmp;
+            const driftY = fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
+            const driftZ = fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
 
-            const speedSq = vx * vx + vy * vy + vz * vz;
-            if (speedSq > maxDispSq) {
-                const invSpeed = activeMaxDisp / Math.sqrt(speedSq);
-                vx *= invSpeed;
-                vy *= invSpeed;
-                vz *= invSpeed;
+            const targetVelX = dx + driftX;
+            const targetVelY = dy + driftY;
+            const targetVelZ = dz + driftZ;
+
+            let ax = targetVelX - velX[i];
+            let ay = targetVelY - velY[i];
+            let az = targetVelZ - velZ[i];
+
+            const accelMagSq = ax * ax + ay * ay + az * az;
+            if (accelMagSq > maxAccelSq && accelMagSq > 1e-6) {
+                const scale = maxAccel / Math.sqrt(accelMagSq);
+                ax *= scale; ay *= scale; az *= scale;
             }
 
-            posX[i] = px + vx;
-            posY[i] = py + vy;
-            posZ[i] = pz + vz;
-            velX[i] = vx;
-            velY[i] = vy;
-            velZ[i] = vz;
+            velX[i] += ax;
+            velY[i] += ay;
+            velZ[i] += az;
 
-            // Direct Instanced Transformation Matrix Computation (0 allocations)
-            let zx = vx;
-            let zy = vy;
-            let zz = vz;
-            const currentSpeedSq = zx * zx + zy * zy + zz * zz;
+            const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
+            if (speedSq > maxDispSq && speedSq > 1e-6) {
+                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
+                velX[i] *= invSpd;
+                velY[i] *= invSpd;
+                velZ[i] *= invSpd;
+            }
 
-            if (currentSpeedSq < 1e-8) {
+            posX[i] += velX[i];
+            posY[i] += velY[i];
+            posZ[i] += velZ[i];
+
+            const distSq = posX[i] * posX[i] + posY[i] * posY[i] + posZ[i] * posZ[i];
+            if (distSq > 196.0 && distSq > 1e-6) {
+                const inv = 14.0 / Math.sqrt(distSq);
+                posX[i] *= inv;
+                posY[i] *= inv;
+                posZ[i] *= inv;
+            }
+
+            // Inline Column-Major Orientation Matrix (Forward Z points along velocity vector +vel)
+            const boidScale = sizeArr[i] * baseScale;
+
+            let zx = velX[i];
+            let zy = velY[i];
+            let zz = velZ[i];
+            let zLenSq = zx * zx + zy * zy + zz * zz;
+            if (zLenSq < 1e-8) {
                 zx = 0; zy = 0; zz = 1;
             } else {
-                const invLen = 1.0 / Math.sqrt(currentSpeedSq);
-                zx *= invLen; zy *= invLen; zz *= invLen;
+                const invZ = 1.0 / Math.sqrt(zLenSq);
+                zx *= invZ; zy *= invZ; zz *= invZ;
             }
 
-            let upX = 0, upY = 1, upZ = 0;
-            if (Math.abs(zy) > 0.96) {
-                upX = 1; upY = 0; upZ = 0;
+            // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
+            let xx = zz;
+            let xy = 0;
+            let xz = -zx;
+            let xLenSq = xx * xx + xz * xz;
+            if (xLenSq < 1e-6) {
+                xx = 0; xy = zz; xz = -zy;
+                xLenSq = xy * xy + xz * xz;
             }
+            const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
+            xx *= invX; xy *= invX; xz *= invX;
 
-            let xx = upY * zz - upZ * zy;
-            let xy = upZ * zx - upX * zz;
-            let xz = upX * zy - upY * zx;
-            const invRightLen = 1.0 / Math.sqrt(xx * xx + xy * xy + xz * xz);
-            xx *= invRightLen; xy *= invRightLen; xz *= invRightLen;
-
+            // Up vector y = z x x
             const yx = zy * xz - zz * xy;
             const yy = zz * xx - zx * xz;
             const yz = zx * xy - zy * xx;
-
-            const boidScale = sizeArr[i] * baseScale;
 
             const matArray = matArrays[sp];
             const offset = spIdx * 16;
