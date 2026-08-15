@@ -189,7 +189,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const maxAccelSq = maxAccel * maxAccel;
         const maxDispSq = activeMaxDisp * activeMaxDisp;
 
-        const baseScale = (state.sizeMultiplier || 1.0) * 0.36;
+        const baseScale = (state.sizeMultiplier || 1.0) * 0.72;
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
@@ -236,6 +236,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state, curPt);
             let tx = curPt[0], ty = curPt[1], tz = curPt[2];
 
+            // Volumetric Cross-Section Sheaf Dispersion (Anti-Clump 3D Cloud Envelope)
+            const phi = (idxSp * 2.3999632) + (u * 13.7) + (sp * 1.5707963);
+            const rNorm = Math.sqrt((idxSp % 41) / 40.0);
+            const volThickness = 0.85;
+            tx += fastCos(phi) * (rNorm * volThickness);
+            ty += fastSin(phi) * (rNorm * volThickness * 0.75);
+            tz += fastSin(phi * 1.33) * (rNorm * volThickness * 0.65);
+
             // Controlled loose aura particles only if formation profile allows it (0% for geometric formations)
             if (profile.strayRatio > 0 && p > 0.8) {
                 const strayMod = Math.floor(1.0 / profile.strayRatio);
@@ -250,6 +258,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             if (isMorphing && prevMode !== undefined) {
                 computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state, prevPt);
+                // Apply volumetric sheath to previous point as well during morph
+                prevPt[0] += fastCos(phi) * (rNorm * volThickness);
+                prevPt[1] += fastSin(phi) * (rNorm * volThickness * 0.75);
+                prevPt[2] += fastSin(phi * 1.33) * (rNorm * volThickness * 0.65);
+
                 tx = prevPt[0] + (tx - prevPt[0]) * sCurve;
                 ty = prevPt[1] + (ty - prevPt[1]) * sCurve;
                 tz = prevPt[2] + (tz - prevPt[2]) * sCurve;
