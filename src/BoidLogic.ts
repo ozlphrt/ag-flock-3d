@@ -389,6 +389,8 @@ export interface SimulationState {
     paletteTransitionDuration?: number;
 }
 
+const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
+
 export function computeFormationPoint(
     formation: FormationMode,
     seed: number,
@@ -398,8 +400,9 @@ export function computeFormationPoint(
     indexInSpecies: number,
     sepWeight: number,
     speedMult: number,
-    state: SimulationState
-): [number, number, number] {
+    state: SimulationState,
+    out?: Float32Array | number[]
+): [number, number, number] | Float32Array | number[] {
     let tx = 0, ty = 0, tz = 0;
     const freqMult = 1.0;
     
@@ -973,7 +976,11 @@ export function computeFormationPoint(
         tz = cloudRadius * Math.sin(phi) * Math.sin(theta);
     }
 
-    return [tx, ty, tz];
+    const targetOut = out || DEFAULT_OUT_PT;
+    targetOut[0] = tx;
+    targetOut[1] = ty;
+    targetOut[2] = tz;
+    return targetOut;
 }
 
 export class BlobCenter {

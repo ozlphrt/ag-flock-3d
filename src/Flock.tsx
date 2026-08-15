@@ -27,7 +27,8 @@ function fastCos(rad: number): number {
     const idx = ((rad * RAD_TO_INDEX) + (TABLE_SIZE >> 2)) & (TABLE_SIZE - 1);
     return SINE_LUT[idx | 0];
 }
-
+const curPt = new Float32Array(3);
+const prevPt = new Float32Array(3);
 
 export function Flock({ count, state, setPopulation }: FlockProps) {
     const meshRef = useRef<THREE.InstancedMesh>(null!);
@@ -229,7 +230,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             const u = uArr[i];
             const idxSp = indexInSpecies[i];
 
-            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state);
+            computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state, curPt);
+            let tx = curPt[0], ty = curPt[1], tz = curPt[2];
 
             // Controlled loose aura particles only if formation profile allows it (0% for geometric formations)
             if (profile.strayRatio > 0 && p > 0.8) {
@@ -237,19 +239,17 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 if (i % strayMod === 0) {
                     const strayAngle = time * (0.3 + (i % 5) * 0.08) + noiseSeed[i];
                     const rAura = 7.0 + (i % 6) * 0.8;
-                    txCurr = rAura * fastCos(strayAngle);
-                    tyCurr = fastSin(strayAngle * 1.5) * 1.8 + (sp - 1.5) * 1.0;
-                    tzCurr = rAura * fastSin(strayAngle);
+                    tx = rAura * fastCos(strayAngle);
+                    ty = fastSin(strayAngle * 1.5) * 1.8 + (sp - 1.5) * 1.0;
+                    tz = rAura * fastSin(strayAngle);
                 }
             }
 
-            let tx = txCurr, ty = tyCurr, tz = tzCurr;
-
             if (isMorphing && prevMode !== undefined) {
-                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state);
-                tx = txPrev + (txCurr - txPrev) * sCurve;
-                ty = tyPrev + (tyCurr - tyPrev) * sCurve;
-                tz = tzPrev + (tzCurr - tzPrev) * sCurve;
+                computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state, prevPt);
+                tx = prevPt[0] + (tx - prevPt[0]) * sCurve;
+                ty = prevPt[1] + (ty - prevPt[1]) * sCurve;
+                tz = prevPt[2] + (tz - prevPt[2]) * sCurve;
             }
 
             // Clamp spring target to R=14
