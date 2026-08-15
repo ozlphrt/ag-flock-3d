@@ -356,9 +356,44 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             velY[i] += ay;
             velZ[i] += az;
 
+            // Direct Vortex Dynamic Velocity Impulse (Single-Axis Smooth Horizontal Whirlpool)
+            const vPower = (state.vortexStrength !== undefined ? state.vortexStrength : 2.5);
+            let isNearVortex = false;
+
+            for (let v = 0; v < numVortices; v++) {
+                const vdx = px - vxArr[v];
+                const vdy = py - vyArr[v];
+                const vdz = pz - vzArr[v];
+                const distSq = vdx * vdx + vdy * vdy + vdz * vdz;
+                if (distSq < 64.0) { // Radius 8.0 units
+                    isNearVortex = true;
+                    const dist = Math.sqrt(distSq) + 0.001;
+                    const falloff = 1.0 - (dist / 8.0);
+                    const w = falloff * falloff * (0.028 * vPower);
+
+                    // Pure single horizontal rotation around vertical Y axis
+                    const spinDir = (v % 2 === 0 ? 1.0 : -1.0);
+                    const swirlX = spinDir * (vdz / dist);
+                    const swirlY = 0;
+                    const swirlZ = -spinDir * (vdx / dist);
+
+                    // Gentle centripetal inward suction pull
+                    const suctionX = -(vdx / dist) * (w * 0.35);
+                    const suctionY = -(vdy / dist) * (w * 0.35);
+                    const suctionZ = -(vdz / dist) * (w * 0.35);
+
+                    velX[i] += swirlX * w + suctionX;
+                    velY[i] += suctionY;
+                    velZ[i] += swirlZ * w + suctionZ;
+                }
+            }
+
+            const curMaxDispSq = isNearVortex ? (maxDispSq * 5.0) : maxDispSq;
+            const curMaxDisp = isNearVortex ? (activeMaxDisp * 2.25) : activeMaxDisp;
+
             const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
-            if (speedSq > maxDispSq && speedSq > 1e-6) {
-                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
+            if (speedSq > curMaxDispSq && speedSq > 1e-6) {
+                const invSpd = curMaxDisp / Math.sqrt(speedSq);
                 velX[i] *= invSpd;
                 velY[i] *= invSpd;
                 velZ[i] *= invSpd;

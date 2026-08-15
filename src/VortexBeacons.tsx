@@ -35,12 +35,13 @@ export const VortexBeacons: React.FC<{ simState: React.MutableRefObject<Simulati
 
                 meshGroup.position.set(vx, vy, vz);
 
-                // Spin the rings rapidly to reflect rotational vorticity
-                meshGroup.rotation.y = time * (2.5 + v * 0.8);
-                meshGroup.rotation.x = Math.sin(time * 1.5 + v) * 0.4;
-                meshGroup.rotation.z = Math.cos(time * 1.2 + v) * 0.4;
+                // Single, calm, graceful horizontal rotation around vertical Y axis
+                const spinDirection = (v % 2 === 0 ? 1.0 : -1.0);
+                meshGroup.rotation.y = time * 0.85 * spinDirection;
+                meshGroup.rotation.x = 0;
+                meshGroup.rotation.z = 0;
 
-                const pulse = 1.0 + Math.sin(time * 4.0 + v * 2.0) * 0.15;
+                const pulse = 1.0 + Math.sin(time * 2.5 + v) * 0.08;
                 meshGroup.scale.set(pulse, pulse, pulse);
             } else {
                 meshGroup.visible = false;
@@ -58,28 +59,28 @@ export const VortexBeacons: React.FC<{ simState: React.MutableRefObject<Simulati
                         ref={(el) => (vortexMeshes.current[v] = el)}
                         visible={false}
                     >
-                        {/* 1. Luminous Vortex Eye Core */}
+                        {/* 1. Luminous Central Vortex Eye */}
                         <mesh>
-                            <sphereGeometry args={[0.28, 16, 16]} />
+                            <sphereGeometry args={[0.22, 16, 16]} />
                             <meshBasicMaterial color={colorSet.core} transparent opacity={0.9} />
                         </mesh>
 
-                        {/* 2. Inner Spinning Holographic Vortex Ring */}
+                        {/* 2. Inner Horizontal Whirlpool Ring */}
                         <mesh rotation={[Math.PI / 2, 0, 0]}>
-                            <torusGeometry args={[0.9, 0.04, 8, 32]} />
+                            <torusGeometry args={[0.85, 0.035, 6, 32]} />
                             <meshBasicMaterial color={colorSet.glow} wireframe transparent opacity={0.8} />
                         </mesh>
 
-                        {/* 3. Outer Swirling Funnel Ring */}
-                        <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]}>
-                            <torusGeometry args={[1.6, 0.05, 8, 32]} />
+                        {/* 3. Middle Horizontal Whirlpool Ring */}
+                        <mesh position={[0, 0.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                            <torusGeometry args={[1.5, 0.035, 6, 32]} />
                             <meshBasicMaterial color={colorSet.ring} wireframe transparent opacity={0.65} />
                         </mesh>
 
-                        {/* 4. Third Tilted Whirlpool Ring */}
-                        <mesh rotation={[-Math.PI / 3, -Math.PI / 4, 0]}>
-                            <torusGeometry args={[2.3, 0.04, 8, 32]} />
-                            <meshBasicMaterial color={colorSet.core} wireframe transparent opacity={0.5} />
+                        {/* 4. Outer Horizontal Whirlpool Ring */}
+                        <mesh position={[0, 0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                            <torusGeometry args={[2.2, 0.03, 6, 32]} />
+                            <meshBasicMaterial color={colorSet.core} wireframe transparent opacity={0.45} />
                         </mesh>
                     </group>
                 );

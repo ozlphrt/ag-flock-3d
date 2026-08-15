@@ -1154,6 +1154,25 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 })}
                             </div>
                         </div>
+
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                                <span>VORTEX TURBULENCE STRENGTH</span>
+                                <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{((simState.current.vortexStrength ?? 2.5) * 100 / 2.5).toFixed(0)}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.5"
+                                max="5.0"
+                                step="0.1"
+                                value={simState.current.vortexStrength ?? 2.5}
+                                onChange={(e) => {
+                                    simState.current.vortexStrength = parseFloat(e.target.value);
+                                    setTick(t => t + 1);
+                                }}
+                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
