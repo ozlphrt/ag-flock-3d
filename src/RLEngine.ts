@@ -124,7 +124,7 @@ export function getRLPreferences(): RLPreferences {
         formationDislikes: {},
         shapeLikes: {},
         shapeDislikes: {},
-        materialLikes: { 8: 6, 6: 6, 0: 3, 3: 3 },
+        materialLikes: { 6: 12, 8: 8, 0: 4, 3: 4 },
         materialDislikes: {},
         paletteLikes: {},
         paletteDislikes: {},
@@ -132,7 +132,7 @@ export function getRLPreferences(): RLPreferences {
         lightingDislikes: {},
         cameraLikes: {},
         cameraDislikes: {},
-        totalLikes: 24,
+        totalLikes: 32,
         totalDislikes: 0,
         likedGenomes: []
     };
