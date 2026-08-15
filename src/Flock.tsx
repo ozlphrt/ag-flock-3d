@@ -104,28 +104,28 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const smoothRadius = useRef<number>(8.0);
 
     const startColors = useRef<THREE.Color[]>([
-        new THREE.Color(SPECIES_COLORS[0]),
-        new THREE.Color(SPECIES_COLORS[1]),
-        new THREE.Color(SPECIES_COLORS[2]),
-        new THREE.Color(SPECIES_COLORS[3])
+        new THREE.Color('#ff3b30'),
+        new THREE.Color('#34c759'),
+        new THREE.Color('#007aff'),
+        new THREE.Color('#ffcc00')
     ]);
     const targetColors = useRef<THREE.Color[]>([
-        new THREE.Color(SPECIES_COLORS[0]),
-        new THREE.Color(SPECIES_COLORS[1]),
-        new THREE.Color(SPECIES_COLORS[2]),
-        new THREE.Color(SPECIES_COLORS[3])
+        new THREE.Color('#ff3b30'),
+        new THREE.Color('#34c759'),
+        new THREE.Color('#007aff'),
+        new THREE.Color('#ffcc00')
     ]);
     const currentColors = useRef<THREE.Color[]>([
-        new THREE.Color(SPECIES_COLORS[0]),
-        new THREE.Color(SPECIES_COLORS[1]),
-        new THREE.Color(SPECIES_COLORS[2]),
-        new THREE.Color(SPECIES_COLORS[3])
+        new THREE.Color('#ff3b30'),
+        new THREE.Color('#34c759'),
+        new THREE.Color('#007aff'),
+        new THREE.Color('#ffcc00')
     ]);
 
     const speciesStartTimes = useRef<number[]>([0, 0, 0, 0]);
     const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2]);
 
-    // Initialize Blob Centers once (4 species x 3 centers = 12 centers)
+    // Initialize Blob Centers once
     if (blobCentersRef.current.length === 0) {
         for (let s = 0; s < 4; s++) {
             const baseR = 2.0 + s * 1.8;
@@ -430,20 +430,20 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         if (lastPaletteKey.current !== paletteKey) {
             lastPaletteKey.current = paletteKey;
 
-            // Generate randomized order of the 4 species
+            // Generate randomized order of the 4 species: e.g. [2, 0, 3, 1]
             const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
 
             let accumulatedLag = 0.0;
             for (let idx = 0; idx < 4; idx++) {
                 const s = order[idx];
                 startColors.current[s].copy(currentColors.current[s]);
-                targetColors.current[s].set(newPalette[s] || SPECIES_COLORS[s]);
+                targetColors.current[s].set(newPalette[s]);
 
                 speciesStartTimes.current[s] = time + accumulatedLag;
                 speciesDurations.current[s] = 4.5 + Math.random() * 1.5; // 4.5s - 6.0s super smooth morph
 
-                // Random lag between 1.2s and 2.5s before the NEXT species starts its transition
-                accumulatedLag += 1.2 + Math.random() * 1.3;
+                // Random lag between 1.5s and 3.0s before the NEXT species starts its transition
+                accumulatedLag += 1.5 + Math.random() * 1.5;
             }
         }
 
@@ -464,8 +464,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             // Perceptually Uniform Oklab Interpolation: zero muddy colors, zero brightness dips
             const [L1, a1, b1] = rgbToOklab(startColors.current[s].r, startColors.current[s].g, startColors.current[s].b);
-            const targetCol = targetColors.current[s];
-            const [L2, a2, b2] = rgbToOklab(targetCol.r, targetCol.g, targetCol.b);
+            const [L2, a2, b2] = rgbToOklab(targetColors.current[s].r, targetColors.current[s].g, targetColors.current[s].b);
 
             const L = L1 + (L2 - L1) * colorEase;
             const a = a1 + (a2 - a1) * colorEase;

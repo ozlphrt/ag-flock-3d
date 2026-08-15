@@ -347,7 +347,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
         } else if (dim === 'shape') {
             const nextShape = sampleRLAttribute(
-                6,
+                5,
                 prefs.shapeLikes,
                 prefs.shapeDislikes,
                 prefs.totalLikes,
@@ -359,7 +359,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             lastCameraPresetTime = time;
             cameraPresetInterval = rndJitter(42.0, 0.2);
             const curIdx = state.cameraPresetIndex ?? 0;
-            state.cameraPresetIndex = (curIdx + 1) % 5;
+            state.cameraPresetIndex = (curIdx + 1) % 6;
         }
     };
 

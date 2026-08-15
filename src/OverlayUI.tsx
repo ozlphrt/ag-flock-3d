@@ -148,7 +148,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const shapes = [
         { id: -1, label: 'Auto (Mutate Cycle)', icon: '🤖', desc: 'Randomize shape every formation cycle' },
-        { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive geometric archetype (Arrowhead, Gemstone, Pyramid, Hex, Delta, Shard)' },
+        { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive geometric archetype' },
         { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
         { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal (8 tris)' },
         { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal (6 tris)' },
