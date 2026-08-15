@@ -120,11 +120,11 @@ export function getRLPreferences(): RLPreferences {
     } catch { }
 
     cachedPrefs = {
-        formationLikes: {},
+        formationLikes: { 28: 4 },
         formationDislikes: {},
         shapeLikes: {},
         shapeDislikes: {},
-        materialLikes: {},
+        materialLikes: { 8: 6, 6: 6, 0: 3, 3: 3 },
         materialDislikes: {},
         paletteLikes: {},
         paletteDislikes: {},
@@ -132,7 +132,7 @@ export function getRLPreferences(): RLPreferences {
         lightingDislikes: {},
         cameraLikes: {},
         cameraDislikes: {},
-        totalLikes: 0,
+        totalLikes: 16,
         totalDislikes: 0,
         likedGenomes: []
     };

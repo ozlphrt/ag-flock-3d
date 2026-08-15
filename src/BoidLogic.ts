@@ -344,7 +344,7 @@ export const MATERIAL_PRESETS = [
     },
     {
         id: 6,
-        label: 'Diamond Crystal',
+        label: 'Faceted Gemstone',
         icon: '💎',
         desc: 'Faceted gemstone catching vivid key and rim studio lights',
         settings: { roughness: 0.02, metalness: 0.92, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
