@@ -292,19 +292,28 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             // Local Vortex Swirl Forces (1 to 4 localized dynamic vortex eddies)
             for (let v = 0; v < numVortices; v++) {
-                const dx = tx - vxArr[v];
-                const dy = ty - vyArr[v];
-                const dz = tz - vzArr[v];
-                const distSq = dx * dx + dy * dy + dz * dz;
-                if (distSq < 36.0) {
-                    const w = Math.exp(-distSq * 0.08) * 0.85;
-                    const crossX = vAxisY[v] * dz - vAxisZ[v] * dy;
-                    const crossY = vAxisZ[v] * dx - vAxisX[v] * dz;
-                    const crossZ = vAxisX[v] * dy - vAxisY[v] * dx;
+                const vdx = tx - vxArr[v];
+                const vdy = ty - vyArr[v];
+                const vdz = tz - vzArr[v];
+                const distSq = vdx * vdx + vdy * vdy + vdz * vdz;
+                if (distSq < 72.0) { // Radius 8.5 units
+                    const dist = Math.sqrt(distSq) + 0.001;
+                    const falloff = 1.0 - (dist / 8.5);
+                    const w = falloff * falloff * 1.85;
 
-                    tx += crossX * w;
-                    ty += crossY * w - Math.sign(vAxisY[v]) * (0.25 * w);
-                    tz += crossZ * w;
+                    // Tangential rotational swirl velocity
+                    const swirlX = (vAxisY[v] * vdz - vAxisZ[v] * vdy) / dist;
+                    const swirlY = (vAxisZ[v] * vdx - vAxisX[v] * vdz) / dist;
+                    const swirlZ = (vAxisX[v] * vdy - vAxisY[v] * vdx) / dist;
+
+                    // Inward core suction
+                    const suction = -0.45 * w;
+                    // Upward/downward helical tornado spiral lift
+                    const lift = vAxisY[v] * Math.sin(time * 3.5 + dist * 1.8) * (w * 1.4);
+
+                    tx += swirlX * (w * 4.2) + (vdx / dist) * suction;
+                    ty += swirlY * (w * 4.2) + lift;
+                    tz += swirlZ * (w * 4.2) + (vdz / dist) * suction;
                 }
             }
 
