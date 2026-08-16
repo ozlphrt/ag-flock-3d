@@ -852,6 +852,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         right: '18px',
                         display: 'flex',
                         flexDirection: 'column',
+                        width: '275px',
+                        boxSizing: 'border-box',
                         background: 'rgba(12, 16, 26, 0.88)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
@@ -866,8 +868,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '10px',
-                        padding: '6px 14px'
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        padding: '6px 12px',
+                        width: '100%',
+                        boxSizing: 'border-box'
                     }}>
                         <div
                             onClick={() => {
@@ -880,13 +885,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 alignItems: 'center',
                                 gap: '8px',
                                 cursor: 'pointer',
-                                marginRight: '2px'
+                                flex: 1,
+                                minWidth: 0
                             }}
                         >
-                            <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 6px rgba(0,255,204,0.35))' }}>
+                            <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 6px rgba(0,255,204,0.35))', flexShrink: 0 }}>
                                 {activePreset.icon || '🌀'}
                             </span>
-                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                                 <span style={{ fontSize: '9px', fontWeight: 800, color: '#00ffcc', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span>TOPOLOGY</span>
                                     <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>• #{Number(simState.current.formationMode ?? 0) + 1}</span>
@@ -896,20 +902,20 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                         </span>
                                     )}
                                 </span>
-                                <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {simState.current.customFormationName || activePreset.label || 'Formation'}
                                 </span>
                             </div>
                         </div>
 
-                        <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 2px' }} />
+                        <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 1px', flexShrink: 0 }} />
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                             <button
                                 className="matrix-action-btn like"
                                 onClick={handleLikeOverallCombination}
                                 title="Like this overall composition combination (+2 RL synergy to all active traits)"
-                                style={{ width: '32px', height: '32px', fontSize: '15px' }}
+                                style={{ width: '30px', height: '30px', fontSize: '14px' }}
                             >
                                 👍
                             </button>
@@ -917,7 +923,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 className="matrix-action-btn dislike"
                                 onClick={handleDislikeOverallCombination}
                                 title="Dislike this overall composition combination & morph immediately to next"
-                                style={{ width: '32px', height: '32px', fontSize: '15px' }}
+                                style={{ width: '30px', height: '30px', fontSize: '14px' }}
                             >
                                 👎
                             </button>
