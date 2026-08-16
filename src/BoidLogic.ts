@@ -432,6 +432,169 @@ export interface SimulationState {
     onInitialLoadComplete?: () => void;
     formationRadius?: number;
     speciesShapes?: [number, number, number, number];
+    customFormationName?: string;
+    customPaletteName?: string;
+    customMaterialName?: string;
+    customLightingName?: string;
+    customShapeName?: string;
+}
+
+// Helper to convert HSL to Hex
+export function hslToHex(h: number, s: number, l: number): string {
+    h = (h % 360 + 360) % 360;
+    s = Math.max(0, Math.min(100, s)) / 100;
+    l = Math.max(0, Math.min(100, l)) / 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n: number) => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+// 1. Procedural Harmonic Superformula Manifold Generator
+export function generateProceduralTopologySurprise(): { genome: ProceduralGenome; name: string } {
+    const families: ('harmonic' | 'superformula' | 'branching')[] = ['harmonic', 'superformula', 'branching'];
+    const family = families[Math.floor(Math.random() * families.length)];
+    const seed = Math.floor(Math.random() * 9000 + 1000);
+
+    const genome: ProceduralGenome = {
+        family,
+        k1: Math.floor(Math.random() * 6) + 1,
+        k2: Math.floor(Math.random() * 6) + 1,
+        k3: Math.floor(Math.random() * 6) + 1,
+        k4: Math.floor(Math.random() * 6) + 1,
+        k5: Math.floor(Math.random() * 6) + 1,
+        k6: Math.floor(Math.random() * 6) + 1,
+        k7: Math.floor(Math.random() * 6) + 1,
+        k8: Math.floor(Math.random() * 6) + 1,
+        r1: 3.0 + Math.random() * 4.0,
+        r2: 2.0 + Math.random() * 3.0,
+        r3: 3.0 + Math.random() * 4.0,
+        a1: 1.0 + Math.random() * 2.0,
+        a2: 1.0 + Math.random() * 2.0,
+        a3: 1.0 + Math.random() * 2.0,
+        phi1: Math.random() * Math.PI * 2,
+        phi2: Math.random() * Math.PI * 2,
+        phi3: Math.random() * Math.PI * 2,
+        m: [3, 4, 5, 6, 7, 8, 12][Math.floor(Math.random() * 7)],
+        n1: 0.3 + Math.random() * 1.5,
+        n2: 0.3 + Math.random() * 1.5,
+        n3: 0.3 + Math.random() * 1.5,
+        a: 1.0,
+        b: 1.0
+    };
+
+    const prefixes = ['Quantum', 'Hyper-Torus', 'Fourier', 'Cosmic', 'Superformula', 'Calabi-Yau', 'Harmonic', 'Nonlinear'];
+    const suffixes = ['Lattice', 'Nexus', 'Manifold', 'Vortex', 'Knot', 'Bloom', 'Matrix', 'Filament'];
+    const pName = `✨ ${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]} #${seed}`;
+
+    return { genome, name: pName };
+}
+
+// 2. Infinite Procedural Harmonic Palette Generator
+export function generateProceduralPaletteSurprise(): { colors: [string, string, string, string]; name: string } {
+    const modes = ['golden', 'analogous', 'triadic', 'cyber'];
+    const mode = modes[Math.floor(Math.random() * modes.length)];
+    const baseHue = Math.floor(Math.random() * 360);
+    const seed = Math.floor(Math.random() * 900 + 100);
+
+    let colors: [string, string, string, string];
+    let name = '';
+
+    if (mode === 'golden') {
+        // Golden Ratio Angle (137.5 deg)
+        colors = [
+            hslToHex(baseHue, 92, 60),
+            hslToHex(baseHue + 137.5, 86, 58),
+            hslToHex(baseHue + 275.0, 94, 62),
+            hslToHex(baseHue + 52.5, 90, 65)
+        ];
+        name = `✨ Golden Ratio Harmony #${seed}`;
+    } else if (mode === 'analogous') {
+        colors = [
+            hslToHex(baseHue, 95, 62),
+            hslToHex(baseHue + 32, 90, 58),
+            hslToHex(baseHue + 64, 88, 64),
+            hslToHex(baseHue + 180, 95, 70) // Complementary accent punch
+        ];
+        name = `✨ Analogous Aurora #${seed}`;
+    } else if (mode === 'triadic') {
+        colors = [
+            hslToHex(baseHue, 90, 58),
+            hslToHex(baseHue + 120, 95, 62),
+            hslToHex(baseHue + 240, 90, 60),
+            hslToHex(baseHue + 60, 95, 68)
+        ];
+        name = `✨ Triadic Prism #${seed}`;
+    } else {
+        // Cyber Iridescence
+        colors = [
+            hslToHex(baseHue, 100, 60),
+            hslToHex(baseHue + 180, 100, 65),
+            hslToHex(baseHue + 90, 90, 55),
+            hslToHex(baseHue + 270, 95, 72)
+        ];
+        name = `✨ Cyber Iridescence #${seed}`;
+    }
+
+    return { colors, name };
+}
+
+// 3. Infinite Procedural Physical PBR Material Generator
+export function generateProceduralMaterialSurprise(): { settings: MaterialSettings; name: string } {
+    const isFaceting = Math.random() > 0.45;
+    const roughness = Number((Math.random() * 0.90 + 0.02).toFixed(2));
+    const metalness = Number((Math.random() * 0.95 + 0.02).toFixed(2));
+    const emissiveIntensity = Number((Math.random() * 0.85 + 0.05).toFixed(2));
+
+    const settings: MaterialSettings = {
+        roughness,
+        metalness,
+        wireframe: false,
+        flatShading: isFaceting,
+        emissiveIntensity
+    };
+
+    const adjectives = ['Liquid', 'Luminescent', 'Anisotropic', 'Iridescent', 'Velvet', 'Galvanized', 'Frosted', 'Hyper-Gloss'];
+    const nouns = ['Chrome', 'Titanium', 'Obsidian', 'Opal', 'Ceramic', 'Polymer', 'Resin', 'Crystal'];
+    const name = `✨ ${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
+
+    return { settings, name };
+}
+
+// 4. Infinite Procedural Studio Lighting Generator
+export function generateProceduralLightingSurprise(): LightingProfile {
+    const keyHue = Math.floor(Math.random() * 360);
+    const rimHue = (keyHue + 150 + Math.random() * 60) % 360;
+    const fillHue = (keyHue + 180) % 360;
+
+    const names = ['Neon Cyber-Dawn', 'Solar Eclipse Studio', 'Bioluminescent Trench', 'Prismatic Twilight', 'Quantum Horizon'];
+    const label = `✨ ` + names[Math.floor(Math.random() * names.length)] + ` #${Math.floor(Math.random() * 900 + 100)}`;
+
+    return {
+        id: -1,
+        label,
+        ambientIntensity: Number((0.45 + Math.random() * 0.35).toFixed(2)),
+        keyIntensity: Number((2.2 + Math.random() * 1.8).toFixed(2)),
+        keyColor: hslToHex(keyHue, 80, 75),
+        fillIntensity: Number((0.5 + Math.random() * 0.5).toFixed(2)),
+        fillColor: hslToHex(fillHue, 60, 65),
+        rimIntensity: Number((1.8 + Math.random() * 1.8).toFixed(2)),
+        rimColor: hslToHex(rimHue, 90, 80),
+        fogDensity: Number((0.002 + Math.random() * 0.004).toFixed(4))
+    };
+}
+
+// 5. Infinite Procedural 4-Species Shape Hybridization
+export function generateProceduralShapeSurprise(): { shapes: [number, number, number, number]; name: string } {
+    const pool = [0, 1, 2, 3, 4, 5];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const shapes: [number, number, number, number] = [shuffled[0], shuffled[1], shuffled[2], shuffled[3]];
+    const names = ['Arrowhead', 'Gem', 'Pyramid', 'Shield', 'Delta Wing', 'Shard'];
+    const name = `✨ Hybrid [${names[shapes[0]]}, ${names[shapes[1]]}, ${names[shapes[2]]}, ${names[shapes[3]]}]`;
+    return { shapes, name };
 }
 
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];

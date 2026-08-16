@@ -376,19 +376,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
         const state = simState.current;
-        let label = 'Trait';
-
-        if (dim === 'formation') label = 'Topology';
-        else if (dim === 'palette') label = 'Color Palette';
-        else if (dim === 'material') label = 'Material';
-        else if (dim === 'lighting') label = 'Lighting';
-        else if (dim === 'shape') label = 'Boid Shape';
-        else if (dim === 'camera') label = 'Camera View';
+        let result = '';
 
         if (state.clockEngine?.skipDimension) {
-            state.clockEngine.skipDimension(dim);
+            result = state.clockEngine.skipDimension(dim);
         }
-        showToast(`🎲 Rerolling ${label}...`);
+        showToast(`🎲 ${result}`);
         setTick(t => t + 1);
     };
 
@@ -674,8 +667,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <div className="ephemeral-row">
                 <div className="dimension-info">
                     <span className="dimension-name">🌀 Topology</span>
-                    <span className="dimension-value" title={formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
-                        {formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label || 'Topology'}
+                    <span className="dimension-value" title={simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
+                        {simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label || 'Topology'}
                     </span>
                 </div>
                 <div className="matrix-actions">
@@ -698,7 +691,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 <div key={i} style={{ flex: 1, background: c }} />
                             ))}
                         </div>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#e0e8ff' }}>#{(simState.current.paletteIndex ?? 0) + 1}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#e0e8ff' }}>
+                            {simState.current.customPaletteName ? '✨ Procedural' : '#' + ((simState.current.paletteIndex ?? 0) + 1)}
+                        </span>
                     </div>
                 </div>
                 <div className="matrix-actions">
@@ -715,8 +710,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <div className="ephemeral-row">
                 <div className="dimension-info">
                     <span className="dimension-name">✨ Material</span>
-                    <span className="dimension-value" title={MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label}>
-                        {MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label || 'Titanium'}
+                    <span className="dimension-value" title={simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label}>
+                        {simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label || 'Titanium Mirror'}
                     </span>
                 </div>
                 <div className="matrix-actions">
@@ -733,8 +728,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <div className="ephemeral-row">
                 <div className="dimension-info">
                     <span className="dimension-name">💡 Lighting</span>
-                    <span className="dimension-value" title={LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label}>
-                        {LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label || 'Studio White'}
+                    <span className="dimension-value" title={simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label}>
+                        {simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label || 'Studio White'}
                     </span>
                 </div>
                 <div className="matrix-actions">
@@ -751,8 +746,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <div className="ephemeral-row">
                 <div className="dimension-info">
                     <span className="dimension-name">📐 Shape</span>
-                    <span className="dimension-value" title={shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label}>
-                        {shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Dart'}
+                    <span className="dimension-value" title={simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label)}>
+                        {simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Arrowhead Jet')}
                     </span>
                 </div>
                 <div className="matrix-actions">

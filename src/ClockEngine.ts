@@ -1,11 +1,22 @@
-import { SimulationState, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
+import {
+    SimulationState,
+    FormationMode,
+    COLOR_PALETTES,
+    MATERIAL_PRESETS,
+    LIGHTING_PROFILES,
+    generateProceduralTopologySurprise,
+    generateProceduralPaletteSurprise,
+    generateProceduralMaterialSurprise,
+    generateProceduralLightingSurprise,
+    generateProceduralShapeSurprise
+} from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
 export interface ClockEngine {
     update: (time: number) => void;
-    setManualOverride: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => void;
+    setManualOverride: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera') => void;
     getCountdownProgress: () => { formationProgress: number; colorProgress: number; formationRemaining: number; currentArcName?: string };
-    skipDimension: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting') => void;
+    skipDimension: (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera') => string;
 }
 
 export function createClockEngine(state: SimulationState): ClockEngine {
@@ -258,109 +269,169 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         };
     };
 
-    const skipDimension = (dim: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera') => {
+    const skipDimension = (dim: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera'): string => {
         const prefs = getRLPreferences();
         const time = (state.currentTime !== undefined) ? state.currentTime : 0.0;
+        const isSurprise = Math.random() > 0.45; // 55% chance of totally novel procedural synthesis
 
         if (dim === 'formation') {
             lastFormationTime = time;
             formationInterval = rndJitter(32.0, 0.2);
 
-            let nextMode = sampleHarmonicFormation(
-                state.formationMode,
-                prefs,
-                recentFormations
-            ) as FormationMode;
-
-            if (nextMode === state.formationMode) {
-                nextMode = ((state.formationMode + 1) % 51) as FormationMode;
-            }
-
-            recentFormations.push(nextMode);
-            if (recentFormations.length > 5) recentFormations.shift();
-
             state.prevFormationMode = state.formationMode;
             state.prevFormationSeed = state.formationSeed;
-            state.formationMode = nextMode;
-            state.formationSeed = Math.random() * 10000;
             state.transitionStartTime = time;
             state.transitionDuration = 5.0; // Snappy 5s morph right away
             state.isCameraLocked = false;
 
-            if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
-                state.proceduralGenome = generateProceduralGenome();
+            if (isSurprise) {
+                const surprise = generateProceduralTopologySurprise();
+                state.formationMode = FormationMode.Procedural;
+                state.proceduralGenome = surprise.genome;
+                state.customFormationName = surprise.name;
+                state.formationSeed = Math.random() * 10000;
+                return `Topology: ${surprise.name}`;
+            } else {
+                state.customFormationName = undefined;
+                let nextMode = sampleHarmonicFormation(
+                    state.formationMode,
+                    prefs,
+                    recentFormations
+                ) as FormationMode;
+
+                if (nextMode === state.formationMode) {
+                    nextMode = ((state.formationMode + 1) % 59) as FormationMode;
+                }
+
+                recentFormations.push(nextMode);
+                if (recentFormations.length > 5) recentFormations.shift();
+
+                state.formationMode = nextMode;
+                state.formationSeed = Math.random() * 10000;
+                if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
+                    state.proceduralGenome = generateProceduralGenome();
+                }
+                return `Topology: ${FormationMode[nextMode] || 'Formation #' + nextMode}`;
             }
         } else if (dim === 'palette') {
             lastColorTime = time;
             colorInterval = rndJitter(54.0, 0.25);
+            state.paletteTransitionDuration = 1.8;
 
-            const nextPaletteIdx = sampleRLAttribute(
-                COLOR_PALETTES.length,
-                prefs.paletteLikes,
-                prefs.paletteDislikes,
-                prefs.totalLikes,
-                prefs.totalDislikes,
-                recentPalettes
-            );
+            if (isSurprise) {
+                const surprise = generateProceduralPaletteSurprise();
+                state.paletteIndex = -1;
+                state.speciesColors = surprise.colors;
+                state.customPaletteName = surprise.name;
+                return `Palette: ${surprise.name}`;
+            } else {
+                state.customPaletteName = undefined;
+                const nextPaletteIdx = sampleRLAttribute(
+                    COLOR_PALETTES.length,
+                    prefs.paletteLikes,
+                    prefs.paletteDislikes,
+                    prefs.totalLikes,
+                    prefs.totalDislikes,
+                    recentPalettes
+                );
 
-            recentPalettes.push(nextPaletteIdx);
-            if (recentPalettes.length > 4) recentPalettes.shift();
+                recentPalettes.push(nextPaletteIdx);
+                if (recentPalettes.length > 4) recentPalettes.shift();
 
-            state.paletteIndex = nextPaletteIdx;
-            state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
-            state.paletteTransitionDuration = 1.8; // Quick 1.8s fluid blend on skip
-        } else if (dim === 'lighting') {
-            lastLightingTime = time;
-            lightingInterval = rndJitter(82.0, 0.25);
-
-            const nextLightIdx = sampleRLAttribute(
-                LIGHTING_PROFILES.length,
-                prefs.lightingLikes,
-                prefs.lightingDislikes,
-                prefs.totalLikes,
-                prefs.totalDislikes,
-                recentLighting
-            );
-
-            recentLighting.push(nextLightIdx);
-            if (recentLighting.length > 3) recentLighting.shift();
-
-            state.lightingProfileIndex = nextLightIdx;
-            state.lightingProfile = LIGHTING_PROFILES[nextLightIdx] || LIGHTING_PROFILES[0];
+                state.paletteIndex = nextPaletteIdx;
+                state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
+                return `Palette: #${nextPaletteIdx + 1} Harmonic Palette`;
+            }
         } else if (dim === 'material') {
             lastMaterialTime = time;
             materialInterval = rndJitter(72.0, 0.2);
 
-            const nextMatIdx = sampleRLAttribute(
-                MATERIAL_PRESETS.length,
-                prefs.materialLikes,
-                prefs.materialDislikes,
-                prefs.totalLikes,
-                prefs.totalDislikes,
-                recentMaterials
-            );
+            if (isSurprise) {
+                const surprise = generateProceduralMaterialSurprise();
+                state.materialPreset = -1;
+                state.materialSettings = surprise.settings;
+                state.customMaterialName = surprise.name;
+                return `Material: ${surprise.name}`;
+            } else {
+                state.customMaterialName = undefined;
+                const nextMatIdx = sampleRLAttribute(
+                    MATERIAL_PRESETS.length,
+                    prefs.materialLikes,
+                    prefs.materialDislikes,
+                    prefs.totalLikes,
+                    prefs.totalDislikes,
+                    recentMaterials
+                );
 
-            recentMaterials.push(nextMatIdx);
-            if (recentMaterials.length > 3) recentMaterials.shift();
+                recentMaterials.push(nextMatIdx);
+                if (recentMaterials.length > 3) recentMaterials.shift();
 
-            state.materialPreset = nextMatIdx;
-            state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
+                state.materialPreset = nextMatIdx;
+                state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
+                return `Material: ${MATERIAL_PRESETS[nextMatIdx]?.label || 'Titanium Mirror'}`;
+            }
+        } else if (dim === 'lighting') {
+            lastLightingTime = time;
+            lightingInterval = rndJitter(82.0, 0.25);
+
+            if (isSurprise) {
+                const surprise = generateProceduralLightingSurprise();
+                state.lightingProfileIndex = -1;
+                state.lightingProfile = surprise;
+                state.customLightingName = surprise.label;
+                return `Lighting: ${surprise.label}`;
+            } else {
+                state.customLightingName = undefined;
+                const nextLightIdx = sampleRLAttribute(
+                    LIGHTING_PROFILES.length,
+                    prefs.lightingLikes,
+                    prefs.lightingDislikes,
+                    prefs.totalLikes,
+                    prefs.totalDislikes,
+                    recentLighting
+                );
+
+                recentLighting.push(nextLightIdx);
+                if (recentLighting.length > 3) recentLighting.shift();
+
+                state.lightingProfileIndex = nextLightIdx;
+                state.lightingProfile = LIGHTING_PROFILES[nextLightIdx] || LIGHTING_PROFILES[0];
+                return `Lighting: ${LIGHTING_PROFILES[nextLightIdx]?.label || 'Studio White'}`;
+            }
         } else if (dim === 'shape') {
-            const nextShape = sampleRLAttribute(
-                5,
-                prefs.shapeLikes,
-                prefs.shapeDislikes,
-                prefs.totalLikes,
-                prefs.totalDislikes,
-                [state.boidShape ?? 0]
-            );
-            state.boidShape = nextShape;
+            if (isSurprise) {
+                const surprise = generateProceduralShapeSurprise();
+                state.boidShape = -1;
+                state.speciesShapes = surprise.shapes;
+                state.customShapeName = surprise.name;
+                return `Shape: ${surprise.name}`;
+            } else {
+                state.customShapeName = undefined;
+                state.speciesShapes = undefined;
+                const shapeChoices = [0, 1, 2, 3, 4, 5, 99];
+                const nextShape = shapeChoices[Math.floor(Math.random() * shapeChoices.length)];
+                state.boidShape = nextShape;
+                const shapeLabels: Record<number, string> = {
+                    0: 'Stealth Arrowhead Jet',
+                    1: 'Faceted Gemstone',
+                    2: 'Angular Prism Pyramid',
+                    3: 'Hex Shield Interceptor',
+                    4: 'Swept Delta Wing',
+                    5: 'Tetrahedral Shard',
+                    99: 'Multi-Species Diverse'
+                };
+                return `Shape: ${shapeLabels[nextShape] || 'Arrowhead Jet'}`;
+            }
         } else if (dim === 'camera') {
             lastCameraPresetTime = time;
             cameraPresetInterval = rndJitter(42.0, 0.2);
+            const cameraNames = ['🪐 Orbit', '🗿 Low Angle', '⚡ Action', '🚀 Fly-Through', '🌀 Corkscrew'];
             const curIdx = state.cameraPresetIndex ?? 0;
-            state.cameraPresetIndex = (curIdx + 1) % 6;
+            const nextIdx = (curIdx + 1) % 5;
+            state.cameraPresetIndex = nextIdx;
+            return `Camera: ${cameraNames[nextIdx] || 'Orbit'}`;
         }
+        return 'Trait updated';
     };
 
     return {
