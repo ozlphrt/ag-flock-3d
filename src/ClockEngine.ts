@@ -139,14 +139,13 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.formationSeed = Math.random() * 10000;
             state.transitionStartTime = time;
             state.transitionDuration = 9.0;
-            state.isCameraLocked = false;
 
             if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                 state.proceduralGenome = generateProceduralGenome();
             }
 
-            // Auto Shape Mutation (if enabled)
-            if (state.autoShape !== false) {
+            // Auto Shape Mutation (only if autoShape enabled AND shape is NOT locked)
+            if (state.autoShape !== false && !state.isShapeLocked) {
                 state.boidShape = sampleRLAttribute(
                     6,
                     prefs.shapeLikes,
@@ -275,6 +274,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         const isSurprise = Math.random() > 0.45; // 55% chance of totally novel procedural synthesis
 
         if (dim === 'formation') {
+            if (state.isFormationLocked) return 'Topology is Locked';
             lastFormationTime = time;
             formationInterval = rndJitter(32.0, 0.2);
 
@@ -282,7 +282,6 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.prevFormationSeed = state.formationSeed;
             state.transitionStartTime = time;
             state.transitionDuration = 5.0; // Snappy 5s morph right away
-            state.isCameraLocked = false;
 
             if (isSurprise) {
                 const surprise = generateProceduralTopologySurprise();
@@ -314,6 +313,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 return `Topology: ${FormationMode[nextMode] || 'Formation #' + nextMode}`;
             }
         } else if (dim === 'palette') {
+            if (state.isPaletteLocked) return 'Palette is Locked';
             lastColorTime = time;
             colorInterval = rndJitter(54.0, 0.25);
             state.paletteTransitionDuration = 1.8;
@@ -343,6 +343,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 return `Palette: #${nextPaletteIdx + 1} Harmonic Palette`;
             }
         } else if (dim === 'material') {
+            if (state.isMaterialLocked) return 'Material is Locked';
             lastMaterialTime = time;
             materialInterval = rndJitter(72.0, 0.2);
 
@@ -371,6 +372,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 return `Material: ${MATERIAL_PRESETS[nextMatIdx]?.label || 'Titanium Mirror'}`;
             }
         } else if (dim === 'lighting') {
+            if (state.isLightingLocked) return 'Lighting is Locked';
             lastLightingTime = time;
             lightingInterval = rndJitter(82.0, 0.25);
 
@@ -399,6 +401,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 return `Lighting: ${LIGHTING_PROFILES[nextLightIdx]?.label || 'Studio White'}`;
             }
         } else if (dim === 'shape') {
+            if (state.isShapeLocked) return 'Shape is Locked';
             if (isSurprise) {
                 const surprise = generateProceduralShapeSurprise();
                 state.boidShape = -1;
@@ -423,6 +426,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 return `Shape: ${shapeLabels[nextShape] || 'Arrowhead Jet'}`;
             }
         } else if (dim === 'camera') {
+            if (state.isCameraLocked) return 'Camera is Locked';
             lastCameraPresetTime = time;
             cameraPresetInterval = rndJitter(42.0, 0.2);
             const cameraNames = ['🪐 Orbit', '🗿 Low Angle', '⚡ Action', '🚀 Fly-Through', '🌀 Corkscrew'];

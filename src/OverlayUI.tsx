@@ -266,9 +266,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             if (!simState.current.isPaletteLocked) {
                 simState.current.clockEngine.skipDimension('palette');
             }
+            if (!simState.current.isMaterialLocked) {
+                simState.current.clockEngine.skipDimension('material');
+            }
+            if (!simState.current.isLightingLocked) {
+                simState.current.clockEngine.skipDimension('lighting');
+            }
+            if (!simState.current.isShapeLocked) {
+                simState.current.clockEngine.skipDimension('shape');
+            }
+            if (!simState.current.isCameraLocked) {
+                simState.current.clockEngine.skipDimension('camera');
+            }
         }
         setTick(t => t + 1);
-        showToast('Skipping to Next Composition ⏭️');
+        showToast('Advancing Unlocked Dimensions ⏭️');
     };
 
     const handleLikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
