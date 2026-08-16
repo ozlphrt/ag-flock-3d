@@ -21,7 +21,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'topology' | 'geometry' | 'material' | 'lighting' | 'camera' | 'physics'>('topology');
+    const [activeTab, setActiveTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'physics'>('topology');
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
@@ -205,6 +205,19 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.materialSettings = { ...mat.settings };
         }
         setTick(t => t + 1);
+        setIsSettingsOpen(false);
+    };
+
+    const selectPalette = (idx: number) => {
+        simState.current.paletteIndex = idx;
+        simState.current.customPaletteName = undefined;
+        simState.current.speciesColors = [...COLOR_PALETTES[idx]];
+        simState.current.paletteTransitionDuration = 1.8;
+        if (simState.current.clockEngine && simState.current.clockEngine.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('palette');
+        }
+        setTick(t => t + 1);
+        showToast(`🎨 Palette #${idx + 1} Applied`);
         setIsSettingsOpen(false);
     };
 
@@ -665,7 +678,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             {/* 1. Topology Row */}
             <div className="ephemeral-row">
-                <div className="dimension-info">
+                <div
+                    className="dimension-info"
+                    onClick={() => { setIsSettingsOpen(true); setActiveTab('topology'); }}
+                    title="Click to browse and select from all 59 Topologies"
+                >
                     <span className="dimension-name">🌀 Topology</span>
                     <span className="dimension-value" title={simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
                         {simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label || 'Topology'}
@@ -683,7 +700,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             {/* 2. Palette Row */}
             <div className="ephemeral-row">
-                <div className="dimension-info">
+                <div
+                    className="dimension-info"
+                    onClick={() => { setIsSettingsOpen(true); setActiveTab('palette'); }}
+                    title="Click to browse and select from all 24 Color Palettes"
+                >
                     <span className="dimension-name">🎨 Palette</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                         <div style={{ display: 'flex', height: '8px', width: '48px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
@@ -708,7 +729,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             {/* 3. Material Row */}
             <div className="ephemeral-row">
-                <div className="dimension-info">
+                <div
+                    className="dimension-info"
+                    onClick={() => { setIsSettingsOpen(true); setActiveTab('material'); }}
+                    title="Click to browse and select from all Material finishes"
+                >
                     <span className="dimension-name">✨ Material</span>
                     <span className="dimension-value" title={simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label}>
                         {simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label || 'Titanium Mirror'}
@@ -726,7 +751,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             {/* 4. Lighting Row */}
             <div className="ephemeral-row">
-                <div className="dimension-info">
+                <div
+                    className="dimension-info"
+                    onClick={() => { setIsSettingsOpen(true); setActiveTab('lighting'); }}
+                    title="Click to browse and select from all Studio Lighting setups"
+                >
                     <span className="dimension-name">💡 Lighting</span>
                     <span className="dimension-value" title={simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label}>
                         {simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label || 'Studio White'}
@@ -744,7 +773,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             {/* 5. Shape Row */}
             <div className="ephemeral-row">
-                <div className="dimension-info">
+                <div
+                    className="dimension-info"
+                    onClick={() => { setIsSettingsOpen(true); setActiveTab('geometry'); }}
+                    title="Click to browse and select 3D Boid Geometries"
+                >
                     <span className="dimension-name">📐 Shape</span>
                     <span className="dimension-value" title={simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label)}>
                         {simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Arrowhead Jet')}
@@ -762,7 +795,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             {/* 6. Camera Row */}
             <div className="ephemeral-row">
-                <div className="dimension-info">
+                <div
+                    className="dimension-info"
+                    onClick={() => { setIsSettingsOpen(true); setActiveTab('camera'); }}
+                    title="Click to browse and select Cinematic Camera presets"
+                >
                     <span className="dimension-name">🎥 Camera</span>
                     <span className="dimension-value" title={CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name}>
                         {CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name || 'Orbit'}
@@ -1153,6 +1190,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '14px', overflowX: 'auto' }}>
                     {[
                         { id: 'topology', label: 'TOPOLOGY' },
+                        { id: 'palette', label: 'PALETTE' },
                         { id: 'geometry', label: 'GEOMETRY' },
                         { id: 'material', label: 'MATERIAL' },
                         { id: 'lighting', label: 'LIGHTING' },
@@ -1216,6 +1254,76 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 </div>
                             </button>
                         ))}
+                    </div>
+                )}
+
+                {/* Tab 2: Palette Grid (All 24 Curated + Procedural Generator) */}
+                {activeTab === 'palette' && (
+                    <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                        <button
+                            onClick={() => {
+                                if (simState.current.clockEngine?.skipDimension) {
+                                    const res = simState.current.clockEngine.skipDimension('palette');
+                                    showToast(`🎲 ${res}`);
+                                    setTick(t => t + 1);
+                                    setIsSettingsOpen(false);
+                                }
+                            }}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                padding: '10px 14px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(255, 0, 127, 0.2))',
+                                border: '1px solid #00ffcc',
+                                color: '#fff',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                marginBottom: '4px'
+                            }}
+                        >
+                            ✨ Generate Surprise Procedural Harmonic Palette 🎲
+                        </button>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                            {COLOR_PALETTES.map((pal, idx) => {
+                                const isSelected = simState.current.paletteIndex === idx && !simState.current.customPaletteName;
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => selectPalette(idx)}
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            padding: '10px 12px',
+                                            borderRadius: '12px',
+                                            background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                            border: isSelected ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            transition: 'all 0.2s ease',
+                                            minWidth: 0,
+                                            boxSizing: 'border-box',
+                                            gap: '6px'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
+                                                #{idx + 1} Harmonic
+                                            </span>
+                                            {isSelected && <span style={{ fontSize: '10px', color: '#00ffcc' }}>✓</span>}
+                                        </div>
+                                        <div style={{ display: 'flex', height: '14px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                            {pal.map((c, i) => (
+                                                <div key={i} style={{ flex: 1, background: c }} />
+                                            ))}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
 
