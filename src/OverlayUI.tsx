@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
-import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences } from './RLEngine';
+import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences, getCentralRLStore, exportCentralRLJSON, importCentralRLJSON, resetCentralRLStore } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
 
 interface OverlayUIProps {
@@ -17,7 +17,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const rlPrefs = getRLPreferences();
     useEffect(() => {
         const interval = setInterval(() => setTick(t => t + 1), 200);
-        return () => clearInterval(interval);
+        const handleRLUpdate = () => setTick(t => t + 1);
+        window.addEventListener('flock_rl_store_updated', handleRLUpdate);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('flock_rl_store_updated', handleRLUpdate);
+        };
     }, []);
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -1047,7 +1052,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         {/* Masterpiece Gallery Slide-Up Sheet */}
         {isGalleryOpen && (
             <div className="gallery-slide-up no-scrollbar">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div>
                         <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffcc00', letterSpacing: '1px', textTransform: 'uppercase' }}>
                             SAVED MASTERPIECES GALLERY
@@ -1070,6 +1075,69 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     >
                         ✕
                     </button>
+                </div>
+
+                {/* Central RL Management & Backup Controls */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#00ffcc', boxShadow: '0 0 8px #00ffcc' }} />
+                        <span>Central RL Store: <strong style={{ color: '#00ffcc' }}>👍 {rlPrefs.totalLikes}</strong> <strong style={{ color: '#ff5c5c', marginLeft: '4px' }}>👎 {rlPrefs.totalDislikes}</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                            onClick={() => {
+                                const json = exportCentralRLJSON();
+                                const blob = new Blob([json], { type: 'application/json' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `flock-taste-profile-${new Date().toISOString().slice(0, 10)}.json`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                                showToast('📥 Central Taste Profile Exported as JSON');
+                            }}
+                            style={{ padding: '5px 10px', borderRadius: '8px', background: 'rgba(0, 255, 204, 0.12)', border: '1px solid rgba(0, 255, 204, 0.3)', color: '#00ffcc', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                            title="Download full centrally stored taste weights, history logs, and masterpieces as a JSON backup"
+                        >
+                            📥 Export Backup
+                        </button>
+                        <button
+                            onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = '.json';
+                                input.onchange = async (e: any) => {
+                                    const file = e.target?.files?.[0];
+                                    if (!file) return;
+                                    const text = await file.text();
+                                    if (importCentralRLJSON(text)) {
+                                        showToast('✅ Central Taste Profile Imported & Synced');
+                                        setTick(t => t + 1);
+                                    } else {
+                                        showToast('⚠️ Invalid Taste Profile JSON');
+                                    }
+                                };
+                                input.click();
+                            }}
+                            style={{ padding: '5px 10px', borderRadius: '8px', background: 'rgba(255, 204, 0, 0.12)', border: '1px solid rgba(255, 204, 0, 0.3)', color: '#ffcc00', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                            title="Import an existing taste profile JSON"
+                        >
+                            📤 Import
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (window.confirm('Are you sure you want to reset all RL preference weights to default?')) {
+                                    resetCentralRLStore();
+                                    showToast('🔄 RL Preferences Reset');
+                                    setTick(t => t + 1);
+                                }
+                            }}
+                            style={{ padding: '5px 8px', borderRadius: '8px', background: 'rgba(255, 59, 48, 0.12)', border: '1px solid rgba(255, 59, 48, 0.3)', color: '#ff5c5c', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                            title="Reset taste preferences"
+                        >
+                            🔄 Reset
+                        </button>
+                    </div>
                 </div>
 
                 {likedList.length === 0 ? (

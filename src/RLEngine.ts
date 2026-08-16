@@ -56,6 +56,27 @@ export interface PersistedLastState {
     savedAt: number;
 }
 
+export interface RLActionLogEntry {
+    timestamp: number;
+    action: 'like' | 'dislike' | 'save' | 'reroll' | 'lock' | 'unlock';
+    dimension?: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera' | 'full';
+    id?: number | string;
+    label?: string;
+    details?: any;
+}
+
+export interface CentralRLStore {
+    version: number;
+    lastUpdated: number;
+    totalLikes: number;
+    totalDislikes: number;
+    preferences: RLPreferences;
+    likedCreations: LikedCreation[];
+    dislikedCreations: DislikedCreation[];
+    historyLog: RLActionLogEntry[];
+}
+
+const STORAGE_KEY_CENTRAL_STORE = 'flock_central_rl_store_v1';
 const STORAGE_KEY_LIKES = 'flock_liked_creations';
 const STORAGE_KEY_DISLIKES = 'flock_disliked_creations';
 const STORAGE_KEY_PREFS_V3 = 'flock_rl_preferences_v3';
@@ -63,63 +84,35 @@ const STORAGE_KEY_PREFS_V2 = 'flock_rl_preferences_v2';
 const STORAGE_KEY_LAST_STATE = 'flock_last_state';
 
 // In-memory cache for ultra-fast, zero-overhead access inside render loops
+let cachedCentralStore: CentralRLStore | null = null;
 let cachedPrefs: RLPreferences | null = null;
 
-export function getLikedCreations(): LikedCreation[] {
+// Multi-tab Real-time Broadcast Channel
+let syncChannel: BroadcastChannel | null = null;
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
     try {
-        const data = localStorage.getItem(STORAGE_KEY_LIKES);
-        return data ? JSON.parse(data) : [];
-    } catch {
-        return [];
-    }
+        syncChannel = new BroadcastChannel('flock_rl_central_sync');
+        syncChannel.onmessage = (event) => {
+            if (event.data?.type === 'SYNC_RL_STORE' && event.data?.store) {
+                cachedCentralStore = event.data.store;
+                cachedPrefs = cachedCentralStore?.preferences || null;
+                window.dispatchEvent(new CustomEvent('flock_rl_store_updated', { detail: cachedCentralStore }));
+            }
+        };
+    } catch { }
 }
 
-export function getDislikedCreations(): DislikedCreation[] {
+function broadcastSync(store: CentralRLStore) {
     try {
-        const data = localStorage.getItem(STORAGE_KEY_DISLIKES);
-        return data ? JSON.parse(data) : [];
-    } catch {
-        return [];
-    }
-}
-
-export function getRLPreferences(): RLPreferences {
-    if (cachedPrefs) return cachedPrefs;
-
-    try {
-        const dataV3 = localStorage.getItem(STORAGE_KEY_PREFS_V3);
-        if (dataV3) {
-            cachedPrefs = JSON.parse(dataV3);
-            return cachedPrefs!;
-        }
-
-        // Seamless migration from v2 to v3 without losing user data
-        const dataV2 = localStorage.getItem(STORAGE_KEY_PREFS_V2);
-        if (dataV2) {
-            const oldPrefs = JSON.parse(dataV2);
-            cachedPrefs = {
-                formationLikes: oldPrefs.formationLikes || {},
-                formationDislikes: oldPrefs.formationDislikes || {},
-                shapeLikes: oldPrefs.shapeLikes || {},
-                shapeDislikes: oldPrefs.shapeDislikes || {},
-                materialLikes: oldPrefs.materialLikes || {},
-                materialDislikes: oldPrefs.materialDislikes || {},
-                paletteLikes: {},
-                paletteDislikes: {},
-                lightingLikes: {},
-                lightingDislikes: {},
-                cameraLikes: {},
-                cameraDislikes: {},
-                totalLikes: oldPrefs.totalLikes || 0,
-                totalDislikes: oldPrefs.totalDislikes || 0,
-                likedGenomes: oldPrefs.likedGenomes || []
-            };
-            localStorage.setItem(STORAGE_KEY_PREFS_V3, JSON.stringify(cachedPrefs));
-            return cachedPrefs;
+        syncChannel?.postMessage({ type: 'SYNC_RL_STORE', store });
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('flock_rl_store_updated', { detail: store }));
         }
     } catch { }
+}
 
-    cachedPrefs = {
+function createDefaultPreferences(): RLPreferences {
+    return {
         formationLikes: { 16: 8, 28: 6 },
         formationDislikes: {},
         shapeLikes: {},
@@ -136,20 +129,187 @@ export function getRLPreferences(): RLPreferences {
         totalDislikes: 0,
         likedGenomes: []
     };
-    return cachedPrefs;
+}
+
+export function getCentralRLStore(): CentralRLStore {
+    if (cachedCentralStore) return cachedCentralStore;
+
+    try {
+        const dataCentral = localStorage.getItem(STORAGE_KEY_CENTRAL_STORE);
+        if (dataCentral) {
+            cachedCentralStore = JSON.parse(dataCentral);
+            cachedPrefs = cachedCentralStore!.preferences;
+            return cachedCentralStore!;
+        }
+
+        // Migrate legacy separate keys into unified central store
+        let legacyLikes: LikedCreation[] = [];
+        try {
+            const rawLikes = localStorage.getItem(STORAGE_KEY_LIKES);
+            if (rawLikes) legacyLikes = JSON.parse(rawLikes);
+        } catch { }
+
+        let legacyDislikes: DislikedCreation[] = [];
+        try {
+            const rawDislikes = localStorage.getItem(STORAGE_KEY_DISLIKES);
+            if (rawDislikes) legacyDislikes = JSON.parse(rawDislikes);
+        } catch { }
+
+        let legacyPrefs = createDefaultPreferences();
+        try {
+            const rawV3 = localStorage.getItem(STORAGE_KEY_PREFS_V3);
+            if (rawV3) {
+                legacyPrefs = { ...legacyPrefs, ...JSON.parse(rawV3) };
+            } else {
+                const rawV2 = localStorage.getItem(STORAGE_KEY_PREFS_V2);
+                if (rawV2) legacyPrefs = { ...legacyPrefs, ...JSON.parse(rawV2) };
+            }
+        } catch { }
+
+        cachedCentralStore = {
+            version: 1,
+            lastUpdated: Date.now(),
+            totalLikes: legacyPrefs.totalLikes || 32,
+            totalDislikes: legacyPrefs.totalDislikes || 0,
+            preferences: legacyPrefs,
+            likedCreations: legacyLikes,
+            dislikedCreations: legacyDislikes,
+            historyLog: []
+        };
+
+        saveCentralRLStore(cachedCentralStore);
+        return cachedCentralStore;
+    } catch {
+        cachedCentralStore = {
+            version: 1,
+            lastUpdated: Date.now(),
+            totalLikes: 32,
+            totalDislikes: 0,
+            preferences: createDefaultPreferences(),
+            likedCreations: [],
+            dislikedCreations: [],
+            historyLog: []
+        };
+        return cachedCentralStore;
+    }
+}
+
+export function saveCentralRLStore(store: CentralRLStore) {
+    store.lastUpdated = Date.now();
+    cachedCentralStore = store;
+    cachedPrefs = store.preferences;
+
+    try {
+        const serialized = JSON.stringify(store);
+        localStorage.setItem(STORAGE_KEY_CENTRAL_STORE, serialized);
+        // Backwards compatibility mirrors for older components
+        localStorage.setItem(STORAGE_KEY_PREFS_V3, JSON.stringify(store.preferences));
+        localStorage.setItem(STORAGE_KEY_LIKES, JSON.stringify(store.likedCreations));
+        localStorage.setItem(STORAGE_KEY_DISLIKES, JSON.stringify(store.dislikedCreations));
+    } catch { }
+
+    broadcastSync(store);
+}
+
+export function recordRLAction(entry: Omit<RLActionLogEntry, 'timestamp'>) {
+    const store = getCentralRLStore();
+    const fullEntry: RLActionLogEntry = {
+        ...entry,
+        timestamp: Date.now()
+    };
+    store.historyLog.unshift(fullEntry);
+    if (store.historyLog.length > 500) store.historyLog.length = 500; // Cap log history
+    saveCentralRLStore(store);
+}
+
+export function exportCentralRLJSON(): string {
+    const store = getCentralRLStore();
+    return JSON.stringify(store, null, 2);
+}
+
+export function importCentralRLJSON(jsonString: string): boolean {
+    try {
+        const parsed = JSON.parse(jsonString);
+        if (!parsed || typeof parsed !== 'object' || !parsed.preferences) {
+            return false;
+        }
+        const store: CentralRLStore = {
+            version: parsed.version || 1,
+            lastUpdated: Date.now(),
+            totalLikes: parsed.totalLikes || parsed.preferences.totalLikes || 0,
+            totalDislikes: parsed.totalDislikes || parsed.preferences.totalDislikes || 0,
+            preferences: parsed.preferences,
+            likedCreations: Array.isArray(parsed.likedCreations) ? parsed.likedCreations : [],
+            dislikedCreations: Array.isArray(parsed.dislikedCreations) ? parsed.dislikedCreations : [],
+            historyLog: Array.isArray(parsed.historyLog) ? parsed.historyLog : []
+        };
+        saveCentralRLStore(store);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function resetCentralRLStore(): CentralRLStore {
+    const defaultStore: CentralRLStore = {
+        version: 1,
+        lastUpdated: Date.now(),
+        totalLikes: 0,
+        totalDislikes: 0,
+        preferences: {
+            formationLikes: {},
+            formationDislikes: {},
+            shapeLikes: {},
+            shapeDislikes: {},
+            materialLikes: {},
+            materialDislikes: {},
+            paletteLikes: {},
+            paletteDislikes: {},
+            lightingLikes: {},
+            lightingDislikes: {},
+            cameraLikes: {},
+            cameraDislikes: {},
+            totalLikes: 0,
+            totalDislikes: 0,
+            likedGenomes: []
+        },
+        likedCreations: [],
+        dislikedCreations: [],
+        historyLog: []
+    };
+    saveCentralRLStore(defaultStore);
+    return defaultStore;
+}
+
+export function getLikedCreations(): LikedCreation[] {
+    const store = getCentralRLStore();
+    return store.likedCreations || [];
+}
+
+export function getDislikedCreations(): DislikedCreation[] {
+    const store = getCentralRLStore();
+    return store.dislikedCreations || [];
+}
+
+export function getRLPreferences(): RLPreferences {
+    const store = getCentralRLStore();
+    return store.preferences;
 }
 
 function persistPrefs(prefs: RLPreferences) {
-    cachedPrefs = prefs;
-    try {
-        localStorage.setItem(STORAGE_KEY_PREFS_V3, JSON.stringify(prefs));
-    } catch { }
+    const store = getCentralRLStore();
+    store.preferences = prefs;
+    store.totalLikes = prefs.totalLikes;
+    store.totalDislikes = prefs.totalDislikes;
+    saveCentralRLStore(store);
 }
 
 // Granular Like/Dislike Functions per Aesthetic Dimension
-export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string): { totalLikes: number } {
-    const prefs = getRLPreferences();
+export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string, label?: string): { totalLikes: number } {
+    const store = getCentralRLStore();
+    const prefs = store.preferences;
     prefs.totalLikes = (prefs.totalLikes || 0) + 1;
+    store.totalLikes = prefs.totalLikes;
 
     switch (dimension) {
         case 'formation':
@@ -172,13 +332,21 @@ export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'p
             break;
     }
 
-    persistPrefs(prefs);
+    recordRLAction({
+        action: 'like',
+        dimension,
+        id,
+        label
+    });
+
     return { totalLikes: prefs.totalLikes };
 }
 
-export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string): { totalDislikes: number } {
-    const prefs = getRLPreferences();
+export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string, label?: string): { totalDislikes: number } {
+    const store = getCentralRLStore();
+    const prefs = store.preferences;
     prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
+    store.totalDislikes = prefs.totalDislikes;
 
     switch (dimension) {
         case 'formation':
@@ -201,13 +369,20 @@ export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' |
             break;
     }
 
-    persistPrefs(prefs);
+    recordRLAction({
+        action: 'dislike',
+        dimension,
+        id,
+        label
+    });
+
     return { totalDislikes: prefs.totalDislikes };
 }
 
 export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; totalLikes: number; totalDislikes: number } {
-    const likes = getLikedCreations();
-    const prefs = getRLPreferences();
+    const store = getCentralRLStore();
+    const likes = store.likedCreations;
+    const prefs = store.preferences;
 
     const existingIndex = likes.findIndex(
         l => l.formationMode === creation.formationMode &&
@@ -218,6 +393,7 @@ export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; to
     let isNew = false;
     if (existingIndex === -1) {
         likes.unshift(creation);
+        if (likes.length > 100) likes.length = 100;
         isNew = true;
 
         // Heavily weight whole-setup saves (+3 RL points each) to train future AI generations
@@ -234,24 +410,29 @@ export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; to
             prefs.cameraLikes[String(creation.cameraPresetIndex)] = (prefs.cameraLikes[String(creation.cameraPresetIndex)] || 0) + 3;
         }
         prefs.totalLikes = (prefs.totalLikes || 0) + 3;
+        store.totalLikes = prefs.totalLikes;
 
         if (creation.genome) {
             prefs.likedGenomes.push(creation.genome);
             if (prefs.likedGenomes.length > 30) prefs.likedGenomes.shift();
         }
 
-        try {
-            localStorage.setItem(STORAGE_KEY_LIKES, JSON.stringify(likes.slice(0, 100)));
-        } catch { }
-        persistPrefs(prefs);
+        recordRLAction({
+            action: 'save',
+            dimension: 'full',
+            id: creation.id,
+            label: `${creation.formationLabel} • ${creation.materialLabel}`,
+            details: creation
+        });
     }
 
     return { isNew, totalLikes: prefs.totalLikes, totalDislikes: prefs.totalDislikes || 0 };
 }
 
 export function saveDislikedCreation(dislike: DislikedCreation): { isNew: boolean; totalLikes: number; totalDislikes: number } {
-    const dislikes = getDislikedCreations();
-    const prefs = getRLPreferences();
+    const store = getCentralRLStore();
+    const dislikes = store.dislikedCreations;
+    const prefs = store.preferences;
 
     const existingIndex = dislikes.findIndex(
         d => d.formationMode === dislike.formationMode &&
@@ -262,6 +443,7 @@ export function saveDislikedCreation(dislike: DislikedCreation): { isNew: boolea
     let isNew = false;
     if (existingIndex === -1) {
         dislikes.unshift(dislike);
+        if (dislikes.length > 100) dislikes.length = 100;
         isNew = true;
 
         prefs.formationDislikes[dislike.formationMode] = (prefs.formationDislikes[dislike.formationMode] || 0) + 1;
@@ -274,11 +456,14 @@ export function saveDislikedCreation(dislike: DislikedCreation): { isNew: boolea
             prefs.lightingDislikes[dislike.lightingProfileIndex] = (prefs.lightingDislikes[dislike.lightingProfileIndex] || 0) + 1;
         }
         prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
+        store.totalDislikes = prefs.totalDislikes;
 
-        try {
-            localStorage.setItem(STORAGE_KEY_DISLIKES, JSON.stringify(dislikes.slice(0, 100)));
-        } catch { }
-        persistPrefs(prefs);
+        recordRLAction({
+            action: 'dislike',
+            dimension: 'full',
+            id: dislike.id,
+            details: dislike
+        });
     }
 
     return { isNew, totalLikes: prefs.totalLikes || 0, totalDislikes: prefs.totalDislikes };
