@@ -180,14 +180,17 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const g5 = new THREE.TetrahedronGeometry(0.17, 0);
         g5.scale(0.65, 0.65, 1.6);
 
-        return [g0, g1, g2, g3, g4, g5];
+        // 6: Geodesic Ico-Sphere Level-0 (20 flat triangular mirror facets for disco-ball diamond glints)
+        const g6 = new THREE.IcosahedronGeometry(0.16, 0);
+
+        return [g0, g1, g2, g3, g4, g5, g6];
     }, []);
 
     const getSpeciesShapes = (): [number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
         if (state.boidShape === 99) {
             // Multi-Species Diverse: 4 distinct volumetric 3D geometric archetypes
-            return [0, 1, 2, 4]; // Stealth Jet (3D), Faceted Gem (3D), Prism Pyramid (3D), Swept Delta Wing (3D)
+            return [0, 1, 4, 6]; // Stealth Jet (3D), Faceted Gem (3D), Swept Delta Wing (3D), Geodesic Ico-Sphere (3D)
         }
         const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % geometries.length) : 0;
         return [s, s, s, s];

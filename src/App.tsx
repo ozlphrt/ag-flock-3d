@@ -349,7 +349,7 @@ function App() {
     const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
     const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    const initialShape = Math.random() < 0.25 ? 99 : Math.floor(Math.random() * 6);
+    const initialShape = Math.random() < 0.20 ? 99 : Math.floor(Math.random() * 7);
     const initialCameraIdx = Math.floor(Math.random() * CAMERA_PRESETS.length);
     const initialBloomIdx = Math.floor(Math.random() * BLOOM_PRESETS.length);
     const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];

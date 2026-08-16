@@ -166,7 +166,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             // Auto Shape Mutation (only if autoShape enabled AND shape is NOT locked)
             if (state.autoShape !== false && !state.isShapeLocked) {
                 state.boidShape = sampleRLAttribute(
-                    6,
+                    7,
                     prefs.shapeLikes,
                     prefs.shapeDislikes,
                     prefs.totalLikes,
@@ -426,7 +426,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             } else {
                 state.customShapeName = undefined;
                 state.speciesShapes = undefined;
-                const shapeChoices = [0, 1, 2, 3, 4, 5, 99];
+                const shapeChoices = [0, 1, 2, 3, 4, 5, 6, 99];
                 const nextShape = shapeChoices[Math.floor(Math.random() * shapeChoices.length)];
                 state.boidShape = nextShape;
                 const shapeLabels: Record<number, string> = {
@@ -436,6 +436,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                     3: 'Hex Shield Interceptor',
                     4: 'Swept Delta Wing',
                     5: 'Tetrahedral Shard',
+                    6: 'Geodesic Ico-Sphere',
                     99: 'Multi-Species Diverse'
                 };
                 return `Shape: ${shapeLabels[nextShape] || 'Arrowhead Jet'}`;

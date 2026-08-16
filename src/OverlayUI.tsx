@@ -176,7 +176,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal (6 tris)' },
         { id: 3, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
         { id: 4, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
-        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' }
+        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' },
+        { id: 6, label: 'Geodesic Ico-Sphere', icon: '🌐', desc: '20-facet diamond geodesic sphere with multi-angle glints (20 tris)' }
     ];
 
     const materialOptions = [
