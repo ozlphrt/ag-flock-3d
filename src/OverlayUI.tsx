@@ -951,13 +951,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </div>
             </div>
 
-            {/* Footer Actions: Save Masterpiece & Global Lock All */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+            {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
                 <button
                     className="save-full-btn"
                     onClick={handleSaveFullCreation}
                     title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
-                    style={{ flex: 1, margin: 0 }}
+                    style={{ flex: 1.1, margin: 0, padding: '0 8px', height: '35px', fontSize: '11px', whiteSpace: 'nowrap' }}
                 >
                     <span>❤️</span> Save (+RL)
                 </button>
@@ -967,9 +967,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     title={isAllDimensionsLocked ? "All 6 dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All 6 Dimensions (Freeze Entire Simulation)"}
                     style={{
                         width: 'auto',
-                        padding: '0 12px',
+                        padding: '0 8px',
                         height: '35px',
-                        gap: '5px',
+                        gap: '4px',
                         borderRadius: '10px',
                         fontWeight: 800,
                         fontSize: '11px',
@@ -978,6 +978,38 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 >
                     <span>{isAllDimensionsLocked ? '🔒' : '🔓'}</span>
                     <span>{isAllDimensionsLocked ? 'Locked' : 'Lock All'}</span>
+                </button>
+                <button
+                    className="matrix-action-btn"
+                    onClick={() => setIsGalleryOpen(true)}
+                    title={`Open Masterpiece Gallery (${likedList.length} saved creations)`}
+                    style={{
+                        width: 'auto',
+                        padding: '0 8px',
+                        height: '35px',
+                        gap: '4px',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap',
+                        background: 'rgba(255, 204, 0, 0.12)',
+                        border: '1px solid rgba(255, 204, 0, 0.35)',
+                        color: '#ffcc00'
+                    }}
+                >
+                    <span>🖼️</span>
+                    <span>Gallery</span>
+                    {likedList.length > 0 && (
+                        <span style={{
+                            background: 'rgba(255, 204, 0, 0.25)',
+                            padding: '1px 4px',
+                            borderRadius: '6px',
+                            fontSize: '9.5px',
+                            color: '#fff'
+                        }}>
+                            {likedList.length}
+                        </span>
+                    )}
                 </button>
             </div>
         </div>
