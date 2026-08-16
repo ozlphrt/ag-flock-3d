@@ -45,13 +45,13 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
-  width: 270px;
+  width: 295px;
   background: rgba(10, 14, 24, 0.88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  padding: 10px;
+  padding: 10px 12px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2);
   z-index: 999;
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -149,52 +149,53 @@ body {
 .matrix-actions {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .matrix-action-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  font-size: 11px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   outline: none;
   padding: 0;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
 
 .matrix-action-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
   color: #fff;
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
 .matrix-action-btn.like:hover {
   background: rgba(0, 255, 204, 0.25);
   border-color: #00ffcc;
   color: #00ffcc;
-  box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.45);
 }
 
 .matrix-action-btn.dislike:hover {
   background: rgba(255, 59, 48, 0.25);
   border-color: #ff3b30;
   color: #ff5c5c;
-  box-shadow: 0 0 10px rgba(255, 59, 48, 0.4);
+  box-shadow: 0 0 12px rgba(255, 59, 48, 0.45);
 }
 
 .matrix-action-btn.lock.is-locked {
   background: rgba(0, 255, 204, 0.22);
   border-color: #00ffcc;
   color: #00ffcc;
-  box-shadow: 0 0 10px rgba(0, 255, 204, 0.35);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
   animation: pulseLock 2.5s infinite ease-in-out;
 }
 
@@ -202,7 +203,7 @@ body {
   background: rgba(255, 204, 0, 0.25);
   border-color: #ffcc00;
   color: #ffcc00;
-  box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.45);
 }
 
 .matrix-action-btn:active {
@@ -337,14 +338,26 @@ body {
   }
 
   .ephemeral-like-bar {
-    right: 12px !important;
+    right: 10px !important;
     left: auto !important;
-    top: 45% !important;
+    top: 48% !important;
     bottom: auto !important;
     transform: translateY(-50%) !important;
-    padding: 6px 6px !important;
-    gap: 5px !important;
-    border-radius: 20px !important;
+    width: min(315px, calc(100vw - 20px)) !important;
+    padding: 8px 10px !important;
+    gap: 6px !important;
+    border-radius: 18px !important;
+  }
+
+  .matrix-action-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 15px !important;
+    border-radius: 8px !important;
+  }
+
+  .matrix-actions {
+    gap: 4px !important;
   }
 
   .ephemeral-like-btn {
