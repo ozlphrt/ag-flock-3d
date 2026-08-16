@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Stars, Environment } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
 import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
@@ -107,6 +107,16 @@ function lerpOklabColor(c1: THREE.Color, c2: THREE.Color, t: number, out: THREE.
     const [r, g, b_rgb] = oklabToRgb(L, a, b);
     out.setRGB(r, g, b_rgb);
 }
+
+// Pre-allocated scratch vectors for DynamicStudioLighting (zero per-frame GC pressure)
+const _viewVec = new THREE.Vector3();
+const _worldUp = new THREE.Vector3(0, 1, 0);
+const _rightVec = new THREE.Vector3();
+const _upVec = new THREE.Vector3();
+const _idealKey = new THREE.Vector3();
+const _idealFill = new THREE.Vector3();
+const _idealRim = new THREE.Vector3();
+const _idealBounce = new THREE.Vector3();
 
 function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const ambientRef = useRef<THREE.AmbientLight>(null!);
@@ -217,62 +227,58 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
         // --- Camera-Adaptive Studio Rig: Eliminates Backlighting While Maximizing 3D Volumetric Depth ---
         const camPos = camera.position;
-        // View vector pointing from scene center toward camera
-        const viewVec = new THREE.Vector3().copy(camPos).normalize();
-        if (viewVec.lengthSq() < 0.001) viewVec.set(0, 0, 1);
+        // View vector pointing from scene center toward camera (reuse scratch vector)
+        _viewVec.copy(camPos).normalize();
+        if (_viewVec.lengthSq() < 0.001) _viewVec.set(0, 0, 1);
 
-        const worldUp = new THREE.Vector3(0, 1, 0);
+        _worldUp.set(0, 1, 0);
         // Right vector orthogonal to viewVec
-        const rightVec = new THREE.Vector3().crossVectors(viewVec, worldUp).normalize();
-        if (rightVec.lengthSq() < 0.001) rightVec.set(1, 0, 0);
+        _rightVec.crossVectors(_viewVec, _worldUp).normalize();
+        if (_rightVec.lengthSq() < 0.001) _rightVec.set(1, 0, 0);
 
         // Orthonormal Up vector
-        const upVec = new THREE.Vector3().crossVectors(rightVec, viewVec).normalize();
+        _upVec.crossVectors(_rightVec, _viewVec).normalize();
 
         const lightDist = 60.0;
 
         // 1. Key Light: 40° key angle (front-top-right relative to camera).
-        // Casts crisp dimensional form-shadows across boid wings without blinding flat headlights or dark backlights.
-        const idealKeyPos = new THREE.Vector3()
-            .addScaledVector(viewVec, 0.70)
-            .addScaledVector(rightVec, 0.55)
-            .addScaledVector(upVec, 0.45)
+        _idealKey.set(0, 0, 0)
+            .addScaledVector(_viewVec, 0.70)
+            .addScaledVector(_rightVec, 0.55)
+            .addScaledVector(_upVec, 0.45)
             .normalize()
             .multiplyScalar(lightDist);
 
         // 2. Fill Light: 45° fill angle (front-left-low relative to camera).
-        // Softens shadows to keep internal geometry visible, maintaining depth contrast.
-        const idealFillPos = new THREE.Vector3()
-            .addScaledVector(viewVec, 0.72)
-            .addScaledVector(rightVec, -0.52)
-            .addScaledVector(upVec, 0.25)
+        _idealFill.set(0, 0, 0)
+            .addScaledVector(_viewVec, 0.72)
+            .addScaledVector(_rightVec, -0.52)
+            .addScaledVector(_upVec, 0.25)
             .normalize()
             .multiplyScalar(lightDist * 0.9);
 
         // 3. Rim / Kicker Light: 145° edge backlight (high behind subject relative to camera).
-        // Traces outer wing silhouettes with an iridescent contour highlight for figure-ground depth separation.
-        const idealRimPos = new THREE.Vector3()
-            .addScaledVector(viewVec, -0.62)
-            .addScaledVector(rightVec, -0.32)
-            .addScaledVector(upVec, 0.70)
+        _idealRim.set(0, 0, 0)
+            .addScaledVector(_viewVec, -0.62)
+            .addScaledVector(_rightVec, -0.32)
+            .addScaledVector(_upVec, 0.70)
             .normalize()
             .multiplyScalar(lightDist * 1.1);
 
         // 4. Bounce / Ground Uplight: Below camera facing up.
-        // Provides subtle upward reflections on undersides.
-        const idealBouncePos = new THREE.Vector3()
-            .addScaledVector(viewVec, 0.40)
-            .addScaledVector(rightVec, 0.20)
-            .addScaledVector(upVec, -0.80)
+        _idealBounce.set(0, 0, 0)
+            .addScaledVector(_viewVec, 0.40)
+            .addScaledVector(_rightVec, 0.20)
+            .addScaledVector(_upVec, -0.80)
             .normalize()
             .multiplyScalar(lightDist * 0.8);
 
         // Smoothly glide light positions with organic temporal damping
         const smoothRate = Math.min(1.0, (delta || 0.016) * 7.5);
-        curKeyPos.current.lerp(idealKeyPos, smoothRate);
-        curFillPos.current.lerp(idealFillPos, smoothRate);
-        curRimPos.current.lerp(idealRimPos, smoothRate);
-        curBouncePos.current.lerp(idealBouncePos, smoothRate);
+        curKeyPos.current.lerp(_idealKey, smoothRate);
+        curFillPos.current.lerp(_idealFill, smoothRate);
+        curRimPos.current.lerp(_idealRim, smoothRate);
+        curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
             ambientRef.current.intensity = curAmbient.current;
@@ -333,9 +339,40 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
 function App() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const [population, setPopulation] = useState(isMobile ? 25000 : 100000);
+    const [population, setPopulation] = useState(isMobile ? 25000 : 60000);
     const [fps, setFps] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Adaptive FPS-based population auto-scaler
+    const fpsHistory = useRef<number[]>([]);
+    const lastScaleTime = useRef(0);
+    const populationRef = useRef(isMobile ? 25000 : 60000);
+
+    useEffect(() => {
+        if (fps <= 0 || isMobile) return;
+        fpsHistory.current.push(fps);
+        if (fpsHistory.current.length > 5) fpsHistory.current.shift();
+
+        const now = performance.now();
+        if (now - lastScaleTime.current < 4000) return; // Wait 4s between adjustments
+        if (fpsHistory.current.length < 3) return;
+
+        const avgFps = fpsHistory.current.reduce((a, b) => a + b, 0) / fpsHistory.current.length;
+
+        if (avgFps < 28 && populationRef.current > 20000) {
+            const next = Math.max(20000, Math.floor(populationRef.current * 0.75));
+            populationRef.current = next;
+            setPopulation(next);
+            fpsHistory.current = [];
+            lastScaleTime.current = now;
+        } else if (avgFps > 52 && populationRef.current < 100000) {
+            const next = Math.min(100000, Math.floor(populationRef.current * 1.12));
+            populationRef.current = next;
+            setPopulation(next);
+            fpsHistory.current = [];
+            lastScaleTime.current = now;
+        }
+    }, [fps]);
 
     // Hydrate from persisted last active state if available with full index bounds safety
     const lastSaved = getLastState();
@@ -396,7 +433,7 @@ function App() {
                 <Flock count={population} state={simState.current} setPopulation={setPopulation} />
 
                 <EffectComposer>
-                    <Bloom luminanceThreshold={0.22} mipmapBlur intensity={1.25} radius={0.75} />
+                    <Bloom luminanceThreshold={0.22} mipmapBlur intensity={1.25} radius={0.75} levels={4} />
                 </EffectComposer>
             </Canvas>
         </div>

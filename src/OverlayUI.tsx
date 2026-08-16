@@ -16,16 +16,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [, setTick] = useState(0);
     const rlPrefs = getRLPreferences();
     useEffect(() => {
-        let animId: number;
-        const loop = () => {
+        // 10Hz UI refresh — reads simState.current for live values without
+        // forcing React to reconcile the full component tree every animation frame.
+        const uiInterval = setInterval(() => {
             setTick(t => (t + 1) % 100000);
-            animId = requestAnimationFrame(loop);
-        };
-        animId = requestAnimationFrame(loop);
+        }, 100);
         const handleRLUpdate = () => setTick(t => t + 1);
         window.addEventListener('flock_rl_store_updated', handleRLUpdate);
         return () => {
-            cancelAnimationFrame(animId);
+            clearInterval(uiInterval);
             window.removeEventListener('flock_rl_store_updated', handleRLUpdate);
         };
     }, []);

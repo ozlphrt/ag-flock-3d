@@ -5,6 +5,12 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import { SimulationState } from './BoidLogic';
 
+// Pre-allocated scratch vectors for CameraRig (zero per-frame GC pressure)
+const _camIdealPos = new THREE.Vector3();
+const _camIdealTarget = new THREE.Vector3();
+const _camDir = new THREE.Vector3();
+const _camDir2 = new THREE.Vector3();
+
 export interface CameraPreset {
     id: string;
     name: string;
@@ -188,45 +194,44 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
         // 3. Compute Ideal Preset Trajectory / Position & LookTarget
-        const idealPos = new THREE.Vector3();
-        const idealTarget = new THREE.Vector3(preset.target[0], preset.target[1], preset.target[2]);
+        _camIdealTarget.set(preset.target[0], preset.target[1], preset.target[2]);
 
         const rScale = Math.max(0.65, (rBound / 7.5));
 
         if (preset.type === 'flythrough') {
             flightTime.current += safeDelta * 0.20;
             const t = flightTime.current;
-            idealPos.set(
+            _camIdealPos.set(
                 Math.sin(t) * (7.5 * rScale),
                 Math.sin(t * 2.0) * (2.6 * rScale),
                 Math.cos(t) * (8.5 * rScale)
             );
-            idealTarget.set(0, Math.sin(t * 1.5) * 0.8, 0);
+            _camIdealTarget.set(0, Math.sin(t * 1.5) * 0.8, 0);
         } else if (preset.type === 'corkscrew') {
             flightTime.current += safeDelta * 0.14;
             const t = flightTime.current;
             const r = (5.5 + Math.sin(t * 0.6) * 3.0) * rScale;
-            idealPos.set(
+            _camIdealPos.set(
                 Math.cos(t) * r,
                 Math.sin(t * 0.8) * (5.5 * rScale),
                 Math.sin(t) * r
             );
-            idealTarget.set(0, Math.sin(t * 0.8) * 1.2, 0);
+            _camIdealTarget.set(0, Math.sin(t * 0.8) * 1.2, 0);
         } else {
             // Orbit Presets
-            const dir = new THREE.Vector3(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
-            idealPos.copy(idealTarget).addScaledVector(dir, targetDistance);
+            _camDir.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
+            _camIdealPos.copy(_camIdealTarget).addScaledVector(_camDir, targetDistance);
             if (preset.id === 'giant') {
                 // Ensure camera is snugly situated close beneath the bottom of the topology
-                idealPos.y = Math.min(idealPos.y, -rBound * 0.85 - 1.2);
+                _camIdealPos.y = Math.min(_camIdealPos.y, -rBound * 0.85 - 1.2);
             }
         }
 
         // 4. Smoothly Blend Position, LookTarget, and FOV
         if (p < 1.0) {
             // Actively Morphing
-            camera.position.lerpVectors(startCamPos.current, idealPos, sCurve);
-            curLookTarget.current.lerpVectors(startLookTarget.current, idealTarget, sCurve);
+            camera.position.lerpVectors(startCamPos.current, _camIdealPos, sCurve);
+            curLookTarget.current.lerpVectors(startLookTarget.current, _camIdealTarget, sCurve);
             camera.up.set(0, 1, 0);
             camera.lookAt(curLookTarget.current);
 
@@ -238,13 +243,16 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 controlsRef.current.target.copy(curLookTarget.current);
             }
         } else {
-            // Settled in Preset Mode
-            perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, preset.fov, 0.05);
-            perspCam.updateProjectionMatrix();
+            // Settled in Preset Mode — only update projection when FOV actually changes
+            const targetFov = preset.fov;
+            if (Math.abs(perspCam.fov - targetFov) > 0.01) {
+                perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, targetFov, 0.05);
+                perspCam.updateProjectionMatrix();
+            }
 
             if (preset.type === 'flythrough' || preset.type === 'corkscrew') {
-                camera.position.copy(idealPos);
-                curLookTarget.current.copy(idealTarget);
+                camera.position.copy(_camIdealPos);
+                curLookTarget.current.copy(_camIdealTarget);
                 camera.up.set(0, 1, 0);
                 camera.lookAt(curLookTarget.current);
 
@@ -264,8 +272,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                         const curDist = camera.position.distanceTo(target);
                         if (curDist > 0.1 && Math.abs(curDist - targetDistance) > 0.05) {
                             const nextDist = THREE.MathUtils.lerp(curDist, targetDistance, 0.025);
-                            const dir = new THREE.Vector3().subVectors(camera.position, target).normalize();
-                            camera.position.copy(target).addScaledVector(dir, nextDist);
+                            _camDir2.subVectors(camera.position, target).normalize();
+                            camera.position.copy(target).addScaledVector(_camDir2, nextDist);
                         }
                     }
                     curLookTarget.current.copy(controlsRef.current.target);

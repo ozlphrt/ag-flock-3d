@@ -146,24 +146,25 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         swarm.setPopulation(count, state);
     }, [count]);
 
-    // 6 Ultra-Fast, Low-Poly, Hard-Edged 3D Geometries with Sharp Pointy Nose (+Z)
+    // 6 Ultra-Fast, Minimal-Poly 3D Geometries with Sharp Pointy Nose (+Z)
+    // Triangle counts reduced to 3-4 per boid for max instanced throughput
     const geometries = useMemo(() => {
         const g0 = new THREE.ConeGeometry(0.12, 0.40, 3);
         g0.rotateX(Math.PI / 2);
 
-        const g1 = new THREE.OctahedronGeometry(0.16, 0);
+        const g1 = new THREE.TetrahedronGeometry(0.16, 0);
         g1.scale(0.7, 0.7, 1.5);
 
-        const g2 = new THREE.ConeGeometry(0.13, 0.38, 4);
+        const g2 = new THREE.ConeGeometry(0.13, 0.38, 3);
         g2.rotateX(Math.PI / 2);
 
-        const g3 = new THREE.ConeGeometry(0.14, 0.36, 6);
+        const g3 = new THREE.ConeGeometry(0.14, 0.36, 3);
         g3.rotateX(Math.PI / 2);
 
-        const g4 = new THREE.CylinderGeometry(0.01, 0.14, 0.40, 4);
+        const g4 = new THREE.ConeGeometry(0.01, 0.40, 3);
         g4.rotateX(Math.PI / 2);
 
-        const g5 = new THREE.ConeGeometry(0.12, 0.40, 5);
+        const g5 = new THREE.ConeGeometry(0.12, 0.40, 3);
         g5.rotateX(Math.PI / 2);
 
         return [g0, g1, g2, g3, g4, g5];
