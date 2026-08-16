@@ -1,4 +1,4 @@
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Stars, Environment } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { useState, useRef } from 'react'
@@ -114,6 +114,13 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
     const fillRef = useRef<THREE.DirectionalLight>(null!);
     const rimRef = useRef<THREE.DirectionalLight>(null!);
     const bounceRef = useRef<THREE.DirectionalLight>(null!);
+    const { camera } = useThree();
+
+    // Smoothed light positions for camera-adaptive studio rig
+    const curKeyPos = useRef(new THREE.Vector3(35, 45, 30));
+    const curFillPos = useRef(new THREE.Vector3(-40, 25, -25));
+    const curRimPos = useRef(new THREE.Vector3(0, 50, -45));
+    const curBouncePos = useRef(new THREE.Vector3(15, -45, 20));
 
     const lastProfileId = useRef<number>(-1);
     const transitionStartTime = useRef<number>(0);
@@ -148,7 +155,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
     const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
     const curRimColor = useRef(new THREE.Color('#e0e8ff'));
 
-    useFrame((stateContext) => {
+    useFrame((stateContext, delta) => {
         const time = stateContext.clock.getElapsedTime();
         const state = simState.current;
         const profile = state.lightingProfile || LIGHTING_PROFILES[0];
@@ -208,23 +215,86 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         lerpOklabColor(startFillColor.current, targetFillColor.current, sCurve, curFillColor.current);
         lerpOklabColor(startRimColor.current, targetRimColor.current, sCurve, curRimColor.current);
 
+        // --- Camera-Adaptive Studio Rig: Eliminates Backlighting While Maximizing 3D Volumetric Depth ---
+        const camPos = camera.position;
+        // View vector pointing from scene center toward camera
+        const viewVec = new THREE.Vector3().copy(camPos).normalize();
+        if (viewVec.lengthSq() < 0.001) viewVec.set(0, 0, 1);
+
+        const worldUp = new THREE.Vector3(0, 1, 0);
+        // Right vector orthogonal to viewVec
+        const rightVec = new THREE.Vector3().crossVectors(viewVec, worldUp).normalize();
+        if (rightVec.lengthSq() < 0.001) rightVec.set(1, 0, 0);
+
+        // Orthonormal Up vector
+        const upVec = new THREE.Vector3().crossVectors(rightVec, viewVec).normalize();
+
+        const lightDist = 60.0;
+
+        // 1. Key Light: 40° key angle (front-top-right relative to camera).
+        // Casts crisp dimensional form-shadows across boid wings without blinding flat headlights or dark backlights.
+        const idealKeyPos = new THREE.Vector3()
+            .addScaledVector(viewVec, 0.70)
+            .addScaledVector(rightVec, 0.55)
+            .addScaledVector(upVec, 0.45)
+            .normalize()
+            .multiplyScalar(lightDist);
+
+        // 2. Fill Light: 45° fill angle (front-left-low relative to camera).
+        // Softens shadows to keep internal geometry visible, maintaining depth contrast.
+        const idealFillPos = new THREE.Vector3()
+            .addScaledVector(viewVec, 0.72)
+            .addScaledVector(rightVec, -0.52)
+            .addScaledVector(upVec, 0.25)
+            .normalize()
+            .multiplyScalar(lightDist * 0.9);
+
+        // 3. Rim / Kicker Light: 145° edge backlight (high behind subject relative to camera).
+        // Traces outer wing silhouettes with an iridescent contour highlight for figure-ground depth separation.
+        const idealRimPos = new THREE.Vector3()
+            .addScaledVector(viewVec, -0.62)
+            .addScaledVector(rightVec, -0.32)
+            .addScaledVector(upVec, 0.70)
+            .normalize()
+            .multiplyScalar(lightDist * 1.1);
+
+        // 4. Bounce / Ground Uplight: Below camera facing up.
+        // Provides subtle upward reflections on undersides.
+        const idealBouncePos = new THREE.Vector3()
+            .addScaledVector(viewVec, 0.40)
+            .addScaledVector(rightVec, 0.20)
+            .addScaledVector(upVec, -0.80)
+            .normalize()
+            .multiplyScalar(lightDist * 0.8);
+
+        // Smoothly glide light positions with organic temporal damping
+        const smoothRate = Math.min(1.0, (delta || 0.016) * 7.5);
+        curKeyPos.current.lerp(idealKeyPos, smoothRate);
+        curFillPos.current.lerp(idealFillPos, smoothRate);
+        curRimPos.current.lerp(idealRimPos, smoothRate);
+        curBouncePos.current.lerp(idealBouncePos, smoothRate);
+
         if (ambientRef.current) {
             ambientRef.current.intensity = curAmbient.current;
             ambientRef.current.color.copy(curFillColor.current);
         }
         if (keyRef.current) {
+            keyRef.current.position.copy(curKeyPos.current);
             keyRef.current.intensity = curKeyInt.current;
             keyRef.current.color.copy(curKeyColor.current);
         }
         if (fillRef.current) {
+            fillRef.current.position.copy(curFillPos.current);
             fillRef.current.intensity = curFillInt.current;
             fillRef.current.color.copy(curFillColor.current);
         }
         if (rimRef.current) {
+            rimRef.current.position.copy(curRimPos.current);
             rimRef.current.intensity = curRimInt.current;
             rimRef.current.color.copy(curRimColor.current);
         }
         if (bounceRef.current) {
+            bounceRef.current.position.copy(curBouncePos.current);
             bounceRef.current.intensity = curFillInt.current * 0.85;
             bounceRef.current.color.copy(curFillColor.current);
         }
