@@ -33,10 +33,10 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'giant',
         name: 'Low Angle',
         icon: '🗿',
-        description: 'Placed at the bottom looking up into the sky with an ultra-wide angle lens',
-        fov: 82,
-        defaultPos: [0, -5.5, 8.8],
-        target: [0, 1.8, 0],
+        description: 'Positioned close beneath the bottom of the topology gazing upward into the swarm',
+        fov: 84,
+        defaultPos: [0, -12.0, 7.5],
+        target: [0, 1.5, 0],
         autoRotateSpeed: 0.7,
         type: 'orbit'
     },
@@ -125,7 +125,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const baseFramingDist = (rBound / Math.sin(Math.max(0.12, vFovRad * 0.5))) * 0.58;
 
         let presetDistMult = 1.0;
-        if (preset.id === 'giant') presetDistMult = 0.85;
+        if (preset.id === 'giant') presetDistMult = 0.62;
         else if (preset.id === 'action') presetDistMult = 0.68;
         else if (preset.id === 'celestial') presetDistMult = 1.10;
 
@@ -179,6 +179,10 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             // Orbit Presets
             const dir = new THREE.Vector3(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
             idealPos.copy(idealTarget).addScaledVector(dir, targetDistance);
+            if (preset.id === 'giant') {
+                // Ensure camera is snugly situated close beneath the bottom of the topology
+                idealPos.y = Math.min(idealPos.y, -rBound * 0.85 - 1.2);
+            }
         }
 
         // 4. Smoothly Blend Position, LookTarget, and FOV

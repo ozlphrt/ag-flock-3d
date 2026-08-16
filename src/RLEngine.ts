@@ -379,6 +379,88 @@ export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' |
     return { totalDislikes: prefs.totalDislikes };
 }
 
+export interface CompositionStateSnapshot {
+    formationMode: number;
+    formationLabel?: string;
+    boidShape: number;
+    shapeLabel?: string;
+    materialPreset: number;
+    materialLabel?: string;
+    paletteIndex?: number;
+    lightingProfileIndex?: number;
+    cameraPresetIndex?: number;
+    colors?: string[];
+    genome?: ProceduralGenome;
+}
+
+export function likeCompositionCombination(comp: CompositionStateSnapshot): { totalLikes: number } {
+    const store = getCentralRLStore();
+    const prefs = store.preferences;
+
+    // Harmoniously weight all active traits as a winning combination synergy (+2 each)
+    prefs.formationLikes[comp.formationMode] = (prefs.formationLikes[comp.formationMode] || 0) + 2;
+    prefs.shapeLikes[comp.boidShape] = (prefs.shapeLikes[comp.boidShape] || 0) + 2;
+    prefs.materialLikes[comp.materialPreset] = (prefs.materialLikes[comp.materialPreset] || 0) + 2;
+    if (comp.paletteIndex !== undefined) {
+        prefs.paletteLikes[comp.paletteIndex] = (prefs.paletteLikes[comp.paletteIndex] || 0) + 2;
+    }
+    if (comp.lightingProfileIndex !== undefined) {
+        prefs.lightingLikes[comp.lightingProfileIndex] = (prefs.lightingLikes[comp.lightingProfileIndex] || 0) + 2;
+    }
+    if (comp.cameraPresetIndex !== undefined) {
+        prefs.cameraLikes[String(comp.cameraPresetIndex)] = (prefs.cameraLikes[String(comp.cameraPresetIndex)] || 0) + 2;
+    }
+
+    prefs.totalLikes = (prefs.totalLikes || 0) + 1;
+    store.totalLikes = prefs.totalLikes;
+
+    if (comp.genome) {
+        prefs.likedGenomes.push(comp.genome);
+        if (prefs.likedGenomes.length > 30) prefs.likedGenomes.shift();
+    }
+
+    recordRLAction({
+        action: 'like',
+        dimension: 'full',
+        id: `${comp.formationMode}_${comp.materialPreset}_${comp.paletteIndex ?? 0}`,
+        label: `✨ Combination: ${comp.formationLabel || 'Topology'} + ${comp.materialLabel || 'Material'}`,
+        details: comp
+    });
+
+    return { totalLikes: prefs.totalLikes };
+}
+
+export function dislikeCompositionCombination(comp: CompositionStateSnapshot): { totalDislikes: number } {
+    const store = getCentralRLStore();
+    const prefs = store.preferences;
+
+    prefs.formationDislikes[comp.formationMode] = (prefs.formationDislikes[comp.formationMode] || 0) + 1;
+    prefs.shapeDislikes[comp.boidShape] = (prefs.shapeDislikes[comp.boidShape] || 0) + 1;
+    prefs.materialDislikes[comp.materialPreset] = (prefs.materialDislikes[comp.materialPreset] || 0) + 1;
+    if (comp.paletteIndex !== undefined) {
+        prefs.paletteDislikes[comp.paletteIndex] = (prefs.paletteDislikes[comp.paletteIndex] || 0) + 1;
+    }
+    if (comp.lightingProfileIndex !== undefined) {
+        prefs.lightingDislikes[comp.lightingProfileIndex] = (prefs.lightingDislikes[comp.lightingProfileIndex] || 0) + 1;
+    }
+    if (comp.cameraPresetIndex !== undefined) {
+        prefs.cameraDislikes[String(comp.cameraPresetIndex)] = (prefs.cameraDislikes[String(comp.cameraPresetIndex)] || 0) + 1;
+    }
+
+    prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
+    store.totalDislikes = prefs.totalDislikes;
+
+    recordRLAction({
+        action: 'dislike',
+        dimension: 'full',
+        id: `${comp.formationMode}_${comp.materialPreset}_${comp.paletteIndex ?? 0}`,
+        label: `Combination Dislike: ${comp.formationLabel || 'Topology'} + ${comp.materialLabel || 'Material'}`,
+        details: comp
+    });
+
+    return { totalDislikes: prefs.totalDislikes };
+}
+
 export function saveLikedCreation(creation: LikedCreation): { isNew: boolean; totalLikes: number; totalDislikes: number } {
     const store = getCentralRLStore();
     const likes = store.likedCreations;

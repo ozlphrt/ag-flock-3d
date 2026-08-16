@@ -337,6 +337,20 @@ body {
     right: 16px !important;
   }
 
+  .top-right-combination-bar {
+    top: 14px !important;
+    right: 14px !important;
+    padding: 4px 8px !important;
+  }
+
+  .bottom-left-topology-card {
+    bottom: 16px !important;
+    left: 14px !important;
+    max-width: calc(100vw - 190px) !important;
+    padding: 6px 10px !important;
+    gap: 8px !important;
+  }
+
   .ephemeral-like-bar {
     right: 10px !important;
     left: auto !important;
@@ -365,6 +379,20 @@ body {
     font-size: 11px !important;
     gap: 6px !important;
   }
+}
+
+.bottom-left-topology-card:hover {
+  transform: translateY(-2px);
+  border-color: #00ffcc !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 204, 0.25) !important;
+}
+
+.bottom-left-topology-card:active {
+  transform: scale(0.97);
+}
+
+.top-right-combination-bar:hover {
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 @keyframes spin {
