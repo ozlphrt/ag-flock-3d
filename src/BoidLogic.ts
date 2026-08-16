@@ -91,8 +91,22 @@ export enum FormationMode {
     TrefoilBraidedRibbon = 55,
     HexaHelixVortexTower = 56,
     MobiusHelixBraid = 57,
-    LissajousIntertwinedKnot = 58
+    LissajousIntertwinedKnot = 58,
+    // --- Advanced Intertwined Loops, Knots & Links ---
+    BorromeanRings = 59,
+    FigureEightKnot = 60,
+    CinqfoilKnot = 61,
+    SeptafoilKnot = 62,
+    OlympicChainLink = 63,
+    TriquetraCelticBraid = 64,
+    SolarFlareProminence = 65,
+    WhiteheadLink = 66,
+    QuatrefoilKnotBraid = 67,
+    GrannyKnotBraid = 68
 }
+
+export const TOTAL_FORMATION_COUNT = 69;
+
 
 export interface ProceduralGenome {
     family?: 'harmonic' | 'superformula' | 'branching';
@@ -128,175 +142,175 @@ export interface LightingProfile {
 export const LIGHTING_PROFILES: LightingProfile[] = [
     {
         id: 0,
-        label: 'Studio White',
-        ambientIntensity: 0.55,
-        keyIntensity: 2.4,
+        label: 'Studio High-Contrast',
+        ambientIntensity: 0.12,
+        keyIntensity: 3.8,
         keyColor: '#ffffff',
-        fillIntensity: 0.65,
-        fillColor: '#ffffff',
-        rimIntensity: 1.6,
-        rimColor: '#e0e8ff',
+        fillIntensity: 0.30,
+        fillColor: '#1a2238',
+        rimIntensity: 3.4,
+        rimColor: '#e0f0ff',
         fogDensity: 0.003
     },
     {
         id: 1,
         label: 'Golden Hour',
-        ambientIntensity: 0.45,
-        keyIntensity: 2.8,
-        keyColor: '#ffd580',
-        fillIntensity: 0.60,
-        fillColor: '#ffe5b4',
-        rimIntensity: 1.8,
-        rimColor: '#4060a0',
+        ambientIntensity: 0.14,
+        keyIntensity: 3.9,
+        keyColor: '#ffe090',
+        fillIntensity: 0.35,
+        fillColor: '#1e1430',
+        rimIntensity: 3.2,
+        rimColor: '#5090ff',
         fogDensity: 0.0035
     },
     {
         id: 2,
         label: 'Arctic Cold',
-        ambientIntensity: 0.40,
-        keyIntensity: 2.6,
-        keyColor: '#c0d8ff',
-        fillIntensity: 0.70,
-        fillColor: '#d8f0ff',
-        rimIntensity: 1.9,
-        rimColor: '#ff8040',
+        ambientIntensity: 0.12,
+        keyIntensity: 3.6,
+        keyColor: '#d0e5ff',
+        fillIntensity: 0.30,
+        fillColor: '#0a1525',
+        rimIntensity: 3.6,
+        rimColor: '#ff9040',
         fogDensity: 0.004
     },
     {
         id: 3,
-        label: 'Deep Sea',
-        ambientIntensity: 0.30,
-        keyIntensity: 2.2,
-        keyColor: '#102040',
-        fillIntensity: 0.50,
-        fillColor: '#004060',
-        rimIntensity: 2.4,
-        rimColor: '#00ffcc',
+        label: 'Deep Sea Abyss',
+        ambientIntensity: 0.10,
+        keyIntensity: 3.4,
+        keyColor: '#00e5ff',
+        fillIntensity: 0.25,
+        fillColor: '#020b18',
+        rimIntensity: 3.8,
+        rimColor: '#00ffaa',
         fogDensity: 0.006
     },
     {
         id: 4,
-        label: 'Volcanic',
-        ambientIntensity: 0.35,
-        keyIntensity: 3.0,
-        keyColor: '#ff6020',
-        fillIntensity: 0.50,
-        fillColor: '#801000',
-        rimIntensity: 2.2,
-        rimColor: '#200820',
+        label: 'Volcanic Magma',
+        ambientIntensity: 0.12,
+        keyIntensity: 4.2,
+        keyColor: '#ff6820',
+        fillIntensity: 0.28,
+        fillColor: '#180408',
+        rimIntensity: 3.5,
+        rimColor: '#ffa040',
         fogDensity: 0.005
     },
     {
         id: 5,
-        label: 'Nebula Purple',
-        ambientIntensity: 0.35,
-        keyIntensity: 2.5,
-        keyColor: '#9040ff',
-        fillIntensity: 0.60,
-        fillColor: '#401080',
-        rimIntensity: 2.0,
-        rimColor: '#40ff90',
+        label: 'Nebula Violet',
+        ambientIntensity: 0.12,
+        keyIntensity: 3.8,
+        keyColor: '#b060ff',
+        fillIntensity: 0.30,
+        fillColor: '#100520',
+        rimIntensity: 3.6,
+        rimColor: '#30ffb0',
         fogDensity: 0.004
     },
     {
         id: 6,
-        label: 'Moonlight',
-        ambientIntensity: 0.25,
-        keyIntensity: 2.0,
-        keyColor: '#d0e0ff',
-        fillIntensity: 0.40,
-        fillColor: '#102030',
-        rimIntensity: 2.2,
-        rimColor: '#204020',
+        label: 'Moonlight Cyber',
+        ambientIntensity: 0.09,
+        keyIntensity: 3.5,
+        keyColor: '#e0f0ff',
+        fillIntensity: 0.22,
+        fillColor: '#08101e',
+        rimIntensity: 3.8,
+        rimColor: '#00e0ff',
         fogDensity: 0.004
     },
     {
         id: 7,
-        label: 'Sunrise',
-        ambientIntensity: 0.45,
-        keyIntensity: 2.7,
-        keyColor: '#ffb080',
-        fillIntensity: 0.60,
-        fillColor: '#ffd0b0',
-        rimIntensity: 1.8,
-        rimColor: '#6080c0',
+        label: 'Sunrise Horizon',
+        ambientIntensity: 0.14,
+        keyIntensity: 3.8,
+        keyColor: '#ffb888',
+        fillIntensity: 0.32,
+        fillColor: '#181228',
+        rimIntensity: 3.4,
+        rimColor: '#70a0ff',
         fogDensity: 0.0035
     },
     {
         id: 8,
-        label: 'Neon Cyber',
-        ambientIntensity: 0.35,
-        keyIntensity: 2.8,
-        keyColor: '#00ffcc',
-        fillIntensity: 0.50,
-        fillColor: '#200040',
-        rimIntensity: 2.6,
-        rimColor: '#ff0080',
+        label: 'Neon Synthwave',
+        ambientIntensity: 0.11,
+        keyIntensity: 4.0,
+        keyColor: '#00ffdd',
+        fillIntensity: 0.28,
+        fillColor: '#180028',
+        rimIntensity: 4.0,
+        rimColor: '#ff0088',
         fogDensity: 0.0045
     },
     {
         id: 9,
-        label: 'Overcast',
-        ambientIntensity: 0.65,
-        keyIntensity: 1.8,
-        keyColor: '#c8c8d8',
-        fillIntensity: 0.80,
-        fillColor: '#d8c8c8',
-        rimIntensity: 1.2,
-        rimColor: '#b0b0c0',
+        label: 'Cinematic Noir',
+        ambientIntensity: 0.08,
+        keyIntensity: 3.6,
+        keyColor: '#e8e8f8',
+        fillIntensity: 0.20,
+        fillColor: '#080812',
+        rimIntensity: 3.5,
+        rimColor: '#a0c0e0',
         fogDensity: 0.005
     },
     {
         id: 10,
         label: 'Bioluminescent',
-        ambientIntensity: 0.25,
-        keyIntensity: 2.4,
-        keyColor: '#40ff80',
-        fillIntensity: 0.45,
-        fillColor: '#003020',
-        rimIntensity: 2.5,
-        rimColor: '#00e0ff',
+        ambientIntensity: 0.09,
+        keyIntensity: 3.8,
+        keyColor: '#50ff90',
+        fillIntensity: 0.24,
+        fillColor: '#001810',
+        rimIntensity: 3.8,
+        rimColor: '#00f0ff',
         fogDensity: 0.006
     },
     {
         id: 11,
-        label: 'Eclipse',
-        ambientIntensity: 0.20,
-        keyIntensity: 1.5,
-        keyColor: '#101018',
-        fillIntensity: 0.30,
-        fillColor: '#050510',
-        rimIntensity: 3.2,
-        rimColor: '#e0a020',
+        label: 'Solar Eclipse',
+        ambientIntensity: 0.07,
+        keyIntensity: 3.2,
+        keyColor: '#ffffff',
+        fillIntensity: 0.18,
+        fillColor: '#04040a',
+        rimIntensity: 4.5,
+        rimColor: '#ffa820',
         fogDensity: 0.007
     }
 ];
 
 export const COLOR_PALETTES = [
-    ['#2e5a44', '#768a75', '#b38b4d', '#3e2a22'], // 1. Organic Forest & Moss
-    ['#1b4965', '#5fa8d3', '#c86d51', '#bee9e8'], // 2. Deep Ocean Ecosystem
-    ['#2b5c5e', '#1c3b2b', '#c48044', '#d8c8b8'], // 3. Nordic Fjord & Autumn Birch
-    ['#2d3142', '#bf573f', '#e09f67', '#7d8597'], // 4. Volcanic Basalt & Warm Terracotta
-    ['#a0522d', '#8a9a86', '#d4a373', '#e9d8a6'], // 5. Desert Canyon & Clay Sage
-    ['#5c5470', '#3a5a40', '#7189bf', '#b5c99a'], // 6. Alpine Meadow & Wild Violet
-    ['#134074', '#2d6a4f', '#d4a373', '#8d99ae'], // 7. Bioluminescent Deep Reef
-    ['#4a5759', '#dedbd2', '#cc8b65', '#253d44'], // 8. Sandstone & Coastal Mineral
-    ['#4a154b', '#6b2d5c', '#e0a96d', '#9c3d54'], // 9. Cosmic Amethyst & Rose Gold
-    ['#0b2545', '#134074', '#8da9c4', '#ee6c4d'], // 10. Deep Cobalt & Coral Sunset
-    ['#2a9d8f', '#e76f51', '#f4a261', '#264653'], // 11. Terracotta & Emerald Lagoon
-    ['#483c46', '#3c6e71', '#d9bbf9', '#70ae6e'], // 12. Twilight Lavender & Sage
-    ['#1e3888', '#47a8bd', '#f5e663', '#ffad60'], // 13. Solar Flare & Electric Sapphire
-    ['#355070', '#6d597a', '#b5e2fa', '#e56b6f'], // 14. Icelandic Glacial Fiord
-    ['#05668d', '#028090', '#00a896', '#f0f3bd'], // 15. Bioluminescent Mint Reef
-    ['#3d314a', '#684756', '#96705b', '#ab876d'], // 16. Earthy Obsidian & Smoked Amber
-    ['#143642', '#0f8b8d', '#ec9a29', '#a8201a'], // 17. Volcanic Copper & Patina
-    ['#582f0e', '#7f4f24', '#936639', '#c2956e'], // 18. Ancient Teak & Sandstone
-    ['#283618', '#606c38', '#fefae0', '#dda15e'], // 19. Olive Grove & Golden Barley
-    ['#220901', '#621708', '#941b0c', '#bc3908'], // 20. Magma Obsidian & Crimson Amber
-    ['#2b2d42', '#8d99ae', '#edf2f4', '#ef233c'], // 21. Nordic Winter & Ruby Spark
-    ['#003049', '#d62828', '#f77f00', '#fcbf49'], // 22. Celestial Sunspot & Midnight
-    ['#10002b', '#240046', '#5a189a', '#e0aaff'], // 23. Imperial Violet & Pearl Nebula
-    ['#004b23', '#007200', '#38b000', '#ccff33']  // 24. Hyper-Emerald & Lime Moss
+    ['#183024', '#3d6346', '#b8893d', '#f2cb7c'], // 1. Organic Forest & Moss
+    ['#0c2133', '#2b6e94', '#d9643d', '#bce8e6'], // 2. Deep Ocean Ecosystem
+    ['#162e24', '#265354', '#cb7a32', '#f5e4d0'], // 3. Nordic Fjord & Autumn Birch
+    ['#1b1e2a', '#a3422a', '#e8894d', '#e0e5ef'], // 4. Volcanic Basalt & Warm Terracotta
+    ['#4a2414', '#7a8c76', '#d69e60', '#faecc2'], // 5. Desert Canyon & Clay Sage
+    ['#2c2438', '#345e3c', '#6884bf', '#cae0ad'], // 6. Alpine Meadow & Wild Violet
+    ['#0c2647', '#225940', '#cf9963', '#a3b4cf'], // 7. Bioluminescent Deep Reef
+    ['#293233', '#856149', '#de986e', '#f0ede6'], // 8. Sandstone & Coastal Mineral
+    ['#29082a', '#612252', '#d67a96', '#f5be82'], // 9. Cosmic Amethyst & Rose Gold
+    ['#071930', '#184775', '#7ca1c4', '#f06d48'], // 10. Deep Cobalt & Coral Sunset
+    ['#18333b', '#258f82', '#e86a48', '#f5b573'], // 11. Terracotta & Emerald Lagoon
+    ['#261f25', '#355f61', '#9868c7', '#8ed48c'], // 12. Twilight Lavender & Sage
+    ['#132559', '#3b8da0', '#f78d3b', '#ffea6c'], // 13. Solar Flare & Electric Sapphire
+    ['#1e2f42', '#584463', '#8ecff0', '#f06e73'], // 14. Icelandic Glacial Fiord
+    ['#033b52', '#007585', '#00bfa8', '#f2f7b8'], // 15. Bioluminescent Mint Reef
+    ['#211929', '#4d323e', '#8a5f49', '#d1aa8c'], // 16. Earthy Obsidian & Smoked Amber
+    ['#0c232b', '#0a6b6d', '#cf7b19', '#d6342b'], // 17. Volcanic Copper & Patina
+    ['#2d1706', '#5e3818', '#996333', '#dbae85'], // 18. Ancient Teak & Sandstone
+    ['#18210e', '#49542a', '#c7924e', '#fff6cc'], // 19. Olive Grove & Golden Barley
+    ['#140402', '#7a1908', '#d64512', '#ffa33a'], // 20. Magma Obsidian & Crimson Amber (High-Contrast Strands)
+    ['#191b29', '#63748e', '#d0d8e0', '#f01a34'], // 21. Nordic Winter & Ruby Spark
+    ['#001e30', '#a81616', '#eb6800', '#ffd04d'], // 22. Celestial Sunspot & Midnight
+    ['#0a001c', '#2b0054', '#7a22cc', '#ebb8ff'], // 23. Imperial Violet & Pearl Nebula
+    ['#002b13', '#006100', '#30b800', '#d8ff40']  // 24. Hyper-Emerald & Lime Moss
 ];
 
 export const MATERIAL_PRESETS = [
@@ -304,85 +318,85 @@ export const MATERIAL_PRESETS = [
         id: 0,
         label: 'Titanium Mirror',
         icon: '✨',
-        desc: 'Refined metallic specular mirror with strong glowing highlights',
-        settings: { roughness: 0.03, metalness: 0.94, wireframe: false, flatShading: true, emissiveIntensity: 0.75 }
+        desc: 'Refined metallic specular mirror with sharp geometric facets and gleaming highlights',
+        settings: { roughness: 0.05, metalness: 0.92, wireframe: false, flatShading: true, emissiveIntensity: 0.25 }
     },
     {
         id: 1,
-        label: 'Origami Matte Paper',
-        icon: '📄',
-        desc: 'Crisp geometric folded matte paper with soft diffuse shadows',
-        settings: { roughness: 0.92, metalness: 0.02, wireframe: false, flatShading: true, emissiveIntensity: 0.05 }
+        label: 'Faceted Ceramic',
+        icon: '🏺',
+        desc: 'High-contrast glazed ceramic with sharp facet reflections and crisp specular sheen',
+        settings: { roughness: 0.12, metalness: 0.35, wireframe: false, flatShading: true, emissiveIntensity: 0.08 }
     },
     {
         id: 2,
-        label: 'Glossy Molded Plastic',
+        label: 'Glossy Injection Polymer',
         icon: '🧩',
-        desc: 'Vibrant glossy injection-molded polymer with sharp specular glints',
-        settings: { roughness: 0.16, metalness: 0.08, wireframe: false, flatShading: false, emissiveIntensity: 0.15 }
+        desc: 'Vibrant glossy polymer with crisp directional glints and deep facet shadows',
+        settings: { roughness: 0.14, metalness: 0.22, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
     },
     {
         id: 3,
         label: 'Champagne Gold',
         icon: '🏆',
-        desc: 'Polished golden mirror specularity with vivid studio highlights',
-        settings: { roughness: 0.02, metalness: 0.96, wireframe: false, flatShading: true, emissiveIntensity: 0.65 }
+        desc: 'Polished golden mirror specularity with vivid multi-angled studio highlights',
+        settings: { roughness: 0.04, metalness: 0.95, wireframe: false, flatShading: true, emissiveIntensity: 0.30 }
     },
     {
         id: 4,
-        label: 'Ceramic Porcelain',
-        icon: '🏺',
-        desc: 'Fine faceted porcelain with a brilliant glassy glazed reflection',
-        settings: { roughness: 0.10, metalness: 0.04, wireframe: false, flatShading: true, emissiveIntensity: 0.20 }
+        label: 'Glass Crystal Glaze',
+        icon: '🔮',
+        desc: 'Brilliant glassy faceted sheen with rich tonal refraction highlights',
+        settings: { roughness: 0.08, metalness: 0.40, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
     },
     {
         id: 5,
-        label: 'Soft-Touch Polymer',
-        icon: '🧸',
-        desc: 'Silky matte elastomer with velvety ambient light diffusion',
-        settings: { roughness: 0.75, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
+        label: 'Satin Anodized Alloy',
+        icon: '⚡',
+        desc: 'Smooth satin brushed alloy with strong directional highlights along edges',
+        settings: { roughness: 0.22, metalness: 0.78, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
     },
     {
         id: 6,
         label: 'Faceted Gemstone',
         icon: '💎',
-        desc: 'Faceted gemstone catching vivid key and rim studio lights',
-        settings: { roughness: 0.02, metalness: 0.92, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
+        desc: 'High-index faceted gemstone with razor-sharp specular glints',
+        settings: { roughness: 0.03, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.35 }
     },
     {
         id: 7,
-        label: 'Frosted Wax Resin',
-        icon: '🕯️',
-        desc: 'Warm translucent candle wax resin with soft inner glow',
-        settings: { roughness: 0.45, metalness: 0.03, wireframe: false, flatShading: false, emissiveIntensity: 0.35 }
+        label: 'Cyber Obsidian Blade',
+        icon: '🖤',
+        desc: 'Deep dark obsidian with razor-sharp directional rim reflections',
+        settings: { roughness: 0.15, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.06 }
     },
     {
         id: 8,
-        label: 'Satin Cyber Metal',
-        icon: '⚡',
-        desc: 'Smooth satin chrome finish with strong glowing edge definition',
-        settings: { roughness: 0.06, metalness: 0.90, wireframe: false, flatShading: true, emissiveIntensity: 0.72 }
+        label: 'Satin Cyber Chrome',
+        icon: '🛡️',
+        desc: 'Satin cyber chrome finish with powerful rim definition',
+        settings: { roughness: 0.08, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.28 }
     },
     {
         id: 9,
-        label: 'Carbon Obsidian',
-        icon: '🖤',
-        desc: 'Stealth dark composite with crisp directional anisotropic sheen',
-        settings: { roughness: 0.28, metalness: 0.45, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
+        label: 'Carbon Composite',
+        icon: '🏎️',
+        desc: 'Stealth dark composite with crisp directional facet sheen',
+        settings: { roughness: 0.20, metalness: 0.50, wireframe: false, flatShading: true, emissiveIntensity: 0.08 }
     },
     {
         id: 10,
         label: 'Frost Crystal Shard',
         icon: '❄️',
-        desc: 'Ice-cold platinum mirror with vivid luminous reflections',
-        settings: { roughness: 0.04, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.70 }
+        desc: 'Ice-cold platinum mirror with brilliant luminous rim glints',
+        settings: { roughness: 0.04, metalness: 0.90, wireframe: false, flatShading: true, emissiveIntensity: 0.32 }
     },
     {
         id: 11,
-        label: 'Glowing Cyber Crystal',
-        icon: '🔮',
-        desc: 'High-tech cyber gemstone with vivid glowing specular reflections',
-        settings: { roughness: 0.03, metalness: 0.94, wireframe: false, flatShading: true, emissiveIntensity: 0.85 }
+        label: 'Neon Quantum Crystal',
+        icon: '💫',
+        desc: 'Quantum crystal with high specular gloss and edge reflections',
+        settings: { roughness: 0.05, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.40 }
     }
 ];
 
@@ -1181,16 +1195,28 @@ export function computeFormationPoint(
         tx = (helixR + rungFactor * 1.8) * Math.cos(theta);
         ty = h;
         tz = (helixR + rungFactor * 1.8) * Math.sin(theta);
-    } else if (formation === FormationMode.MobiusHelixBraid) {
-        // --- 52. Mobius Helix Braid: Continuous 3D Mobius Ribbon with 3 Braided Helical Sub-Currents ---
-        const tMob = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        const strand = indexInSpecies % 3;
-        const strandPhase = strand * (Math.PI * 2.0 / 3.0) + (species * 0.25);
-        const braidTwist = Math.sin(tMob * 3.0 + strandPhase) * 1.2;
-        const rMob = 4.5 + Math.cos(tMob * 0.5) * (1.6 + braidTwist);
-        tx = rMob * Math.cos(tMob);
-        ty = Math.sin(tMob * 0.5) * (2.2 + braidTwist) + (species - 1.5) * 0.4;
-        tz = rMob * Math.sin(tMob);
+    } else if (formation === FormationMode.ConcentricDualHelixSheath) {
+        // --- 52. Concentric Dual Helix Sheath: Inner Double-Helix with Outer Counter-Rotating Cage & Radial Rungs ---
+        const h = (u - 0.5) * 11.5;
+        const isInner = (species < 2);
+        if (isInner) {
+            // Inner double helix core
+            const thetaIn = u * 10.0 * Math.PI + time * 0.8 * speedMult + (species * Math.PI);
+            const rIn = 2.2 + Math.sin(h * 0.5 + time) * 0.3;
+            tx = rIn * Math.cos(thetaIn);
+            ty = h;
+            tz = rIn * Math.sin(thetaIn);
+        } else {
+            // Outer counter-rotating quad sheath
+            const thetaOut = -u * 7.0 * Math.PI - time * 0.5 * speedMult + ((species - 2) * Math.PI * 0.5);
+            const rOut = 4.4 + Math.cos(h * 0.4 - time * 0.4) * 0.4;
+            const isSpoke = (indexInSpecies % 10 === 0);
+            const spokeFactor = isSpoke ? ((indexInSpecies % 30) / 30.0) : 1.0;
+            const finalR = 2.2 + spokeFactor * (rOut - 2.2);
+            tx = finalR * Math.cos(thetaOut);
+            ty = h;
+            tz = finalR * Math.sin(thetaOut);
+        }
     } else if (formation === FormationMode.CaduceusVortex) {
         // --- 53. Caduceus Vortex: Dual Intertwined Helical Serpents with Ascending Central Spine ---
         if (u < 0.22) {
@@ -1219,6 +1245,183 @@ export function computeFormationPoint(
         tx = (R_maj + rLocal * Math.cos(tTwist)) * Math.cos(tRing);
         ty = rLocal * Math.sin(tTwist) * 1.4;
         tz = (R_maj + rLocal * Math.cos(tTwist)) * Math.sin(tRing);
+    } else if (formation === FormationMode.TrefoilBraidedRibbon) {
+        // --- 55. Trefoil Braided Ribbon: 4-Strand Braided Cable Woven Around 3D Trefoil Knot ---
+        const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
+        const cx = (Math.sin(t) + 2.0 * Math.sin(2.0 * t)) * 1.5;
+        const cy = (Math.cos(t) - 2.0 * Math.cos(2.0 * t)) * 1.5;
+        const cz = (-Math.sin(3.0 * t)) * 2.0;
+        const strandPhase = species * (Math.PI * 0.5);
+        const braidTwist = t * 6.0 + strandPhase + time * 0.6;
+        const rBraid = 0.65;
+        tx = cx + rBraid * Math.cos(braidTwist) * Math.cos(t);
+        ty = cy + rBraid * Math.cos(braidTwist) * Math.sin(t);
+        tz = cz + rBraid * Math.sin(braidTwist) * 1.4;
+    } else if (formation === FormationMode.HexaHelixVortexTower) {
+        // --- 56. Hexa Helix Vortex Tower: 6 Intertwined Ascending Helical Pillars with Cross-Tiers ---
+        const strandID = (species * 2 + (indexInSpecies % 2)) % 6;
+        const phiStrand = strandID * (Math.PI / 3.0);
+        const h = (u - 0.5) * 12.0;
+        const rTower = 3.2 + Math.sin(h * 0.3 + time * 0.4) * 0.8;
+        const theta = u * 10.0 * Math.PI + phiStrand + time * 0.55 * speedMult;
+        const isCrossTier = (indexInSpecies % 12 === 0);
+        const tierFactor = isCrossTier ? ((indexInSpecies % 24) / 24.0 - 0.5) * 1.2 : 0.0;
+        tx = (rTower + tierFactor) * Math.cos(theta);
+        ty = h;
+        tz = (rTower + tierFactor) * Math.sin(theta);
+    } else if (formation === FormationMode.MobiusHelixBraid) {
+        // --- 57. Mobius Helix Braid: Continuous 3D Mobius Ribbon with 3 Braided Helical Sub-Currents ---
+        const tMob = u * Math.PI * 2.0 + time * 0.35 * speedMult;
+        const strand = indexInSpecies % 3;
+        const strandPhase = strand * (Math.PI * 2.0 / 3.0) + (species * 0.25);
+        const braidTwist = Math.sin(tMob * 3.0 + strandPhase) * 1.2;
+        const rMob = 4.5 + Math.cos(tMob * 0.5) * (1.6 + braidTwist);
+        tx = rMob * Math.cos(tMob);
+        ty = Math.sin(tMob * 0.5) * (2.2 + braidTwist) + (species - 1.5) * 0.4;
+        tz = rMob * Math.sin(tMob);
+    } else if (formation === FormationMode.LissajousIntertwinedKnot) {
+        // --- 58. Lissajous Intertwined Knot: 4 Harmonic Ribbon Streams in 3D 8-Knot ---
+        const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
+        const delta = species * (Math.PI * 0.5);
+        tx = 4.3 * Math.sin(2.0 * t + delta);
+        ty = 3.5 * Math.cos(3.0 * t + delta * 0.5) + Math.sin(t * 5.0) * 0.3;
+        tz = 2.8 * Math.sin(4.0 * t + time * 0.2 + delta);
+    } else if (formation === FormationMode.BorromeanRings) {
+        // --- 59. Borromean Rings: Three Mutually Intertwined Orthogonal Elliptical Loops ---
+        const ringIdx = (species + Math.floor(u * 3)) % 3;
+        const t = ((u * 3) % 1.0) * Math.PI * 2.0 + time * 0.45 * speedMult;
+        const spOffset = (species - 1.5) * 0.18;
+        if (ringIdx === 0) {
+            // Ring 0: XY-dominant, weaves in Z
+            tx = (4.4 + spOffset) * Math.cos(t);
+            ty = (2.5 + spOffset) * Math.sin(t);
+            tz = 1.4 * Math.sin(2.0 * t) + 0.9;
+        } else if (ringIdx === 1) {
+            // Ring 1: YZ-dominant, weaves in X
+            ty = (4.4 + spOffset) * Math.cos(t);
+            tz = (2.5 + spOffset) * Math.sin(t);
+            tx = 1.4 * Math.sin(2.0 * t) + 0.9;
+        } else {
+            // Ring 2: ZX-dominant, weaves in Y
+            tz = (4.4 + spOffset) * Math.cos(t);
+            tx = (2.5 + spOffset) * Math.sin(t);
+            ty = 1.4 * Math.sin(2.0 * t) + 0.9;
+        }
+    } else if (formation === FormationMode.FigureEightKnot) {
+        // --- 60. Figure-Eight Knot Braid: Canonical 4_1 Alternating Prime Knot with Multi-Strand Braid ---
+        const t = u * Math.PI * 2.0 + time * 0.38 * speedMult;
+        const rBase = 2.8 + 1.3 * Math.cos(2.0 * t);
+        const cx = rBase * Math.cos(3.0 * t);
+        const cy = rBase * Math.sin(3.0 * t);
+        const cz = 2.4 * Math.sin(4.0 * t);
+        const twistAngle = t * 6.0 + species * (Math.PI * 0.5);
+        tx = cx + 0.5 * Math.cos(twistAngle) * Math.cos(3.0 * t);
+        ty = cy + 0.5 * Math.cos(twistAngle) * Math.sin(3.0 * t);
+        tz = cz + 0.55 * Math.sin(twistAngle);
+    } else if (formation === FormationMode.CinqfoilKnot) {
+        // --- 61. Cinqfoil Knot: (5,2) Torus Knot / Solomon's Seal 5-Lobe Intertwined Ribbon ---
+        const t = u * Math.PI * 2.0 + time * 0.32 * speedMult;
+        const r = 3.6 + 1.5 * Math.cos(5.0 * t);
+        const cx = r * Math.cos(2.0 * t);
+        const cy = r * Math.sin(2.0 * t);
+        const cz = -2.5 * Math.sin(5.0 * t);
+        const spAngle = species * (Math.PI * 0.5) + t * 5.0;
+        tx = cx + 0.45 * Math.cos(spAngle) * Math.cos(2.0 * t);
+        ty = cy + 0.45 * Math.cos(spAngle) * Math.sin(2.0 * t);
+        tz = cz + 0.45 * Math.sin(spAngle);
+    } else if (formation === FormationMode.SeptafoilKnot) {
+        // --- 62. Septafoil Knot: (7,3) Torus Knot - 7-Point Intertwined Stellar Ribbon ---
+        const t = u * Math.PI * 2.0 + time * 0.28 * speedMult;
+        const r = 3.8 + 1.6 * Math.cos(7.0 * t);
+        const cx = r * Math.cos(3.0 * t);
+        const cy = r * Math.sin(3.0 * t);
+        const cz = -2.6 * Math.sin(7.0 * t);
+        const phi = t * 7.0 + species * (Math.PI * 0.5);
+        tx = cx + 0.45 * Math.cos(phi) * Math.cos(3.0 * t);
+        ty = cy + 0.45 * Math.cos(phi) * Math.sin(3.0 * t);
+        tz = cz + 0.5 * Math.sin(phi);
+    } else if (formation === FormationMode.OlympicChainLink) {
+        // --- 63. Olympic Chain Link: 4 Interlocked Elliptical Rings in Toroidal Space ---
+        const ringK = (species + Math.floor(u * 4)) % 4;
+        const ringTheta = ringK * (Math.PI * 0.5) + time * 0.25 * speedMult;
+        const cx = 3.4 * Math.cos(ringTheta);
+        const cz = 3.4 * Math.sin(ringTheta);
+        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6) * Math.sin(time * 0.4 + ringK);
+        const tau = ((u * 4) % 1.0) * Math.PI * 2.0 + time * 0.6;
+        const cosTau = Math.cos(tau), sinTau = Math.sin(tau);
+        const cosTh = Math.cos(ringTheta), sinTh = Math.sin(ringTheta);
+        const lx = 2.0 * cosTau * (-sinTh) + 0.5 * sinTau * cosTh;
+        const ly = 2.0 * sinTau;
+        const lz = 2.0 * cosTau * cosTh + 0.5 * sinTau * sinTh;
+        tx = cx + lx;
+        ty = cy + ly;
+        tz = cz + lz;
+    } else if (formation === FormationMode.TriquetraCelticBraid) {
+        // --- 64. Triquetra Celtic Braid: 3D Celtic Trinity Knot with Over-Under Crossings ---
+        const t = u * Math.PI * 2.0 + time * 0.38 * speedMult;
+        const r = 3.3 * (1.0 + 0.48 * Math.cos(3.0 * t));
+        const cx = r * Math.cos(t);
+        const cy = r * Math.sin(t);
+        const cz = 2.3 * Math.sin(3.0 * t);
+        const dr = (species - 1.5) * 0.32;
+        tx = (r + dr) * Math.cos(t) - dr * Math.sin(3.0 * t) * Math.sin(t) * 0.5;
+        ty = (r + dr) * Math.sin(t) + dr * Math.sin(3.0 * t) * Math.cos(t) * 0.5;
+        tz = cz + dr * Math.cos(3.0 * t);
+    } else if (formation === FormationMode.SolarFlareProminence) {
+        // --- 65. Solar Flare Prominence: Intertwined Magnetic Flux Ropes with Reconnection Cusp ---
+        const s = (u - 0.5) * Math.PI;
+        const cx = 5.2 * Math.sin(s);
+        const cy = 4.6 * Math.cos(s) - 1.2;
+        const cz = Math.sin(s * 2.0) * 1.6;
+        const thetaMag = s * 7.0 + time * 0.75 * speedMult + species * (Math.PI * 0.5);
+        const rRope = 0.85 + 0.35 * Math.cos(s * 2.0);
+        tx = cx + rRope * Math.cos(thetaMag) * Math.cos(s);
+        ty = cy - rRope * Math.cos(thetaMag) * Math.sin(s);
+        tz = cz + rRope * Math.sin(thetaMag) * 1.3;
+    } else if (formation === FormationMode.WhiteheadLink) {
+        // --- 66. Whitehead Link: Circular Ring Intertwined with 3D Figure-8 Loop ---
+        const isRing = (species < 2);
+        const t = u * Math.PI * 2.0 + time * 0.42 * speedMult;
+        if (isRing) {
+            // Ring component (horizontal planar saddle)
+            const rRing = 4.0 + (species === 1 ? 0.35 : -0.35);
+            tx = rRing * Math.cos(t);
+            ty = rRing * Math.sin(t);
+            tz = 0.7 * Math.sin(2.0 * t);
+        } else {
+            // Figure-8 component threading through the ring
+            const spOff = (species === 3 ? 0.3 : -0.3);
+            tx = 2.4 * Math.sin(2.0 * t) + spOff;
+            ty = 0.9 * Math.sin(4.0 * t);
+            tz = 3.6 * Math.cos(t);
+        }
+    } else if (formation === FormationMode.QuatrefoilKnotBraid) {
+        // --- 67. Quatrefoil Knot Braid: (4,3) Torus Knot / 4-Leaf Intertwined Clover Ribbon ---
+        const t = u * Math.PI * 2.0 + time * 0.34 * speedMult;
+        const r = 3.6 + 1.5 * Math.cos(4.0 * t);
+        const cx = r * Math.cos(3.0 * t);
+        const cy = r * Math.sin(3.0 * t);
+        const cz = 2.3 * Math.sin(4.0 * t);
+        const phi = t * 4.0 + species * (Math.PI * 0.5);
+        tx = cx + 0.42 * Math.cos(phi) * Math.cos(3.0 * t);
+        ty = cy + 0.42 * Math.cos(phi) * Math.sin(3.0 * t);
+        tz = cz + 0.45 * Math.sin(phi);
+    } else if (formation === FormationMode.GrannyKnotBraid) {
+        // --- 68. Granny Knot Braid: Dual Linked Trefoil Knots in Tandem with Bridge Threads ---
+        const isUpper = (u < 0.5);
+        const segU = isUpper ? u * 2.0 : (u - 0.5) * 2.0;
+        const t = segU * Math.PI * 2.0 + time * 0.4 * speedMult;
+        const yOffset = isUpper ? 2.2 : -2.2;
+        const cx = (Math.sin(t) + 1.6 * Math.sin(2.0 * t)) * 1.25;
+        const cy = (Math.cos(t) - 1.6 * Math.cos(2.0 * t)) * 1.25 + yOffset;
+        const cz = (-Math.sin(3.0 * t)) * 1.8;
+        const phi = t * 3.0 + species * (Math.PI * 0.5);
+        const isBridge = (indexInSpecies % 8 === 0 && Math.abs(u - 0.5) < 0.15);
+        const bridgeShift = isBridge ? ((species - 1.5) * 0.8) : 0.0;
+        tx = cx + 0.38 * Math.cos(phi);
+        ty = cy + 0.38 * Math.sin(phi) + bridgeShift;
+        tz = cz + 0.42 * Math.sin(phi);
+
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;
@@ -1677,6 +1880,16 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.FerrisWheel:
         case FormationMode.HopfFibration:
         case FormationMode.AlienMothership:
+        case FormationMode.BorromeanRings:
+        case FormationMode.FigureEightKnot:
+        case FormationMode.CinqfoilKnot:
+        case FormationMode.SeptafoilKnot:
+        case FormationMode.OlympicChainLink:
+        case FormationMode.TriquetraCelticBraid:
+        case FormationMode.SolarFlareProminence:
+        case FormationMode.WhiteheadLink:
+        case FormationMode.QuatrefoilKnotBraid:
+        case FormationMode.GrannyKnotBraid:
             return { lerpRate: 0.12, noiseDrift: 0.002, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.20 };
 
         // 2. ORGANIC BALANCED (Crisp silhouette with graceful aerodynamic breathing)

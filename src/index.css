@@ -459,12 +459,11 @@ body {
     padding: 4px 8px !important;
   }
 
-  .bottom-left-topology-card {
+  .hud-fps-badge {
     bottom: 16px !important;
     left: 14px !important;
-    max-width: calc(100vw - 190px) !important;
-    padding: 6px 10px !important;
-    gap: 8px !important;
+    top: auto !important;
+    padding: 4px 8px !important;
   }
 
   .ephemeral-like-bar {

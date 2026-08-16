@@ -4,7 +4,7 @@ import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
@@ -32,21 +32,7 @@ const INITIAL_MATRIX = [
     [0, 0, 0, 0]
 ];
 
-function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
-    const frames = useRef(0)
-    const prevTime = useRef(performance.now())
 
-    useFrame(() => {
-        frames.current++
-        const time = performance.now()
-        if (time >= prevTime.current + 1000) {
-            onChange(Math.round((frames.current * 1000) / (time - prevTime.current)))
-            prevTime.current = time
-            frames.current = 0
-        }
-    })
-    return null
-}
 
 // Perceptual Oklab Color Space Interpolation for Flawless Lighting Transitions
 function srgbToLinear(c: number): number {
@@ -176,10 +162,11 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             flashBoost = 2.4;
         }
 
-        const tAmb = (profile.ambientIntensity + 0.45) * mult;
-        const tKey = (profile.keyIntensity * 1.25) * mult * flashBoost;
-        const tFill = (profile.fillIntensity + 0.65) * mult;
-        const tRim = (profile.rimIntensity * 1.35) * mult * flashBoost;
+        // Low ambient wash + high directional key & rim for deep sculptural chiaroscuro
+        const tAmb = (profile.ambientIntensity * 0.40 + 0.08) * mult;
+        const tKey = (profile.keyIntensity * 1.35) * mult * flashBoost;
+        const tFill = (profile.fillIntensity * 0.40 + 0.12) * mult;
+        const tRim = (profile.rimIntensity * 1.75) * mult * flashBoost;
 
         if (lastProfileId.current !== profile.id) {
             lastProfileId.current = profile.id;
@@ -225,53 +212,50 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         lerpOklabColor(startFillColor.current, targetFillColor.current, sCurve, curFillColor.current);
         lerpOklabColor(startRimColor.current, targetRimColor.current, sCurve, curRimColor.current);
 
-        // --- Camera-Adaptive Studio Rig: Eliminates Backlighting While Maximizing 3D Volumetric Depth ---
+        // --- Camera-Adaptive Studio Rig: 70° Cross-Side Rake Lighting & Crisp Silhouette Rim ---
         const camPos = camera.position;
-        // View vector pointing from scene center toward camera (reuse scratch vector)
         _viewVec.copy(camPos).normalize();
         if (_viewVec.lengthSq() < 0.001) _viewVec.set(0, 0, 1);
 
         _worldUp.set(0, 1, 0);
-        // Right vector orthogonal to viewVec
         _rightVec.crossVectors(_viewVec, _worldUp).normalize();
         if (_rightVec.lengthSq() < 0.001) _rightVec.set(1, 0, 0);
 
-        // Orthonormal Up vector
         _upVec.crossVectors(_rightVec, _viewVec).normalize();
 
-        const lightDist = 60.0;
+        const lightDist = 65.0;
 
-        // 1. Key Light: 40° key angle (front-top-right relative to camera).
+        // 1. Key Light: 70° Cross-Side Rake Angle (illuminates one facet steeply while casting distinct shadow on the other).
         _idealKey.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.70)
-            .addScaledVector(_rightVec, 0.55)
-            .addScaledVector(_upVec, 0.45)
+            .addScaledVector(_viewVec, 0.28)
+            .addScaledVector(_rightVec, 0.82)
+            .addScaledVector(_upVec, 0.50)
             .normalize()
             .multiplyScalar(lightDist);
 
-        // 2. Fill Light: 45° fill angle (front-left-low relative to camera).
+        // 2. Fill Light: 65° Low Counter-Angle with Deep Complementary Shadow Tint.
         _idealFill.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.72)
-            .addScaledVector(_rightVec, -0.52)
-            .addScaledVector(_upVec, 0.25)
+            .addScaledVector(_viewVec, 0.40)
+            .addScaledVector(_rightVec, -0.78)
+            .addScaledVector(_upVec, -0.25)
             .normalize()
             .multiplyScalar(lightDist * 0.9);
 
-        // 3. Rim / Kicker Light: 145° edge backlight (high behind subject relative to camera).
+        // 3. Rim / Kicker Light: 155° High Silhouette Backlight (produces razor-sharp glowing edge separation).
         _idealRim.set(0, 0, 0)
-            .addScaledVector(_viewVec, -0.62)
-            .addScaledVector(_rightVec, -0.32)
-            .addScaledVector(_upVec, 0.70)
+            .addScaledVector(_viewVec, -0.80)
+            .addScaledVector(_rightVec, -0.38)
+            .addScaledVector(_upVec, 0.52)
             .normalize()
-            .multiplyScalar(lightDist * 1.1);
+            .multiplyScalar(lightDist * 1.15);
 
-        // 4. Bounce / Ground Uplight: Below camera facing up.
+        // 4. Bounce / Ground Uplight: Underside specular definition.
         _idealBounce.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.40)
-            .addScaledVector(_rightVec, 0.20)
-            .addScaledVector(_upVec, -0.80)
+            .addScaledVector(_viewVec, -0.10)
+            .addScaledVector(_rightVec, 0.35)
+            .addScaledVector(_upVec, -0.90)
             .normalize()
-            .multiplyScalar(lightDist * 0.8);
+            .multiplyScalar(lightDist * 0.85);
 
         // Smoothly glide light positions with organic temporal damping
         const smoothRate = Math.min(1.0, (delta || 0.016) * 7.5);
@@ -301,86 +285,70 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         }
         if (bounceRef.current) {
             bounceRef.current.position.copy(curBouncePos.current);
-            bounceRef.current.intensity = curFillInt.current * 0.85;
+            bounceRef.current.intensity = curFillInt.current * 0.70;
             bounceRef.current.color.copy(curFillColor.current);
         }
     });
 
     return (
         <>
-            <ambientLight ref={ambientRef} intensity={0.95} color="#e8f0fe" />
+            <ambientLight ref={ambientRef} intensity={0.20} color="#0c1220" />
             <directionalLight
                 ref={keyRef}
-                position={[35, 45, 30]}
-                intensity={3.0}
+                position={[45, 35, 20]}
+                intensity={4.2}
                 color="#ffffff"
             />
             <directionalLight
                 ref={fillRef}
-                position={[-40, 25, -25]}
-                intensity={1.2}
-                color="#e8f0fe"
+                position={[-45, -15, -20]}
+                intensity={0.45}
+                color="#101828"
             />
             <directionalLight
                 ref={rimRef}
-                position={[0, 50, -45]}
-                intensity={2.2}
+                position={[-20, 45, -50]}
+                intensity={3.8}
                 color="#ffffff"
             />
             <directionalLight
                 ref={bounceRef}
-                position={[15, -45, 20]}
-                intensity={1.0}
-                color="#e8f0fe"
+                position={[20, -45, -10]}
+                intensity={0.35}
+                color="#0c1424"
             />
         </>
     );
 }
 
+function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
+    const frames = useRef(0)
+    const prevTime = useRef(performance.now())
+
+    useFrame(() => {
+        frames.current++
+        const time = performance.now()
+        if (time >= prevTime.current + 500) {
+            onChange(Math.round((frames.current * 1000) / (time - prevTime.current)))
+            prevTime.current = time
+            frames.current = 0
+        }
+    })
+    return null
+}
+
 function App() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const [population, setPopulation] = useState(isMobile ? 25000 : 60000);
+    const [population, setPopulation] = useState(isMobile ? 35000 : 100000);
     const [fps, setFps] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Adaptive FPS-based population auto-scaler
-    const fpsHistory = useRef<number[]>([]);
-    const lastScaleTime = useRef(0);
-    const populationRef = useRef(isMobile ? 25000 : 60000);
-
-    useEffect(() => {
-        if (fps <= 0 || isMobile) return;
-        fpsHistory.current.push(fps);
-        if (fpsHistory.current.length > 5) fpsHistory.current.shift();
-
-        const now = performance.now();
-        if (now - lastScaleTime.current < 4000) return; // Wait 4s between adjustments
-        if (fpsHistory.current.length < 3) return;
-
-        const avgFps = fpsHistory.current.reduce((a, b) => a + b, 0) / fpsHistory.current.length;
-
-        if (avgFps < 28 && populationRef.current > 20000) {
-            const next = Math.max(20000, Math.floor(populationRef.current * 0.75));
-            populationRef.current = next;
-            setPopulation(next);
-            fpsHistory.current = [];
-            lastScaleTime.current = now;
-        } else if (avgFps > 52 && populationRef.current < 100000) {
-            const next = Math.min(100000, Math.floor(populationRef.current * 1.12));
-            populationRef.current = next;
-            setPopulation(next);
-            fpsHistory.current = [];
-            lastScaleTime.current = now;
-        }
-    }, [fps]);
-
-    // Random fresh configuration at start across all aesthetic dimensions
-    const totalModes = 59;
-    const initialMode = Math.floor(Math.random() * totalModes) as FormationMode;
-    const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
-    const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
+    // Startup configuration: Palette #18 Ancient Teak & Sandstone and Titanium Mirror material
+    const initialMode: FormationMode = FormationMode.TrefoilBraidedRibbon;
+    const initialPaletteIdx = 17; // #18 Ancient Teak & Sandstone
+    const initialMatIdx = 0; // Titanium Mirror
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    const initialShape = Math.floor(Math.random() * 6);
+    const initialShape = Math.floor(Math.random() * 12);
     const initialCameraIdx = Math.floor(Math.random() * 6);
 
     const simState = useRef<SimulationState>({
@@ -392,8 +360,7 @@ function App() {
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
         formationSeed: Math.random() * 10000,
-        transitionStartTime: 0.0,
-        proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
+        proceduralGenome: undefined,
         paletteIndex: initialPaletteIdx,
         speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],
         materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
@@ -422,7 +389,7 @@ function App() {
 
                 <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
 
-                <Environment preset="city" environmentIntensity={3.8} />
+                <Environment preset="city" environmentIntensity={0.85} />
 
                 <DynamicStudioLighting simState={simState} />
 

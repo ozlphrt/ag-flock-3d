@@ -94,8 +94,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         return engine;
     }, [state]);
 
-    // Structure-of-Arrays High Performance Data Buffer
-    const swarm = useMemo(() => new BoidSwarmData(100000), []);
+    // Structure-of-Arrays High Performance Data Buffer (Supports up to 120k boids)
+    const MAX_SPECIES_CAPACITY = 30000;
+    const swarm = useMemo(() => new BoidSwarmData(120000), []);
+    const renderedCount = useRef(count);
     const blobCentersRef = useRef<BlobCenter[]>([]);
     const lastSeed = useRef<number>(-1);
     const lastMode = useRef<number>(-1);
@@ -103,23 +105,24 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const colorTransitionStartTime = useRef<number>(0);
     const smoothRadius = useRef<number>(8.0);
 
+    const initialPalette = state.speciesColors || COLOR_PALETTES[17];
     const startColors = useRef<THREE.Color[]>([
-        new THREE.Color('#ff3b30'),
-        new THREE.Color('#34c759'),
-        new THREE.Color('#007aff'),
-        new THREE.Color('#ffcc00')
+        new THREE.Color(initialPalette[0]),
+        new THREE.Color(initialPalette[1]),
+        new THREE.Color(initialPalette[2]),
+        new THREE.Color(initialPalette[3])
     ]);
     const targetColors = useRef<THREE.Color[]>([
-        new THREE.Color('#ff3b30'),
-        new THREE.Color('#34c759'),
-        new THREE.Color('#007aff'),
-        new THREE.Color('#ffcc00')
+        new THREE.Color(initialPalette[0]),
+        new THREE.Color(initialPalette[1]),
+        new THREE.Color(initialPalette[2]),
+        new THREE.Color(initialPalette[3])
     ]);
     const currentColors = useRef<THREE.Color[]>([
-        new THREE.Color('#ff3b30'),
-        new THREE.Color('#34c759'),
-        new THREE.Color('#007aff'),
-        new THREE.Color('#ffcc00')
+        new THREE.Color(initialPalette[0]),
+        new THREE.Color(initialPalette[1]),
+        new THREE.Color(initialPalette[2]),
+        new THREE.Color(initialPalette[3])
     ]);
 
     const speciesStartTimes = useRef<number[]>([0, 0, 0, 0]);
@@ -141,51 +144,150 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
     }
 
-    // Initialize/Update Boid Swarm Population
+    // Initial swarm setup
     useMemo(() => {
         swarm.setPopulation(count, state);
-    }, [count]);
+    }, []);
 
-    // 6 Ultra-Fast, Minimal-Poly 3D Geometries with Sharp Pointy Nose (+Z)
-    // Triangle counts reduced to 3-4 per boid for max instanced throughput
+    // 12 High-Performance 3D Volumetric & 2D Planar Geometries
+    // Scaled for maximum silhouette definition, distinct styles, and 120k boid throughput
     const geometries = useMemo(() => {
-        const g0 = new THREE.ConeGeometry(0.12, 0.40, 3);
+        // --- 6 3D Volumetric Geometries ---
+        // 0: Stealth Arrowhead Jet (3-sided wedge)
+        const g0 = new THREE.ConeGeometry(0.13, 0.42, 3);
         g0.rotateX(Math.PI / 2);
+        g0.scale(1.1, 0.75, 1.0);
 
-        const g1 = new THREE.TetrahedronGeometry(0.16, 0);
-        g1.scale(0.7, 0.7, 1.5);
+        // 1: Faceted Gemstone (8-faced double pyramid)
+        const g1 = new THREE.OctahedronGeometry(0.15, 0);
+        g1.scale(0.8, 0.8, 1.4);
 
-        const g2 = new THREE.ConeGeometry(0.13, 0.38, 3);
+        // 2: Angular Prism Pyramid (4-sided sharp pyramid)
+        const g2 = new THREE.ConeGeometry(0.14, 0.40, 4);
         g2.rotateX(Math.PI / 2);
 
-        const g3 = new THREE.ConeGeometry(0.14, 0.36, 3);
+        // 3: Hex Shield Interceptor (faceted 6-sided shield)
+        const g3 = new THREE.CylinderGeometry(0.0, 0.16, 0.38, 6);
         g3.rotateX(Math.PI / 2);
+        g3.scale(1.3, 0.65, 1.0);
 
-        const g4 = new THREE.ConeGeometry(0.01, 0.40, 3);
+        // 4: Swept Delta Wing (wide wingspan, sleek flat blade with swept-back wings)
+        const g4 = new THREE.ConeGeometry(0.16, 0.44, 4);
         g4.rotateX(Math.PI / 2);
+        g4.scale(2.2, 0.45, 1.0);
 
-        const g5 = new THREE.ConeGeometry(0.12, 0.40, 3);
-        g5.rotateX(Math.PI / 2);
+        // 5: Tetrahedral Shard (sharp elongated wedge shard)
+        const g5 = new THREE.TetrahedronGeometry(0.17, 0);
+        g5.scale(0.65, 0.65, 1.6);
 
-        return [g0, g1, g2, g3, g4, g5];
+        // --- 6 2D Planar Geometries (Iconic Flat Boids) ---
+        // 6: 2D Classic Reynolds Triangle (Flat 1986 Iconic Boid)
+        const g6 = new THREE.BufferGeometry();
+        g6.setAttribute('position', new THREE.Float32BufferAttribute([
+            0.0, 0.0, 0.28,
+            -0.18, 0.0, -0.16,
+            0.18, 0.0, -0.16
+        ], 3));
+        g6.setIndex([0, 1, 2]);
+        g6.computeVertexNormals();
+
+        // 7: 2D Planar Chevron Dart (Swept Notched Tail)
+        const g7 = new THREE.BufferGeometry();
+        g7.setAttribute('position', new THREE.Float32BufferAttribute([
+            0.0, 0.0, 0.32,
+            0.22, 0.0, -0.16,
+            0.0, 0.0, -0.05,
+            -0.22, 0.0, -0.16
+        ], 3));
+        g7.setIndex([0, 1, 2, 0, 2, 3]);
+        g7.computeVertexNormals();
+
+        // 8: 2D Planar Diamond Kite (Elongated Diamond)
+        const g8 = new THREE.BufferGeometry();
+        g8.setAttribute('position', new THREE.Float32BufferAttribute([
+            0.0, 0.0, 0.30,
+            0.18, 0.0, 0.02,
+            0.0, 0.0, -0.24,
+            -0.18, 0.0, 0.02
+        ], 3));
+        g8.setIndex([0, 1, 2, 0, 2, 3]);
+        g8.computeVertexNormals();
+
+        // 9: 2D Origami Winged Swallow (Avian Wing Silhouette)
+        const g9 = new THREE.BufferGeometry();
+        g9.setAttribute('position', new THREE.Float32BufferAttribute([
+            0.0, 0.0, 0.28,
+            0.32, 0.0, -0.06,
+            0.10, 0.0, -0.08,
+            0.0, 0.0, -0.22,
+            -0.10, 0.0, -0.08,
+            -0.32, 0.0, -0.06
+        ], 3));
+        g9.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]);
+        g9.computeVertexNormals();
+
+        // 10: 2D Planar Hex Star Glider (6-Point Star)
+        const g10 = new THREE.BufferGeometry();
+        g10.setAttribute('position', new THREE.Float32BufferAttribute([
+            0.0, 0.0, 0.32,
+            0.15, 0.0, 0.12,
+            0.26, 0.0, -0.02,
+            0.12, 0.0, -0.10,
+            0.0, 0.0, -0.24,
+            -0.12, 0.0, -0.10,
+            -0.26, 0.0, -0.02,
+            -0.15, 0.0, 0.12,
+            0.0, 0.0, 0.0
+        ], 3));
+        g10.setIndex([
+            8, 0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4,
+            8, 4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0
+        ]);
+        g10.computeVertexNormals();
+
+        // 11: 2D Planar Crescent Boomerang (Curved Arc Blade)
+        const g11 = new THREE.BufferGeometry();
+        g11.setAttribute('position', new THREE.Float32BufferAttribute([
+            0.0, 0.0, 0.28,
+            0.26, 0.0, -0.14,
+            0.0, 0.0, 0.08,
+            -0.26, 0.0, -0.14
+        ], 3));
+        g11.setIndex([0, 1, 2, 0, 2, 3]);
+        g11.computeVertexNormals();
+
+        return [g0, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11];
     }, []);
 
     const getSpeciesShapes = (): [number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
         if (state.boidShape === 99) {
-            // Multi-Species Diverse: 4 distinct geometric archetypes
-            return [0, 1, 2, 4]; // Stealth Arrowhead (sp0), Faceted Gemstone (sp1), Pyramid (sp2), Swept Delta Wing (sp3)
+            // Multi-Species Diverse: 4 distinct geometric archetypes (mixed 3D & 2D)
+            return [0, 1, 6, 7]; // Stealth Jet (3D), Faceted Gem (3D), Reynolds Triangle (2D), Chevron Dart (2D)
         }
-        const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % 6) : 0;
+        const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % geometries.length) : 0;
         return [s, s, s, s];
     };
 
     useFrame((stateContext, delta) => {
-        const boidCount = count;
+        const safeDelta = Math.min(delta, 0.05);
+
+        // Organic, continuous per-frame population gliding
+        if (Math.abs(renderedCount.current - count) > 1) {
+            const diff = count - renderedCount.current;
+            const step = diff * Math.min(1.0, safeDelta * 3.5);
+            renderedCount.current += Math.sign(diff) * Math.max(4, Math.abs(step));
+            if (Math.abs(renderedCount.current - count) < 6) {
+                renderedCount.current = count;
+            }
+            const activeTotal = Math.min(120000, Math.floor(renderedCount.current));
+            swarm.setPopulation(activeTotal, state);
+        }
+
+        const boidCount = Math.floor(renderedCount.current);
         const speciesCount = Math.floor(boidCount / 4);
         if (!meshRef0.current || !meshRef1.current || !meshRef2.current || !meshRef3.current) return;
         const time = stateContext.clock.getElapsedTime();
-        const safeDelta = Math.min(delta, 0.05);
         state.currentTime = time;
 
         // 1. Advance Independent Clocks via ClockEngine
@@ -485,6 +587,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         for (let sp = 0; sp < 4; sp++) {
             const mesh = meshRefs[sp].current;
             if (mesh) {
+                mesh.count = speciesCount;
                 mesh.instanceMatrix.needsUpdate = true;
                 if (mesh.material) {
                     (mesh.material as THREE.MeshStandardMaterial).color.copy(currentColors.current[sp]);
@@ -501,7 +604,6 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     });
 
     const activeSpeciesShapes = getSpeciesShapes();
-    const speciesCount = Math.floor(count / 4);
     const mat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };
 
     // Check for transient material pulse micro-surprise
@@ -517,9 +619,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const activeGeometry = geometries[shapeId];
                 return (
                     <instancedMesh
-                        key={`sp-${sp}-${shapeId}-${speciesCount}`}
+                        key={`sp-${sp}-${shapeId}`}
                         ref={meshRefs[sp]}
-                        args={[activeGeometry, undefined, speciesCount]}
+                        args={[activeGeometry, undefined, MAX_SPECIES_CAPACITY]}
                     >
                         <meshStandardMaterial
                             key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
@@ -529,6 +631,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                             flatShading={mat.flatShading}
                             emissiveIntensity={emissiveInt}
                             toneMapped={true}
+                            side={THREE.DoubleSide}
                         />
                     </instancedMesh>
                 );

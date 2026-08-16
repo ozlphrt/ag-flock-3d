@@ -1,6 +1,7 @@
 import {
     SimulationState,
     FormationMode,
+    TOTAL_FORMATION_COUNT,
     COLOR_PALETTES,
     MATERIAL_PRESETS,
     LIGHTING_PROFILES,
@@ -44,14 +45,14 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     let lastSaveStateTime = 0;
 
-    // Manual Override Timestamps: freeze auto-cycle for 45s on user manual click
+    // Manual Override Timestamps: track manual clicks in simulation time
     const manualOverrides: Record<string, number> = {
-        formation: 0,
-        palette: 0,
-        material: 0,
-        shape: 0,
-        lighting: 0,
-        camera: 0
+        formation: -9999.0,
+        palette: -9999.0,
+        material: -9999.0,
+        shape: -9999.0,
+        lighting: -9999.0,
+        camera: -9999.0
     };
 
     // Recent Histories for Forbidden Repeat Buffers
@@ -69,7 +70,24 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     };
 
     const setManualOverride = (dimension: 'formation' | 'palette' | 'material' | 'shape' | 'lighting' | 'camera') => {
-        manualOverrides[dimension] = performance.now() / 1000.0;
+        const curTime = (state.currentTime !== undefined) ? state.currentTime : 0.0;
+        manualOverrides[dimension] = curTime;
+        if (dimension === 'formation') {
+            lastFormationTime = curTime;
+            formationInterval = rndJitter(activeArc ? 20.0 : 32.0, 0.2);
+        } else if (dimension === 'palette') {
+            lastColorTime = curTime;
+            colorInterval = rndJitter(54.0, 0.25);
+        } else if (dimension === 'material') {
+            lastMaterialTime = curTime;
+            materialInterval = rndJitter(72.0, 0.2);
+        } else if (dimension === 'lighting') {
+            lastLightingTime = curTime;
+            lightingInterval = rndJitter(82.0, 0.25);
+        } else if (dimension === 'camera') {
+            lastCameraPresetTime = curTime;
+            cameraPresetInterval = rndJitter(26.0, 0.2);
+        }
     };
 
     const update = (time: number) => {
@@ -91,14 +109,15 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // If Auto Mode is OFF or user is holding in inspect mode, freeze all autonomous clocks!
         if (state.autoMode === false || state.isInspecting) {
+            // Keep last times tracking current time while paused so countdown doesn't immediately snap to 0 upon resume
+            lastFormationTime = time - (formationInterval * (1.0 - (getCountdownProgress().formationProgress || 0)));
             return;
         }
 
         const prefs = getRLPreferences();
 
         // 1. FORMATION CLOCK (Every 28-40s or Harmonic Suite step)
-        const isFormationOverridden = (time - manualOverrides.formation) < 45.0;
-        if (!isFormationOverridden && !state.isFormationLocked && (time - lastFormationTime) >= formationInterval) {
+        if (!state.isFormationLocked && (time - lastFormationTime) >= formationInterval) {
             lastFormationTime = time;
             formationInterval = rndJitter(activeArc ? 20.0 : 32.0, 0.2);
 
@@ -126,7 +145,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             }
 
             if (nextMode === state.formationMode) {
-                nextMode = ((state.formationMode + 1) % 51) as FormationMode;
+                nextMode = ((state.formationMode + 1) % TOTAL_FORMATION_COUNT) as FormationMode;
             }
 
             recentFormations.push(nextMode);
@@ -147,7 +166,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             // Auto Shape Mutation (only if autoShape enabled AND shape is NOT locked)
             if (state.autoShape !== false && !state.isShapeLocked) {
                 state.boidShape = sampleRLAttribute(
-                    6,
+                    12,
                     prefs.shapeLikes,
                     prefs.shapeDislikes,
                     prefs.totalLikes,
@@ -157,8 +176,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         }
 
         // 2. PALETTE CLOCK (Every 45-65s)
-        const isColorOverridden = (time - manualOverrides.palette) < 45.0;
-        if (!isColorOverridden && !state.isPaletteLocked && (time - lastColorTime) >= colorInterval) {
+        if (!state.isPaletteLocked && (time - lastColorTime) >= colorInterval) {
             lastColorTime = time;
             colorInterval = rndJitter(54.0, 0.25);
 
@@ -179,8 +197,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         }
 
         // 3. INDEPENDENT MATERIAL CLOCK (Every 60-90s)
-        const isMaterialOverridden = (time - manualOverrides.material) < 45.0;
-        if (!isMaterialOverridden && !state.isMaterialLocked && (time - lastMaterialTime) >= materialInterval && state.autoMaterial !== false) {
+        if (!state.isMaterialLocked && (time - lastMaterialTime) >= materialInterval && state.autoMaterial !== false) {
             lastMaterialTime = time;
             materialInterval = rndJitter(72.0, 0.2);
 
@@ -201,8 +218,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         }
 
         // 4. INDEPENDENT LIGHTING CLOCK (Every 70-110s)
-        const isLightingOverridden = (time - manualOverrides.lighting) < 45.0;
-        if (!isLightingOverridden && !state.isLightingLocked && (time - lastLightingTime) >= lightingInterval) {
+        if (!state.isLightingLocked && (time - lastLightingTime) >= lightingInterval) {
             lastLightingTime = time;
             lightingInterval = rndJitter(82.0, 0.25);
 
@@ -223,8 +239,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         }
 
         // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 22-30s in Auto Mode)
-        const isCameraOverridden = (time - (manualOverrides.camera || 0)) < 15.0;
-        if (!isCameraOverridden && !state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
+        if (!state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
             lastCameraPresetTime = time;
             cameraPresetInterval = rndJitter(26.0, 0.2);
 
@@ -299,7 +314,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 ) as FormationMode;
 
                 if (nextMode === state.formationMode) {
-                    nextMode = ((state.formationMode + 1) % 59) as FormationMode;
+                    nextMode = ((state.formationMode + 1) % TOTAL_FORMATION_COUNT) as FormationMode;
                 }
 
                 recentFormations.push(nextMode);
@@ -411,7 +426,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             } else {
                 state.customShapeName = undefined;
                 state.speciesShapes = undefined;
-                const shapeChoices = [0, 1, 2, 3, 4, 5, 99];
+                const shapeChoices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 99];
                 const nextShape = shapeChoices[Math.floor(Math.random() * shapeChoices.length)];
                 state.boidShape = nextShape;
                 const shapeLabels: Record<number, string> = {
@@ -421,6 +436,12 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                     3: 'Hex Shield Interceptor',
                     4: 'Swept Delta Wing',
                     5: 'Tetrahedral Shard',
+                    6: '2D Reynolds Triangle',
+                    7: '2D Planar Chevron Dart',
+                    8: '2D Diamond Kite',
+                    9: '2D Origami Swallow',
+                    10: '2D Hex Star Glider',
+                    11: '2D Crescent Boomerang',
                     99: 'Multi-Species Diverse'
                 };
                 return `Shape: ${shapeLabels[nextShape] || 'Arrowhead Jet'}`;

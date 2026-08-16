@@ -102,6 +102,16 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         { id: FormationMode.HexaHelixVortexTower, label: 'Hexa Helix Vortex Tower', icon: '🌪️', desc: 'Multi-tiered ascending celestial helix staircase' },
         { id: FormationMode.MobiusHelixBraid, label: 'Mobius Helix Braid', icon: '🎗️', desc: 'Continuous 3D Mobius ribbon with 4 braided sub-currents' },
         { id: FormationMode.LissajousIntertwinedKnot, label: 'Lissajous Intertwined Knot', icon: '🔮', desc: '4 Weaving harmonic ribbons in 3D 8-knot' },
+        { id: FormationMode.BorromeanRings, label: 'Borromean Rings', icon: '⭕', desc: 'Three mutually intertwined orthogonal elliptical rings (Brunnian link)' },
+        { id: FormationMode.FigureEightKnot, label: 'Figure-Eight Knot Braid', icon: '♾️', desc: 'Canonical Listing 4_1 alternating prime knot with multi-strand braid' },
+        { id: FormationMode.CinqfoilKnot, label: 'Cinqfoil Knot Braid', icon: '⭐', desc: '5-Lobed intertwined Torus (5,2) Solomon seal ribbon' },
+        { id: FormationMode.SeptafoilKnot, label: 'Septafoil Stellar Knot', icon: '🌟', desc: 'High-frequency 7-point intertwined Torus (7,3) stellar knot' },
+        { id: FormationMode.OlympicChainLink, label: 'Olympic Chain Link', icon: '🔗', desc: '4 Interlocked elliptical rings linked sequentially in 3D toroidal space' },
+        { id: FormationMode.TriquetraCelticBraid, label: 'Triquetra Celtic Braid', icon: '☘️', desc: '3 Intertwined Vesica Piscis arcs forming 3D Celtic trinity knot' },
+        { id: FormationMode.SolarFlareProminence, label: 'Solar Flare Prominence', icon: '☀️', desc: 'Intertwined magnetic flux ropes arching with counter-helicity twisting' },
+        { id: FormationMode.WhiteheadLink, label: 'Whitehead Link', icon: '🪢', desc: 'Canonical Whitehead link of circular ring interlocked with 3D figure-8' },
+        { id: FormationMode.QuatrefoilKnotBraid, label: 'Quatrefoil Knot Braid', icon: '🍀', desc: '4-Leaf intertwined Torus (4,3) architectural clover ribbon' },
+        { id: FormationMode.GrannyKnotBraid, label: 'Granny Knot Braid', icon: '🧵', desc: 'Dual intertwined composite trefoils linked in tandem with bridge threads' },
         { id: FormationMode.DoubleHelix, label: 'Double Helix', icon: '🧬', desc: 'Intertwined bio-macromolecule dual strand' },
         { id: FormationMode.TripleHelix, label: 'Triple Helix', icon: '🧬', desc: 'Tri-strand intertwined braided stream' },
         { id: FormationMode.DNALadder, label: 'DNA Ladder Braid', icon: '🧬', desc: 'Dual helical sugar-phosphate rails with base-pair rungs' },
@@ -159,12 +169,20 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const shapes = [
         { id: -1, label: 'Auto (Mutate Cycle)', icon: '🤖', desc: 'Randomize shape every formation cycle' },
         { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive geometric archetype' },
+        // 3D Volumetric Archetypes
         { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
         { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal (8 tris)' },
         { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal (6 tris)' },
         { id: 3, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
         { id: 4, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
-        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' }
+        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' },
+        // 2D Planar Archetypes
+        { id: 6, label: '2D Reynolds Triangle', icon: '🔺', desc: '1986 Craig Reynolds classic planar triangle boid (1 tri)' },
+        { id: 7, label: '2D Planar Chevron Dart', icon: '⚡', desc: 'Aerodynamic swept-wing notched chevron dart (2 tris)' },
+        { id: 8, label: '2D Diamond Kite', icon: '🪁', desc: 'Planar elongated diamond kite glider (2 tris)' },
+        { id: 9, label: '2D Origami Swallow', icon: '🕊️', desc: 'Swept avian silhouette with forked tail (4 tris)' },
+        { id: 10, label: '2D Hex Star Glider', icon: '⭐', desc: 'Geometric 6-pointed planar star flyer (8 tris)' },
+        { id: 11, label: '2D Crescent Boomerang', icon: '🌙', desc: 'Curved aerodynamic crescent arc blade (2 tris)' }
     ];
 
     const materialOptions = [
@@ -191,6 +209,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.proceduralGenome = generateProceduralGenome();
         }
 
+        if (simState.current.clockEngine?.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('formation');
+        }
+
         setTick(t => t + 1);
         setActiveCatalogTab(null);
         showToast(`🌀 Topology Applied`);
@@ -203,6 +225,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.autoShape = false;
             simState.current.boidShape = id;
             simState.current.customShapeName = undefined;
+        }
+        if (simState.current.clockEngine?.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('shape');
         }
         setTick(t => t + 1);
         setActiveCatalogTab(null);
@@ -218,6 +243,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.materialPreset = id;
             simState.current.materialSettings = { ...mat.settings };
             simState.current.customMaterialName = undefined;
+        }
+        if (simState.current.clockEngine?.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('material');
         }
         setTick(t => t + 1);
         setActiveCatalogTab(null);
@@ -242,6 +270,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.lightingProfileIndex = id;
         simState.current.lightingProfile = light;
         simState.current.customLightingName = undefined;
+        if (simState.current.clockEngine && simState.current.clockEngine.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('lighting');
+        }
         setTick(t => t + 1);
         setActiveCatalogTab(null);
         showToast(`💡 Lighting Applied`);
@@ -789,13 +820,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
-        {/* Top-Left Telemetry & FPS Badge */}
+        {/* Bottom-Left Telemetry & FPS Badge */}
         <div
             className="hud-fps-badge"
             style={{
                 position: 'fixed',
-                top: '18px',
-                left: '18px',
+                bottom: '24px',
+                left: '24px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
@@ -811,56 +842,28 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 pointerEvents: 'none'
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                    <span
-                        style={{
-                            fontFamily: 'monospace',
-                            fontSize: '14px',
-                            fontWeight: 900,
-                            color: fps >= 55 ? '#00ffcc' : fps >= 30 ? '#ffcc00' : '#ff3b30',
-                            letterSpacing: '-0.5px'
-                        }}
-                    >
-                        {fps || 60}
-                    </span>
-                    <span
-                        style={{
-                            fontSize: '9px',
-                            fontWeight: 800,
-                            color: 'rgba(255, 255, 255, 0.45)',
-                            letterSpacing: '0.5px'
-                        }}
-                    >
-                        FPS
-                    </span>
-                </div>
-
-                <div style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.15)' }} />
-
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                    <span
-                        style={{
-                            fontFamily: 'monospace',
-                            fontSize: '14px',
-                            fontWeight: 800,
-                            color: '#ffffff',
-                            letterSpacing: '-0.3px'
-                        }}
-                    >
-                        {population >= 1000 ? `${(population / 1000).toFixed(0)}k` : population}
-                    </span>
-                    <span
-                        style={{
-                            fontSize: '9px',
-                            fontWeight: 800,
-                            color: 'rgba(255, 255, 255, 0.45)',
-                            letterSpacing: '0.5px'
-                        }}
-                    >
-                        BOIDS
-                    </span>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                <span
+                    style={{
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                        fontWeight: 900,
+                        color: fps >= 55 ? '#00ffcc' : fps >= 30 ? '#ffcc00' : '#ff3b30',
+                        letterSpacing: '-0.5px'
+                    }}
+                >
+                    {fps || 60}
+                </span>
+                <span
+                    style={{
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        color: 'rgba(255, 255, 255, 0.45)',
+                        letterSpacing: '0.5px'
+                    }}
+                >
+                    FPS
+                </span>
             </div>
         </div>
 
@@ -906,7 +909,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 setIsSettingsOpen(true);
                                 setActiveCatalogTab('topology');
                             }}
-                            title="Click to view and choose from all 59 Topologies"
+                            title={`Click to view and choose from all ${formations.length} Topologies`}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1029,7 +1032,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             <div
                                 className="dimension-info"
                                 onClick={() => setActiveCatalogTab('topology')}
-                                title="Click to browse and select from all 59 Topologies"
+                                title={`Click to browse and select from all ${formations.length} Topologies`}
                             >
                                 <span className="dimension-name">🌀 TOPOLOGY</span>
                                 <span className="dimension-value" title={simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
@@ -1236,7 +1239,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 ❮ Back
                             </button>
                             <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                                {activeCatalogTab === 'topology' && 'Topologies (59)'}
+                                {activeCatalogTab === 'topology' && `Topologies (${formations.length})`}
                                 {activeCatalogTab === 'palette' && 'Color Palettes (24)'}
                                 {activeCatalogTab === 'geometry' && 'Species & Shapes'}
                                 {activeCatalogTab === 'material' && 'Material Finishes'}

@@ -652,6 +652,27 @@ export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
     // Suite 5: Infinite Algorithmic DNA
     [
         FormationMode.Procedural          // Infinite Procedural (30)
+    ],
+    // Suite 6: Intertwined Multi-Helix & Topological Knots / Braids
+    [
+        FormationMode.QuadHelixBraid,
+        FormationMode.ConcentricDualHelixSheath,
+        FormationMode.CaduceusVortex,
+        FormationMode.ToroidalHelixBraid,
+        FormationMode.TrefoilBraidedRibbon,
+        FormationMode.HexaHelixVortexTower,
+        FormationMode.MobiusHelixBraid,
+        FormationMode.LissajousIntertwinedKnot,
+        FormationMode.BorromeanRings,
+        FormationMode.FigureEightKnot,
+        FormationMode.CinqfoilKnot,
+        FormationMode.SeptafoilKnot,
+        FormationMode.OlympicChainLink,
+        FormationMode.TriquetraCelticBraid,
+        FormationMode.SolarFlareProminence,
+        FormationMode.WhiteheadLink,
+        FormationMode.QuatrefoilKnotBraid,
+        FormationMode.GrannyKnotBraid
     ]
 ];
 
@@ -921,6 +942,16 @@ export const EMOTIONAL_ARCS: EmotionalArc[] = [
         name: 'Digital Hyper-Geometry',
         description: 'Clean wireframe cube unfolding into 4D tesseract and star prism',
         modes: [FormationMode.WireCube, FormationMode.Tesseract4D, FormationMode.StarPolygon]
+    },
+    {
+        name: 'Topological Links & Knots',
+        description: 'Orthogonal Borromean rings weaving into figure-eight prime knot and Celtic triquetra braid',
+        modes: [FormationMode.BorromeanRings, FormationMode.FigureEightKnot, FormationMode.TriquetraCelticBraid]
+    },
+    {
+        name: 'Helical Pagoda Architecture',
+        description: 'Multi-tiered quad helix morphing into concentric sheath and soaring hexa-helix vortex tower',
+        modes: [FormationMode.QuadHelixBraid, FormationMode.ConcentricDualHelixSheath, FormationMode.HexaHelixVortexTower]
     }
 ];
 
