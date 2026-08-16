@@ -8,6 +8,7 @@ import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTA
 import { OverlayUI } from './OverlayUI'
 import { CameraRig } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
+import { BloomControlPanel, BloomSettings } from './BloomControlPanel'
 
 const INITIAL_ATTRIBUTES: SpeciesAttributes = {
     separationWeight: 3.5,
@@ -342,13 +343,19 @@ function App() {
     const [population, setPopulation] = useState(isMobile ? 35000 : 100000);
     const [fps, setFps] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [bloomSettings, setBloomSettings] = useState<BloomSettings>({
+        luminanceThreshold: 0.88,
+        radius: 0.12,
+        intensity: 0.45,
+        levels: 2
+    });
 
     // Startup configuration: Palette #18 Ancient Teak & Sandstone and Titanium Mirror material
     const initialMode: FormationMode = FormationMode.TrefoilBraidedRibbon;
     const initialPaletteIdx = 17; // #18 Ancient Teak & Sandstone
     const initialMatIdx = 0; // Titanium Mirror
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    const initialShape = Math.floor(Math.random() * 12);
+    const initialShape = Math.floor(Math.random() * 6);
     const initialCameraIdx = Math.floor(Math.random() * 6);
 
     const simState = useRef<SimulationState>({
@@ -379,6 +386,7 @@ function App() {
 
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
+            <BloomControlPanel settings={bloomSettings} onChange={setBloomSettings} />
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} isLoading={isLoading} />
             <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
                 <color attach="background" args={['#1a233a']} />
@@ -396,7 +404,14 @@ function App() {
                 <Flock count={population} state={simState.current} setPopulation={setPopulation} />
 
                 <EffectComposer>
-                    <Bloom luminanceThreshold={0.88} mipmapBlur intensity={0.45} radius={0.12} levels={2} />
+                    <Bloom
+                        key={`${bloomSettings.levels}`}
+                        luminanceThreshold={bloomSettings.luminanceThreshold}
+                        mipmapBlur
+                        intensity={bloomSettings.intensity}
+                        radius={bloomSettings.radius}
+                        levels={bloomSettings.levels}
+                    />
                 </EffectComposer>
             </Canvas>
         </div>
