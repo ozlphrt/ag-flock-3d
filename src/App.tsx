@@ -396,7 +396,7 @@ function App() {
                 <Flock count={population} state={simState.current} setPopulation={setPopulation} />
 
                 <EffectComposer>
-                    <Bloom luminanceThreshold={0.22} mipmapBlur intensity={1.25} radius={0.75} levels={4} />
+                    <Bloom luminanceThreshold={0.88} mipmapBlur intensity={0.45} radius={0.12} levels={2} />
                 </EffectComposer>
             </Canvas>
         </div>
