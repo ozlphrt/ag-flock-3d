@@ -85,7 +85,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const lastPresetIdx = useRef<number>(-1);
     const flightTime = useRef(0);
     const lastInteractionTime = useRef(0);
-    const { camera, size } = useThree();
+    const isUserDragging = useRef(false);
+    const userHasOverridden = useRef(false);
+    const { camera } = useThree();
 
     // Seamless Transition Anchors (Quintic C2-Continuous Morphing)
     const transitionStartTime = useRef(0);
@@ -95,17 +97,38 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const startFov = useRef(55);
     const curLookTarget = useRef(new THREE.Vector3(0, 0, 0));
 
+    const handleUserInteraction = () => {
+        lastInteractionTime.current = performance.now();
+        userHasOverridden.current = true;
+        transitionStartTime.current = -100; // Immediately stop transition from overriding
+        if (simState.current.clockEngine?.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('camera');
+        }
+    };
+
     useEffect(() => {
-        const onInteraction = () => {
-            lastInteractionTime.current = performance.now();
+        const onPointerDown = () => {
+            isUserDragging.current = true;
+            handleUserInteraction();
         };
-        window.addEventListener('pointerdown', onInteraction);
-        window.addEventListener('wheel', onInteraction, { passive: true });
-        window.addEventListener('touchstart', onInteraction, { passive: true });
+        const onPointerUp = () => {
+            isUserDragging.current = false;
+        };
+        const onWheel = () => {
+            handleUserInteraction();
+        };
+
+        window.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('wheel', onWheel, { passive: true });
+        window.addEventListener('touchstart', onPointerDown, { passive: true });
+        window.addEventListener('touchend', onPointerUp, { passive: true });
         return () => {
-            window.removeEventListener('pointerdown', onInteraction);
-            window.removeEventListener('wheel', onInteraction);
-            window.removeEventListener('touchstart', onInteraction);
+            window.removeEventListener('pointerdown', onPointerDown);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('wheel', onWheel);
+            window.removeEventListener('touchstart', onPointerDown);
+            window.removeEventListener('touchend', onPointerUp);
         };
     }, []);
 
@@ -131,8 +154,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         const targetDistance = baseFramingDist * presetDistMult;
 
-        // 2. Trigger Smooth Transition on Preset Switch
+        // 2. Trigger Smooth Transition on Explicit Preset Switch
         if (lastPresetIdx.current !== presetIdx) {
+            userHasOverridden.current = false; // Reset override on intentional preset switch
             if (lastPresetIdx.current === -1) {
                 // Initial load: snap immediately
                 transitionStartTime.current = -100;
@@ -143,6 +167,19 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 startFov.current = perspCam.fov;
             }
             lastPresetIdx.current = presetIdx;
+        }
+
+        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 5000 || isUserDragging.current;
+
+        // User mouse/touch drag PREVAILS immediately over all presets & paths
+        if (userHasOverridden.current) {
+            if (controlsRef.current) {
+                controlsRef.current.enabled = true;
+                controlsRef.current.autoRotate = !isUserInteracting;
+                controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed * 0.6;
+                curLookTarget.current.copy(controlsRef.current.target);
+            }
+            return;
         }
 
         const elapsed = Math.max(0.0, time - transitionStartTime.current);
@@ -186,8 +223,6 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         }
 
         // 4. Smoothly Blend Position, LookTarget, and FOV
-        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 4000;
-
         if (p < 1.0) {
             // Actively Morphing
             camera.position.lerpVectors(startCamPos.current, idealPos, sCurve);
@@ -199,7 +234,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             perspCam.updateProjectionMatrix();
 
             if (controlsRef.current) {
-                controlsRef.current.enabled = false;
+                controlsRef.current.enabled = true;
                 controlsRef.current.target.copy(curLookTarget.current);
             }
         } else {
@@ -214,14 +249,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 camera.lookAt(curLookTarget.current);
 
                 if (controlsRef.current) {
-                    controlsRef.current.enabled = false;
+                    controlsRef.current.enabled = true;
                     controlsRef.current.target.copy(curLookTarget.current);
                 }
             } else {
                 // Orbit mode
                 if (controlsRef.current) {
                     controlsRef.current.enabled = true;
-                    controlsRef.current.autoRotate = true;
+                    controlsRef.current.autoRotate = !isUserInteracting;
                     controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
 
                     if (!isUserInteracting) {
@@ -254,6 +289,12 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI}
                 target={[0, 0, 0]}
+                onStart={() => handleUserInteraction()}
+                onChange={() => {
+                    if (isUserDragging.current) {
+                        handleUserInteraction();
+                    }
+                }}
             />
         </>
     );

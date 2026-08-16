@@ -16,11 +16,16 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [, setTick] = useState(0);
     const rlPrefs = getRLPreferences();
     useEffect(() => {
-        const interval = setInterval(() => setTick(t => t + 1), 200);
+        let animId: number;
+        const loop = () => {
+            setTick(t => (t + 1) % 100000);
+            animId = requestAnimationFrame(loop);
+        };
+        animId = requestAnimationFrame(loop);
         const handleRLUpdate = () => setTick(t => t + 1);
         window.addEventListener('flock_rl_store_updated', handleRLUpdate);
         return () => {
-            clearInterval(interval);
+            cancelAnimationFrame(animId);
             window.removeEventListener('flock_rl_store_updated', handleRLUpdate);
         };
     }, []);
@@ -821,76 +826,118 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
-        {/* Top-Right Active Topology Display & Generic Overall Feedback Control */}
-        <div
-            className="top-right-combination-bar"
-            style={{
-                position: 'fixed',
-                top: '18px',
-                right: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '6px 14px',
-                background: 'rgba(12, 16, 26, 0.85)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1.5px solid rgba(255, 255, 255, 0.16)',
-                borderRadius: '16px',
-                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.55), 0 0 16px rgba(0, 255, 204, 0.08)',
-                zIndex: 1000,
-                userSelect: 'none'
-            }}
-        >
-            <div
-                onClick={() => {
-                    setIsSettingsOpen(true);
-                    setActiveCatalogTab('topology');
-                }}
-                title="Click to view and choose from all 59 Topologies"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    cursor: 'pointer',
-                    marginRight: '2px'
-                }}
-            >
-                <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 6px rgba(0,255,204,0.35))' }}>
-                    {activePreset.icon || '🌀'}
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#00ffcc', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <span>TOPOLOGY</span>
-                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>• #{Number(simState.current.formationMode ?? 0) + 1}</span>
-                    </span>
-                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {simState.current.customFormationName || activePreset.label || 'Formation'}
-                    </span>
+        {/* Top-Right Active Topology Display & Morph Convergence Progress Bar */}
+        {(() => {
+            const rawProgress = simState.current?.morphProgress !== undefined ? simState.current.morphProgress : 1.0;
+            const morphPercent = Math.min(100, Math.max(0, Math.round(rawProgress * 100)));
+            const isMorphing = rawProgress < 1.0;
+
+            return (
+                <div
+                    className="top-right-combination-bar"
+                    style={{
+                        position: 'fixed',
+                        top: '18px',
+                        right: '18px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        background: 'rgba(12, 16, 26, 0.88)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1.5px solid rgba(255, 255, 255, 0.16)',
+                        borderRadius: '16px',
+                        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.55), 0 0 16px rgba(0, 255, 204, 0.08)',
+                        zIndex: 1000,
+                        userSelect: 'none',
+                        overflow: 'hidden'
+                    }}
+                >
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '6px 14px'
+                    }}>
+                        <div
+                            onClick={() => {
+                                setIsSettingsOpen(true);
+                                setActiveCatalogTab('topology');
+                            }}
+                            title="Click to view and choose from all 59 Topologies"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                cursor: 'pointer',
+                                marginRight: '2px'
+                            }}
+                        >
+                            <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 6px rgba(0,255,204,0.35))' }}>
+                                {activePreset.icon || '🌀'}
+                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                <span style={{ fontSize: '9px', fontWeight: 800, color: '#00ffcc', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span>TOPOLOGY</span>
+                                    <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>• #{Number(simState.current.formationMode ?? 0) + 1}</span>
+                                    {isMorphing && (
+                                        <span style={{ fontSize: '8.5px', color: '#00ffcc', fontWeight: 900, background: 'rgba(0, 255, 204, 0.15)', padding: '0 3px', borderRadius: '4px' }}>
+                                            {morphPercent}%
+                                        </span>
+                                    )}
+                                </span>
+                                <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {simState.current.customFormationName || activePreset.label || 'Formation'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 2px' }} />
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <button
+                                className="matrix-action-btn like"
+                                onClick={handleLikeOverallCombination}
+                                title="Like this overall composition combination (+2 RL synergy to all active traits)"
+                                style={{ width: '32px', height: '32px', fontSize: '15px' }}
+                            >
+                                👍
+                            </button>
+                            <button
+                                className="matrix-action-btn dislike"
+                                onClick={handleDislikeOverallCombination}
+                                title="Dislike this overall composition combination & morph immediately to next"
+                                style={{ width: '32px', height: '32px', fontSize: '15px' }}
+                            >
+                                👎
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar for Completion of the Topology */}
+                    <div
+                        style={{
+                            width: '100%',
+                            height: '3px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            position: 'relative'
+                        }}
+                        title={`Topology Formation Morph: ${morphPercent}% completed`}
+                    >
+                        <div
+                            style={{
+                                height: '100%',
+                                width: `${morphPercent}%`,
+                                background: isMorphing
+                                    ? 'linear-gradient(90deg, #ff007f, #00ffcc)'
+                                    : 'linear-gradient(90deg, #00ffcc, #00e5ff)',
+                                boxShadow: isMorphing ? '0 0 8px #00ffcc' : 'none',
+                                transition: 'width 0.08s linear'
+                            }}
+                        />
+                    </div>
                 </div>
-            </div>
-
-            <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 2px' }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <button
-                    className="matrix-action-btn like"
-                    onClick={handleLikeOverallCombination}
-                    title="Like this overall composition combination (+2 RL synergy to all active traits)"
-                    style={{ width: '32px', height: '32px', fontSize: '15px' }}
-                >
-                    👍
-                </button>
-                <button
-                    className="matrix-action-btn dislike"
-                    onClick={handleDislikeOverallCombination}
-                    title="Dislike this overall composition combination & morph immediately to next"
-                    style={{ width: '32px', height: '32px', fontSize: '15px' }}
-                >
-                    👎
-                </button>
-            </div>
-        </div>
+            );
+        })()}
 
         {/* Aesthetic Matrix Studio (Main Settings Menu) */}
         {isSettingsOpen && (

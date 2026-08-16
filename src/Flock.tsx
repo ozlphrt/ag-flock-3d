@@ -211,6 +211,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const elapsed = Math.max(0.0, time - startTime);
         const p = Math.min(1.0, elapsed / duration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
+        if (state) {
+            state.morphProgress = p;
+        }
 
         const isMorphing = (state && state.prevFormationMode !== undefined && p < 1.0);
         const profile = getFormationPhysicsProfile(formation);
