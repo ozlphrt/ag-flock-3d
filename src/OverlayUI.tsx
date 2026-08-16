@@ -1119,51 +1119,28 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         </div>
 
-                        {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                        {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery in tidy 3-column Grid */}
+                        <div className="matrix-footer-grid">
                             <button
-                                className="save-full-btn"
+                                className="matrix-footer-btn save"
                                 onClick={handleSaveFullCreation}
                                 title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
-                                style={{ flex: 1.1, margin: 0, padding: '0 8px', height: '36px', fontSize: '11px', whiteSpace: 'nowrap' }}
                             >
-                                <span>❤️</span> Save (+RL)
+                                <span>❤️</span>
+                                <span>Save (+RL)</span>
                             </button>
                             <button
-                                className={`matrix-action-btn lock ${isAllDimensionsLocked ? 'is-locked' : ''}`}
+                                className={`matrix-footer-btn lock ${isAllDimensionsLocked ? 'is-locked' : ''}`}
                                 onClick={handleToggleGlobalLock}
                                 title={isAllDimensionsLocked ? "All 6 dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All 6 Dimensions (Freeze Entire Simulation)"}
-                                style={{
-                                    width: 'auto',
-                                    padding: '0 8px',
-                                    height: '36px',
-                                    gap: '4px',
-                                    borderRadius: '10px',
-                                    fontWeight: 800,
-                                    fontSize: '11px',
-                                    whiteSpace: 'nowrap'
-                                }}
                             >
                                 <span>{isAllDimensionsLocked ? '🔒' : '🔓'}</span>
                                 <span>{isAllDimensionsLocked ? 'Locked' : 'Lock All'}</span>
                             </button>
                             <button
-                                className="matrix-action-btn"
+                                className="matrix-footer-btn gallery"
                                 onClick={() => setIsGalleryOpen(true)}
                                 title={`Open Masterpiece Gallery (${likedList.length} saved creations)`}
-                                style={{
-                                    width: 'auto',
-                                    padding: '0 8px',
-                                    height: '36px',
-                                    gap: '4px',
-                                    borderRadius: '10px',
-                                    fontWeight: 800,
-                                    fontSize: '11px',
-                                    whiteSpace: 'nowrap',
-                                    background: 'rgba(255, 204, 0, 0.12)',
-                                    border: '1px solid rgba(255, 204, 0, 0.35)',
-                                    color: '#ffcc00'
-                                }}
                             >
                                 <span>🖼️</span>
                                 <span>Gallery</span>
@@ -1172,8 +1149,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                         background: 'rgba(255, 204, 0, 0.25)',
                                         padding: '1px 4px',
                                         borderRadius: '6px',
-                                        fontSize: '9.5px',
-                                        color: '#fff'
+                                        fontSize: '9px',
+                                        color: '#fff',
+                                        marginLeft: '1px'
                                     }}>
                                         {likedList.length}
                                     </span>
@@ -1183,24 +1161,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
                         {/* Extra Physics & Simulation Quick Trigger */}
                         <button
+                            className="matrix-physics-btn"
                             onClick={() => setActiveCatalogTab('physics')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px',
-                                padding: '7px 10px',
-                                background: 'rgba(255, 255, 255, 0.03)',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
-                                borderRadius: '10px',
-                                color: 'rgba(255, 255, 255, 0.65)',
-                                fontSize: '10px',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                marginTop: '2px'
-                            }}
+                            title="Open Boid Population & Flight Physics settings"
                         >
-                            <span>⚙️ Simulation Physics & Population</span>
+                            <span>⚙️</span>
+                            <span>Simulation Physics & Population</span>
                         </button>
                     </>
                 ) : (
@@ -1669,12 +1635,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
                         {/* Sub-Catalog 7: Physics */}
                         {activeCatalogTab === 'physics' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '380px', overflowY: 'auto', padding: '4px 2px' }}>
+                            <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', padding: '4px 2px', boxSizing: 'border-box' }}>
                                 <div>
                                     <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
                                         BOID POPULATION
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
                                         {[5000, 10000, 20000, 50000, 75000, 100000].map(count => (
                                             <button
                                                 key={count}
@@ -1691,7 +1657,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                                     background: population === count ? 'rgba(0, 255, 204, 0.2)' : 'rgba(255, 255, 255, 0.04)',
                                                     color: population === count ? '#00ffcc' : '#fff',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.2s ease'
+                                                    transition: 'all 0.2s ease',
+                                                    boxSizing: 'border-box'
                                                 }}
                                             >
                                                 {count >= 1000 ? `${count / 1000}k` : count}
@@ -1715,7 +1682,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                             simState.current.speedMultiplier = parseFloat(e.target.value);
                                             setTick(t => t + 1);
                                         }}
-                                        style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                                        style={{ width: '100%', boxSizing: 'border-box', accentColor: '#00ffcc', cursor: 'pointer' }}
                                     />
                                 </div>
                             </div>
