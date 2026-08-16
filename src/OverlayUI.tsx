@@ -811,28 +811,56 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 pointerEvents: 'none'
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                <span
-                    style={{
-                        fontFamily: 'monospace',
-                        fontSize: '15px',
-                        fontWeight: 900,
-                        color: fps >= 55 ? '#00ffcc' : fps >= 30 ? '#ffcc00' : '#ff3b30',
-                        letterSpacing: '-0.5px'
-                    }}
-                >
-                    {fps || 60}
-                </span>
-                <span
-                    style={{
-                        fontSize: '9px',
-                        fontWeight: 800,
-                        color: 'rgba(255, 255, 255, 0.45)',
-                        letterSpacing: '0.5px'
-                    }}
-                >
-                    FPS
-                </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                    <span
+                        style={{
+                            fontFamily: 'monospace',
+                            fontSize: '14px',
+                            fontWeight: 900,
+                            color: fps >= 55 ? '#00ffcc' : fps >= 30 ? '#ffcc00' : '#ff3b30',
+                            letterSpacing: '-0.5px'
+                        }}
+                    >
+                        {fps || 60}
+                    </span>
+                    <span
+                        style={{
+                            fontSize: '9px',
+                            fontWeight: 800,
+                            color: 'rgba(255, 255, 255, 0.45)',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        FPS
+                    </span>
+                </div>
+
+                <div style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.15)' }} />
+
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                    <span
+                        style={{
+                            fontFamily: 'monospace',
+                            fontSize: '14px',
+                            fontWeight: 800,
+                            color: '#ffffff',
+                            letterSpacing: '-0.3px'
+                        }}
+                    >
+                        {population >= 1000 ? `${(population / 1000).toFixed(0)}k` : population}
+                    </span>
+                    <span
+                        style={{
+                            fontSize: '9px',
+                            fontWeight: 800,
+                            color: 'rgba(255, 255, 255, 0.45)',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        BOIDS
+                    </span>
+                </div>
             </div>
         </div>
 

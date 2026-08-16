@@ -34,7 +34,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     let lightingInterval = 82.0;
 
     let lastCameraPresetTime = -15.0;
-    let cameraPresetInterval = 42.0;
+    let cameraPresetInterval = 26.0;
 
     let lastCameraMoodTime = -10.0;
     let cameraMoodInterval = 28.0;
@@ -222,14 +222,14 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.lightingProfile = LIGHTING_PROFILES[nextLightIdx] || LIGHTING_PROFILES[0];
         }
 
-        // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 38-52s in Auto Mode)
-        const isCameraOverridden = (time - (manualOverrides.camera || 0)) < 45.0;
+        // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 22-30s in Auto Mode)
+        const isCameraOverridden = (time - (manualOverrides.camera || 0)) < 15.0;
         if (!isCameraOverridden && !state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
             lastCameraPresetTime = time;
-            cameraPresetInterval = rndJitter(42.0, 0.2);
+            cameraPresetInterval = rndJitter(26.0, 0.2);
 
             const curIdx = state.cameraPresetIndex ?? 0;
-            const nextCamIdx = (curIdx + 1) % 6;
+            const nextCamIdx = (curIdx + 1) % 5;
             state.cameraPresetIndex = nextCamIdx;
         }
 

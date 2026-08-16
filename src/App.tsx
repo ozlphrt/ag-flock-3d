@@ -374,19 +374,14 @@ function App() {
         }
     }, [fps]);
 
-    // Hydrate from persisted last active state if available with full index bounds safety
-    const lastSaved = getLastState();
-    const initialMode = (lastSaved && lastSaved.formationMode !== undefined) ? (lastSaved.formationMode as FormationMode) : FormationMode.QuadHelixBraid;
-    const initialPaletteIdx = (lastSaved && lastSaved.paletteIndex !== undefined && COLOR_PALETTES[lastSaved.paletteIndex])
-        ? lastSaved.paletteIndex
-        : 0;
-    const initialMatIdx = (lastSaved && lastSaved.materialPreset !== undefined && MATERIAL_PRESETS[lastSaved.materialPreset])
-        ? lastSaved.materialPreset
-        : 0;
-    const initialLightIdx = (lastSaved && lastSaved.lightingProfileIndex !== undefined && LIGHTING_PROFILES[lastSaved.lightingProfileIndex])
-        ? lastSaved.lightingProfileIndex
-        : 0;
-    const initialShape = (lastSaved && lastSaved.boidShape !== undefined) ? lastSaved.boidShape : 0;
+    // Random fresh configuration at start across all aesthetic dimensions
+    const totalModes = 59;
+    const initialMode = Math.floor(Math.random() * totalModes) as FormationMode;
+    const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
+    const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
+    const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
+    const initialShape = Math.floor(Math.random() * 6);
+    const initialCameraIdx = Math.floor(Math.random() * 6);
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -396,7 +391,7 @@ function App() {
         sizeMultiplier: 1.5,
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
-        formationSeed: lastSaved ? lastSaved.formationSeed : Math.random() * 10000,
+        formationSeed: Math.random() * 10000,
         transitionStartTime: 0.0,
         proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
         paletteIndex: initialPaletteIdx,
@@ -404,7 +399,8 @@ function App() {
         materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
         materialPreset: initialMatIdx,
         boidShape: initialShape,
-        autoMode: true,
+        cameraPresetIndex: initialCameraIdx,
+        autoMode: true, // Auto timer is ON by default
         autoShape: true,
         autoMaterial: true,
         lightingProfileIndex: initialLightIdx,

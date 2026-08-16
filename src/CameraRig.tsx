@@ -106,37 +106,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const handleUserInteraction = () => {
         lastInteractionTime.current = performance.now();
         userHasOverridden.current = true;
-        transitionStartTime.current = -100; // Immediately stop transition from overriding
-        if (simState.current.clockEngine?.setManualOverride) {
-            simState.current.clockEngine.setManualOverride('camera');
-        }
+        transitionStartTime.current = -100;
     };
-
-    useEffect(() => {
-        const onPointerDown = () => {
-            isUserDragging.current = true;
-            handleUserInteraction();
-        };
-        const onPointerUp = () => {
-            isUserDragging.current = false;
-        };
-        const onWheel = () => {
-            handleUserInteraction();
-        };
-
-        window.addEventListener('pointerdown', onPointerDown);
-        window.addEventListener('pointerup', onPointerUp);
-        window.addEventListener('wheel', onWheel, { passive: true });
-        window.addEventListener('touchstart', onPointerDown, { passive: true });
-        window.addEventListener('touchend', onPointerUp, { passive: true });
-        return () => {
-            window.removeEventListener('pointerdown', onPointerDown);
-            window.removeEventListener('pointerup', onPointerUp);
-            window.removeEventListener('wheel', onWheel);
-            window.removeEventListener('touchstart', onPointerDown);
-            window.removeEventListener('touchend', onPointerUp);
-        };
-    }, []);
 
     useFrame((stateContext, delta) => {
         const time = stateContext.clock.getElapsedTime();
@@ -160,9 +131,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         const targetDistance = baseFramingDist * presetDistMult;
 
-        // 2. Trigger Smooth Transition on Explicit Preset Switch
+        // 2. Trigger Smooth Transition on Preset Switch (autonomous clock or manual selection)
         if (lastPresetIdx.current !== presetIdx) {
-            userHasOverridden.current = false; // Reset override on intentional preset switch
+            userHasOverridden.current = false; // Reset override on preset switch
             if (lastPresetIdx.current === -1) {
                 // Initial load: snap immediately
                 transitionStartTime.current = -100;
@@ -175,17 +146,25 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             lastPresetIdx.current = presetIdx;
         }
 
-        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 5000 || isUserDragging.current;
+        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 4000 || isUserDragging.current;
 
-        // User mouse/touch drag PREVAILS immediately over all presets & paths
-        if (userHasOverridden.current) {
+        // If user is actively dragging right now, OrbitControls controls camera
+        if (isUserDragging.current || (userHasOverridden.current && isUserInteracting)) {
             if (controlsRef.current) {
                 controlsRef.current.enabled = true;
-                controlsRef.current.autoRotate = !isUserInteracting;
-                controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed * 0.6;
+                controlsRef.current.autoRotate = false;
                 curLookTarget.current.copy(controlsRef.current.target);
             }
             return;
+        }
+
+        // If user stopped dragging and idle time elapsed, restore autonomous preset trajectory
+        if (userHasOverridden.current && !isUserInteracting && state.autoMode !== false) {
+            userHasOverridden.current = false;
+            transitionStartTime.current = time;
+            startCamPos.current.copy(camera.position);
+            startLookTarget.current.copy(curLookTarget.current);
+            startFov.current = perspCam.fov;
         }
 
         const elapsed = Math.max(0.0, time - transitionStartTime.current);
@@ -296,8 +275,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 maxDistance={250}
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI}
-                target={[0, 0, 0]}
-                onStart={() => handleUserInteraction()}
+                onStart={() => {
+                    isUserDragging.current = true;
+                    handleUserInteraction();
+                }}
+                onEnd={() => {
+                    isUserDragging.current = false;
+                    lastInteractionTime.current = performance.now();
+                }}
                 onChange={() => {
                     if (isUserDragging.current) {
                         handleUserInteraction();
