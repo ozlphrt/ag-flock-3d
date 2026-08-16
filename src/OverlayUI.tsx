@@ -269,6 +269,17 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast(`🎥 Camera: ${CAMERA_PRESETS[idx].name}`);
     };
 
+    const handleToggleAuto = () => {
+        const nextState = simState.current.autoMode === false ? true : false;
+        simState.current.autoMode = nextState;
+        setTick(t => t + 1);
+        if (nextState) {
+            showToast('▶️ Auto Cycle: ON (Active)');
+        } else {
+            showToast('⏸️ Auto Cycle: OFF (Paused)');
+        }
+    };
+
     const handleNextComposition = () => {
         simState.current.autoMode = true;
 
@@ -1694,21 +1705,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
         {/* Floating Bottom Right Controls */}
         <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
-            {/* Auto Mode Advance Button with Radial Timer Ring */}
+            {/* Auto Mode Toggle Button with Radial Timer Progress Ring */}
             <button
                 className={`defeat-selector-btn ${isAutoMode ? 'timer-active-pulse' : ''}`}
-                onClick={handleNextComposition}
-                title={`Auto-cycle active (${countdown}s remaining) — Click to advance immediately to next composition ⏭️`}
+                onClick={handleToggleAuto}
+                title={isAutoMode ? `Auto-cycle is ON (${countdown}s remaining) — Click to Turn Auto OFF (Pause)` : "Auto-cycle is OFF — Click to Turn Auto ON (Resume)"}
                 style={{
                     position: 'relative',
                     width: '56px',
                     height: '56px',
                     padding: 0,
                     borderRadius: '50%',
-                    background: 'rgba(12, 16, 26, 0.85)',
+                    background: isAutoMode ? 'rgba(12, 16, 26, 0.85)' : 'rgba(18, 22, 34, 0.8)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
-                    border: 'none',
+                    border: isAutoMode ? 'none' : '1.5px solid rgba(255, 255, 255, 0.18)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1735,7 +1746,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         cy="28"
                         r="24"
                         fill="none"
-                        stroke={isAutoMode ? '#00ffcc' : 'rgba(255, 255, 255, 0.3)'}
+                        stroke={isAutoMode ? '#00ffcc' : 'rgba(255, 255, 255, 0.25)'}
                         strokeWidth="3.5"
                         strokeDasharray="150.796"
                         strokeDashoffset={isAutoMode ? (150.796 * progress).toFixed(2) : '150.796'}
@@ -1778,15 +1789,26 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </span>
                         </>
                     ) : (
-                        <span style={{
-                            fontSize: '12px',
-                            fontWeight: 900,
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            color: 'rgba(255, 255, 255, 0.45)',
-                            letterSpacing: '0.5px'
-                        }}>
-                            HOLD
-                        </span>
+                        <>
+                            <span style={{
+                                fontSize: '12px',
+                                fontWeight: 900,
+                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                letterSpacing: '0.5px'
+                            }}>
+                                OFF
+                            </span>
+                            <span style={{
+                                fontSize: '7.5px',
+                                fontWeight: 800,
+                                color: 'rgba(255, 255, 255, 0.45)',
+                                letterSpacing: '0.5px',
+                                marginTop: '1px'
+                            }}>
+                                AUTO
+                            </span>
+                        </>
                     )}
                 </div>
             </button>
