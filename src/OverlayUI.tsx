@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
-import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome } from './RLEngine';
+import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
 
 interface OverlayUIProps {
@@ -14,6 +14,7 @@ interface OverlayUIProps {
 
 export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setPopulation, fps, isLoading }) => {
     const [, setTick] = useState(0);
+    const rlPrefs = getRLPreferences();
     useEffect(() => {
         const interval = setInterval(() => setTick(t => t + 1), 200);
         return () => clearInterval(interval);
@@ -1163,7 +1164,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             SWARM CONTROL PANEL
                         </div>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px', fontWeight: 500 }}>
-                            Active: <span style={{ color: '#fff', fontWeight: 700 }}>{activePreset.label}</span>
+                            Active: <span style={{ color: '#fff', fontWeight: 700 }}>{activePreset.label}</span> • <span style={{ color: '#00ffcc', fontWeight: 800 }}>👍 {rlPrefs.totalLikes}</span> <span style={{ color: '#ff5c5c', fontWeight: 800, marginLeft: '4px' }}>👎 {rlPrefs.totalDislikes}</span>
                         </div>
                     </div>
                     <button
@@ -1224,36 +1225,48 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 {/* Tab 1: Topology Grid (All Formations) */}
                 {activeTab === 'topology' && (
                     <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
-                        {formations.map(f => (
-                            <button
-                                key={f.id}
-                                onClick={() => selectFormation(f.id)}
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    padding: '10px 12px',
-                                    borderRadius: '12px',
-                                    background: currentFormation === f.id ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                    border: currentFormation === f.id ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
-                                    color: currentFormation === f.id ? '#00ffcc' : '#fff',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s ease',
-                                    minWidth: 0,
-                                    maxWidth: '100%',
-                                    width: '100%',
-                                    boxSizing: 'border-box',
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                <div style={{ width: '100%', maxWidth: '100%', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {f.icon} {f.label}
-                                </div>
-                                <div style={{ width: '100%', maxWidth: '100%', fontSize: '9.5px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {f.desc}
-                                </div>
-                            </button>
-                        ))}
+                        {formations.map(f => {
+                            const fLikes = rlPrefs.formationLikes[f.id] || 0;
+                            const fDislikes = rlPrefs.formationDislikes[f.id] || 0;
+                            return (
+                                <button
+                                    key={f.id}
+                                    onClick={() => selectFormation(f.id)}
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '10px 12px',
+                                        borderRadius: '12px',
+                                        background: currentFormation === f.id ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                        border: currentFormation === f.id ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                        color: currentFormation === f.id ? '#00ffcc' : '#fff',
+                                        cursor: 'pointer',
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s ease',
+                                        minWidth: 0,
+                                        maxWidth: '100%',
+                                        width: '100%',
+                                        boxSizing: 'border-box',
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '4px' }}>
+                                        <div style={{ width: '100%', maxWidth: '100%', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {f.icon} {f.label}
+                                        </div>
+                                        {(fLikes > 0 || fDislikes > 0) && (
+                                            <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800, flexShrink: 0 }}>
+                                                {fLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{fLikes}</span>}
+                                                {fDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{fDislikes}</span>}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{ width: '100%', maxWidth: '100%', fontSize: '9.5px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {f.desc}
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
@@ -1290,6 +1303,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                             {COLOR_PALETTES.map((pal, idx) => {
                                 const isSelected = simState.current.paletteIndex === idx && !simState.current.customPaletteName;
+                                const pLikes = rlPrefs.paletteLikes[idx] || 0;
+                                const pDislikes = rlPrefs.paletteDislikes[idx] || 0;
                                 return (
                                     <button
                                         key={idx}
@@ -1313,7 +1328,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                             <span style={{ fontSize: '11px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
                                                 #{idx + 1} Harmonic
                                             </span>
-                                            {isSelected && <span style={{ fontSize: '10px', color: '#00ffcc' }}>✓</span>}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                {(pLikes > 0 || pDislikes > 0) && (
+                                                    <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800, flexShrink: 0 }}>
+                                                        {pLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{pLikes}</span>}
+                                                        {pDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{pDislikes}</span>}
+                                                    </div>
+                                                )}
+                                                {isSelected && <span style={{ fontSize: '10px', color: '#00ffcc' }}>✓</span>}
+                                            </div>
                                         </div>
                                         <div style={{ display: 'flex', height: '14px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
                                             {pal.map((c, i) => (
@@ -1327,97 +1350,133 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 2: Geometry Grid */}
+                {/* Tab 3: Geometry Grid */}
                 {activeTab === 'geometry' && (
                     <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {shapes.map(s => (
-                            <button
-                                key={s.id}
-                                onClick={() => selectShape(s.id)}
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    padding: '10px 14px',
-                                    borderRadius: '12px',
-                                    background: currentShapeId === s.id ? 'rgba(255, 0, 127, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                    border: currentShapeId === s.id ? '1px solid #ff007f' : '1px solid rgba(255, 255, 255, 0.08)',
-                                    color: currentShapeId === s.id ? '#ff007f' : '#fff',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s ease'
-                                }}
-                            >
-                                <div style={{ fontSize: '12px', fontWeight: 700 }}>{s.icon} {s.label}</div>
-                                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{s.desc}</div>
-                            </button>
-                        ))}
+                        {shapes.map(s => {
+                            const sLikes = rlPrefs.shapeLikes[s.id] || 0;
+                            const sDislikes = rlPrefs.shapeDislikes[s.id] || 0;
+                            return (
+                                <button
+                                    key={s.id}
+                                    onClick={() => selectShape(s.id)}
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        background: currentShapeId === s.id ? 'rgba(255, 0, 127, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                        border: currentShapeId === s.id ? '1px solid #ff007f' : '1px solid rgba(255, 255, 255, 0.08)',
+                                        color: currentShapeId === s.id ? '#ff007f' : '#fff',
+                                        cursor: 'pointer',
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: 700 }}>{s.icon} {s.label}</div>
+                                        {(sLikes > 0 || sDislikes > 0) && (
+                                            <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                {sLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{sLikes}</span>}
+                                                {sDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{sDislikes}</span>}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{s.desc}</div>
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
-                {/* Tab 3: Material Aesthetics Grid */}
+                {/* Tab 4: Material Aesthetics Grid */}
                 {activeTab === 'material' && (
                     <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {materialOptions.map(m => (
-                            <button
-                                key={m.id}
-                                onClick={() => selectMaterial(m.id)}
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    padding: '10px 14px',
-                                    borderRadius: '12px',
-                                    background: currentMaterialId === m.id ? 'rgba(157, 0, 255, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                    border: currentMaterialId === m.id ? '1px solid #9d00ff' : '1px solid rgba(255, 255, 255, 0.08)',
-                                    color: currentMaterialId === m.id ? '#c084fc' : '#fff',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s ease'
-                                }}
-                            >
-                                <div style={{ fontSize: '12px', fontWeight: 700 }}>{m.icon} {m.label}</div>
-                                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{m.desc}</div>
-                            </button>
-                        ))}
+                        {materialOptions.map(m => {
+                            const mLikes = rlPrefs.materialLikes[m.id] || 0;
+                            const mDislikes = rlPrefs.materialDislikes[m.id] || 0;
+                            return (
+                                <button
+                                    key={m.id}
+                                    onClick={() => selectMaterial(m.id)}
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        background: currentMaterialId === m.id ? 'rgba(157, 0, 255, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                        border: currentMaterialId === m.id ? '1px solid #9d00ff' : '1px solid rgba(255, 255, 255, 0.08)',
+                                        color: currentMaterialId === m.id ? '#c084fc' : '#fff',
+                                        cursor: 'pointer',
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: 700 }}>{m.icon} {m.label}</div>
+                                        {(mLikes > 0 || mDislikes > 0) && (
+                                            <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                {mLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{mLikes}</span>}
+                                                {mDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{mDislikes}</span>}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{m.desc}</div>
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
-                {/* Tab 4: Studio Lighting Grid */}
+                {/* Tab 5: Studio Lighting Grid */}
                 {activeTab === 'lighting' && (
                     <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {LIGHTING_PROFILES.map(lp => (
-                            <button
-                                key={lp.id}
-                                onClick={() => selectLighting(lp.id)}
-                                style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: '10px 14px',
-                                    borderRadius: '12px',
-                                    background: currentLightingId === lp.id ? 'rgba(255, 204, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                    border: currentLightingId === lp.id ? '1px solid #ffcc00' : '1px solid rgba(255, 255, 255, 0.08)',
-                                    color: currentLightingId === lp.id ? '#ffcc00' : '#fff',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s ease'
-                                }}
-                            >
-                                <div>
-                                    <div style={{ fontSize: '12px', fontWeight: 700 }}>💡 {lp.label}</div>
-                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>
-                                        Key: {lp.keyColor} • Rim: {lp.rimColor}
+                        {LIGHTING_PROFILES.map(lp => {
+                            const lLikes = rlPrefs.lightingLikes[lp.id] || 0;
+                            const lDislikes = rlPrefs.lightingDislikes[lp.id] || 0;
+                            return (
+                                <button
+                                    key={lp.id}
+                                    onClick={() => selectLighting(lp.id)}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        background: currentLightingId === lp.id ? 'rgba(255, 204, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                        border: currentLightingId === lp.id ? '1px solid #ffcc00' : '1px solid rgba(255, 255, 255, 0.08)',
+                                        color: currentLightingId === lp.id ? '#ffcc00' : '#fff',
+                                        cursor: 'pointer',
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <div style={{ fontSize: '12px', fontWeight: 700 }}>💡 {lp.label}</div>
+                                            {(lLikes > 0 || lDislikes > 0) && (
+                                                <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                    {lLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{lLikes}</span>}
+                                                    {lDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{lDislikes}</span>}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>
+                                            Key: {lp.keyColor} • Rim: {lp.rimColor}
+                                        </div>
                                     </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '4px' }}>
-                                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.keyColor, border: '1px solid rgba(255,255,255,0.3)' }} />
-                                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.rimColor, border: '1px solid rgba(255,255,255,0.3)' }} />
-                                </div>
-                            </button>
-                        ))}
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.keyColor, border: '1px solid rgba(255,255,255,0.3)' }} />
+                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.rimColor, border: '1px solid rgba(255,255,255,0.3)' }} />
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
-                {/* Tab 5: Cinematic Camera Presets Grid */}
+                {/* Tab 6: Cinematic Camera Presets Grid */}
                 {activeTab === 'camera' && (
                     <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>
@@ -1426,6 +1485,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
                             {CAMERA_PRESETS.map((cp, idx) => {
                                 const isSelected = (simState.current.cameraPresetIndex ?? 0) === idx;
+                                const cLikes = rlPrefs.cameraLikes[String(idx)] || 0;
+                                const cDislikes = rlPrefs.cameraDislikes[String(idx)] || 0;
                                 return (
                                     <button
                                         key={cp.id}
@@ -1448,8 +1509,16 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <span style={{ fontSize: '22px' }}>{cp.icon}</span>
                                             <div>
-                                                <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
-                                                    {cp.name}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
+                                                        {cp.name}
+                                                    </div>
+                                                    {(cLikes > 0 || cDislikes > 0) && (
+                                                        <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                            {cLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{cLikes}</span>}
+                                                            {cDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{cDislikes}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div style={{ fontSize: '11px', color: isSelected ? 'rgba(0, 255, 204, 0.8)' : 'rgba(255, 255, 255, 0.5)', marginTop: '2px', lineHeight: 1.3 }}>
                                                     {cp.description}
@@ -1463,7 +1532,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                             fontWeight: 900,
                                             letterSpacing: '0.5px',
                                             background: isSelected ? '#00ffcc' : 'rgba(255,255,255,0.08)',
-                                            color: isSelected ? '#000' : 'rgba(255,255,255,0.4)'
+                                            color: isSelected ? '#0a0f1d' : 'rgba(255,255,255,0.6)'
                                         }}>
                                             {isSelected ? 'ACTIVE' : 'SELECT'}
                                         </div>
