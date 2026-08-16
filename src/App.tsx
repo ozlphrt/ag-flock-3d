@@ -6,9 +6,9 @@ import * as THREE from 'three'
 import { Flock } from './Flock'
 import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
-import { CameraRig } from './CameraRig'
+import { CameraRig, CAMERA_PRESETS } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
-import { BloomControlPanel, BloomSettings } from './BloomControlPanel'
+import { BloomSettings, BLOOM_PRESETS } from './BloomControlPanel'
 
 const INITIAL_ATTRIBUTES: SpeciesAttributes = {
     separationWeight: 3.5,
@@ -343,20 +343,20 @@ function App() {
     const [population, setPopulation] = useState(isMobile ? 35000 : 100000);
     const [fps, setFps] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const [bloomSettings, setBloomSettings] = useState<BloomSettings>({
-        luminanceThreshold: 0.88,
-        radius: 0.12,
-        intensity: 0.45,
-        levels: 2
-    });
 
-    // Startup configuration: Palette #18 Ancient Teak & Sandstone and Titanium Mirror material
-    const initialMode: FormationMode = FormationMode.TrefoilBraidedRibbon;
-    const initialPaletteIdx = 17; // #18 Ancient Teak & Sandstone
-    const initialMatIdx = 0; // Titanium Mirror
+    // 100% Entirely Random Startup Configuration across all 7 aesthetic dimensions
+    const initialMode: FormationMode = Math.floor(Math.random() * TOTAL_FORMATION_COUNT) as FormationMode;
+    const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
+    const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    const initialShape = Math.floor(Math.random() * 6);
-    const initialCameraIdx = Math.floor(Math.random() * 6);
+    const initialShape = Math.random() < 0.25 ? 99 : Math.floor(Math.random() * 6);
+    const initialCameraIdx = Math.floor(Math.random() * CAMERA_PRESETS.length);
+    const initialBloomIdx = Math.floor(Math.random() * BLOOM_PRESETS.length);
+    const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
+
+    const [bloomSettings, setBloomSettings] = useState<BloomSettings>({
+        ...initialBloom.settings
+    });
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -366,14 +366,18 @@ function App() {
         sizeMultiplier: 1.5,
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
-        formationSeed: Math.random() * 10000,
-        proceduralGenome: undefined,
+        formationSeed: Math.random() * 100000,
+        proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
         paletteIndex: initialPaletteIdx,
         speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],
         materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
         materialPreset: initialMatIdx,
         boidShape: initialShape,
         cameraPresetIndex: initialCameraIdx,
+        bloomPreset: initialBloomIdx,
+        bloomSettings: {
+            ...initialBloom.settings
+        },
         autoMode: true, // Auto timer is ON by default
         autoShape: true,
         autoMaterial: true,
@@ -384,9 +388,31 @@ function App() {
         }
     });
 
+    // Keep simState and React state synchronized
+    useEffect(() => {
+        simState.current.bloomSettings = bloomSettings;
+    }, [bloomSettings]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (simState.current.bloomSettings) {
+                const s = simState.current.bloomSettings;
+                setBloomSettings(prev => {
+                    if (prev.luminanceThreshold !== s.luminanceThreshold ||
+                        prev.radius !== s.radius ||
+                        prev.intensity !== s.intensity ||
+                        prev.levels !== s.levels) {
+                        return { ...s };
+                    }
+                    return prev;
+                });
+            }
+        }, 100);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-            <BloomControlPanel settings={bloomSettings} onChange={setBloomSettings} />
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} isLoading={isLoading} />
             <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
                 <color attach="background" args={['#1a233a']} />

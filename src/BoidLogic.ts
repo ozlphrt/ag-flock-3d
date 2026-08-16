@@ -452,6 +452,9 @@ export interface SimulationState {
     customMaterialName?: string;
     customLightingName?: string;
     customShapeName?: string;
+    bloomSettings?: { luminanceThreshold: number; radius: number; intensity: number; levels: number; };
+    bloomPreset?: number;
+    isBloomLocked?: boolean;
 }
 
 // Helper to convert HSL to Hex

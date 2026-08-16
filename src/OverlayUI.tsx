@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
 import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences, getCentralRLStore, exportCentralRLJSON, importCentralRLJSON, resetCentralRLStore, likeCompositionCombination, dislikeCompositionCombination } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
+import { BLOOM_PRESETS, BloomPreset } from './BloomControlPanel';
 
 interface OverlayUIProps {
     simState: React.MutableRefObject<SimulationState>;
@@ -31,7 +32,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [activeCatalogTab, setActiveCatalogTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'physics' | null>(null);
+    const [activeCatalogTab, setActiveCatalogTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'bloom' | 'physics' | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
@@ -168,21 +169,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const shapes = [
         { id: -1, label: 'Auto (Mutate Cycle)', icon: '🤖', desc: 'Randomize shape every formation cycle' },
-        { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive geometric archetype' },
+        { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive 3D geometric archetype' },
         // 3D Volumetric Archetypes
         { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
         { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal (8 tris)' },
         { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal (6 tris)' },
         { id: 3, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
         { id: 4, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
-        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' },
-        // 2D Planar Archetypes
-        { id: 6, label: '2D Reynolds Triangle', icon: '🔺', desc: '1986 Craig Reynolds classic planar triangle boid (1 tri)' },
-        { id: 7, label: '2D Planar Chevron Dart', icon: '⚡', desc: 'Aerodynamic swept-wing notched chevron dart (2 tris)' },
-        { id: 8, label: '2D Diamond Kite', icon: '🪁', desc: 'Planar elongated diamond kite glider (2 tris)' },
-        { id: 9, label: '2D Origami Swallow', icon: '🕊️', desc: 'Swept avian silhouette with forked tail (4 tris)' },
-        { id: 10, label: '2D Hex Star Glider', icon: '⭐', desc: 'Geometric 6-pointed planar star flyer (8 tris)' },
-        { id: 11, label: '2D Crescent Boomerang', icon: '🌙', desc: 'Curved aerodynamic crescent arc blade (2 tris)' }
+        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' }
     ];
 
     const materialOptions = [
@@ -337,7 +331,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast('Advancing Unlocked Dimensions ⏭️');
     };
 
-    const handleLikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+    const handleLikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let id: number | string = 0;
         let label = 'Trait';
@@ -360,6 +354,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         } else if (dim === 'camera') {
             id = state.cameraPresetIndex ?? 0;
             label = CAMERA_PRESETS[Number(id)]?.name || 'Camera';
+        } else if (dim === 'bloom') {
+            id = state.bloomPreset ?? 0;
+            label = BLOOM_PRESETS[Number(id)]?.label || 'Bloom';
         }
 
         likeDimension(dim, id);
@@ -367,7 +364,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         setTick(t => t + 1);
     };
 
-    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let id: number | string = 0;
         let label = 'Trait';
@@ -390,12 +387,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         } else if (dim === 'camera') {
             id = state.cameraPresetIndex ?? 0;
             label = 'Camera Preset';
+        } else if (dim === 'bloom') {
+            id = state.bloomPreset ?? 0;
+            label = 'Bloom Preset';
+            const nextPreset = (Number(id) + 1 + Math.floor(Math.random() * (BLOOM_PRESETS.length - 1))) % BLOOM_PRESETS.length;
+            state.bloomPreset = nextPreset;
+            state.bloomSettings = { ...BLOOM_PRESETS[nextPreset].settings };
         }
 
         dislikeDimension(dim, id);
 
         // Immediately morph to a fresh AI-selected creation without waiting for timer!
-        if (state.clockEngine?.skipDimension) {
+        if (state.clockEngine?.skipDimension && dim !== 'bloom') {
             state.clockEngine.skipDimension(dim);
         }
 
@@ -403,7 +406,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         setTick(t => t + 1);
     };
 
-    const handleToggleLockDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+    const handleToggleLockDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let isLocked = false;
         let label = 'Trait';
@@ -432,6 +435,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             state.isCameraLocked = !state.isCameraLocked;
             isLocked = !!state.isCameraLocked;
             label = 'Camera Angle';
+        } else if (dim === 'bloom') {
+            state.isBloomLocked = !state.isBloomLocked;
+            isLocked = !!state.isBloomLocked;
+            label = 'Optical Bloom';
         }
 
         setTick(t => t + 1);
@@ -444,7 +451,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.isMaterialLocked &&
         simState.current.isLightingLocked &&
         simState.current.isShapeLocked &&
-        simState.current.isCameraLocked
+        simState.current.isCameraLocked &&
+        simState.current.isBloomLocked
     );
 
     const handleToggleGlobalLock = () => {
@@ -455,15 +463,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.isLightingLocked = nextLock;
         simState.current.isShapeLocked = nextLock;
         simState.current.isCameraLocked = nextLock;
+        simState.current.isBloomLocked = nextLock;
         setTick(t => t + 1);
-        showToast(nextLock ? '🔒 All 6 Dimensions LOCKED (Total Freeze)' : '🔓 All Dimensions UNLOCKED (Full AI Flow)');
+        showToast(nextLock ? '🔒 All Dimensions LOCKED (Total Freeze)' : '🔓 All Dimensions UNLOCKED (Full AI Flow)');
     };
 
-    const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera') => {
+    const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let result = '';
 
-        if (state.clockEngine?.skipDimension) {
+        if (dim === 'bloom') {
+            const nextPreset = Math.floor(Math.random() * BLOOM_PRESETS.length);
+            state.bloomPreset = nextPreset;
+            state.bloomSettings = { ...BLOOM_PRESETS[nextPreset].settings };
+            result = `Bloom: ${BLOOM_PRESETS[nextPreset].label}`;
+        } else if (state.clockEngine?.skipDimension) {
             result = state.clockEngine.skipDimension(dim);
         }
         showToast(`🎲 ${result}`);
@@ -1166,12 +1180,34 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         </div>
 
+                        {/* 7. Bloom & Optical Flares Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('bloom')}
+                                title="Click to browse 24 high-intensity non-opaque Bloom presets and live sliders"
+                            >
+                                <span className="dimension-name">✨ OPTICAL BLOOM</span>
+                                <span className="dimension-value" title={BLOOM_PRESETS[simState.current.bloomPreset ?? 0]?.label}>
+                                    {BLOOM_PRESETS[simState.current.bloomPreset ?? 0]?.label || 'Diamond Facet Sparkle'}
+                                </span>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('bloom')} title="Like Bloom (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('bloom')} title="Dislike Bloom (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isBloomLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('bloom')} title={simState.current.isBloomLocked ? "Bloom is LOCKED — Click to Unlock" : "Click to LOCK Bloom"}>
+                                    {simState.current.isBloomLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('bloom')} title="Reroll Bloom Preset">🎲</button>
+                            </div>
+                        </div>
+
                         {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery in tidy 3-column Grid */}
                         <div className="matrix-footer-grid">
                             <button
                                 className="matrix-footer-btn save"
                                 onClick={handleSaveFullCreation}
-                                title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
+                                title="Save entire aesthetic Masterpiece to Gallery & train future AI generations"
                             >
                                 <span>❤️</span>
                                 <span>Save (+RL)</span>
@@ -1179,7 +1215,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             <button
                                 className={`matrix-footer-btn lock ${isAllDimensionsLocked ? 'is-locked' : ''}`}
                                 onClick={handleToggleGlobalLock}
-                                title={isAllDimensionsLocked ? "All 6 dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All 6 Dimensions (Freeze Entire Simulation)"}
+                                title={isAllDimensionsLocked ? "All dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All Dimensions (Freeze Entire Simulation)"}
                             >
                                 <span>{isAllDimensionsLocked ? '🔒' : '🔓'}</span>
                                 <span>{isAllDimensionsLocked ? 'Locked' : 'Lock All'}</span>
@@ -1245,6 +1281,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 {activeCatalogTab === 'material' && 'Material Finishes'}
                                 {activeCatalogTab === 'lighting' && 'Studio Lighting'}
                                 {activeCatalogTab === 'camera' && 'Camera Angles'}
+                                {activeCatalogTab === 'bloom' && 'Optical Bloom & Flares (24)'}
                                 {activeCatalogTab === 'physics' && 'Physics & Population'}
                             </span>
                             <button
@@ -1680,7 +1717,159 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         )}
 
-                        {/* Sub-Catalog 7: Physics */}
+                        {/* Sub-Catalog 7: Optical Bloom & Flares */}
+                        {activeCatalogTab === 'bloom' && (
+                            <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', padding: '4px 2px', boxSizing: 'border-box' }}>
+                                {/* 24 Presets Grid */}
+                                <div>
+                                    <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                                        CURATED PRESETS (HIGH INTENSITY • NON-OPAQUE)
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '6px' }}>
+                                        {BLOOM_PRESETS.map(bp => {
+                                            const isSelected = (simState.current.bloomPreset ?? 0) === bp.id;
+                                            return (
+                                                <button
+                                                    key={bp.id}
+                                                    onClick={() => {
+                                                        simState.current.bloomPreset = bp.id;
+                                                        simState.current.bloomSettings = { ...bp.settings };
+                                                        setTick(t => t + 1);
+                                                        showToast(`✨ Applied: ${bp.label}`);
+                                                    }}
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        padding: '10px 12px',
+                                                        borderRadius: '10px',
+                                                        background: isSelected ? 'rgba(0, 255, 204, 0.20)' : 'rgba(255, 255, 255, 0.04)',
+                                                        border: isSelected ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                        color: isSelected ? '#00ffcc' : '#fff',
+                                                        cursor: 'pointer',
+                                                        textAlign: 'left',
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: 700 }}>{bp.icon} {bp.label}</div>
+                                                        <div style={{ display: 'flex', gap: '4px', fontSize: '9px', fontWeight: 800 }}>
+                                                            <span style={{ background: 'rgba(0, 255, 204, 0.15)', color: '#00ffcc', padding: '2px 5px', borderRadius: '4px' }}>
+                                                                {bp.settings.intensity}x Int
+                                                            </span>
+                                                            <span style={{ background: 'rgba(255, 255, 255, 0.10)', color: 'rgba(255, 255, 255, 0.8)', padding: '2px 5px', borderRadius: '4px' }}>
+                                                                {bp.settings.luminanceThreshold} Cutoff
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '3px' }}>{bp.desc}</div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Live Fine-Tuning Sliders */}
+                                <div style={{ background: 'rgba(0, 0, 0, 0.35)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#00ffcc', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                        REAL-TIME SLIDER TUNING
+                                    </div>
+
+                                    {/* Threshold */}
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '3px' }}>
+                                            <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Luminance Threshold:</span>
+                                            <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>
+                                                {(simState.current.bloomSettings?.luminanceThreshold ?? 0.90).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0.00"
+                                            max="1.50"
+                                            step="0.01"
+                                            value={simState.current.bloomSettings?.luminanceThreshold ?? 0.90}
+                                            onChange={e => {
+                                                if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.90, radius: 0.10, intensity: 2.20, levels: 2 };
+                                                simState.current.bloomSettings.luminanceThreshold = parseFloat(e.target.value);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                                        />
+                                    </div>
+
+                                    {/* Radius */}
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '3px' }}>
+                                            <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Glow Radius:</span>
+                                            <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>
+                                                {(simState.current.bloomSettings?.radius ?? 0.10).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0.00"
+                                            max="1.50"
+                                            step="0.01"
+                                            value={simState.current.bloomSettings?.radius ?? 0.10}
+                                            onChange={e => {
+                                                if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.90, radius: 0.10, intensity: 2.20, levels: 2 };
+                                                simState.current.bloomSettings.radius = parseFloat(e.target.value);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                                        />
+                                    </div>
+
+                                    {/* Intensity */}
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '3px' }}>
+                                            <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Glint Intensity:</span>
+                                            <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>
+                                                {(simState.current.bloomSettings?.intensity ?? 2.20).toFixed(2)}x
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0.00"
+                                            max="5.00"
+                                            step="0.05"
+                                            value={simState.current.bloomSettings?.intensity ?? 2.20}
+                                            onChange={e => {
+                                                if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.90, radius: 0.10, intensity: 2.20, levels: 2 };
+                                                simState.current.bloomSettings.intensity = parseFloat(e.target.value);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                                        />
+                                    </div>
+
+                                    {/* Levels */}
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '3px' }}>
+                                            <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Blur Pass Levels:</span>
+                                            <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>
+                                                {simState.current.bloomSettings?.levels ?? 2}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="8"
+                                            step="1"
+                                            value={simState.current.bloomSettings?.levels ?? 2}
+                                            onChange={e => {
+                                                if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.90, radius: 0.10, intensity: 2.20, levels: 2 };
+                                                simState.current.bloomSettings.levels = parseInt(e.target.value, 10);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 8: Physics */}
                         {activeCatalogTab === 'physics' && (
                             <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', padding: '4px 2px', boxSizing: 'border-box' }}>
                                 <div>

@@ -41,6 +41,8 @@ export interface RLPreferences {
     lightingDislikes: Record<number, number>;
     cameraLikes: Record<string, number>;
     cameraDislikes: Record<string, number>;
+    bloomLikes?: Record<number, number>;
+    bloomDislikes?: Record<number, number>;
     totalLikes: number;
     totalDislikes: number;
     likedGenomes: ProceduralGenome[];
@@ -59,7 +61,7 @@ export interface PersistedLastState {
 export interface RLActionLogEntry {
     timestamp: number;
     action: 'like' | 'dislike' | 'save' | 'reroll' | 'lock' | 'unlock';
-    dimension?: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera' | 'full';
+    dimension?: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera' | 'bloom' | 'full';
     id?: number | string;
     label?: string;
     details?: any;
@@ -305,7 +307,7 @@ function persistPrefs(prefs: RLPreferences) {
 }
 
 // Granular Like/Dislike Functions per Aesthetic Dimension
-export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string, label?: string): { totalLikes: number } {
+export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera' | 'bloom', id: number | string, label?: string): { totalLikes: number } {
     const store = getCentralRLStore();
     const prefs = store.preferences;
     prefs.totalLikes = (prefs.totalLikes || 0) + 1;
@@ -330,6 +332,10 @@ export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'p
         case 'camera':
             prefs.cameraLikes[String(id)] = (prefs.cameraLikes[String(id)] || 0) + 1;
             break;
+        case 'bloom':
+            if (!prefs.bloomLikes) prefs.bloomLikes = {};
+            prefs.bloomLikes[Number(id)] = (prefs.bloomLikes[Number(id)] || 0) + 1;
+            break;
     }
 
     recordRLAction({
@@ -342,7 +348,7 @@ export function likeDimension(dimension: 'formation' | 'shape' | 'material' | 'p
     return { totalLikes: prefs.totalLikes };
 }
 
-export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera', id: number | string, label?: string): { totalDislikes: number } {
+export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' | 'palette' | 'lighting' | 'camera' | 'bloom', id: number | string, label?: string): { totalDislikes: number } {
     const store = getCentralRLStore();
     const prefs = store.preferences;
     prefs.totalDislikes = (prefs.totalDislikes || 0) + 1;
@@ -366,6 +372,10 @@ export function dislikeDimension(dimension: 'formation' | 'shape' | 'material' |
             break;
         case 'camera':
             prefs.cameraDislikes[String(id)] = (prefs.cameraDislikes[String(id)] || 0) + 1;
+            break;
+        case 'bloom':
+            if (!prefs.bloomDislikes) prefs.bloomDislikes = {};
+            prefs.bloomDislikes[Number(id)] = (prefs.bloomDislikes[Number(id)] || 0) + 1;
             break;
     }
 

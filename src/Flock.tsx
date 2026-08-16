@@ -149,7 +149,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         swarm.setPopulation(count, state);
     }, []);
 
-    // 12 High-Performance 3D Volumetric & 2D Planar Geometries
+    // 6 High-Performance 3D Volumetric Geometries (Zero 2D geometries)
     // Scaled for maximum silhouette definition, distinct styles, and 120k boid throughput
     const geometries = useMemo(() => {
         // --- 6 3D Volumetric Geometries ---
@@ -180,90 +180,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const g5 = new THREE.TetrahedronGeometry(0.17, 0);
         g5.scale(0.65, 0.65, 1.6);
 
-        // --- 6 2D Planar Geometries (Iconic Flat Boids) ---
-        // 6: 2D Classic Reynolds Triangle (Flat 1986 Iconic Boid)
-        const g6 = new THREE.BufferGeometry();
-        g6.setAttribute('position', new THREE.Float32BufferAttribute([
-            0.0, 0.0, 0.28,
-            -0.18, 0.0, -0.16,
-            0.18, 0.0, -0.16
-        ], 3));
-        g6.setIndex([0, 1, 2]);
-        g6.computeVertexNormals();
-
-        // 7: 2D Planar Chevron Dart (Swept Notched Tail)
-        const g7 = new THREE.BufferGeometry();
-        g7.setAttribute('position', new THREE.Float32BufferAttribute([
-            0.0, 0.0, 0.32,
-            0.22, 0.0, -0.16,
-            0.0, 0.0, -0.05,
-            -0.22, 0.0, -0.16
-        ], 3));
-        g7.setIndex([0, 1, 2, 0, 2, 3]);
-        g7.computeVertexNormals();
-
-        // 8: 2D Planar Diamond Kite (Elongated Diamond)
-        const g8 = new THREE.BufferGeometry();
-        g8.setAttribute('position', new THREE.Float32BufferAttribute([
-            0.0, 0.0, 0.30,
-            0.18, 0.0, 0.02,
-            0.0, 0.0, -0.24,
-            -0.18, 0.0, 0.02
-        ], 3));
-        g8.setIndex([0, 1, 2, 0, 2, 3]);
-        g8.computeVertexNormals();
-
-        // 9: 2D Origami Winged Swallow (Avian Wing Silhouette)
-        const g9 = new THREE.BufferGeometry();
-        g9.setAttribute('position', new THREE.Float32BufferAttribute([
-            0.0, 0.0, 0.28,
-            0.32, 0.0, -0.06,
-            0.10, 0.0, -0.08,
-            0.0, 0.0, -0.22,
-            -0.10, 0.0, -0.08,
-            -0.32, 0.0, -0.06
-        ], 3));
-        g9.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]);
-        g9.computeVertexNormals();
-
-        // 10: 2D Planar Hex Star Glider (6-Point Star)
-        const g10 = new THREE.BufferGeometry();
-        g10.setAttribute('position', new THREE.Float32BufferAttribute([
-            0.0, 0.0, 0.32,
-            0.15, 0.0, 0.12,
-            0.26, 0.0, -0.02,
-            0.12, 0.0, -0.10,
-            0.0, 0.0, -0.24,
-            -0.12, 0.0, -0.10,
-            -0.26, 0.0, -0.02,
-            -0.15, 0.0, 0.12,
-            0.0, 0.0, 0.0
-        ], 3));
-        g10.setIndex([
-            8, 0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4,
-            8, 4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0
-        ]);
-        g10.computeVertexNormals();
-
-        // 11: 2D Planar Crescent Boomerang (Curved Arc Blade)
-        const g11 = new THREE.BufferGeometry();
-        g11.setAttribute('position', new THREE.Float32BufferAttribute([
-            0.0, 0.0, 0.28,
-            0.26, 0.0, -0.14,
-            0.0, 0.0, 0.08,
-            -0.26, 0.0, -0.14
-        ], 3));
-        g11.setIndex([0, 1, 2, 0, 2, 3]);
-        g11.computeVertexNormals();
-
-        return [g0, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11];
+        return [g0, g1, g2, g3, g4, g5];
     }, []);
 
     const getSpeciesShapes = (): [number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
         if (state.boidShape === 99) {
-            // Multi-Species Diverse: 4 distinct geometric archetypes (mixed 3D & 2D)
-            return [0, 1, 6, 7]; // Stealth Jet (3D), Faceted Gem (3D), Reynolds Triangle (2D), Chevron Dart (2D)
+            // Multi-Species Diverse: 4 distinct volumetric 3D geometric archetypes
+            return [0, 1, 2, 4]; // Stealth Jet (3D), Faceted Gem (3D), Prism Pyramid (3D), Swept Delta Wing (3D)
         }
         const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % geometries.length) : 0;
         return [s, s, s, s];
