@@ -1102,7 +1102,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     position: 'fixed',
                     bottom: '88px',
                     right: '24px',
-                    width: '440px',
+                    width: 'min(540px, calc(100vw - 32px))',
                     maxHeight: 'calc(100vh - 130px)',
                     overflowY: 'auto',
                     overflowX: 'hidden',
@@ -1115,7 +1115,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     boxShadow: '0 24px 60px rgba(0, 0, 0, 0.85)',
                     zIndex: 1001,
                     color: '#fff',
-                    fontFamily: 'Inter, system-ui, sans-serif'
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    boxSizing: 'border-box'
                 }}
             >
                 {/* Header Bar */}
@@ -1149,7 +1150,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </div>
 
                 {/* Navigation Tabs */}
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '14px' }}>
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '14px', overflowX: 'auto' }}>
                     {[
                         { id: 'topology', label: 'TOPOLOGY' },
                         { id: 'geometry', label: 'GEOMETRY' },
@@ -1173,7 +1174,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 color: activeTab === tab.id ? '#00ffcc' : 'rgba(255, 255, 255, 0.5)',
                                 boxShadow: activeTab === tab.id ? '0 0 12px rgba(0, 255, 204, 0.2)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                whiteSpace: 'nowrap'
                             }}
                         >
                             {tab.label}
@@ -1181,9 +1183,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     ))}
                 </div>
 
-                {/* Tab 1: Topology Grid (All 45 Formations) */}
+                {/* Tab 1: Topology Grid (All Formations) */}
                 {activeTab === 'topology' && (
-                    <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                    <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
                         {formations.map(f => (
                             <button
                                 key={f.id}
@@ -1198,13 +1200,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     color: currentFormation === f.id ? '#00ffcc' : '#fff',
                                     cursor: 'pointer',
                                     textAlign: 'left',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    minWidth: 0,
+                                    maxWidth: '100%',
+                                    width: '100%',
+                                    boxSizing: 'border-box',
+                                    overflow: 'hidden'
                                 }}
                             >
-                                <div style={{ fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div style={{ width: '100%', maxWidth: '100%', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {f.icon} {f.label}
                                 </div>
-                                <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div style={{ width: '100%', maxWidth: '100%', fontSize: '9.5px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {f.desc}
                                 </div>
                             </button>

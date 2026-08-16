@@ -266,6 +266,27 @@ body {
   to { transform: translate(-50%, 0); }
 }
 
+/* Swarm Control Panel and Grid Layouts */
+.swarm-settings-panel {
+  box-sizing: border-box !important;
+}
+
+.topology-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.topology-grid > button {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
 /* Mobile Portrait Responsive Adjustments */
 @media (max-width: 600px) {
   .swarm-settings-panel {
@@ -279,7 +300,8 @@ body {
   }
   
   .topology-grid {
-    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
     max-height: 52vh !important;
   }
 
