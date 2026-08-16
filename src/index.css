@@ -35,27 +35,34 @@ body {
   animation: timerPulse 2s infinite ease-in-out;
 }
 
-/* Ephemeral Floating Aesthetic Matrix Deck (Right Vertical) */
+/* Floating Aesthetic Matrix Settings Menu (Right Deck) */
 .ephemeral-like-bar {
   position: fixed;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 20px;
+  bottom: 88px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
-  width: 295px;
-  background: rgba(10, 14, 24, 0.88);
+  gap: 7px;
+  width: 330px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgba(10, 14, 24, 0.94);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 10px 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 12px 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2);
   z-index: 999;
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
+  box-sizing: border-box;
+}
+
+.ephemeral-like-bar.catalog-expanded {
+  width: min(520px, calc(100vw - 32px));
 }
 
 .matrix-header {

@@ -27,7 +27,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'physics'>('topology');
+    const [activeCatalogTab, setActiveCatalogTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'physics' | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
@@ -174,20 +174,22 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const currentMaterialId = isAutoMaterial ? -1 : (simState.current.materialPreset !== undefined ? Math.abs(simState.current.materialPreset) % MATERIAL_PRESETS.length : 0);
     const currentLightingId = simState.current.lightingProfileIndex ?? 0;
 
-    const selectFormation = (id: FormationMode) => {
+    const selectFormation = (id: number) => {
         simState.current.prevFormationMode = simState.current.formationMode;
         simState.current.prevFormationSeed = simState.current.formationSeed;
         simState.current.formationMode = id;
         simState.current.formationSeed = Math.random() * 10000;
-        simState.current.transitionStartTime = simState.current.currentTime || 0;
-        simState.current.transitionDuration = 9.0;
+        simState.current.customFormationName = undefined;
+        simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
+        simState.current.transitionDuration = 5.0;
 
         if (id === FormationMode.Procedural || !simState.current.proceduralGenome) {
             simState.current.proceduralGenome = generateProceduralGenome();
         }
 
         setTick(t => t + 1);
-        setIsSettingsOpen(false);
+        setActiveCatalogTab(null);
+        showToast(`🌀 Topology Applied`);
     };
 
     const selectShape = (id: number) => {
@@ -196,9 +198,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         } else {
             simState.current.autoShape = false;
             simState.current.boidShape = id;
+            simState.current.customShapeName = undefined;
         }
         setTick(t => t + 1);
-        setIsSettingsOpen(false);
+        setActiveCatalogTab(null);
+        showToast(`📐 Shape Applied`);
     };
 
     const selectMaterial = (id: number) => {
@@ -209,9 +213,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.autoMaterial = false;
             simState.current.materialPreset = id;
             simState.current.materialSettings = { ...mat.settings };
+            simState.current.customMaterialName = undefined;
         }
         setTick(t => t + 1);
-        setIsSettingsOpen(false);
+        setActiveCatalogTab(null);
+        showToast(`✨ Material Applied`);
     };
 
     const selectPalette = (idx: number) => {
@@ -223,16 +229,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.clockEngine.setManualOverride('palette');
         }
         setTick(t => t + 1);
+        setActiveCatalogTab(null);
         showToast(`🎨 Palette #${idx + 1} Applied`);
-        setIsSettingsOpen(false);
     };
 
     const selectLighting = (id: number) => {
         const light = LIGHTING_PROFILES[id] || LIGHTING_PROFILES[0];
         simState.current.lightingProfileIndex = id;
         simState.current.lightingProfile = light;
+        simState.current.customLightingName = undefined;
         setTick(t => t + 1);
-        setIsSettingsOpen(false);
+        setActiveCatalogTab(null);
+        showToast(`💡 Lighting Applied`);
     };
 
     const handleCycleCameraPreset = () => {
@@ -252,8 +260,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             simState.current.clockEngine.setManualOverride('camera');
         }
         setTick(t => t + 1);
+        setActiveCatalogTab(null);
         showToast(`🎥 Camera: ${CAMERA_PRESETS[idx].name}`);
-        setIsSettingsOpen(false);
     };
 
     const handleNextComposition = () => {
@@ -837,7 +845,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <div
                 onClick={() => {
                     setIsSettingsOpen(true);
-                    setActiveTab('topology');
+                    setActiveCatalogTab('topology');
                 }}
                 title="Click to view and choose from all 59 Topologies"
                 style={{
@@ -884,222 +892,791 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
-        {/* Aesthetic Matrix Studio (Right Vertical Deck) */}
-        <div
-            className="ephemeral-like-bar"
-            onPointerEnter={() => { lastUserActivity.current = Date.now(); }}
-            onPointerMove={() => { lastUserActivity.current = Date.now(); }}
-            style={{
-                opacity: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 1 : 0,
-                pointerEvents: isLikeBarVisible && !isSettingsOpen && !isGalleryOpen ? 'auto' : 'none'
-            }}
-        >
-            <div className="matrix-header">
-                <span className="matrix-title">🎛️ Aesthetic Matrix</span>
-                <span style={{ fontSize: '9px', color: 'rgba(0, 255, 204, 0.7)', fontWeight: 700 }}>AI RL Engine</span>
-            </div>
-
-            {/* 1. Topology Row */}
-            <div className="ephemeral-row">
-                <div
-                    className="dimension-info"
-                    onClick={() => { setIsSettingsOpen(true); setActiveTab('topology'); }}
-                    title="Click to browse and select from all 59 Topologies"
-                >
-                    <span className="dimension-name">🌀 Topology</span>
-                    <span className="dimension-value" title={simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
-                        {simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label || 'Topology'}
-                    </span>
-                </div>
-                <div className="matrix-actions">
-                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('formation')} title="Like Topology (+1 RL Weight)">👍</button>
-                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('formation')} title="Dislike Topology (-1 & Morph Next)">👎</button>
-                    <button className={`matrix-action-btn lock ${simState.current.isFormationLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('formation')} title={simState.current.isFormationLocked ? "Topology is LOCKED — Click to Unlock" : "Click to LOCK Topology"}>
-                        {simState.current.isFormationLocked ? '🔒' : '🔓'}
-                    </button>
-                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('formation')} title="Reroll Topology (Instant Smooth Morph)">🎲</button>
-                </div>
-            </div>
-
-            {/* 2. Palette Row */}
-            <div className="ephemeral-row">
-                <div
-                    className="dimension-info"
-                    onClick={() => { setIsSettingsOpen(true); setActiveTab('palette'); }}
-                    title="Click to browse and select from all 24 Color Palettes"
-                >
-                    <span className="dimension-name">🎨 Palette</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                        <div style={{ display: 'flex', height: '8px', width: '48px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
-                            {(simState.current.speciesColors || SPECIES_COLORS).map((c, i) => (
-                                <div key={i} style={{ flex: 1, background: c }} />
-                            ))}
+        {/* Aesthetic Matrix Studio (Main Settings Menu) */}
+        {isSettingsOpen && (
+            <div
+                className={`ephemeral-like-bar ${activeCatalogTab ? 'catalog-expanded' : ''}`}
+                style={{
+                    opacity: 1,
+                    pointerEvents: 'auto'
+                }}
+            >
+                {activeCatalogTab === null ? (
+                    <>
+                        {/* Main Settings Header */}
+                        <div className="matrix-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span className="matrix-title">🎛️ AESTHETIC MATRIX</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '9px', color: '#00ffcc', fontWeight: 800 }}>AI RL Engine</span>
+                                <button
+                                    onClick={() => setIsSettingsOpen(false)}
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.08)',
+                                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                                        borderRadius: '50%',
+                                        width: '22px',
+                                        height: '22px',
+                                        color: '#fff',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '11px',
+                                        padding: 0
+                                    }}
+                                    title="Close Settings Menu"
+                                >
+                                    ✕
+                                </button>
+                            </div>
                         </div>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#e0e8ff' }}>
-                            {simState.current.customPaletteName ? '✨ Procedural' : '#' + ((simState.current.paletteIndex ?? 0) + 1)}
-                        </span>
-                    </div>
-                </div>
-                <div className="matrix-actions">
-                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('palette')} title="Like Palette (+1 RL Weight)">👍</button>
-                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('palette')} title="Dislike Palette (-1 & Morph Next)">👎</button>
-                    <button className={`matrix-action-btn lock ${simState.current.isPaletteLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('palette')} title={simState.current.isPaletteLocked ? "Palette is LOCKED — Click to Unlock" : "Click to LOCK Palette"}>
-                        {simState.current.isPaletteLocked ? '🔒' : '🔓'}
-                    </button>
-                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('palette')} title="Reroll Palette (Instant Fluid Morph)">🎲</button>
-                </div>
-            </div>
 
-            {/* 3. Material Row */}
-            <div className="ephemeral-row">
-                <div
-                    className="dimension-info"
-                    onClick={() => { setIsSettingsOpen(true); setActiveTab('material'); }}
-                    title="Click to browse and select from all Material finishes"
-                >
-                    <span className="dimension-name">✨ Material</span>
-                    <span className="dimension-value" title={simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label}>
-                        {simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label || 'Titanium Mirror'}
-                    </span>
-                </div>
-                <div className="matrix-actions">
-                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('material')} title="Like Material (+1 RL Weight)">👍</button>
-                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('material')} title="Dislike Material (-1 & Morph Next)">👎</button>
-                    <button className={`matrix-action-btn lock ${simState.current.isMaterialLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('material')} title={simState.current.isMaterialLocked ? "Material is LOCKED — Click to Unlock" : "Click to LOCK Material"}>
-                        {simState.current.isMaterialLocked ? '🔒' : '🔓'}
-                    </button>
-                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('material')} title="Reroll Material">🎲</button>
-                </div>
-            </div>
+                        {/* 1. Topology Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('topology')}
+                                title="Click to browse and select from all 59 Topologies"
+                            >
+                                <span className="dimension-name">🌀 TOPOLOGY</span>
+                                <span className="dimension-value" title={simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label}>
+                                    {simState.current.customFormationName || formations.find(f => f.id === (simState.current.formationMode ?? 0))?.label || 'Topology'}
+                                </span>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('formation')} title="Like Topology (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('formation')} title="Dislike Topology (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isFormationLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('formation')} title={simState.current.isFormationLocked ? "Topology is LOCKED — Click to Unlock" : "Click to LOCK Topology"}>
+                                    {simState.current.isFormationLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('formation')} title="Reroll Topology (Instant Smooth Morph)">🎲</button>
+                            </div>
+                        </div>
 
-            {/* 4. Lighting Row */}
-            <div className="ephemeral-row">
-                <div
-                    className="dimension-info"
-                    onClick={() => { setIsSettingsOpen(true); setActiveTab('lighting'); }}
-                    title="Click to browse and select from all Studio Lighting setups"
-                >
-                    <span className="dimension-name">💡 Lighting</span>
-                    <span className="dimension-value" title={simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label}>
-                        {simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label || 'Studio White'}
-                    </span>
-                </div>
-                <div className="matrix-actions">
-                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('lighting')} title="Like Lighting (+1 RL Weight)">👍</button>
-                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('lighting')} title="Dislike Lighting (-1 & Morph Next)">👎</button>
-                    <button className={`matrix-action-btn lock ${simState.current.isLightingLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('lighting')} title={simState.current.isLightingLocked ? "Lighting is LOCKED — Click to Unlock" : "Click to LOCK Lighting"}>
-                        {simState.current.isLightingLocked ? '🔒' : '🔓'}
-                    </button>
-                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('lighting')} title="Reroll Lighting (Smooth Quintic S-Curve)">🎲</button>
-                </div>
-            </div>
+                        {/* 2. Palette Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('palette')}
+                                title="Click to browse and select from all 24 Color Palettes"
+                            >
+                                <span className="dimension-name">🎨 PALETTE</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                    <div style={{ display: 'flex', height: '8px', width: '48px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                        {(simState.current.speciesColors || SPECIES_COLORS).map((c, i) => (
+                                            <div key={i} style={{ flex: 1, background: c }} />
+                                        ))}
+                                    </div>
+                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#e0e8ff' }}>
+                                        {simState.current.customPaletteName ? '✨ Procedural' : '#' + ((simState.current.paletteIndex ?? 0) + 1)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('palette')} title="Like Palette (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('palette')} title="Dislike Palette (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isPaletteLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('palette')} title={simState.current.isPaletteLocked ? "Palette is LOCKED — Click to Unlock" : "Click to LOCK Palette"}>
+                                    {simState.current.isPaletteLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('palette')} title="Reroll Palette (Instant Fluid Morph)">🎲</button>
+                            </div>
+                        </div>
 
-            {/* 5. Shape Row */}
-            <div className="ephemeral-row">
-                <div
-                    className="dimension-info"
-                    onClick={() => { setIsSettingsOpen(true); setActiveTab('geometry'); }}
-                    title="Click to browse and select 3D Boid Geometries"
-                >
-                    <span className="dimension-name">📐 Shape</span>
-                    <span className="dimension-value" title={simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label)}>
-                        {simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Arrowhead Jet')}
-                    </span>
-                </div>
-                <div className="matrix-actions">
-                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('shape')} title="Like Shape (+1 RL Weight)">👍</button>
-                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('shape')} title="Dislike Shape (-1 & Morph Next)">👎</button>
-                    <button className={`matrix-action-btn lock ${simState.current.isShapeLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('shape')} title={simState.current.isShapeLocked ? "Shape is LOCKED — Click to Unlock" : "Click to LOCK Shape"}>
-                        {simState.current.isShapeLocked ? '🔒' : '🔓'}
-                    </button>
-                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('shape')} title="Reroll Shape">🎲</button>
-                </div>
-            </div>
+                        {/* 3. Material Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('material')}
+                                title="Click to browse and select from all Material finishes"
+                            >
+                                <span className="dimension-name">✨ MATERIAL</span>
+                                <span className="dimension-value" title={simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label}>
+                                    {simState.current.customMaterialName || MATERIAL_PRESETS[simState.current.materialPreset ?? 0]?.label || 'Titanium Mirror'}
+                                </span>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('material')} title="Like Material (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('material')} title="Dislike Material (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isMaterialLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('material')} title={simState.current.isMaterialLocked ? "Material is LOCKED — Click to Unlock" : "Click to LOCK Material"}>
+                                    {simState.current.isMaterialLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('material')} title="Reroll Material">🎲</button>
+                            </div>
+                        </div>
 
-            {/* 6. Camera Row */}
-            <div className="ephemeral-row">
-                <div
-                    className="dimension-info"
-                    onClick={() => { setIsSettingsOpen(true); setActiveTab('camera'); }}
-                    title="Click to browse and select Cinematic Camera presets"
-                >
-                    <span className="dimension-name">🎥 Camera</span>
-                    <span className="dimension-value" title={CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name}>
-                        {CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name || 'Orbit'}
-                    </span>
-                </div>
-                <div className="matrix-actions">
-                    <button className="matrix-action-btn like" onClick={() => handleLikeDimension('camera')} title="Like Camera (+1 RL Weight)">👍</button>
-                    <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('camera')} title="Dislike Camera (-1 & Morph Next)">👎</button>
-                    <button className={`matrix-action-btn lock ${simState.current.isCameraLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('camera')} title={simState.current.isCameraLocked ? "Camera is LOCKED — Click to Unlock" : "Click to LOCK Camera"}>
-                        {simState.current.isCameraLocked ? '🔒' : '🔓'}
-                    </button>
-                    <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('camera')} title="Reroll Camera (Silky Smooth Glide)">🎲</button>
-                </div>
-            </div>
+                        {/* 4. Lighting Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('lighting')}
+                                title="Click to browse and select from all Studio Lighting setups"
+                            >
+                                <span className="dimension-name">💡 LIGHTING</span>
+                                <span className="dimension-value" title={simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label}>
+                                    {simState.current.customLightingName || LIGHTING_PROFILES[simState.current.lightingProfileIndex ?? 0]?.label || 'Studio White'}
+                                </span>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('lighting')} title="Like Lighting (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('lighting')} title="Dislike Lighting (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isLightingLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('lighting')} title={simState.current.isLightingLocked ? "Lighting is LOCKED — Click to Unlock" : "Click to LOCK Lighting"}>
+                                    {simState.current.isLightingLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('lighting')} title="Reroll Lighting (Smooth Quintic S-Curve)">🎲</button>
+                            </div>
+                        </div>
 
-            {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
-                <button
-                    className="save-full-btn"
-                    onClick={handleSaveFullCreation}
-                    title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
-                    style={{ flex: 1.1, margin: 0, padding: '0 8px', height: '35px', fontSize: '11px', whiteSpace: 'nowrap' }}
-                >
-                    <span>❤️</span> Save (+RL)
-                </button>
-                <button
-                    className={`matrix-action-btn lock ${isAllDimensionsLocked ? 'is-locked' : ''}`}
-                    onClick={handleToggleGlobalLock}
-                    title={isAllDimensionsLocked ? "All 6 dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All 6 Dimensions (Freeze Entire Simulation)"}
-                    style={{
-                        width: 'auto',
-                        padding: '0 8px',
-                        height: '35px',
-                        gap: '4px',
-                        borderRadius: '10px',
-                        fontWeight: 800,
-                        fontSize: '11px',
-                        whiteSpace: 'nowrap'
-                    }}
-                >
-                    <span>{isAllDimensionsLocked ? '🔒' : '🔓'}</span>
-                    <span>{isAllDimensionsLocked ? 'Locked' : 'Lock All'}</span>
-                </button>
-                <button
-                    className="matrix-action-btn"
-                    onClick={() => setIsGalleryOpen(true)}
-                    title={`Open Masterpiece Gallery (${likedList.length} saved creations)`}
-                    style={{
-                        width: 'auto',
-                        padding: '0 8px',
-                        height: '35px',
-                        gap: '4px',
-                        borderRadius: '10px',
-                        fontWeight: 800,
-                        fontSize: '11px',
-                        whiteSpace: 'nowrap',
-                        background: 'rgba(255, 204, 0, 0.12)',
-                        border: '1px solid rgba(255, 204, 0, 0.35)',
-                        color: '#ffcc00'
-                    }}
-                >
-                    <span>🖼️</span>
-                    <span>Gallery</span>
-                    {likedList.length > 0 && (
-                        <span style={{
-                            background: 'rgba(255, 204, 0, 0.25)',
-                            padding: '1px 4px',
-                            borderRadius: '6px',
-                            fontSize: '9.5px',
-                            color: '#fff'
-                        }}>
-                            {likedList.length}
-                        </span>
-                    )}
-                </button>
+                        {/* 5. Shape Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('geometry')}
+                                title="Click to browse and select 3D Boid Geometries"
+                            >
+                                <span className="dimension-name">📐 SHAPE</span>
+                                <span className="dimension-value" title={simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label)}>
+                                    {simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Arrowhead Jet')}
+                                </span>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('shape')} title="Like Shape (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('shape')} title="Dislike Shape (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isShapeLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('shape')} title={simState.current.isShapeLocked ? "Shape is LOCKED — Click to Unlock" : "Click to LOCK Shape"}>
+                                    {simState.current.isShapeLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('shape')} title="Reroll Shape">🎲</button>
+                            </div>
+                        </div>
+
+                        {/* 6. Camera Row */}
+                        <div className="ephemeral-row">
+                            <div
+                                className="dimension-info"
+                                onClick={() => setActiveCatalogTab('camera')}
+                                title="Click to browse and select Cinematic Camera presets"
+                            >
+                                <span className="dimension-name">🎥 CAMERA</span>
+                                <span className="dimension-value" title={CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name}>
+                                    {CAMERA_PRESETS[simState.current.cameraPresetIndex ?? 0]?.name || 'Orbit'}
+                                </span>
+                            </div>
+                            <div className="matrix-actions">
+                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('camera')} title="Like Camera (+1 RL Weight)">👍</button>
+                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('camera')} title="Dislike Camera (-1 & Morph Next)">👎</button>
+                                <button className={`matrix-action-btn lock ${simState.current.isCameraLocked ? 'is-locked' : ''}`} onClick={() => handleToggleLockDimension('camera')} title={simState.current.isCameraLocked ? "Camera is LOCKED — Click to Unlock" : "Click to LOCK Camera"}>
+                                    {simState.current.isCameraLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('camera')} title="Reroll Camera (Silky Smooth Glide)">🎲</button>
+                            </div>
+                        </div>
+
+                        {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                            <button
+                                className="save-full-btn"
+                                onClick={handleSaveFullCreation}
+                                title="Save entire 6-dimension Masterpiece to Gallery & train future AI generations"
+                                style={{ flex: 1.1, margin: 0, padding: '0 8px', height: '36px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                            >
+                                <span>❤️</span> Save (+RL)
+                            </button>
+                            <button
+                                className={`matrix-action-btn lock ${isAllDimensionsLocked ? 'is-locked' : ''}`}
+                                onClick={handleToggleGlobalLock}
+                                title={isAllDimensionsLocked ? "All 6 dimensions are LOCKED — Click to Unlock All" : "Click to LOCK All 6 Dimensions (Freeze Entire Simulation)"}
+                                style={{
+                                    width: 'auto',
+                                    padding: '0 8px',
+                                    height: '36px',
+                                    gap: '4px',
+                                    borderRadius: '10px',
+                                    fontWeight: 800,
+                                    fontSize: '11px',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                <span>{isAllDimensionsLocked ? '🔒' : '🔓'}</span>
+                                <span>{isAllDimensionsLocked ? 'Locked' : 'Lock All'}</span>
+                            </button>
+                            <button
+                                className="matrix-action-btn"
+                                onClick={() => setIsGalleryOpen(true)}
+                                title={`Open Masterpiece Gallery (${likedList.length} saved creations)`}
+                                style={{
+                                    width: 'auto',
+                                    padding: '0 8px',
+                                    height: '36px',
+                                    gap: '4px',
+                                    borderRadius: '10px',
+                                    fontWeight: 800,
+                                    fontSize: '11px',
+                                    whiteSpace: 'nowrap',
+                                    background: 'rgba(255, 204, 0, 0.12)',
+                                    border: '1px solid rgba(255, 204, 0, 0.35)',
+                                    color: '#ffcc00'
+                                }}
+                            >
+                                <span>🖼️</span>
+                                <span>Gallery</span>
+                                {likedList.length > 0 && (
+                                    <span style={{
+                                        background: 'rgba(255, 204, 0, 0.25)',
+                                        padding: '1px 4px',
+                                        borderRadius: '6px',
+                                        fontSize: '9.5px',
+                                        color: '#fff'
+                                    }}>
+                                        {likedList.length}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Extra Physics & Simulation Quick Trigger */}
+                        <button
+                            onClick={() => setActiveCatalogTab('physics')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                padding: '7px 10px',
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                borderRadius: '10px',
+                                color: 'rgba(255, 255, 255, 0.65)',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                marginTop: '2px'
+                            }}
+                        >
+                            <span>⚙️ Simulation Physics & Population</span>
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        {/* Sub-Catalog Header */}
+                        <div className="matrix-header" style={{ paddingBottom: '8px' }}>
+                            <button
+                                onClick={() => setActiveCatalogTab(null)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    borderRadius: '8px',
+                                    color: '#00ffcc',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    padding: '4px 8px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ❮ Back
+                            </button>
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                                {activeCatalogTab === 'topology' && 'Topologies (59)'}
+                                {activeCatalogTab === 'palette' && 'Color Palettes (24)'}
+                                {activeCatalogTab === 'geometry' && 'Species & Shapes'}
+                                {activeCatalogTab === 'material' && 'Material Finishes'}
+                                {activeCatalogTab === 'lighting' && 'Studio Lighting'}
+                                {activeCatalogTab === 'camera' && 'Camera Angles'}
+                                {activeCatalogTab === 'physics' && 'Physics & Population'}
+                            </span>
+                            <button
+                                onClick={() => { setIsSettingsOpen(false); setActiveCatalogTab(null); }}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    borderRadius: '50%',
+                                    width: '22px',
+                                    height: '22px',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '11px',
+                                    padding: 0
+                                }}
+                                title="Close Settings"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Sub-Catalog 1: Topology */}
+                        {activeCatalogTab === 'topology' && (
+                            <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
+                                {sortedFormations.map(f => {
+                                    const fLikes = rlPrefs.formationLikes[f.id] || 0;
+                                    const fDislikes = rlPrefs.formationDislikes[f.id] || 0;
+                                    const isSelected = currentFormation === f.id;
+                                    return (
+                                        <button
+                                            key={f.id}
+                                            onClick={() => selectFormation(f.id)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                padding: '10px 12px',
+                                                borderRadius: '12px',
+                                                background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                                border: isSelected ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                color: isSelected ? '#00ffcc' : '#fff',
+                                                cursor: 'pointer',
+                                                textAlign: 'left',
+                                                transition: 'all 0.2s ease',
+                                                minWidth: 0,
+                                                maxWidth: '100%',
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '4px' }}>
+                                                <div style={{ width: '100%', maxWidth: '100%', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {f.icon} {f.label}
+                                                </div>
+                                                {(fLikes > 0 || fDislikes > 0) && (
+                                                    <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800, flexShrink: 0 }}>
+                                                        {fLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{fLikes}</span>}
+                                                        {fDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{fDislikes}</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ width: '100%', maxWidth: '100%', fontSize: '9.5px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {f.desc}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 2: Palette */}
+                        {activeCatalogTab === 'palette' && (
+                            <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                                <button
+                                    onClick={() => {
+                                        if (simState.current.clockEngine?.skipDimension) {
+                                            const res = simState.current.clockEngine.skipDimension('palette');
+                                            showToast(`🎲 ${res}`);
+                                            setTick(t => t + 1);
+                                            setActiveCatalogTab(null);
+                                        }
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        background: 'linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(255, 0, 127, 0.2))',
+                                        border: '1px solid #00ffcc',
+                                        color: '#fff',
+                                        fontSize: '11px',
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        marginBottom: '4px'
+                                    }}
+                                >
+                                    ✨ Generate Surprise Procedural Harmonic Palette 🎲
+                                </button>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                                    {sortedPalettes.map(({ pal, idx }) => {
+                                        const isSelected = simState.current.paletteIndex === idx && !simState.current.customPaletteName;
+                                        const pLikes = rlPrefs.paletteLikes[idx] || 0;
+                                        const pDislikes = rlPrefs.paletteDislikes[idx] || 0;
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => selectPalette(idx)}
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    padding: '10px 12px',
+                                                    borderRadius: '12px',
+                                                    background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                                    border: isSelected ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                    cursor: 'pointer',
+                                                    textAlign: 'left',
+                                                    transition: 'all 0.2s ease',
+                                                    minWidth: 0,
+                                                    boxSizing: 'border-box',
+                                                    gap: '6px'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontSize: '11px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
+                                                        #{idx + 1} Harmonic
+                                                    </span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        {(pLikes > 0 || pDislikes > 0) && (
+                                                            <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800, flexShrink: 0 }}>
+                                                                {pLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{pLikes}</span>}
+                                                                {pDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{pDislikes}</span>}
+                                                            </div>
+                                                        )}
+                                                        {isSelected && <span style={{ fontSize: '10px', color: '#00ffcc' }}>✓</span>}
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', height: '14px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                                    {pal.map((c, i) => (
+                                                        <div key={i} style={{ flex: 1, background: c }} />
+                                                    ))}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 3: Geometry & Shapes */}
+                        {activeCatalogTab === 'geometry' && (
+                            <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '11px', fontWeight: 800, color: '#ff007f', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                                            🧬 4-Species Shape Customizer
+                                        </span>
+                                        <button
+                                            onClick={() => {
+                                                if (simState.current.clockEngine?.skipDimension) {
+                                                    const res = simState.current.clockEngine.skipDimension('shape');
+                                                    showToast(`🎲 ${res}`);
+                                                    setTick(t => t + 1);
+                                                    setActiveCatalogTab(null);
+                                                }
+                                            }}
+                                            style={{
+                                                padding: '4px 8px',
+                                                borderRadius: '8px',
+                                                background: 'linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(0, 255, 204, 0.2))',
+                                                border: '1px solid #ff007f',
+                                                color: '#fff',
+                                                fontSize: '9.5px',
+                                                fontWeight: 800,
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            ✨ Surprise Hybrid 🎲
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+                                        {[0, 1, 2, 3].map((spIdx) => {
+                                            const spColors = simState.current.speciesColors || SPECIES_COLORS;
+                                            const currentShapes = simState.current.speciesShapes || (simState.current.boidShape === 99 ? [0, 1, 2, 4] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
+                                            const currentSpShape = currentShapes[spIdx] ?? 0;
+                                            const shapeDef = shapes.find(s => s.id === currentSpShape) || shapes[2];
+
+                                            return (
+                                                <div
+                                                    key={spIdx}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        padding: '8px 10px',
+                                                        background: 'rgba(255, 255, 255, 0.03)',
+                                                        border: `1px solid ${spColors[spIdx] || 'rgba(255,255,255,0.1)'}44`,
+                                                        borderRadius: '10px',
+                                                        gap: '6px'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
+                                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: spColors[spIdx], flexShrink: 0, boxShadow: `0 0 6px ${spColors[spIdx]}` }} />
+                                                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                                            <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>Species {spIdx + 1}</span>
+                                                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {shapeDef.icon} {shapeDef.label.split(' ')[0]}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            const nextShapeId = (currentSpShape + 1) % 6;
+                                                            handleSetSpeciesShape(spIdx, nextShapeId);
+                                                        }}
+                                                        title="Cycle shape for this species"
+                                                        style={{
+                                                            padding: '4px 6px',
+                                                            borderRadius: '6px',
+                                                            background: 'rgba(255, 255, 255, 0.08)',
+                                                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                                                            color: '#00ffcc',
+                                                            fontSize: '10px',
+                                                            fontWeight: 800,
+                                                            cursor: 'pointer',
+                                                            flexShrink: 0
+                                                        }}
+                                                    >
+                                                        Next ❯
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
+                                    {sortedShapes.map(s => {
+                                        const sLikes = rlPrefs.shapeLikes[s.id] || 0;
+                                        const sDislikes = rlPrefs.shapeDislikes[s.id] || 0;
+                                        const isSelected = currentShapeId === s.id && !simState.current.customShapeName;
+                                        return (
+                                            <button
+                                                key={s.id}
+                                                onClick={() => selectShape(s.id)}
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    padding: '10px 14px',
+                                                    borderRadius: '12px',
+                                                    background: isSelected ? 'rgba(255, 0, 127, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                                    border: isSelected ? '1px solid #ff007f' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                    color: isSelected ? '#ff007f' : '#fff',
+                                                    cursor: 'pointer',
+                                                    textAlign: 'left',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                                    <div style={{ fontSize: '12px', fontWeight: 700 }}>{s.icon} {s.label}</div>
+                                                    {(sLikes > 0 || sDislikes > 0) && (
+                                                        <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                            {sLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{sLikes}</span>}
+                                                            {sDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{sDislikes}</span>}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{s.desc}</div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 4: Material */}
+                        {activeCatalogTab === 'material' && (
+                            <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                                {sortedMaterials.map(m => {
+                                    const mLikes = rlPrefs.materialLikes[m.id] || 0;
+                                    const mDislikes = rlPrefs.materialDislikes[m.id] || 0;
+                                    const isSelected = currentMaterialId === m.id;
+                                    return (
+                                        <button
+                                            key={m.id}
+                                            onClick={() => selectMaterial(m.id)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                padding: '10px 14px',
+                                                borderRadius: '12px',
+                                                background: isSelected ? 'rgba(157, 0, 255, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                                border: isSelected ? '1px solid #9d00ff' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                color: isSelected ? '#c084fc' : '#fff',
+                                                cursor: 'pointer',
+                                                textAlign: 'left',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                                <div style={{ fontSize: '12px', fontWeight: 700 }}>{m.icon} {m.label}</div>
+                                                {(mLikes > 0 || mDislikes > 0) && (
+                                                    <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                        {mLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{mLikes}</span>}
+                                                        {mDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{mDislikes}</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{m.desc}</div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 5: Lighting */}
+                        {activeCatalogTab === 'lighting' && (
+                            <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                                {sortedLighting.map(({ lp, idx }) => {
+                                    const lLikes = rlPrefs.lightingLikes[lp.id] || 0;
+                                    const lDislikes = rlPrefs.lightingDislikes[lp.id] || 0;
+                                    const isSelected = currentLightingId === lp.id;
+                                    return (
+                                        <button
+                                            key={lp.id}
+                                            onClick={() => selectLighting(lp.id)}
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                padding: '10px 14px',
+                                                borderRadius: '12px',
+                                                background: isSelected ? 'rgba(255, 204, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                                border: isSelected ? '1px solid #ffcc00' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                color: isSelected ? '#ffcc00' : '#fff',
+                                                cursor: 'pointer',
+                                                textAlign: 'left',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <div style={{ fontSize: '12px', fontWeight: 700 }}>💡 {lp.label}</div>
+                                                    {(lLikes > 0 || lDislikes > 0) && (
+                                                        <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                            {lLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{lLikes}</span>}
+                                                            {lDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{lDislikes}</span>}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>
+                                                    Key: {lp.keyColor} • Rim: {lp.rimColor}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.keyColor, border: '1px solid rgba(255,255,255,0.3)' }} />
+                                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.rimColor, border: '1px solid rgba(255,255,255,0.3)' }} />
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 6: Camera Angles */}
+                        {activeCatalogTab === 'camera' && (
+                            <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>
+                                    Choose an artistic camera vantage:
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
+                                    {sortedCameras.map(({ cp, idx }) => {
+                                        const isSelected = (simState.current.cameraPresetIndex ?? 0) === idx;
+                                        const cLikes = rlPrefs.cameraLikes[String(idx)] || rlPrefs.cameraLikes[cp.id] || 0;
+                                        const cDislikes = rlPrefs.cameraDislikes[String(idx)] || rlPrefs.cameraDislikes[cp.id] || 0;
+                                        return (
+                                            <button
+                                                key={cp.id}
+                                                onClick={() => selectCameraPreset(idx)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '12px 14px',
+                                                    borderRadius: '12px',
+                                                    background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                                    border: isSelected ? '1.5px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
+                                                    color: isSelected ? '#00ffcc' : '#fff',
+                                                    cursor: 'pointer',
+                                                    textAlign: 'left',
+                                                    transition: 'all 0.2s ease',
+                                                    gap: '12px'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <span style={{ fontSize: '22px' }}>{cp.icon}</span>
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
+                                                                {cp.name}
+                                                            </div>
+                                                            {(cLikes > 0 || cDislikes > 0) && (
+                                                                <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
+                                                                    {cLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{cLikes}</span>}
+                                                                    {cDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{cDislikes}</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div style={{ fontSize: '11px', color: isSelected ? 'rgba(0, 255, 204, 0.8)' : 'rgba(255, 255, 255, 0.5)', marginTop: '2px', lineHeight: 1.3 }}>
+                                                            {cp.description}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style={{
+                                                    padding: '4px 8px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '9px',
+                                                    fontWeight: 900,
+                                                    letterSpacing: '0.5px',
+                                                    background: isSelected ? '#00ffcc' : 'rgba(255,255,255,0.08)',
+                                                    color: isSelected ? '#0a0f1d' : 'rgba(255,255,255,0.6)'
+                                                }}>
+                                                    {isSelected ? 'ACTIVE' : 'SELECT'}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sub-Catalog 7: Physics */}
+                        {activeCatalogTab === 'physics' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '380px', overflowY: 'auto', padding: '4px 2px' }}>
+                                <div>
+                                    <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                                        BOID POPULATION
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                                        {[5000, 10000, 20000, 50000, 75000, 100000].map(count => (
+                                            <button
+                                                key={count}
+                                                onClick={() => {
+                                                    setPopulation(count);
+                                                    setTick(t => t + 1);
+                                                }}
+                                                style={{
+                                                    padding: '8px 4px',
+                                                    borderRadius: '10px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 700,
+                                                    border: population === count ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                    background: population === count ? 'rgba(0, 255, 204, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                                                    color: population === count ? '#00ffcc' : '#fff',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >
+                                                {count >= 1000 ? `${count / 1000}k` : count}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                                        <span>FLIGHT SPEED</span>
+                                        <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{((simState.current.speedMultiplier || 0.28) * 100).toFixed(0)}%</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0.10"
+                                        max="0.60"
+                                        step="0.01"
+                                        value={simState.current.speedMultiplier || 0.28}
+                                        onChange={(e) => {
+                                            simState.current.speedMultiplier = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
-        </div>
+        )}
 
         {/* Floating Bottom Right Controls */}
         <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
@@ -1388,561 +1965,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         )}
 
-        {/* Unified Swarm Studio Settings Panel */}
-        {isSettingsOpen && (
-            <div
-                className="swarm-settings-panel no-scrollbar"
-                style={{
-                    position: 'fixed',
-                    bottom: '88px',
-                    right: '24px',
-                    width: 'min(540px, calc(100vw - 32px))',
-                    maxHeight: 'calc(100vh - 130px)',
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
-                    background: 'rgba(12, 16, 26, 0.95)',
-                    backdropFilter: 'blur(24px)',
-                    WebkitBackdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '24px',
-                    padding: '20px',
-                    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.85)',
-                    zIndex: 1001,
-                    color: '#fff',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    boxSizing: 'border-box'
-                }}
-            >
-                {/* Header Bar */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#00ffcc', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                            SWARM CONTROL PANEL
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px', fontWeight: 500 }}>
-                            Active: <span style={{ color: '#fff', fontWeight: 700 }}>{activePreset.label}</span> • <span style={{ color: '#00ffcc', fontWeight: 800 }}>👍 {rlPrefs.totalLikes}</span> <span style={{ color: '#ff5c5c', fontWeight: 800, marginLeft: '4px' }}>👎 {rlPrefs.totalDislikes}</span>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setIsSettingsOpen(false)}
-                        style={{
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            borderRadius: '50%',
-                            width: '28px',
-                            height: '28px',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '13px'
-                        }}
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                {/* Navigation Tabs */}
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '14px', overflowX: 'auto' }}>
-                    {[
-                        { id: 'topology', label: 'TOPOLOGY' },
-                        { id: 'palette', label: 'PALETTE' },
-                        { id: 'geometry', label: 'GEOMETRY' },
-                        { id: 'material', label: 'MATERIAL' },
-                        { id: 'lighting', label: 'LIGHTING' },
-                        { id: 'camera', label: 'CAMERA' },
-                        { id: 'physics', label: 'PHYSICS' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            style={{
-                                flex: 1,
-                                padding: '8px 2px',
-                                borderRadius: '10px',
-                                fontSize: '10px',
-                                fontWeight: 800,
-                                letterSpacing: '0.6px',
-                                border: 'none',
-                                background: activeTab === tab.id ? 'rgba(0, 255, 204, 0.2)' : 'transparent',
-                                color: activeTab === tab.id ? '#00ffcc' : 'rgba(255, 255, 255, 0.5)',
-                                boxShadow: activeTab === tab.id ? '0 0 12px rgba(0, 255, 204, 0.2)' : 'none',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                whiteSpace: 'nowrap'
-                            }}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Tab 1: Topology Grid (All Formations Sorted by Reactions) */}
-                {activeTab === 'topology' && (
-                    <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
-                        {sortedFormations.map(f => {
-                            const fLikes = rlPrefs.formationLikes[f.id] || 0;
-                            const fDislikes = rlPrefs.formationDislikes[f.id] || 0;
-                            return (
-                                <button
-                                    key={f.id}
-                                    onClick={() => selectFormation(f.id)}
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        padding: '10px 12px',
-                                        borderRadius: '12px',
-                                        background: currentFormation === f.id ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                        border: currentFormation === f.id ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
-                                        color: currentFormation === f.id ? '#00ffcc' : '#fff',
-                                        cursor: 'pointer',
-                                        textAlign: 'left',
-                                        transition: 'all 0.2s ease',
-                                        minWidth: 0,
-                                        maxWidth: '100%',
-                                        width: '100%',
-                                        boxSizing: 'border-box',
-                                        overflow: 'hidden'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '4px' }}>
-                                        <div style={{ width: '100%', maxWidth: '100%', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {f.icon} {f.label}
-                                        </div>
-                                        {(fLikes > 0 || fDislikes > 0) && (
-                                            <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800, flexShrink: 0 }}>
-                                                {fLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{fLikes}</span>}
-                                                {fDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{fDislikes}</span>}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ width: '100%', maxWidth: '100%', fontSize: '9.5px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {f.desc}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Tab 2: Palette Grid (Sorted by Reactions + Procedural Generator) */}
-                {activeTab === 'palette' && (
-                    <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        <button
-                            onClick={() => {
-                                if (simState.current.clockEngine?.skipDimension) {
-                                    const res = simState.current.clockEngine.skipDimension('palette');
-                                    showToast(`🎲 ${res}`);
-                                    setTick(t => t + 1);
-                                    setIsSettingsOpen(false);
-                                }
-                            }}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                padding: '10px 14px',
-                                borderRadius: '12px',
-                                background: 'linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(255, 0, 127, 0.2))',
-                                border: '1px solid #00ffcc',
-                                color: '#fff',
-                                fontSize: '11px',
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                                marginBottom: '4px'
-                            }}
-                        >
-                            ✨ Generate Surprise Procedural Harmonic Palette 🎲
-                        </button>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-                            {sortedPalettes.map(({ pal, idx }) => {
-                                const isSelected = simState.current.paletteIndex === idx && !simState.current.customPaletteName;
-                                const pLikes = rlPrefs.paletteLikes[idx] || 0;
-                                const pDislikes = rlPrefs.paletteDislikes[idx] || 0;
-                                return (
-                                    <button
-                                        key={idx}
-                                        onClick={() => selectPalette(idx)}
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            padding: '10px 12px',
-                                            borderRadius: '12px',
-                                            background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                            border: isSelected ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                            transition: 'all 0.2s ease',
-                                            minWidth: 0,
-                                            boxSizing: 'border-box',
-                                            gap: '6px'
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <span style={{ fontSize: '11px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
-                                                #{idx + 1} Harmonic
-                                            </span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                {(pLikes > 0 || pDislikes > 0) && (
-                                                    <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800, flexShrink: 0 }}>
-                                                        {pLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{pLikes}</span>}
-                                                        {pDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{pDislikes}</span>}
-                                                    </div>
-                                                )}
-                                                {isSelected && <span style={{ fontSize: '10px', color: '#00ffcc' }}>✓</span>}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', height: '14px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
-                                            {pal.map((c, i) => (
-                                                <div key={i} style={{ flex: 1, background: c }} />
-                                            ))}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Tab 3: Geometry Grid with Per-Species Differentiation (Sorted by Reactions) */}
-                {activeTab === 'geometry' && (
-                    <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {/* Per-Species Customizer Panel */}
-                        <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#ff007f', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-                                    🧬 4-Species Shape Customizer
-                                </span>
-                                <button
-                                    onClick={() => {
-                                        if (simState.current.clockEngine?.skipDimension) {
-                                            const res = simState.current.clockEngine.skipDimension('shape');
-                                            showToast(`🎲 ${res}`);
-                                            setTick(t => t + 1);
-                                            setIsSettingsOpen(false);
-                                        }
-                                    }}
-                                    style={{
-                                        padding: '4px 8px',
-                                        borderRadius: '8px',
-                                        background: 'linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(0, 255, 204, 0.2))',
-                                        border: '1px solid #ff007f',
-                                        color: '#fff',
-                                        fontSize: '9.5px',
-                                        fontWeight: 800,
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    ✨ Surprise Hybrid 🎲
-                                </button>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
-                                {[0, 1, 2, 3].map((spIdx) => {
-                                    const spColors = simState.current.speciesColors || SPECIES_COLORS;
-                                    const currentShapes = simState.current.speciesShapes || (simState.current.boidShape === 99 ? [0, 1, 2, 4] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
-                                    const currentSpShape = currentShapes[spIdx] ?? 0;
-                                    const shapeDef = shapes.find(s => s.id === currentSpShape) || shapes[2];
-
-                                    return (
-                                        <div
-                                            key={spIdx}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '8px 10px',
-                                                background: 'rgba(255, 255, 255, 0.03)',
-                                                border: `1px solid ${spColors[spIdx] || 'rgba(255,255,255,0.1)'}44`,
-                                                borderRadius: '10px',
-                                                gap: '6px'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
-                                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: spColors[spIdx], flexShrink: 0, boxShadow: `0 0 6px ${spColors[spIdx]}` }} />
-                                                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                                                    <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>Species {spIdx + 1}</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                        {shapeDef.icon} {shapeDef.label.split(' ')[0]}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    const nextShapeId = (currentSpShape + 1) % 6;
-                                                    handleSetSpeciesShape(spIdx, nextShapeId);
-                                                }}
-                                                title="Cycle shape for this species"
-                                                style={{
-                                                    padding: '4px 6px',
-                                                    borderRadius: '6px',
-                                                    background: 'rgba(255, 255, 255, 0.08)',
-                                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                                    color: '#00ffcc',
-                                                    fontSize: '10px',
-                                                    fontWeight: 800,
-                                                    cursor: 'pointer',
-                                                    flexShrink: 0
-                                                }}
-                                            >
-                                                Next ❯
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Geometric Archetype Presets (Sorted by Reactions) */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
-                            {sortedShapes.map(s => {
-                                const sLikes = rlPrefs.shapeLikes[s.id] || 0;
-                                const sDislikes = rlPrefs.shapeDislikes[s.id] || 0;
-                                const isSelected = currentShapeId === s.id && !simState.current.customShapeName;
-                                return (
-                                    <button
-                                        key={s.id}
-                                        onClick={() => selectShape(s.id)}
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            padding: '10px 14px',
-                                            borderRadius: '12px',
-                                            background: isSelected ? 'rgba(255, 0, 127, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                            border: isSelected ? '1px solid #ff007f' : '1px solid rgba(255, 255, 255, 0.08)',
-                                            color: isSelected ? '#ff007f' : '#fff',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                            <div style={{ fontSize: '12px', fontWeight: 700 }}>{s.icon} {s.label}</div>
-                                            {(sLikes > 0 || sDislikes > 0) && (
-                                                <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
-                                                    {sLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{sLikes}</span>}
-                                                    {sDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{sDislikes}</span>}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{s.desc}</div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Tab 4: Material Aesthetics Grid (Sorted by Reactions) */}
-                {activeTab === 'material' && (
-                    <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {sortedMaterials.map(m => {
-                            const mLikes = rlPrefs.materialLikes[m.id] || 0;
-                            const mDislikes = rlPrefs.materialDislikes[m.id] || 0;
-                            return (
-                                <button
-                                    key={m.id}
-                                    onClick={() => selectMaterial(m.id)}
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        padding: '10px 14px',
-                                        borderRadius: '12px',
-                                        background: currentMaterialId === m.id ? 'rgba(157, 0, 255, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                        border: currentMaterialId === m.id ? '1px solid #9d00ff' : '1px solid rgba(255, 255, 255, 0.08)',
-                                        color: currentMaterialId === m.id ? '#c084fc' : '#fff',
-                                        cursor: 'pointer',
-                                        textAlign: 'left',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                        <div style={{ fontSize: '12px', fontWeight: 700 }}>{m.icon} {m.label}</div>
-                                        {(mLikes > 0 || mDislikes > 0) && (
-                                            <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
-                                                {mLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{mLikes}</span>}
-                                                {mDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{mDislikes}</span>}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{m.desc}</div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Tab 5: Studio Lighting Grid (Sorted by Reactions) */}
-                {activeTab === 'lighting' && (
-                    <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {sortedLighting.map(({ lp, idx }) => {
-                            const lLikes = rlPrefs.lightingLikes[lp.id] || 0;
-                            const lDislikes = rlPrefs.lightingDislikes[lp.id] || 0;
-                            return (
-                                <button
-                                    key={lp.id}
-                                    onClick={() => selectLighting(lp.id)}
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        padding: '10px 14px',
-                                        borderRadius: '12px',
-                                        background: currentLightingId === lp.id ? 'rgba(255, 204, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                        border: currentLightingId === lp.id ? '1px solid #ffcc00' : '1px solid rgba(255, 255, 255, 0.08)',
-                                        color: currentLightingId === lp.id ? '#ffcc00' : '#fff',
-                                        cursor: 'pointer',
-                                        textAlign: 'left',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <div style={{ fontSize: '12px', fontWeight: 700 }}>💡 {lp.label}</div>
-                                            {(lLikes > 0 || lDislikes > 0) && (
-                                                <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
-                                                    {lLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{lLikes}</span>}
-                                                    {lDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{lDislikes}</span>}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>
-                                            Key: {lp.keyColor} • Rim: {lp.rimColor}
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.keyColor, border: '1px solid rgba(255,255,255,0.3)' }} />
-                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: lp.rimColor, border: '1px solid rgba(255,255,255,0.3)' }} />
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Tab 6: Cinematic Camera Presets Grid (Sorted by Reactions) */}
-                {activeTab === 'camera' && (
-                    <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>
-                            Choose an artistic camera vantage (sorted by your aesthetic ratings):
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
-                            {sortedCameras.map(({ cp, idx }) => {
-                                const isSelected = (simState.current.cameraPresetIndex ?? 0) === idx;
-                                const cLikes = rlPrefs.cameraLikes[String(idx)] || rlPrefs.cameraLikes[cp.id] || 0;
-                                const cDislikes = rlPrefs.cameraDislikes[String(idx)] || rlPrefs.cameraDislikes[cp.id] || 0;
-                                return (
-                                    <button
-                                        key={cp.id}
-                                        onClick={() => selectCameraPreset(idx)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            padding: '12px 14px',
-                                            borderRadius: '12px',
-                                            background: isSelected ? 'rgba(0, 255, 204, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                                            border: isSelected ? '1.5px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.08)',
-                                            color: isSelected ? '#00ffcc' : '#fff',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                            transition: 'all 0.2s ease',
-                                            gap: '12px'
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span style={{ fontSize: '22px' }}>{cp.icon}</span>
-                                            <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? '#00ffcc' : '#fff' }}>
-                                                        {cp.name}
-                                                    </div>
-                                                    {(cLikes > 0 || cDislikes > 0) && (
-                                                        <div style={{ display: 'flex', gap: '3px', fontSize: '9px', fontWeight: 800 }}>
-                                                            {cLikes > 0 && <span style={{ color: '#00ffcc', background: 'rgba(0, 255, 204, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👍{cLikes}</span>}
-                                                            {cDislikes > 0 && <span style={{ color: '#ff5c5c', background: 'rgba(255, 59, 48, 0.15)', padding: '1px 4px', borderRadius: '4px' }}>👎{cDislikes}</span>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div style={{ fontSize: '11px', color: isSelected ? 'rgba(0, 255, 204, 0.8)' : 'rgba(255, 255, 255, 0.5)', marginTop: '2px', lineHeight: 1.3 }}>
-                                                    {cp.description}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div style={{
-                                            padding: '4px 8px',
-                                            borderRadius: '6px',
-                                            fontSize: '9px',
-                                            fontWeight: 900,
-                                            letterSpacing: '0.5px',
-                                            background: isSelected ? '#00ffcc' : 'rgba(255,255,255,0.08)',
-                                            color: isSelected ? '#0a0f1d' : 'rgba(255,255,255,0.6)'
-                                        }}>
-                                            {isSelected ? 'ACTIVE' : 'SELECT'}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Tab 6: Physics & Population Controls */}
-                {activeTab === 'physics' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
-                            <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                                BOID POPULATION
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                                {[5000, 10000, 20000, 50000, 75000, 100000].map(count => (
-                                    <button
-                                        key={count}
-                                        onClick={() => {
-                                            setPopulation(count);
-                                            setTick(t => t + 1);
-                                        }}
-                                        style={{
-                                            padding: '8px 4px',
-                                            borderRadius: '10px',
-                                            fontSize: '11px',
-                                            fontWeight: 700,
-                                            border: population === count ? '1px solid #00ffcc' : '1px solid rgba(255, 255, 255, 0.1)',
-                                            background: population === count ? 'rgba(0, 255, 204, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                                            color: population === count ? '#00ffcc' : '#fff',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                    >
-                                        {count >= 1000 ? `${count / 1000}k` : count}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-                                <span>FLIGHT SPEED</span>
-                                <span style={{ color: '#00ffcc', fontFamily: 'monospace' }}>{((simState.current.speedMultiplier || 0.28) * 100).toFixed(0)}%</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.10"
-                                max="0.60"
-                                step="0.01"
-                                value={simState.current.speedMultiplier || 0.28}
-                                onChange={(e) => {
-                                    simState.current.speedMultiplier = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
-        )}
         </>
     );
 };
