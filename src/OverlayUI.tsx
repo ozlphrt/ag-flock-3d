@@ -557,6 +557,81 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const activePreset = formations.find(f => f.id === currentFormation) || formations[0];
     const likedList = getLikedCreations();
 
+    // Sorting helper: Highest net reactions (likes - dislikes) first, then total likes, then non-zero activity
+    const getReactionScore = (likes: number, dislikes: number) => {
+        return (likes - dislikes) * 1000 + likes * 10 - dislikes;
+    };
+
+    const sortedFormations = [...formations].sort((a, b) => {
+        const aLikes = rlPrefs.formationLikes[a.id] || 0;
+        const aDislikes = rlPrefs.formationDislikes[a.id] || 0;
+        const bLikes = rlPrefs.formationLikes[b.id] || 0;
+        const bDislikes = rlPrefs.formationDislikes[b.id] || 0;
+        const scoreA = getReactionScore(aLikes, aDislikes);
+        const scoreB = getReactionScore(bLikes, bDislikes);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.id - b.id;
+    });
+
+    const sortedPalettes = COLOR_PALETTES.map((pal, idx) => ({ pal, idx })).sort((a, b) => {
+        const aLikes = rlPrefs.paletteLikes[a.idx] || 0;
+        const aDislikes = rlPrefs.paletteDislikes[a.idx] || 0;
+        const bLikes = rlPrefs.paletteLikes[b.idx] || 0;
+        const bDislikes = rlPrefs.paletteDislikes[b.idx] || 0;
+        const scoreA = getReactionScore(aLikes, aDislikes);
+        const scoreB = getReactionScore(bLikes, bDislikes);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.idx - b.idx;
+    });
+
+    const sortedShapes = [...shapes].sort((a, b) => {
+        if (a.id === -1) return -1;
+        if (b.id === -1) return 1;
+        const aLikes = rlPrefs.shapeLikes[a.id] || 0;
+        const aDislikes = rlPrefs.shapeDislikes[a.id] || 0;
+        const bLikes = rlPrefs.shapeLikes[b.id] || 0;
+        const bDislikes = rlPrefs.shapeDislikes[b.id] || 0;
+        const scoreA = getReactionScore(aLikes, aDislikes);
+        const scoreB = getReactionScore(bLikes, bDislikes);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.id - b.id;
+    });
+
+    const sortedMaterials = [...materialOptions].sort((a, b) => {
+        if (a.id === -1) return -1;
+        if (b.id === -1) return 1;
+        const aLikes = rlPrefs.materialLikes[a.id] || 0;
+        const aDislikes = rlPrefs.materialDislikes[a.id] || 0;
+        const bLikes = rlPrefs.materialLikes[b.id] || 0;
+        const bDislikes = rlPrefs.materialDislikes[b.id] || 0;
+        const scoreA = getReactionScore(aLikes, aDislikes);
+        const scoreB = getReactionScore(bLikes, bDislikes);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.id - b.id;
+    });
+
+    const sortedLighting = LIGHTING_PROFILES.map((lp, idx) => ({ lp, idx })).sort((a, b) => {
+        const aLikes = rlPrefs.lightingLikes[a.lp.id] || 0;
+        const aDislikes = rlPrefs.lightingDislikes[a.lp.id] || 0;
+        const bLikes = rlPrefs.lightingLikes[b.lp.id] || 0;
+        const bDislikes = rlPrefs.lightingDislikes[b.lp.id] || 0;
+        const scoreA = getReactionScore(aLikes, aDislikes);
+        const scoreB = getReactionScore(bLikes, bDislikes);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.idx - b.idx;
+    });
+
+    const sortedCameras = CAMERA_PRESETS.map((cp, idx) => ({ cp, idx })).sort((a, b) => {
+        const aLikes = rlPrefs.cameraLikes[String(a.idx)] || rlPrefs.cameraLikes[a.cp.id] || 0;
+        const aDislikes = rlPrefs.cameraDislikes[String(a.idx)] || rlPrefs.cameraDislikes[a.cp.id] || 0;
+        const bLikes = rlPrefs.cameraLikes[String(b.idx)] || rlPrefs.cameraLikes[b.cp.id] || 0;
+        const bDislikes = rlPrefs.cameraDislikes[String(b.idx)] || rlPrefs.cameraDislikes[b.cp.id] || 0;
+        const scoreA = getReactionScore(aLikes, aDislikes);
+        const scoreB = getReactionScore(bLikes, bDislikes);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.idx - b.idx;
+    });
+
     return (
         <>
         {/* Floating Toast Message */}
@@ -1403,10 +1478,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     ))}
                 </div>
 
-                {/* Tab 1: Topology Grid (All Formations) */}
+                {/* Tab 1: Topology Grid (All Formations Sorted by Reactions) */}
                 {activeTab === 'topology' && (
                     <div className="topology-grid no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
-                        {formations.map(f => {
+                        {sortedFormations.map(f => {
                             const fLikes = rlPrefs.formationLikes[f.id] || 0;
                             const fDislikes = rlPrefs.formationDislikes[f.id] || 0;
                             return (
@@ -1451,7 +1526,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 2: Palette Grid (All 24 Curated + Procedural Generator) */}
+                {/* Tab 2: Palette Grid (Sorted by Reactions + Procedural Generator) */}
                 {activeTab === 'palette' && (
                     <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
                         <button
@@ -1482,7 +1557,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             ✨ Generate Surprise Procedural Harmonic Palette 🎲
                         </button>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-                            {COLOR_PALETTES.map((pal, idx) => {
+                            {sortedPalettes.map(({ pal, idx }) => {
                                 const isSelected = simState.current.paletteIndex === idx && !simState.current.customPaletteName;
                                 const pLikes = rlPrefs.paletteLikes[idx] || 0;
                                 const pDislikes = rlPrefs.paletteDislikes[idx] || 0;
@@ -1531,7 +1606,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 3: Geometry Grid with Per-Species Differentiation */}
+                {/* Tab 3: Geometry Grid with Per-Species Differentiation (Sorted by Reactions) */}
                 {activeTab === 'geometry' && (
                     <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
                         {/* Per-Species Customizer Panel */}
@@ -1619,9 +1694,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         </div>
 
-                        {/* Geometric Archetype Presets */}
+                        {/* Geometric Archetype Presets (Sorted by Reactions) */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
-                            {shapes.map(s => {
+                            {sortedShapes.map(s => {
                                 const sLikes = rlPrefs.shapeLikes[s.id] || 0;
                                 const sDislikes = rlPrefs.shapeDislikes[s.id] || 0;
                                 const isSelected = currentShapeId === s.id && !simState.current.customShapeName;
@@ -1659,10 +1734,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 4: Material Aesthetics Grid */}
+                {/* Tab 4: Material Aesthetics Grid (Sorted by Reactions) */}
                 {activeTab === 'material' && (
                     <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {materialOptions.map(m => {
+                        {sortedMaterials.map(m => {
                             const mLikes = rlPrefs.materialLikes[m.id] || 0;
                             const mDislikes = rlPrefs.materialDislikes[m.id] || 0;
                             return (
@@ -1698,10 +1773,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 5: Studio Lighting Grid */}
+                {/* Tab 5: Studio Lighting Grid (Sorted by Reactions) */}
                 {activeTab === 'lighting' && (
                     <div className="no-scrollbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
-                        {LIGHTING_PROFILES.map(lp => {
+                        {sortedLighting.map(({ lp, idx }) => {
                             const lLikes = rlPrefs.lightingLikes[lp.id] || 0;
                             const lDislikes = rlPrefs.lightingDislikes[lp.id] || 0;
                             return (
@@ -1746,17 +1821,17 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 )}
 
-                {/* Tab 6: Cinematic Camera Presets Grid */}
+                {/* Tab 6: Cinematic Camera Presets Grid (Sorted by Reactions) */}
                 {activeTab === 'camera' && (
                     <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', overflowX: 'hidden' }}>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>
-                            Choose an artistic camera vantage or use the quick cycle button on the bottom bar:
+                            Choose an artistic camera vantage (sorted by your aesthetic ratings):
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '8px' }}>
-                            {CAMERA_PRESETS.map((cp, idx) => {
+                            {sortedCameras.map(({ cp, idx }) => {
                                 const isSelected = (simState.current.cameraPresetIndex ?? 0) === idx;
-                                const cLikes = rlPrefs.cameraLikes[String(idx)] || 0;
-                                const cDislikes = rlPrefs.cameraDislikes[String(idx)] || 0;
+                                const cLikes = rlPrefs.cameraLikes[String(idx)] || rlPrefs.cameraLikes[cp.id] || 0;
+                                const cDislikes = rlPrefs.cameraDislikes[String(idx)] || rlPrefs.cameraDislikes[cp.id] || 0;
                                 return (
                                     <button
                                         key={cp.id}
