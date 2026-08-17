@@ -279,7 +279,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const uLen0 = Math.sqrt(rawUx0 * rawUx0 + rawUy0 * rawUy0 + rawUz0 * rawUz0);
                 const ux0 = rawUx0 / uLen0, uy0 = rawUy0 / uLen0, uz0 = rawUz0 / uLen0;
 
-                const H0 = 2.6; // Ultra-compact height
+                const H0 = 1.5; // Mini-vortex height
                 const halfH0 = H0 * 0.5;
                 const bx0 = cx0 - ux0 * halfH0, by0 = cy0 - uy0 * halfH0, bz0 = cz0 - uz0 * halfH0;
                 const tx0 = cx0 + ux0 * halfH0, ty0 = cy0 + uy0 * halfH0, tz0 = cz0 + uz0 * halfH0;
@@ -289,8 +289,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx0, ty: ty0, tz: tz0,
                     ux: ux0, uy: uy0, uz: uz0,
                     H: H0, invH: 1.0 / H0,
-                    neckR: 0.18, crownR: 0.85,
-                    infRSq: 2.25, // R = 1.5 tight localized capture radius
+                    neckR: 0.10, crownR: 0.48,
+                    infRSq: 0.81, // R = 0.9 tight capture radius
                     swirlDir: 1.0
                 });
             }
@@ -308,7 +308,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const uLen1 = Math.sqrt(rawUx1 * rawUx1 + rawUy1 * rawUy1 + rawUz1 * rawUz1);
                 const ux1 = rawUx1 / uLen1, uy1 = rawUy1 / uLen1, uz1 = rawUz1 / uLen1;
 
-                const H1 = 2.4; // Ultra-compact height
+                const H1 = 1.4; // Mini-vortex height
                 const halfH1 = H1 * 0.5;
                 const bx1 = cx1 - ux1 * halfH1, by1 = cy1 - uy1 * halfH1, bz1 = cz1 - uz1 * halfH1;
                 const tx1 = cx1 + ux1 * halfH1, ty1 = cy1 + uy1 * halfH1, tz1 = cz1 + uz1 * halfH1;
@@ -318,8 +318,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx1, ty: ty1, tz: tz1,
                     ux: ux1, uy: uy1, uz: uz1,
                     H: H1, invH: 1.0 / H1,
-                    neckR: 0.18, crownR: 0.88,
-                    infRSq: 2.25, // R = 1.5
+                    neckR: 0.10, crownR: 0.48,
+                    infRSq: 0.81, // R = 0.9
                     swirlDir: -1.0
                 });
             }
@@ -337,7 +337,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const uLen2 = Math.sqrt(rawUx2 * rawUx2 + rawUy2 * rawUy2 + rawUz2 * rawUz2);
                 const ux2 = rawUx2 / uLen2, uy2 = rawUy2 / uLen2, uz2 = rawUz2 / uLen2;
 
-                const H2 = 2.5; // Ultra-compact height
+                const H2 = 1.45; // Mini-vortex height
                 const halfH2 = H2 * 0.5;
                 const bx2 = cx2 - ux2 * halfH2, by2 = cy2 - uy2 * halfH2, bz2 = cz2 - uz2 * halfH2;
                 const tx2 = cx2 + ux2 * halfH2, ty2 = cy2 + uy2 * halfH2, tz2 = cz2 + uz2 * halfH2;
@@ -347,8 +347,8 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx2, ty: ty2, tz: tz2,
                     ux: ux2, uy: uy2, uz: uz2,
                     H: H2, invH: 1.0 / H2,
-                    neckR: 0.18, crownR: 0.82,
-                    infRSq: 2.25, // R = 1.5
+                    neckR: 0.10, crownR: 0.45,
+                    infRSq: 0.81, // R = 0.9
                     swirlDir: 1.0
                 });
             }
@@ -784,37 +784,36 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 );
             })}
 
-            {/* Ethereal Luminous Compact Tornado Funnel Indicators */}
-            {/* Ethereal Luminous Ultra-Compact Tornado Funnel Indicators */}
+            {/* Ethereal Luminous Golden Mini-Vortex Funnel Indicators */}
             <mesh ref={tornadoMesh0} visible={false}>
-                <cylinderGeometry args={[0.85, 0.18, 2.6, 16, 6, true]} />
+                <cylinderGeometry args={[0.48, 0.10, 1.5, 16, 6, true]} />
                 <meshBasicMaterial
-                    color="#00ffcc"
+                    color="#ffb700"
                     wireframe={true}
                     transparent={true}
-                    opacity={0.45}
+                    opacity={0.42}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                 />
             </mesh>
             <mesh ref={tornadoMesh1} visible={false}>
-                <cylinderGeometry args={[0.88, 0.18, 2.4, 16, 6, true]} />
+                <cylinderGeometry args={[0.48, 0.10, 1.4, 16, 6, true]} />
                 <meshBasicMaterial
-                    color="#ffaa00"
+                    color="#ffb700"
                     wireframe={true}
                     transparent={true}
-                    opacity={0.45}
+                    opacity={0.42}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                 />
             </mesh>
             <mesh ref={tornadoMesh2} visible={false}>
-                <cylinderGeometry args={[0.82, 0.18, 2.5, 16, 6, true]} />
+                <cylinderGeometry args={[0.45, 0.10, 1.45, 16, 6, true]} />
                 <meshBasicMaterial
-                    color="#ff00aa"
+                    color="#ffb700"
                     wireframe={true}
                     transparent={true}
-                    opacity={0.45}
+                    opacity={0.42}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                 />
