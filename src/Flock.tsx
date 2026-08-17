@@ -250,10 +250,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
-        // 🌪️ Local 3D Tornado Cyclone Field (COMPACT, HIGH-VELOCITY, DYNAMICALLY TILTED TWISTERS INTERSECTING FORMATION STREAMS)
+        // 🌪️ Local 3D Tornado Cyclone Field (FIXED IN-STREAM LOCATIONS, ULTRA-COMPACT H=2.5, STRONG MAGNETIC PULL)
         const tornadoCount = state.tornadoCount !== undefined ? state.tornadoCount : 2;
-        const tornadoStrength = (state.tornadoStrength ?? 1.8) * (state.speedMultiplier || 1.0);
-        const tornadoCentrifugal = (state.tornadoCentrifugal ?? 2.2);
+        const tornadoStrength = (state.tornadoStrength ?? 2.2) * (state.speedMultiplier || 1.0);
+        const tornadoCentrifugal = (state.tornadoCentrifugal ?? 2.5);
 
         const tActive: {
             bx: number; by: number; bz: number;
@@ -266,22 +266,20 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }[] = [];
 
         if (tornadoCount > 0) {
-            // Cyclone 1: Diagonal Precessing Twister (directly cutting through inner topological streams)
+            // Cyclone 1: Fixed Stream Intersector 1 (Diagonal Pitch at +X Stream Core)
             if (tornadoCount >= 1) {
-                const a0 = time * 0.35;
-                // Position centered inside the active formation ribbon stream (R ≈ 3.6, y ≈ ±1.5)
-                const cx0 = fastCos(a0) * 3.6;
-                const cz0 = fastSin(a0) * 3.6;
-                const cy0 = fastSin(time * 0.5) * 1.5;
+                const cx0 = 2.8;
+                const cy0 = 0.6;
+                const cz0 = 0.2;
 
-                // Tilted 3D axis (40° diagonal pitch)
-                const rawUx0 = fastSin(time * 0.6) * 0.55;
-                const rawUy0 = 0.85;
-                const rawUz0 = fastCos(time * 0.6) * 0.55;
+                // Fixed 3D diagonal tilt axis (pitch ~42°)
+                const rawUx0 = 0.42;
+                const rawUy0 = 0.88;
+                const rawUz0 = 0.22;
                 const uLen0 = Math.sqrt(rawUx0 * rawUx0 + rawUy0 * rawUy0 + rawUz0 * rawUz0);
                 const ux0 = rawUx0 / uLen0, uy0 = rawUy0 / uLen0, uz0 = rawUz0 / uLen0;
 
-                const H0 = 4.8; // Compact height
+                const H0 = 2.6; // Ultra-compact height
                 const halfH0 = H0 * 0.5;
                 const bx0 = cx0 - ux0 * halfH0, by0 = cy0 - uy0 * halfH0, bz0 = cz0 - uz0 * halfH0;
                 const tx0 = cx0 + ux0 * halfH0, ty0 = cy0 + uy0 * halfH0, tz0 = cz0 + uz0 * halfH0;
@@ -291,28 +289,26 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx0, ty: ty0, tz: tz0,
                     ux: ux0, uy: uy0, uz: uz0,
                     H: H0, invH: 1.0 / H0,
-                    neckR: 0.22, crownR: 1.20,
-                    infRSq: 2.72, // Highly localized: R = 1.65 (zero perturbation outside)
+                    neckR: 0.18, crownR: 0.85,
+                    infRSq: 2.25, // R = 1.5 tight localized capture radius
                     swirlDir: 1.0
                 });
             }
 
-            // Cyclone 2: Near-Horizontal Atmospheric Roll Cyclone (75° pitch, horizontal ribbon slicer)
+            // Cyclone 2: Fixed Stream Intersector 2 (Horizontal Cross-Slice at -X Stream Core)
             if (tornadoCount >= 2) {
-                const a1 = time * -0.30 + Math.PI;
-                // Position in complementary quadrant of the formation
-                const cx1 = fastCos(a1) * 3.8;
-                const cz1 = fastSin(a1 * 1.2) * 3.5;
-                const cy1 = fastCos(time * 0.4) * 1.6;
+                const cx1 = -2.5;
+                const cy1 = -0.5;
+                const cz1 = 1.6;
 
-                // Horizontal / transversal tilt axis (75° pitch)
-                const rawUx1 = fastCos(a1 * 0.8) * 0.90;
-                const rawUy1 = 0.28 + fastSin(time * 0.5) * 0.15;
-                const rawUz1 = fastSin(a1 * 0.8) * 0.85;
+                // Horizontal cross-slice axis (pitch ~75°)
+                const rawUx1 = 0.88;
+                const rawUy1 = 0.26;
+                const rawUz1 = -0.40;
                 const uLen1 = Math.sqrt(rawUx1 * rawUx1 + rawUy1 * rawUy1 + rawUz1 * rawUz1);
                 const ux1 = rawUx1 / uLen1, uy1 = rawUy1 / uLen1, uz1 = rawUz1 / uLen1;
 
-                const H1 = 4.5; // Compact height
+                const H1 = 2.4; // Ultra-compact height
                 const halfH1 = H1 * 0.5;
                 const bx1 = cx1 - ux1 * halfH1, by1 = cy1 - uy1 * halfH1, bz1 = cz1 - uz1 * halfH1;
                 const tx1 = cx1 + ux1 * halfH1, ty1 = cy1 + uy1 * halfH1, tz1 = cz1 + uz1 * halfH1;
@@ -322,27 +318,26 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx1, ty: ty1, tz: tz1,
                     ux: ux1, uy: uy1, uz: uz1,
                     H: H1, invH: 1.0 / H1,
-                    neckR: 0.25, crownR: 1.25,
-                    infRSq: 2.89, // Highly localized: R = 1.7
+                    neckR: 0.18, crownR: 0.88,
+                    infRSq: 2.25, // R = 1.5
                     swirlDir: -1.0
                 });
             }
 
-            // Cyclone 3: Inverted Downward/Lateral Gyre (pointing downward -Y with 50° pitch)
+            // Cyclone 3: Fixed Stream Intersector 3 (Downward Inverted Gyre at -Z Stream Core)
             if (tornadoCount >= 3) {
-                const a2 = time * 0.25 + 2.2;
-                const cx2 = fastSin(a2 * 1.1) * 3.4;
-                const cz2 = fastCos(a2) * 3.7;
-                const cy2 = -fastSin(time * 0.4) * 1.8;
+                const cx2 = 0.0;
+                const cy2 = -0.8;
+                const cz2 = -2.6;
 
                 // Inverted downward tilt axis
-                const rawUx2 = fastCos(time * 0.5) * 0.55;
-                const rawUy2 = -0.80;
-                const rawUz2 = fastSin(time * 0.5) * 0.55;
+                const rawUx2 = -0.32;
+                const rawUy2 = -0.90;
+                const rawUz2 = 0.30;
                 const uLen2 = Math.sqrt(rawUx2 * rawUx2 + rawUy2 * rawUy2 + rawUz2 * rawUz2);
                 const ux2 = rawUx2 / uLen2, uy2 = rawUy2 / uLen2, uz2 = rawUz2 / uLen2;
 
-                const H2 = 4.6; // Compact height
+                const H2 = 2.5; // Ultra-compact height
                 const halfH2 = H2 * 0.5;
                 const bx2 = cx2 - ux2 * halfH2, by2 = cy2 - uy2 * halfH2, bz2 = cz2 - uz2 * halfH2;
                 const tx2 = cx2 + ux2 * halfH2, ty2 = cy2 + uy2 * halfH2, tz2 = cz2 + uz2 * halfH2;
@@ -352,14 +347,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx2, ty: ty2, tz: tz2,
                     ux: ux2, uy: uy2, uz: uz2,
                     H: H2, invH: 1.0 / H2,
-                    neckR: 0.24, crownR: 1.15,
-                    infRSq: 2.56, // Highly localized: R = 1.6
+                    neckR: 0.18, crownR: 0.82,
+                    infRSq: 2.25, // R = 1.5
                     swirlDir: 1.0
                 });
             }
         }
 
-        // Update visual tornado meshes with exact 3D orientation & compact height
+        // Update visual tornado meshes with exact 3D orientation & ultra-compact height
         const tMeshes = [tornadoMesh0.current, tornadoMesh1.current, tornadoMesh2.current];
         const upVec = new THREE.Vector3(0, 1, 0);
         for (let tIdx = 0; tIdx < 3; tIdx++) {
@@ -370,7 +365,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const T = tActive[tIdx];
                 m.position.set((T.bx + T.tx) * 0.5, (T.by + T.ty) * 0.5, (T.bz + T.tz) * 0.5);
                 m.quaternion.setFromUnitVectors(upVec, new THREE.Vector3(T.ux, T.uy, T.uz));
-                m.rotation.y += 0.12 * T.swirlDir;
+                m.rotation.y += 0.15 * T.swirlDir;
             } else {
                 m.visible = false;
             }
@@ -539,38 +534,38 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                         const rDiff = r - targetR;
                         const proximity = Math.max(0.0, 1.0 - r / Math.sqrt(T.infRSq));
 
-                        // 1. Concentrated Inward Suction: Snaps boids directly onto the spinning funnel wall
-                        const suctionMag = -rDiff * 0.85 * tornadoStrength * proximity;
+                        // 1. Ultra-Strong Magnetic Inward Suction: Aggressively draws passing boids into the vortex
+                        const suctionMag = -rDiff * 2.8 * tornadoStrength * proximity;
                         velX[i] += rxNorm * suctionMag;
                         velY[i] += ryNorm * suctionMag;
                         velZ[i] += rzNorm * suctionMag;
 
-                        // 2. Hyper-Fast Cyclonic Swirl (Angular Acceleration)
-                        const swirlMag = (0.60 + (1.0 - hClamped) * 0.35) * tornadoStrength * proximity;
+                        // 2. Ultra-Fast Cyclonic Swirl (Hyper-Rotational Velocity)
+                        const swirlMag = (1.6 + (1.0 - hClamped) * 0.8) * tornadoStrength * proximity;
                         velX[i] += txNorm * swirlMag;
                         velY[i] += tyNorm * swirlMag;
                         velZ[i] += tzNorm * swirlMag;
 
-                        // 3. Helical Updraft (Powerful Vertical Ascent)
-                        const updraftMag = (0.48 + (1.0 - hClamped * 0.5) * 0.28) * tornadoStrength * proximity;
+                        // 3. Helical Updraft (Accelerates boids through the compact funnel)
+                        const updraftMag = (1.4 + (1.0 - hClamped * 0.5) * 0.6) * tornadoStrength * proximity;
                         velX[i] += T.ux * updraftMag;
                         velY[i] += T.uy * updraftMag;
                         velZ[i] += T.uz * updraftMag;
 
-                        // 4. Explosive Centrifugal Crown Slingshot Ejection
-                        if (hNorm > 0.65) {
-                            const crownProg = (hNorm - 0.65) / 0.35;
-                            const slingshotMag = crownProg * crownProg * 0.95 * tornadoCentrifugal;
-                            velX[i] += (rxNorm * 1.8 + txNorm * 1.4) * slingshotMag;
-                            velY[i] += (ryNorm * 0.6 + T.uy * 1.0) * slingshotMag;
-                            velZ[i] += (rzNorm * 1.8 + tzNorm * 1.4) * slingshotMag;
+                        // 4. Violent Centrifugal Crown Slingshot Ejection
+                        if (hNorm > 0.60) {
+                            const crownProg = (hNorm - 0.60) / 0.40;
+                            const slingshotMag = crownProg * crownProg * 2.8 * tornadoCentrifugal;
+                            velX[i] += (rxNorm * 2.5 + txNorm * 1.8) * slingshotMag;
+                            velY[i] += (ryNorm * 0.8 + T.uy * 1.5) * slingshotMag;
+                            velZ[i] += (rzNorm * 2.5 + tzNorm * 1.8) * slingshotMag;
                             inTornadoCrown = true;
                         }
                     }
                 }
             }
 
-            const currentMaxDisp = inTornadoCrown ? (activeMaxDisp * 5.0) : activeMaxDisp;
+            const currentMaxDisp = inTornadoCrown ? (activeMaxDisp * 6.0) : activeMaxDisp;
             const currentMaxDispSq = currentMaxDisp * currentMaxDisp;
             const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
             if (speedSq > currentMaxDispSq && speedSq > 1e-6) {
@@ -784,35 +779,36 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             })}
 
             {/* Ethereal Luminous Compact Tornado Funnel Indicators */}
+            {/* Ethereal Luminous Ultra-Compact Tornado Funnel Indicators */}
             <mesh ref={tornadoMesh0} visible={false}>
-                <cylinderGeometry args={[1.20, 0.22, 4.8, 16, 6, true]} />
+                <cylinderGeometry args={[0.85, 0.18, 2.6, 16, 6, true]} />
                 <meshBasicMaterial
                     color="#00ffcc"
                     wireframe={true}
                     transparent={true}
-                    opacity={0.30}
+                    opacity={0.45}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                 />
             </mesh>
             <mesh ref={tornadoMesh1} visible={false}>
-                <cylinderGeometry args={[1.25, 0.25, 4.5, 16, 6, true]} />
+                <cylinderGeometry args={[0.88, 0.18, 2.4, 16, 6, true]} />
                 <meshBasicMaterial
                     color="#ffaa00"
                     wireframe={true}
                     transparent={true}
-                    opacity={0.30}
+                    opacity={0.45}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                 />
             </mesh>
             <mesh ref={tornadoMesh2} visible={false}>
-                <cylinderGeometry args={[1.15, 0.24, 4.6, 16, 6, true]} />
+                <cylinderGeometry args={[0.82, 0.18, 2.5, 16, 6, true]} />
                 <meshBasicMaterial
                     color="#ff00aa"
                     wireframe={true}
                     transparent={true}
-                    opacity={0.30}
+                    opacity={0.45}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                 />
