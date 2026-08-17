@@ -99,21 +99,27 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const tornadoDust1 = useRef<THREE.Points>(null);
     const tornadoDust2 = useRef<THREE.Points>(null);
 
+    const DUST_COUNT = 450;
+    const dustPhaseData = useMemo(() => {
+        return [0, 1, 2].map(() => {
+            const hPhase = new Float32Array(DUST_COUNT);
+            const thetaPhase = new Float32Array(DUST_COUNT);
+            const speedScale = new Float32Array(DUST_COUNT);
+            const radJitter = new Float32Array(DUST_COUNT);
+            for (let p = 0; p < DUST_COUNT; p++) {
+                hPhase[p] = Math.random();
+                thetaPhase[p] = Math.random() * Math.PI * 2;
+                speedScale[p] = 0.8 + Math.random() * 0.4;
+                radJitter[p] = 0.75 + Math.random() * 0.5;
+            }
+            return { hPhase, thetaPhase, speedScale, radJitter };
+        });
+    }, []);
+
     const dustGeometries = useMemo(() => {
-        const PARTICLE_COUNT = 180;
         return [0, 1, 2].map(() => {
             const geo = new THREE.BufferGeometry();
-            const pos = new Float32Array(PARTICLE_COUNT * 3);
-            for (let p = 0; p < PARTICLE_COUNT; p++) {
-                const hNorm = p / PARTICLE_COUNT;
-                const y = (hNorm - 0.5) * 1.5;
-                const funnelR = 0.08 + 0.40 * (hNorm * hNorm);
-                const r = funnelR * (0.35 + Math.random() * 0.75);
-                const theta = Math.random() * Math.PI * 2;
-                pos[p * 3] = Math.cos(theta) * r;
-                pos[p * 3 + 1] = y + (Math.random() - 0.5) * 0.12;
-                pos[p * 3 + 2] = Math.sin(theta) * r;
-            }
+            const pos = new Float32Array(DUST_COUNT * 3);
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             return geo;
         });
@@ -270,7 +276,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
-        // 🌪️ Local 3D Tornado Cyclone Field (FIXED IN-STREAM LOCATIONS, ULTRA-COMPACT H=2.5, STRONG MAGNETIC PULL)
+        // 🌪️ Local 3D Tornado Cyclone Field (SLOW DRIFT ACROSS TOPOLOGIES, ULTRA-COMPACT H=1.5, COILING WHIRLPOOL STREAM)
         const tornadoCount = state.tornadoCount !== undefined ? state.tornadoCount : 2;
         const tornadoStrength = (state.tornadoStrength ?? 2.2) * (state.speedMultiplier || 1.0);
         const tornadoCentrifugal = (state.tornadoCentrifugal ?? 2.5);
@@ -286,16 +292,17 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }[] = [];
 
         if (tornadoCount > 0) {
-            // Cyclone 1: Fixed Stream Intersector 1 (Diagonal Pitch at +X Stream Core)
+            // Cyclone 1: Slow graceful drift through topological ribbon stream
             if (tornadoCount >= 1) {
-                const cx0 = 2.8;
-                const cy0 = 0.6;
-                const cz0 = 0.2;
+                const a0 = time * 0.07;
+                const cx0 = 2.8 * fastCos(a0) - 0.4 * fastSin(a0 * 1.4);
+                const cy0 = 0.6 + 0.35 * fastSin(time * 0.08);
+                const cz0 = 0.2 + 0.45 * fastSin(a0 * 0.9);
 
-                // Fixed 3D diagonal tilt axis (pitch ~42°)
-                const rawUx0 = 0.42;
+                // Dynamically undulating 3D tilt axis (pitch ~42°)
+                const rawUx0 = 0.38 + 0.12 * fastSin(time * 0.10);
                 const rawUy0 = 0.88;
-                const rawUz0 = 0.22;
+                const rawUz0 = 0.22 + 0.12 * fastCos(time * 0.10);
                 const uLen0 = Math.sqrt(rawUx0 * rawUx0 + rawUy0 * rawUy0 + rawUz0 * rawUz0);
                 const ux0 = rawUx0 / uLen0, uy0 = rawUy0 / uLen0, uz0 = rawUz0 / uLen0;
 
@@ -315,16 +322,17 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 });
             }
 
-            // Cyclone 2: Fixed Stream Intersector 2 (Horizontal Cross-Slice at -X Stream Core)
+            // Cyclone 2: Slow counter-drifting cross-slice
             if (tornadoCount >= 2) {
-                const cx1 = -2.5;
-                const cy1 = -0.5;
-                const cz1 = 1.6;
+                const a1 = time * -0.06 + Math.PI;
+                const cx1 = -2.5 * fastCos(a1) + 0.45 * fastSin(a1 * 1.3);
+                const cy1 = -0.5 + 0.35 * fastCos(time * 0.08);
+                const cz1 = 1.6 + 0.40 * fastSin(a1 * 0.8);
 
-                // Horizontal cross-slice axis (pitch ~75°)
-                const rawUx1 = 0.88;
-                const rawUy1 = 0.26;
-                const rawUz1 = -0.40;
+                // Horizontal cross-slice axis
+                const rawUx1 = 0.85 + 0.10 * fastCos(time * 0.09);
+                const rawUy1 = 0.26 + 0.08 * fastSin(time * 0.10);
+                const rawUz1 = -0.40 + 0.10 * fastSin(time * 0.09);
                 const uLen1 = Math.sqrt(rawUx1 * rawUx1 + rawUy1 * rawUy1 + rawUz1 * rawUz1);
                 const ux1 = rawUx1 / uLen1, uy1 = rawUy1 / uLen1, uz1 = rawUz1 / uLen1;
 
@@ -339,21 +347,22 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     ux: ux1, uy: uy1, uz: uz1,
                     H: H1, invH: 1.0 / H1,
                     neckR: 0.10, crownR: 0.48,
-                    infRSq: 0.81, // R = 0.9
+                    infRSq: 0.81,
                     swirlDir: -1.0
                 });
             }
 
-            // Cyclone 3: Fixed Stream Intersector 3 (Downward Inverted Gyre at -Z Stream Core)
+            // Cyclone 3: Slow inverted wandering gyre
             if (tornadoCount >= 3) {
-                const cx2 = 0.0;
-                const cy2 = -0.8;
-                const cz2 = -2.6;
+                const a2 = time * 0.05 + 2.2;
+                const cx2 = 0.45 * fastSin(a2 * 1.2);
+                const cy2 = -0.8 + 0.30 * fastSin(time * 0.07);
+                const cz2 = -2.6 * fastCos(a2);
 
                 // Inverted downward tilt axis
-                const rawUx2 = -0.32;
-                const rawUy2 = -0.90;
-                const rawUz2 = 0.30;
+                const rawUx2 = -0.30 + 0.12 * fastCos(time * 0.08);
+                const rawUy2 = -0.88;
+                const rawUz2 = 0.30 + 0.12 * fastSin(time * 0.08);
                 const uLen2 = Math.sqrt(rawUx2 * rawUx2 + rawUy2 * rawUy2 + rawUz2 * rawUz2);
                 const ux2 = rawUx2 / uLen2, uy2 = rawUy2 / uLen2, uz2 = rawUz2 / uLen2;
 
@@ -368,26 +377,63 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     ux: ux2, uy: uy2, uz: uz2,
                     H: H2, invH: 1.0 / H2,
                     neckR: 0.10, crownR: 0.45,
-                    infRSq: 0.81, // R = 0.9
+                    infRSq: 0.81,
                     swirlDir: 1.0
                 });
             }
         }
 
-        // Update visual tornado dust clouds with exact 3D orientation & orbital spin
+        // Update visual dynamic tornado dust clouds (particles visibly swirl in helical cyclone motion)
         const tDusts = [tornadoDust0.current, tornadoDust1.current, tornadoDust2.current];
-        const upVec = new THREE.Vector3(0, 1, 0);
         for (let tIdx = 0; tIdx < 3; tIdx++) {
-            const m = tDusts[tIdx];
-            if (!m) continue;
+            const pointsMesh = tDusts[tIdx];
+            if (!pointsMesh) continue;
             if (tIdx < tActive.length) {
-                m.visible = true;
+                pointsMesh.visible = true;
                 const T = tActive[tIdx];
-                m.position.set((T.bx + T.tx) * 0.5, (T.by + T.ty) * 0.5, (T.bz + T.tz) * 0.5);
-                m.quaternion.setFromUnitVectors(upVec, new THREE.Vector3(T.ux, T.uy, T.uz));
-                m.rotation.y += 0.06 * T.swirlDir;
+                const geo = dustGeometries[tIdx];
+                const posAttr = geo.attributes.position as THREE.BufferAttribute;
+                const posArr = posAttr.array as Float32Array;
+                const pData = dustPhaseData[tIdx];
+
+                // Build local orthonormal basis (normal1, axis, normal2)
+                const ux = T.ux, uy = T.uy, uz = T.uz;
+                const refX = Math.abs(uy) < 0.9 ? 0 : 1;
+                const refY = Math.abs(uy) < 0.9 ? 1 : 0;
+                const refZ = 0;
+                let n1x = refY * uz - refZ * uy;
+                let n1y = refZ * ux - refX * uz;
+                let n1z = refX * uy - refY * ux;
+                const invN1 = 1.0 / Math.max(1e-4, Math.sqrt(n1x * n1x + n1y * n1y + n1z * n1z));
+                n1x *= invN1; n1y *= invN1; n1z *= invN1;
+                const n2x = uy * n1z - uz * n1y;
+                const n2y = uz * n1x - ux * n1z;
+                const n2z = ux * n1y - uy * n1x;
+
+                const timeSpd = time * 0.40;
+                for (let p = 0; p < DUST_COUNT; p++) {
+                    const spd = pData.speedScale[p];
+                    // Continuous upward ascent cycling from 0 to 1
+                    const h = (pData.hPhase[p] + timeSpd * 0.16 * spd) % 1.0;
+                    // Hyperboloid funnel radius: tight neck at base, expanding to wide crown
+                    const rBase = T.neckR + (T.crownR - T.neckR) * (h * h);
+                    const r = rBase * pData.radJitter[p];
+
+                    // Swirl angle: spins faster at narrow base (angular momentum conservation)
+                    const spinAngle = pData.thetaPhase[p] + (timeSpd * (1.6 / Math.max(0.10, rBase)) + h * 7.5) * T.swirlDir;
+                    const cosA = fastCos(spinAngle) * r;
+                    const sinA = fastSin(spinAngle) * r;
+
+                    const distAlongAxis = h * T.H;
+                    posArr[p * 3] = T.bx + ux * distAlongAxis + n1x * cosA + n2x * sinA;
+                    posArr[p * 3 + 1] = T.by + uy * distAlongAxis + n1y * cosA + n2y * sinA;
+                    posArr[p * 3 + 2] = T.bz + uz * distAlongAxis + n1z * cosA + n2z * sinA;
+                }
+                posAttr.needsUpdate = true;
+                pointsMesh.position.set(0, 0, 0);
+                pointsMesh.quaternion.identity();
             } else {
-                m.visible = false;
+                pointsMesh.visible = false;
             }
         }
 
@@ -804,13 +850,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 );
             })}
 
-            {/* Ethereal Luminous Swirling Golden Dust Clouds */}
+            {/* Ethereal Self-Illuminated Micro-Dust Tornado Helices */}
             <points ref={tornadoDust0} geometry={dustGeometries[0]} visible={false}>
                 <pointsMaterial
-                    size={0.06}
-                    color="#ffb700"
+                    size={0.016}
+                    color="#ffe580"
                     transparent={true}
-                    opacity={0.55}
+                    opacity={0.85}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                     sizeAttenuation={true}
@@ -818,10 +864,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             </points>
             <points ref={tornadoDust1} geometry={dustGeometries[1]} visible={false}>
                 <pointsMaterial
-                    size={0.06}
-                    color="#ffb700"
+                    size={0.016}
+                    color="#ffe580"
                     transparent={true}
-                    opacity={0.55}
+                    opacity={0.85}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                     sizeAttenuation={true}
@@ -829,10 +875,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             </points>
             <points ref={tornadoDust2} geometry={dustGeometries[2]} visible={false}>
                 <pointsMaterial
-                    size={0.06}
-                    color="#ffb700"
+                    size={0.016}
+                    color="#ffe580"
                     transparent={true}
-                    opacity={0.55}
+                    opacity={0.85}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
                     sizeAttenuation={true}
