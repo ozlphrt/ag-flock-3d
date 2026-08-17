@@ -48,158 +48,214 @@ export enum DefeatScenario {
 }
 
 export enum FormationMode {
-    SpiralTower = 0,
-    ConicalHelix = 1,
-    DoubleHelix = 2,
-    TripleHelix = 3,
-    DNALadder = 4,
-    TrefoilKnot = 5,
-    TorusKnot = 6,
-    FigureEightKnot = 7,
-    CinqfoilKnot = 8,
-    SeptafoilKnot = 9,
-    LotusBlossom = 10,
-    SolarFlareArch = 11,
-    LorenzAttractor = 12,
-    GyroidMinimalSurface = 13,
-    KleinBottle4D = 14,
-    CliffordTorus = 15,
-    HopfFibration = 16,
-    CalabiYauManifold = 17,
-    OuroborosSerpent = 18,
-    DancingRibbon = 19,
-    OlympicChain = 20,
-    Procedural = 21
+    QuadHelixBraid = 0,
+    ConcentricDualHelixSheath = 1,
+    ToroidalHelixBraid = 2,
+    TrefoilBraidedRibbon = 3,
+    MobiusHelixBraid = 4,
+    LissajousIntertwinedKnot = 5,
+    CaduceusVortex = 6,
+    BorromeanRings = 7,
+    FigureEightKnotBraid = 8,
+    CinqfoilKnotBraid = 9,
+    SeptafoilKnotBraid = 10,
+    FractalSupercoil = 11,
+    SuperhelicalTorusKnot = 12,
+    DNAChromatinSolenoid = 13,
+    TriquetraCelticBraid = 14,
+    WhiteheadLinkBraid = 15,
+    QuatrefoilKnotBraid = 16,
+    GrannyKnotBraid = 17,
+    DoubleHelixBraid = 18,
+    TripleHelixBraid = 19,
+    DNALadderBraid = 20,
+    GyroidBraidLabyrinth = 21,
+    LorenzChaoticBraid = 22,
+    KleinBottleBraid = 23,
+    CliffordTorusBraid = 24,
+    OuroborosDragonBraid = 25,
+    DancingRibbonBraid = 26,
+    SolarFlareProminence = 27,
+    OlympicChainLink = 28,
+    Procedural = 29
 }
 
-export const TOTAL_FORMATION_COUNT = 22;
+export const TOTAL_FORMATION_COUNT = 30;
 
 export const FORMATION_PRESETS = [
     {
-        id: FormationMode.SpiralTower,
-        label: 'Spiral Tower',
-        icon: '🌪️',
-        desc: 'Ascending conical spiral with central vertical axial spine'
-    },
-    {
-        id: FormationMode.ConicalHelix,
-        label: 'Conical Helix',
-        icon: '🌀',
-        desc: 'Single clean wide ascending conical helical ribbon'
-    },
-    {
-        id: FormationMode.DoubleHelix,
-        label: 'Double Helix',
+        id: FormationMode.QuadHelixBraid,
+        label: 'Quad Helix Braid',
         icon: '🧬',
-        desc: 'Canonical dual parallel helical strands'
+        desc: '4 Intertwined species cords braiding around ascending helical spine with cross rungs'
     },
     {
-        id: FormationMode.TripleHelix,
-        label: 'Triple Helix',
+        id: FormationMode.ConcentricDualHelixSheath,
+        label: 'Concentric Dual Helix Sheath',
         icon: '🧬',
-        desc: 'Three parallel ascending helical streams'
+        desc: 'Multi-layer: inner double-helix nested inside outer counter-rotating 4-strand cage'
     },
     {
-        id: FormationMode.DNALadder,
-        label: 'DNA Ladder',
-        icon: '🧬',
-        desc: 'Helical sugar-phosphate rails with periodic base-pair rungs'
-    },
-    {
-        id: FormationMode.TrefoilKnot,
-        label: 'Trefoil Knot',
-        icon: '🎗️',
-        desc: 'Continuous canonical (2,3) cloverleaf single streamline'
-    },
-    {
-        id: FormationMode.TorusKnot,
-        label: 'Torus Knot',
+        id: FormationMode.ToroidalHelixBraid,
+        label: 'Toroidal Helix Braid',
         icon: '🍩',
-        desc: 'Continuous seamless (3,5) toroidal loop flow'
+        desc: 'Closed continuous 4-strand intertwined braided cable looping through Torus'
     },
     {
-        id: FormationMode.FigureEightKnot,
-        label: 'Figure-Eight Knot',
+        id: FormationMode.TrefoilBraidedRibbon,
+        label: 'Trefoil Braided Ribbon',
+        icon: '🎗️',
+        desc: '4-Strand braided multi-layer rope woven along 3D Trefoil knot (2,3)'
+    },
+    {
+        id: FormationMode.MobiusHelixBraid,
+        label: 'Mobius Helix Braid',
+        icon: '🎗️',
+        desc: 'Continuous 3D Mobius strip with 4 intertwined braided sub-currents'
+    },
+    {
+        id: FormationMode.LissajousIntertwinedKnot,
+        label: 'Lissajous Intertwined Knot',
+        icon: '🔮',
+        desc: '4 Weaving harmonic cords looping in 3D 8-knot configuration'
+    },
+    {
+        id: FormationMode.CaduceusVortex,
+        label: 'Caduceus Vortex',
+        icon: '⚕️',
+        desc: 'Dual intertwined serpents coiling around central vertical spine with cross arcs'
+    },
+    {
+        id: FormationMode.BorromeanRings,
+        label: 'Borromean Rings',
+        icon: '⭕',
+        desc: 'Three mutually intertwined orthogonal elliptical loops with braided cords'
+    },
+    {
+        id: FormationMode.FigureEightKnotBraid,
+        label: 'Figure-Eight Knot Braid',
         icon: '♾️',
-        desc: 'Canonical 4_1 single continuous prime knot'
+        desc: 'Canonical Listing 4_1 alternating prime knot with 4-strand braided cable'
     },
     {
-        id: FormationMode.CinqfoilKnot,
-        label: 'Cinqfoil Knot',
+        id: FormationMode.CinqfoilKnotBraid,
+        label: 'Cinqfoil Knot Braid',
         icon: '⭐',
-        desc: '5-Lobed continuous Torus (5,2) knot ribbon'
+        desc: '5-Lobed intertwined Torus (5,2) Solomon seal braided ribbon'
     },
     {
-        id: FormationMode.SeptafoilKnot,
-        label: 'Septafoil Knot',
+        id: FormationMode.SeptafoilKnotBraid,
+        label: 'Septafoil Stellar Braid',
         icon: '🌟',
-        desc: '7-Point continuous stellar Torus (7,3) knot ribbon'
+        desc: '7-Point stellar Torus (7,3) intertwined braided ribbon'
     },
     {
-        id: FormationMode.LotusBlossom,
-        label: 'Lotus Blossom',
-        icon: '🪷',
-        desc: '5-Petal blooming graceful floral arcs radiating upward'
+        id: FormationMode.FractalSupercoil,
+        label: 'Fractal Supercoil',
+        icon: '🧬',
+        desc: '3-Tier hierarchical coiled-coil: macro-spine with 4 braided meso-cords & micro-helices'
     },
     {
-        id: FormationMode.SolarFlareArch,
-        label: 'Solar Flare Arch',
-        icon: '☀️',
-        desc: 'Smooth magnetic coronal loop arch'
+        id: FormationMode.SuperhelicalTorusKnot,
+        label: 'Superhelical Torus Knot',
+        icon: '🍩',
+        desc: 'Multi-layer (3,5) Torus Knot whose strand is a 4-tube spiraling superhelix'
     },
     {
-        id: FormationMode.LorenzAttractor,
-        label: 'Lorenz Butterfly',
-        icon: '🦋',
-        desc: 'Continuous dual-scroll chaotic butterfly wings'
+        id: FormationMode.DNAChromatinSolenoid,
+        label: 'Chromatin Solenoid',
+        icon: '🧬',
+        desc: '3-Level biological supercoiling: solenoid fiber with orbiting nucleosomes & DNA wraps'
     },
     {
-        id: FormationMode.GyroidMinimalSurface,
-        label: 'Gyroid Flow',
+        id: FormationMode.TriquetraCelticBraid,
+        label: 'Triquetra Celtic Braid',
+        icon: '☘️',
+        desc: '3D Celtic trinity knot with alternating over-under intertwined crossings'
+    },
+    {
+        id: FormationMode.WhiteheadLinkBraid,
+        label: 'Whitehead Link Braid',
+        icon: '🪢',
+        desc: 'Circular ring intertwined with 3D figure-8 loop in multi-strand braid'
+    },
+    {
+        id: FormationMode.QuatrefoilKnotBraid,
+        label: 'Quatrefoil Knot Braid',
+        icon: '🍀',
+        desc: '4-Leaf intertwined Torus (4,3) clover ribbon with 4 braided cords'
+    },
+    {
+        id: FormationMode.GrannyKnotBraid,
+        label: 'Granny Knot Braid',
+        icon: '🧵',
+        desc: 'Dual intertwined composite trefoils linked in tandem with bridge threads'
+    },
+    {
+        id: FormationMode.DoubleHelixBraid,
+        label: 'Double Helix Braid',
+        icon: '🧬',
+        desc: 'Dual intertwined bio-macromolecule strands with cross-ladder rungs'
+    },
+    {
+        id: FormationMode.TripleHelixBraid,
+        label: 'Triple Helix Braid',
+        icon: '🧬',
+        desc: 'Tri-strand intertwined braided collagen rope'
+    },
+    {
+        id: FormationMode.DNALadderBraid,
+        label: 'DNA Ladder Braid',
+        icon: '🧬',
+        desc: 'Dual helical sugar-phosphate rails with periodic cross base-pair rungs'
+    },
+    {
+        id: FormationMode.GyroidBraidLabyrinth,
+        label: 'Gyroid Braid Labyrinth',
         icon: '🌊',
-        desc: 'Triply periodic minimal surface continuous streamline'
+        desc: '4 Species cords weaving through periodic minimal surface tunnels'
     },
     {
-        id: FormationMode.KleinBottle4D,
-        label: 'Klein Bottle',
+        id: FormationMode.LorenzChaoticBraid,
+        label: 'Lorenz Chaotic Braid',
+        icon: '🦋',
+        desc: '4 Intertwined strands circulating the dual-scroll chaotic butterfly wings'
+    },
+    {
+        id: FormationMode.KleinBottleBraid,
+        label: 'Klein Bottle Braid',
         icon: '♾️',
-        desc: 'Continuous 4D topological self-contained immersion'
+        desc: '4-Strand intertwined immersion through 4D figure-8 self-intersection'
     },
     {
-        id: FormationMode.CliffordTorus,
-        label: 'Clifford Torus',
+        id: FormationMode.CliffordTorusBraid,
+        label: 'Clifford Torus Braid',
         icon: '💫',
-        desc: 'Flat 4D hyper-torus stereographic projection'
+        desc: '4 Intertwined cords in flat 4D hyper-torus stereographic projection'
     },
     {
-        id: FormationMode.HopfFibration,
-        label: 'Hopf Fiber Bundle',
-        icon: '🫧',
-        desc: 'Concentric Villarceau circular fiber streams'
-    },
-    {
-        id: FormationMode.CalabiYauManifold,
-        label: 'Calabi-Yau Bloom',
-        icon: '🌌',
-        desc: '6D String theory compactification projection'
-    },
-    {
-        id: FormationMode.OuroborosSerpent,
-        label: 'Ouroboros Dragon',
+        id: FormationMode.OuroborosDragonBraid,
+        label: 'Ouroboros Dragon Braid',
         icon: '🐉',
-        desc: 'Coiling aerodynamic dragon loop'
+        desc: '4-Strand intertwined coiling dragon loop swallowing its tail'
     },
     {
-        id: FormationMode.DancingRibbon,
-        label: 'Dancing Ribbon',
+        id: FormationMode.DancingRibbonBraid,
+        label: 'Dancing Ribbon Braid',
         icon: '🎀',
-        desc: 'Twisting closed 3D harmonic gymnast loop'
+        desc: '4-Strand intertwined twisting kinetic gymnast loop'
     },
     {
-        id: FormationMode.OlympicChain,
-        label: 'Olympic Chain',
+        id: FormationMode.SolarFlareProminence,
+        label: 'Solar Flare Prominence',
+        icon: '☀️',
+        desc: 'Intertwined magnetic flux ropes arching with counter-helicity twisting'
+    },
+    {
+        id: FormationMode.OlympicChainLink,
+        label: 'Olympic Chain Link',
         icon: '🔗',
-        desc: '4 Interlocked clean circular rings'
+        desc: '4 Interlocked elliptical rings linked sequentially in 3D toroidal space'
     },
     {
         id: FormationMode.Procedural,
@@ -635,6 +691,62 @@ export function generateProceduralShapeSurprise(): { shapes: [number, number, nu
 }
 
 
+// Stable normal/binormal braiding offset around a macro-spine point [mx, my, mz]
+// with tangent vector [tanX, tanY, tanZ]
+function applyIntertwinedMultiLayer(
+    mx: number, my: number, mz: number,
+    tanX: number, tanY: number, tanZ: number,
+    u: number,
+    time: number,
+    species: number,
+    indexInSpecies: number,
+    speedMult: number,
+    rMeso: number,
+    omegaMeso: number,
+    rMicro: number,
+    omegaMicro: number
+): [number, number, number] {
+    const tLen = Math.sqrt(tanX * tanX + tanY * tanY + tanZ * tanZ) || 1.0;
+    const tx = tanX / tLen, ty = tanY / tLen, tz = tanZ / tLen;
+
+    let upX = 0, upY = 1, upZ = 0;
+    if (Math.abs(ty) > 0.92) {
+        upX = 1; upY = 0; upZ = 0;
+    }
+    let nx = upY * tz - upZ * ty;
+    let ny = upZ * tx - upX * tz;
+    let nz = upX * ty - upY * tx;
+    const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1.0;
+    nx /= nLen; ny /= nLen; nz /= nLen;
+
+    const bx = ty * nz - tz * ny;
+    const by = tz * nx - tx * nz;
+    const bz = tx * ny - ty * nx;
+
+    // Layer 2: Meso species braid phase
+    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.9 * speedMult);
+    const cosMeso = fastCos(mesoAngle);
+    const sinMeso = fastSin(mesoAngle);
+
+    // Layer 3: Micro sub-strand within species cable
+    const microSub = (indexInSpecies % 2 === 0) ? 0.0 : Math.PI;
+    const microAngle = u * omegaMicro * Math.PI + microSub + (time * 1.8 * speedMult);
+    const cosMicro = fastCos(microAngle);
+    const sinMicro = fastSin(microAngle);
+
+    const isRung = (indexInSpecies % 10 === 0);
+    const rungExt = isRung ? ((indexInSpecies % 30) / 30.0 - 0.5) * 1.2 : 0.0;
+
+    const offN = (cosMeso * (rMeso + rungExt)) + (cosMicro * rMicro);
+    const offB = (sinMeso * (rMeso + rungExt)) + (sinMicro * rMicro);
+
+    return [
+        mx + nx * offN + bx * offB,
+        my + ny * offN + by * offB,
+        mz + nz * offN + bz * offB
+    ];
+}
+
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
 
 export function computeFormationPoint(
@@ -651,189 +763,394 @@ export function computeFormationPoint(
 ): [number, number, number] | Float32Array | number[] {
     let tx = 0, ty = 0, tz = 0;
 
-    if (formation === FormationMode.SpiralTower) {
-        // --- 0. Spiral Tower: Ascending Conical Spiral with Central Vertical Axial Spine ---
-        if (u < 0.15) {
-            // Central vertical spine axis
-            tx = 0;
-            ty = (u / 0.15 - 0.5) * 12.0;
-            tz = 0;
+    if (formation === FormationMode.QuadHelixBraid) {
+        // --- 0. Quad Helix Braid: 4 Intertwined Species Cords with Cross-Ladders ---
+        const h = (u - 0.5) * 12.0;
+        const theta = u * 8.0 * Math.PI + time * 0.5 * speedMult;
+        const R = 3.6;
+        const mx = R * fastCos(theta);
+        const my = h;
+        const mz = R * fastSin(theta);
+        const tanX = -R * fastSin(theta);
+        const tanY = 1.2;
+        const tanZ = R * fastCos(theta);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.15, 10.0, 0.28, 20.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.ConcentricDualHelixSheath) {
+        // --- 1. Concentric Dual Helix Sheath: Multi-Layer Nested Braids ---
+        const h = (u - 0.5) * 12.0;
+        const isInner = (species < 2);
+        if (isInner) {
+            const theta = u * 9.0 * Math.PI + time * 0.7 * speedMult;
+            const mx = 2.2 * fastCos(theta);
+            const my = h;
+            const mz = 2.2 * fastSin(theta);
+            const tanX = -2.2 * fastSin(theta), tanY = 1.2, tanZ = 2.2 * fastCos(theta);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.55, 8.0, 0.20, 16.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
         } else {
-            const segU = (u - 0.15) / 0.85;
-            const theta = segU * 8.0 * Math.PI + time * 0.5 * speedMult + (species * Math.PI * 0.5);
-            const r = 1.6 + 2.8 * segU; // Conical widening from bottom to top
-            tx = r * fastCos(theta);
-            ty = (segU - 0.5) * 12.0;
-            tz = r * fastSin(theta);
+            const theta = -u * 6.0 * Math.PI - time * 0.5 * speedMult;
+            const mx = 4.4 * fastCos(theta);
+            const my = h;
+            const mz = 4.4 * fastSin(theta);
+            const tanX = 4.4 * fastSin(theta), tanY = 1.2, tanZ = -4.4 * fastCos(theta);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species - 2, indexInSpecies, speedMult, 0.75, 8.0, 0.22, 16.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
         }
-    } else if (formation === FormationMode.ConicalHelix) {
-        // --- 1. Conical Helix: Single Clean Wide Ascending Conical Helical Ribbon ---
-        const h = (u - 0.5) * 11.5;
-        const theta = u * 9.0 * Math.PI + time * 0.45 * speedMult;
-        const r = 1.8 + 2.4 * u;
-        tx = r * fastCos(theta);
-        ty = h;
-        tz = r * fastSin(theta);
-    } else if (formation === FormationMode.DoubleHelix) {
-        // --- 2. Double Helix: Canonical Dual Parallel Helical Strands ---
-        const h = (u - 0.5) * 11.5;
-        const theta = u * 6.0 * Math.PI + time * 0.5 * speedMult + ((species % 2) * Math.PI);
-        const r = 3.6;
-        tx = r * fastCos(theta);
-        ty = h;
-        tz = r * fastSin(theta);
-    } else if (formation === FormationMode.TripleHelix) {
-        // --- 3. Triple Helix: Three Parallel Ascending Helical Streams ---
-        const h = (u - 0.5) * 11.5;
-        const theta = u * 6.0 * Math.PI + time * 0.5 * speedMult + ((species % 3) * (Math.PI * 2.0 / 3.0));
-        const r = 3.6;
-        tx = r * fastCos(theta);
-        ty = h;
-        tz = r * fastSin(theta);
-    } else if (formation === FormationMode.DNALadder) {
-        // --- 4. DNA Ladder: Double Helix Rails with Base-Pair Horizontal Rungs ---
-        const h = (u - 0.5) * 11.5;
-        const isRung = (indexInSpecies % 8 === 0);
-        if (isRung) {
-            const theta = u * 6.0 * Math.PI + time * 0.5 * speedMult;
-            const rungProg = (indexInSpecies % 32) / 32.0 - 0.5;
-            tx = rungProg * 7.2 * fastCos(theta);
-            ty = h;
-            tz = rungProg * 7.2 * fastSin(theta);
-        } else {
-            const theta = u * 6.0 * Math.PI + time * 0.5 * speedMult + ((species % 2) * Math.PI);
-            tx = 3.6 * fastCos(theta);
-            ty = h;
-            tz = 3.6 * fastSin(theta);
-        }
-    } else if (formation === FormationMode.TrefoilKnot) {
-        // --- 5. Trefoil Knot: Continuous Canonical (2,3) Cloverleaf Single Streamline ---
-        const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        tx = (fastSin(t) + 2.0 * fastSin(2.0 * t)) * 1.6;
-        ty = (fastCos(t) - 2.0 * fastCos(2.0 * t)) * 1.6;
-        tz = -fastSin(3.0 * t) * 2.2;
-    } else if (formation === FormationMode.TorusKnot) {
-        // --- 6. Torus Knot: Continuous Seamless (3,5) Toroidal Loop ---
+    } else if (formation === FormationMode.ToroidalHelixBraid) {
+        // --- 2. Toroidal Helix Braid: 4-Strand Braided Torus Cable ---
         const t = u * Math.PI * 2.0 + time * 0.3 * speedMult;
-        const r = fastCos(5.0 * t) * 1.6 + 4.0;
-        tx = r * fastCos(3.0 * t);
-        ty = fastSin(5.0 * t) * 2.2;
-        tz = r * fastSin(3.0 * t);
-    } else if (formation === FormationMode.FigureEightKnot) {
-        // --- 7. Figure-Eight Knot: Canonical 4_1 Figure-Eight Continuous Knot ---
+        const R0 = 4.8;
+        const mx = R0 * fastCos(t);
+        const my = 0;
+        const mz = R0 * fastSin(t);
+        const tanX = -R0 * fastSin(t), tanY = 0, tanZ = R0 * fastCos(t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.35, 8.0, 0.28, 22.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.TrefoilBraidedRibbon) {
+        // --- 3. Trefoil Braided Ribbon: 4-Strand Multi-Layer Knot (2,3) ---
         const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        const r = 2.8 + 1.3 * fastCos(2.0 * t);
-        tx = r * fastCos(3.0 * t) * 1.3;
-        ty = r * fastSin(3.0 * t) * 1.3;
-        tz = 2.4 * fastSin(4.0 * t);
-    } else if (formation === FormationMode.CinqfoilKnot) {
-        // --- 8. Cinqfoil Knot: 5-Lobed Continuous Torus (5,2) Knot Ribbon ---
+        const mx = (fastSin(t) + 2.0 * fastSin(2.0 * t)) * 1.5;
+        const my = (fastCos(t) - 2.0 * fastCos(2.0 * t)) * 1.5;
+        const mz = (-fastSin(3.0 * t)) * 2.0;
+        const tanX = (fastCos(t) + 4.0 * fastCos(2.0 * t)) * 1.5;
+        const tanY = (-fastSin(t) + 4.0 * fastSin(2.0 * t)) * 1.5;
+        const tanZ = (-3.0 * fastCos(3.0 * t)) * 2.0;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.26, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.MobiusHelixBraid) {
+        // --- 4. Mobius Helix Braid: Continuous 3D Mobius Strip with 4 Braided Cords ---
+        const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
+        const halfT = t * 0.5;
+        const R0 = 4.5;
+        const mx = R0 * fastCos(t);
+        const my = fastSin(halfT) * 1.8;
+        const mz = R0 * fastSin(t);
+        const tanX = -R0 * fastSin(t);
+        const tanY = fastCos(halfT) * 0.9;
+        const tanZ = R0 * fastCos(t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.1, 7.0, 0.25, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.LissajousIntertwinedKnot) {
+        // --- 5. Lissajous Intertwined Knot: 4 Weaving Harmonic Ribbons in 3D 8-Knot ---
+        const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
+        const mx = 4.2 * fastSin(2.0 * t);
+        const my = 3.5 * fastCos(3.0 * t);
+        const mz = 2.8 * fastSin(4.0 * t);
+        const tanX = 8.4 * fastCos(2.0 * t);
+        const tanY = -10.5 * fastSin(3.0 * t);
+        const tanZ = 11.2 * fastCos(4.0 * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.26, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.CaduceusVortex) {
+        // --- 6. Caduceus Vortex: Dual Intertwined Serpents Coiling around Central Spine ---
+        if (u < 0.18) {
+            tx = 0; ty = (u / 0.18 - 0.5) * 12.0; tz = 0;
+        } else {
+            const segU = (u - 0.18) / 0.82;
+            const h = (segU - 0.5) * 11.5;
+            const strand = (species % 2 === 0 ? 0 : 1);
+            const theta = segU * 8.0 * Math.PI + time * 0.7 * speedMult + (strand * Math.PI);
+            const loopScale = fastSin(segU * Math.PI * 3.0) * 1.6 + 2.8;
+            const mx = loopScale * fastCos(theta);
+            const my = h;
+            const mz = loopScale * fastSin(theta);
+            const tanX = -loopScale * fastSin(theta), tanY = 1.2, tanZ = loopScale * fastCos(theta);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, segU, time, Math.floor(species / 2), indexInSpecies, speedMult, 0.55, 6.0, 0.22, 14.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
+        }
+    } else if (formation === FormationMode.BorromeanRings) {
+        // --- 7. Borromean Rings: 3 Mutually Intertwined Orthogonal Loops ---
+        const ringIdx = (species + Math.floor(u * 3)) % 3;
+        const t = ((u * 3) % 1.0) * Math.PI * 2.0 + time * 0.45 * speedMult;
+        let mx = 0, my = 0, mz = 0, tanX = 0, tanY = 0, tanZ = 0;
+        if (ringIdx === 0) {
+            mx = 4.4 * fastCos(t); my = 2.5 * fastSin(t); mz = 1.4 * fastSin(2.0 * t) + 0.9;
+            tanX = -4.4 * fastSin(t); tanY = 2.5 * fastCos(t); tanZ = 2.8 * fastCos(2.0 * t);
+        } else if (ringIdx === 1) {
+            my = 4.4 * fastCos(t); mz = 2.5 * fastSin(t); mx = 1.4 * fastSin(2.0 * t) + 0.9;
+            tanY = -4.4 * fastSin(t); tanZ = 2.5 * fastCos(t); tanX = 2.8 * fastCos(2.0 * t);
+        } else {
+            mz = 4.4 * fastCos(t); mx = 2.5 * fastSin(t); my = 1.4 * fastSin(2.0 * t) + 0.9;
+            tanZ = -4.4 * fastSin(t); tanX = 2.5 * fastCos(t); tanY = 2.8 * fastCos(2.0 * t);
+        }
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.65, 6.0, 0.22, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.FigureEightKnotBraid) {
+        // --- 8. Figure-Eight Knot Braid: Canonical 4_1 Listing Knot with 4-Strand Braided Cable ---
+        const t = u * Math.PI * 2.0 + time * 0.38 * speedMult;
+        const rBase = 2.8 + 1.3 * fastCos(2.0 * t);
+        const mx = rBase * fastCos(3.0 * t);
+        const my = rBase * fastSin(3.0 * t);
+        const mz = 2.4 * fastSin(4.0 * t);
+        const tanX = -3.0 * rBase * fastSin(3.0 * t);
+        const tanY = 3.0 * rBase * fastCos(3.0 * t);
+        const tanZ = 9.6 * fastCos(4.0 * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.CinqfoilKnotBraid) {
+        // --- 9. Cinqfoil Knot Braid: 5-Lobe Intertwined Torus (5,2) Solomon Seal Ribbon ---
         const t = u * Math.PI * 2.0 + time * 0.32 * speedMult;
         const r = 3.6 + 1.5 * fastCos(5.0 * t);
-        tx = r * fastCos(2.0 * t);
-        ty = fastSin(5.0 * t) * 2.2;
-        tz = r * fastSin(2.0 * t);
-    } else if (formation === FormationMode.SeptafoilKnot) {
-        // --- 9. Septafoil Knot: 7-Point Continuous Stellar Torus (7,3) Knot Ribbon ---
+        const mx = r * fastCos(2.0 * t);
+        const my = r * fastSin(2.0 * t);
+        const mz = -2.5 * fastSin(5.0 * t);
+        const tanX = -2.0 * r * fastSin(2.0 * t);
+        const tanY = 2.0 * r * fastCos(2.0 * t);
+        const tanZ = -12.5 * fastCos(5.0 * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 5.0, 0.24, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.SeptafoilKnotBraid) {
+        // --- 10. Septafoil Stellar Braid: 7-Point Intertwined Torus (7,3) Ribbon ---
         const t = u * Math.PI * 2.0 + time * 0.28 * speedMult;
         const r = 3.8 + 1.6 * fastCos(7.0 * t);
-        tx = r * fastCos(3.0 * t);
-        ty = fastSin(7.0 * t) * 2.2;
-        tz = r * fastSin(3.0 * t);
-    } else if (formation === FormationMode.LotusBlossom) {
-        // --- 10. Lotus Blossom: 5-Petal Blooming Graceful Floral Arcs Radiating Upward ---
-        const petal = (species + Math.floor(u * 5)) % 5;
-        const theta = petal * (Math.PI * 2.0 / 5.0) + time * 0.2 * speedMult;
-        const s = (u * 5.0) % 1.0;
-        const y = (s - 0.5) * 8.5 + s * s * 2.5;
-        const r = s * 5.5 + fastSin(s * Math.PI) * 1.0;
-        tx = r * fastCos(theta);
-        ty = y;
-        tz = r * fastSin(theta);
-    } else if (formation === FormationMode.SolarFlareArch) {
-        // --- 11. Solar Flare Arch: Smooth Magnetic Coronal Loop Arch ---
-        const s = (u - 0.5) * Math.PI;
-        tx = 5.2 * fastSin(s);
-        ty = 4.6 * fastCos(s) - 1.2;
-        tz = fastSin(s * 2.0) * 1.6;
-    } else if (formation === FormationMode.LorenzAttractor) {
-        // --- 12. Lorenz Butterfly: Continuous Dual-Scroll Chaotic Butterfly Wings ---
+        const mx = r * fastCos(3.0 * t);
+        const my = r * fastSin(3.0 * t);
+        const mz = -2.6 * fastSin(7.0 * t);
+        const tanX = -3.0 * r * fastSin(3.0 * t);
+        const tanY = 3.0 * r * fastCos(3.0 * t);
+        const tanZ = -18.2 * fastCos(7.0 * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 7.0, 0.24, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.FractalSupercoil) {
+        // --- 11. Fractal Supercoil: 3-Tier Nested Coiled-Coil ---
+        const h = (u - 0.5) * 11.5;
+        const tMacro = u * 4.0 * Math.PI + time * 0.45 * speedMult;
+        const rMacro = 3.8 + fastSin(h * 0.35 + time * 0.5) * 0.4;
+        const mx = rMacro * fastCos(tMacro);
+        const my = h;
+        const mz = rMacro * fastSin(tMacro);
+        const tanX = -rMacro * fastSin(tMacro), tanY = 1.0, tanZ = rMacro * fastCos(tMacro);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.25, 12.0, 0.32, 24.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.SuperhelicalTorusKnot) {
+        // --- 12. Superhelical Torus Knot: Multi-Layer (3,5) Torus Knot with Interlocking Superhelix Strands ---
+        const p = 3, q = 5;
+        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult;
+        const r = fastCos(q * t) * 1.6 + 4.0;
+        const mx = r * fastCos(p * t);
+        const my = fastSin(q * t) * 2.2;
+        const mz = r * fastSin(p * t);
+        const tanX = -p * r * fastSin(p * t);
+        const tanY = q * fastCos(q * t) * 2.2;
+        const tanZ = p * r * fastCos(p * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.1, 10.0, 0.28, 20.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.DNAChromatinSolenoid) {
+        // --- 13. Chromatin Solenoid: 3-Tier Biological Supercoiling ---
+        const nBeads = 12;
+        const beadIdx = Math.floor(u * nBeads);
+        const beadU = (u * nBeads) % 1.0;
+        const beadCenterAngle = (beadIdx / nBeads) * Math.PI * 6.0 + time * 0.4 * speedMult;
+        const rSolenoid = 3.6;
+        const bx = rSolenoid * fastCos(beadCenterAngle);
+        const by = (beadIdx / nBeads - 0.5) * 11.0;
+        const bz = rSolenoid * fastSin(beadCenterAngle);
+        const dnaWrapAngle = beadU * Math.PI * 3.3 + (species % 2) * Math.PI + time * 1.2;
+        const rBead = 0.85 + (species >= 2 ? 0.35 : 0.0);
+        tx = bx + fastCos(dnaWrapAngle) * rBead;
+        ty = by + (beadU - 0.5) * 0.9 + fastSin(dnaWrapAngle) * 0.35;
+        tz = bz + fastSin(dnaWrapAngle) * rBead;
+    } else if (formation === FormationMode.TriquetraCelticBraid) {
+        // --- 14. Triquetra Celtic Braid: 3D Celtic Trinity Knot with Over-Under Crossings ---
+        const t = u * Math.PI * 2.0 + time * 0.38 * speedMult;
+        const r = 3.3 * (1.0 + 0.48 * fastCos(3.0 * t));
+        const mx = r * fastCos(t);
+        const my = r * fastSin(t);
+        const mz = 2.3 * fastSin(3.0 * t);
+        const tanX = -r * fastSin(t);
+        const tanY = r * fastCos(t);
+        const tanZ = 6.9 * fastCos(3.0 * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.WhiteheadLinkBraid) {
+        // --- 15. Whitehead Link Braid: Circular Ring Intertwined with 3D Figure-8 Loop ---
+        const isRing = (species < 2);
+        const t = u * Math.PI * 2.0 + time * 0.42 * speedMult;
+        if (isRing) {
+            const rRing = 4.0;
+            const mx = rRing * fastCos(t);
+            const my = rRing * fastSin(t);
+            const mz = 0.7 * fastSin(2.0 * t);
+            const tanX = -rRing * fastSin(t), tanY = rRing * fastCos(t), tanZ = 1.4 * fastCos(2.0 * t);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.6, 6.0, 0.22, 14.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
+        } else {
+            const mx = 2.4 * fastSin(2.0 * t);
+            const my = 0.9 * fastSin(4.0 * t);
+            const mz = 3.6 * fastCos(t);
+            const tanX = 4.8 * fastCos(2.0 * t), tanY = 3.6 * fastCos(4.0 * t), tanZ = -3.6 * fastSin(t);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species - 2, indexInSpecies, speedMult, 0.6, 6.0, 0.22, 14.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
+        }
+    } else if (formation === FormationMode.QuatrefoilKnotBraid) {
+        // --- 16. Quatrefoil Knot Braid: (4,3) Torus Knot / 4-Leaf Intertwined Clover Ribbon ---
+        const t = u * Math.PI * 2.0 + time * 0.34 * speedMult;
+        const r = 3.6 + 1.5 * fastCos(4.0 * t);
+        const mx = r * fastCos(3.0 * t);
+        const my = r * fastSin(3.0 * t);
+        const mz = 2.3 * fastSin(4.0 * t);
+        const tanX = -3.0 * r * fastSin(3.0 * t);
+        const tanY = 3.0 * r * fastCos(3.0 * t);
+        const tanZ = 9.2 * fastCos(4.0 * t);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.GrannyKnotBraid) {
+        // --- 17. Granny Knot Braid: Dual Intertwined Composite Trefoils ---
+        const isUpper = (u < 0.5);
+        const segU = isUpper ? u * 2.0 : (u - 0.5) * 2.0;
+        const t = segU * Math.PI * 2.0 + time * 0.4 * speedMult;
+        const yOffset = isUpper ? 2.2 : -2.2;
+        const mx = (fastSin(t) + 1.6 * fastSin(2.0 * t)) * 1.25;
+        const my = (fastCos(t) - 1.6 * fastCos(2.0 * t)) * 1.25 + yOffset;
+        const mz = (-fastSin(3.0 * t)) * 1.8;
+        const tanX = (fastCos(t) + 3.2 * fastCos(2.0 * t)) * 1.25;
+        const tanY = (-fastSin(t) + 3.2 * fastSin(2.0 * t)) * 1.25;
+        const tanZ = (-3.0 * fastCos(3.0 * t)) * 1.8;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, segU, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.DoubleHelixBraid) {
+        // --- 18. Double Helix Braid: Dual Intertwined Strands with Cross-Ladder Rungs ---
+        const h = (u - 0.5) * 11.5;
+        const theta = u * 8.0 * Math.PI + time * 0.6 * speedMult;
+        const isRung = (indexInSpecies % 6 === 0);
+        if (isRung) {
+            const rungT = ((indexInSpecies % 24) / 24.0 - 0.5) * 2.0;
+            tx = (3.4 * rungT) * fastCos(theta);
+            ty = h;
+            tz = (3.4 * rungT) * fastSin(theta);
+        } else {
+            const strand = (species % 2 === 0 ? 0 : 1);
+            const strandAngle = theta + (strand * Math.PI);
+            const r = 3.6 + fastSin(h * 0.4 + time * 0.5) * 0.4;
+            const mx = r * fastCos(strandAngle);
+            const my = h;
+            const mz = r * fastSin(strandAngle);
+            const tanX = -r * fastSin(strandAngle), tanY = 1.2, tanZ = r * fastCos(strandAngle);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, Math.floor(species / 2), indexInSpecies, speedMult, 0.55, 6.0, 0.22, 14.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
+        }
+    } else if (formation === FormationMode.TripleHelixBraid) {
+        // --- 19. Triple Helix Braid: Tri-Strand Intertwined Braided Stream ---
+        const strand = indexInSpecies % 3;
+        const strandOffset = (strand * Math.PI * 2.0 / 3.0);
+        const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + strandOffset;
+        const h = (u - 0.5) * 11.0;
+        const r = 3.4 + fastSin(h * 0.3 + time * 0.5) * 0.4;
+        const mx = r * fastCos(theta);
+        const my = h;
+        const mz = r * fastSin(theta);
+        const tanX = -r * fastSin(theta), tanY = 1.2, tanZ = r * fastCos(theta);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.65, 6.0, 0.22, 14.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.DNALadderBraid) {
+        // --- 20. DNA Ladder Braid: Dual Helical Sugar-Phosphate Rails with Rungs ---
+        const h = (u - 0.5) * 11.5;
+        const theta = u * 6.0 * Math.PI + time * 0.5 * speedMult;
+        const isRung = (indexInSpecies % 6 === 0);
+        if (isRung) {
+            const rungT = ((indexInSpecies % 24) / 24.0 - 0.5) * 2.0;
+            tx = (3.6 * rungT) * fastCos(theta);
+            ty = h;
+            tz = (3.6 * rungT) * fastSin(theta);
+        } else {
+            const strand = (species % 2 === 0 ? 0 : 1);
+            const strandAngle = theta + (strand * Math.PI);
+            const mx = 3.6 * fastCos(strandAngle);
+            const my = h;
+            const mz = 3.6 * fastSin(strandAngle);
+            const tanX = -3.6 * fastSin(strandAngle), tanY = 1.2, tanZ = 3.6 * fastCos(strandAngle);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, Math.floor(species / 2), indexInSpecies, speedMult, 0.55, 6.0, 0.22, 14.0);
+            tx = pt[0]; ty = pt[1]; tz = pt[2];
+        }
+    } else if (formation === FormationMode.GyroidBraidLabyrinth) {
+        // --- 21. Gyroid Braid Labyrinth: 4 Species Cords Weaving through Periodic Surface ---
+        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult;
+        const mx = (fastSin(t) * fastCos(t * 1.5) + fastCos(t * 0.5)) * 2.8;
+        const my = (fastSin(t * 1.5) * fastCos(t * 0.5) + fastCos(t)) * 2.8;
+        const mz = (fastSin(t * 0.5) * fastCos(t) + fastCos(t * 1.5)) * 2.8;
+        const tanX = fastCos(t) * 2.8, tanY = fastCos(t * 1.5) * 2.8, tanZ = fastCos(t * 0.5) * 2.8;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.24, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.LorenzChaoticBraid) {
+        // --- 22. Lorenz Chaotic Braid: 4 Intertwined Strands in Dual-Scroll Butterfly Wings ---
         const t = u * Math.PI * 2.0 + time * 0.4 * speedMult;
         const s = fastSin(t);
-        tx = s * 4.4;
-        ty = fastCos(t) * 3.8;
-        tz = (s > 0 ? 1 : -1) * (4.2 - Math.abs(s) * 2.6);
-    } else if (formation === FormationMode.GyroidMinimalSurface) {
-        // --- 13. Gyroid Flow: Smooth Triply Periodic Minimal Surface Streamline ---
-        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult;
-        tx = (fastSin(t) * fastCos(t * 1.5) + fastCos(t * 0.5)) * 2.8;
-        ty = (fastSin(t * 1.5) * fastCos(t * 0.5) + fastCos(t)) * 2.8;
-        tz = (fastSin(t * 0.5) * fastCos(t) + fastCos(t * 1.5)) * 2.8;
-    } else if (formation === FormationMode.KleinBottle4D) {
-        // --- 14. Klein Bottle: Smooth 4D Immersion Loop ---
+        const mx = s * 4.4;
+        const my = fastCos(t) * 3.8;
+        const mz = (s > 0 ? 1 : -1) * (4.2 - Math.abs(s) * 2.6);
+        const tanX = fastCos(t) * 4.4, tanY = -fastSin(t) * 3.8, tanZ = fastCos(t) * 2.6;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.KleinBottleBraid) {
+        // --- 23. Klein Bottle Braid: 4-Strand Intertwined Immersion ---
         const ku = u * Math.PI * 2.0 + time * 0.25 * speedMult;
         const kv = (((indexInSpecies % 60) / 60.0) * Math.PI * 2.0);
         const rk = 4.0 * (1.0 - fastCos(ku) * 0.5);
         const kx = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastCos(ku);
         const ky = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastSin(ku);
         const kz = (fastSin(ku * 0.5) * fastSin(kv) + fastCos(ku * 0.5) * fastSin(2.0 * kv)) * 2.2;
-        tx = kx * 0.75;
-        ty = ky * 0.75;
-        tz = kz * 0.75;
-    } else if (formation === FormationMode.CliffordTorus) {
-        // --- 15. Clifford Torus: Flat 4D Hyper-Torus Stereographic Projection ---
+        const mx = kx * 0.75, my = ky * 0.75, mz = kz * 0.75;
+        const tanX = -ky * 0.75, tanY = kx * 0.75, tanZ = kz * 0.5;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.CliffordTorusBraid) {
+        // --- 24. Clifford Torus Braid: 4 Intertwined Cords in 4D Hyper-Torus ---
         const thC = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        const phiC = (species * (Math.PI / 2.0));
-        tx = 4.2 * fastCos(thC);
-        ty = 4.2 * fastSin(thC);
-        tz = 2.4 * fastSin(phiC);
-    } else if (formation === FormationMode.HopfFibration) {
-        // --- 16. Hopf Fiber Bundle: Concentric Villarceau Circular Fiber Streams ---
-        const theta = u * Math.PI * 2.0 + time * 0.4 * speedMult;
-        const phi = species * (Math.PI * 0.5);
-        const rHopf = 3.5 + 1.2 * fastCos(phi);
-        tx = rHopf * fastCos(theta);
-        ty = 1.8 * fastSin(phi);
-        tz = rHopf * fastSin(theta);
-    } else if (formation === FormationMode.CalabiYauManifold) {
-        // --- 17. Calabi-Yau Bloom: 6D String Theory Compactification Projection ---
-        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult;
-        tx = (fastCos(t) + 0.5 * fastCos(3.0 * t)) * 3.2;
-        ty = (fastSin(t) - 0.5 * fastSin(3.0 * t)) * 3.2;
-        tz = fastSin(2.0 * t + species * Math.PI * 0.5) * 2.5;
-    } else if (formation === FormationMode.OuroborosSerpent) {
-        // --- 18. Ouroboros Dragon: Coiling Aerodynamic Dragon Loop ---
+        const mx = 4.2 * fastCos(thC);
+        const my = 4.2 * fastSin(thC);
+        const mz = 0;
+        const tanX = -4.2 * fastSin(thC), tanY = 4.2 * fastCos(thC), tanZ = 0;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.25, 8.0, 0.26, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.OuroborosDragonBraid) {
+        // --- 25. Ouroboros Dragon Braid: 4-Strand Intertwined Dragon Loop ---
         const ringAngle = u * Math.PI * 2.0 + time * 0.4 * speedMult;
         const spineWave = fastSin(u * 10.0 - time * 2.0) * 0.45;
-        const baseR = 4.2 + (species - 1.5) * 0.35;
-        tx = (baseR + spineWave) * fastCos(ringAngle);
-        ty = fastSin(u * 7.0 + time) * 0.7;
-        tz = (baseR + spineWave) * fastSin(ringAngle);
-    } else if (formation === FormationMode.DancingRibbon) {
-        // --- 19. Dancing Ribbon: Twisting Closed 3D Harmonic Gymnast Loop ---
+        const baseR = 4.2;
+        const mx = (baseR + spineWave) * fastCos(ringAngle);
+        const my = fastSin(u * 7.0 + time) * 0.7;
+        const mz = (baseR + spineWave) * fastSin(ringAngle);
+        const tanX = -baseR * fastSin(ringAngle), tanY = 0.5, tanZ = baseR * fastCos(ringAngle);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 8.0, 0.25, 18.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.DancingRibbonBraid) {
+        // --- 26. Dancing Ribbon Braid: 4-Strand Intertwined Gymnast Loop ---
         const ribT = (u - 0.5) * 11.0;
         const ribWave = ribT * 0.7 - time * 0.8 * speedMult;
-        const ribbonWidth = (indexInSpecies % 2 === 0 ? 1 : -1) * 0.85;
-        const twistAngle = ribT * 0.9 + time * 0.5;
-        const rx = fastSin(ribWave) * 3.2;
-        const ry = ribT * 0.85 + fastCos(ribWave) * 1.2;
-        const rz = fastCos(ribWave) * 3.0;
-        tx = rx + fastCos(twistAngle) * ribbonWidth;
-        ty = ry;
-        tz = rz + fastSin(twistAngle) * ribbonWidth;
-    } else if (formation === FormationMode.OlympicChain) {
-        // --- 20. Olympic Chain: 4 Interlocked Clean Circular Rings ---
-        const ringK = species;
+        const mx = fastSin(ribWave) * 3.2;
+        const my = ribT * 0.85 + fastCos(ribWave) * 1.2;
+        const mz = fastCos(ribWave) * 3.0;
+        const tanX = fastCos(ribWave) * 3.2, tanY = 0.85, tanZ = -fastSin(ribWave) * 3.0;
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 7.0, 0.24, 16.0);
+        tx = pt[0]; ty = pt[1]; tz = pt[2];
+    } else if (formation === FormationMode.SolarFlareProminence) {
+        // --- 27. Solar Flare Prominence: Intertwined Magnetic Flux Ropes ---
+        const s = (u - 0.5) * Math.PI;
+        const cx = 5.2 * fastSin(s);
+        const cy = 4.6 * fastCos(s) - 1.2;
+        const cz = fastSin(s * 2.0) * 1.6;
+        const thetaMag = s * 7.0 + time * 0.75 * speedMult + species * (Math.PI * 0.5);
+        const rRope = 0.85 + 0.35 * fastCos(s * 2.0);
+        tx = cx + rRope * fastCos(thetaMag) * fastCos(s);
+        ty = cy - rRope * fastCos(thetaMag) * fastSin(s);
+        tz = cz + rRope * fastSin(thetaMag) * 1.3;
+    } else if (formation === FormationMode.OlympicChainLink) {
+        // --- 28. Olympic Chain Link: 4 Interlocked Elliptical Rings ---
+        const ringK = (species + Math.floor(u * 4)) % 4;
         const ringTheta = ringK * (Math.PI * 0.5) + time * 0.25 * speedMult;
         const cx = 3.4 * fastCos(ringTheta);
         const cz = 3.4 * fastSin(ringTheta);
-        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6);
-        const tau = u * Math.PI * 2.0 + time * 0.6;
+        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6) * fastSin(time * 0.4 + ringK);
+        const tau = ((u * 4) % 1.0) * Math.PI * 2.0 + time * 0.6;
         const cosTau = fastCos(tau), sinTau = fastSin(tau);
         const cosTh = fastCos(ringTheta), sinTh = fastSin(ringTheta);
-        tx = cx + (2.0 * cosTau * (-sinTh) + 0.5 * sinTau * cosTh);
-        ty = cy + 2.0 * sinTau;
-        tz = cz + (2.0 * cosTau * cosTh + 0.5 * sinTau * sinTh);
+        const lx = 2.0 * cosTau * (-sinTh) + 0.5 * sinTau * cosTh;
+        const ly = 2.0 * sinTau;
+        const lz = 2.0 * cosTau * cosTh + 0.5 * sinTau * sinTh;
+        tx = cx + lx;
+        ty = cy + ly;
+        tz = cz + lz;
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;
@@ -893,37 +1210,45 @@ export interface FormationPhysicsProfile {
 
 export function getFormationPhysicsProfile(formation: FormationMode): FormationPhysicsProfile {
     switch (formation) {
-        // 1. TIGHT MATHEMATICAL CURVES & HELICES
-        case FormationMode.SpiralTower:
-        case FormationMode.ConicalHelix:
-        case FormationMode.DoubleHelix:
-        case FormationMode.TripleHelix:
-        case FormationMode.DNALadder:
-        case FormationMode.TrefoilKnot:
-        case FormationMode.TorusKnot:
-        case FormationMode.FigureEightKnot:
-        case FormationMode.CinqfoilKnot:
-        case FormationMode.SeptafoilKnot:
-        case FormationMode.LotusBlossom:
-        case FormationMode.SolarFlareArch:
-        case FormationMode.GyroidMinimalSurface:
-        case FormationMode.KleinBottle4D:
-        case FormationMode.CliffordTorus:
-        case FormationMode.HopfFibration:
-        case FormationMode.CalabiYauManifold:
-        case FormationMode.OlympicChain:
-            return { lerpRate: 0.14, noiseDrift: 0.0002, strayRatio: 0.0, maxSpeedCap: 0.095, volThickness: 0.06 };
+        // 1. TIGHT MATHEMATICAL BRAIDED CORDS & INTERTWINED KNOTS
+        case FormationMode.QuadHelixBraid:
+        case FormationMode.ConcentricDualHelixSheath:
+        case FormationMode.ToroidalHelixBraid:
+        case FormationMode.TrefoilBraidedRibbon:
+        case FormationMode.MobiusHelixBraid:
+        case FormationMode.LissajousIntertwinedKnot:
+        case FormationMode.CaduceusVortex:
+        case FormationMode.BorromeanRings:
+        case FormationMode.FigureEightKnotBraid:
+        case FormationMode.CinqfoilKnotBraid:
+        case FormationMode.SeptafoilKnotBraid:
+        case FormationMode.FractalSupercoil:
+        case FormationMode.SuperhelicalTorusKnot:
+        case FormationMode.DNAChromatinSolenoid:
+        case FormationMode.TriquetraCelticBraid:
+        case FormationMode.WhiteheadLinkBraid:
+        case FormationMode.QuatrefoilKnotBraid:
+        case FormationMode.GrannyKnotBraid:
+        case FormationMode.DoubleHelixBraid:
+        case FormationMode.TripleHelixBraid:
+        case FormationMode.DNALadderBraid:
+        case FormationMode.GyroidBraidLabyrinth:
+        case FormationMode.KleinBottleBraid:
+        case FormationMode.CliffordTorusBraid:
+        case FormationMode.SolarFlareProminence:
+        case FormationMode.OlympicChainLink:
+            return { lerpRate: 0.14, noiseDrift: 0.0002, strayRatio: 0.0, maxSpeedCap: 0.095, volThickness: 0.05 };
 
         // 2. ORGANIC KINETIC LOOPS
-        case FormationMode.OuroborosSerpent:
-        case FormationMode.DancingRibbon:
+        case FormationMode.OuroborosDragonBraid:
+        case FormationMode.DancingRibbonBraid:
         case FormationMode.Procedural:
-            return { lerpRate: 0.10, noiseDrift: 0.001, strayRatio: 0.0, maxSpeedCap: 0.075, volThickness: 0.10 };
+            return { lerpRate: 0.10, noiseDrift: 0.001, strayRatio: 0.0, maxSpeedCap: 0.075, volThickness: 0.08 };
 
         // 3. CHAOTIC ATTRACTOR
-        case FormationMode.LorenzAttractor:
+        case FormationMode.LorenzChaoticBraid:
         default:
-            return { lerpRate: 0.10, noiseDrift: 0.0005, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.08 };
+            return { lerpRate: 0.10, noiseDrift: 0.0005, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.06 };
     }
 }
 
@@ -1146,7 +1471,7 @@ export class Boid {
             speedMult *= 2.2;
         }
 
-        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.SpiralTower;
+        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const total = this.totalInSpecies > 0 ? this.totalInSpecies : 100;

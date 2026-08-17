@@ -222,7 +222,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             speedMult *= 2.2;
         }
 
-        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.SpiralTower;
+        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;

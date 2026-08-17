@@ -601,41 +601,48 @@ export function getLastState(): PersistedLastState | null {
     }
 }
 
-// 5 Curated Organic Aesthetic Symphony Suites
-// 4 Curated Clean Geometric Symphony Suites
+// 4 Curated Intertwined Aesthetic Symphony Suites
 export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
-    // Suite 1: Iconic Helices & Towers
+    // Suite 1: Intertwined Multi-Helices & Braided Towers
     [
-        FormationMode.SpiralTower,
-        FormationMode.ConicalHelix,
-        FormationMode.DoubleHelix,
-        FormationMode.TripleHelix,
-        FormationMode.DNALadder
+        FormationMode.QuadHelixBraid,
+        FormationMode.ConcentricDualHelixSheath,
+        FormationMode.ToroidalHelixBraid,
+        FormationMode.CaduceusVortex,
+        FormationMode.DoubleHelixBraid,
+        FormationMode.TripleHelixBraid,
+        FormationMode.DNALadderBraid
     ],
-    // Suite 2: Prime Knots & Toroidal Ribbons
+    // Suite 2: Prime Knots, Multi-Links & Celtic Braids
     [
-        FormationMode.TrefoilKnot,
-        FormationMode.TorusKnot,
-        FormationMode.FigureEightKnot,
-        FormationMode.CinqfoilKnot,
-        FormationMode.SeptafoilKnot,
-        FormationMode.OlympicChain
+        FormationMode.TrefoilBraidedRibbon,
+        FormationMode.MobiusHelixBraid,
+        FormationMode.LissajousIntertwinedKnot,
+        FormationMode.BorromeanRings,
+        FormationMode.FigureEightKnotBraid,
+        FormationMode.CinqfoilKnotBraid,
+        FormationMode.SeptafoilKnotBraid,
+        FormationMode.TriquetraCelticBraid,
+        FormationMode.WhiteheadLinkBraid,
+        FormationMode.QuatrefoilKnotBraid,
+        FormationMode.GrannyKnotBraid,
+        FormationMode.OlympicChainLink
     ],
-    // Suite 3: Floral Arcs & Natural Manifolds
+    // Suite 3: Hierarchical Multi-Layer Supercoils & Solenoids
     [
-        FormationMode.LotusBlossom,
-        FormationMode.SolarFlareArch,
-        FormationMode.OuroborosSerpent,
-        FormationMode.DancingRibbon,
-        FormationMode.LorenzAttractor
+        FormationMode.FractalSupercoil,
+        FormationMode.SuperhelicalTorusKnot,
+        FormationMode.DNAChromatinSolenoid,
+        FormationMode.SolarFlareProminence
     ],
-    // Suite 4: Higher-Order Topological Manifolds
+    // Suite 4: Higher-Order Topological Manifolds & Attractors
     [
-        FormationMode.GyroidMinimalSurface,
-        FormationMode.KleinBottle4D,
-        FormationMode.CliffordTorus,
-        FormationMode.HopfFibration,
-        FormationMode.CalabiYauManifold,
+        FormationMode.GyroidBraidLabyrinth,
+        FormationMode.LorenzChaoticBraid,
+        FormationMode.KleinBottleBraid,
+        FormationMode.CliffordTorusBraid,
+        FormationMode.OuroborosDragonBraid,
+        FormationMode.DancingRibbonBraid,
         FormationMode.Procedural
     ]
 ];
@@ -868,24 +875,24 @@ export interface EmotionalArc {
 
 export const EMOTIONAL_ARCS: EmotionalArc[] = [
     {
-        name: 'Helical Ascendance',
-        description: 'Conical spiral tower transitioning into double helix, triple helix, and DNA ladder',
-        modes: [FormationMode.SpiralTower, FormationMode.ConicalHelix, FormationMode.DoubleHelix, FormationMode.TripleHelix, FormationMode.DNALadder]
+        name: 'Topological Links & Knots',
+        description: 'Borromean multi-rings weaving into figure-eight prime knot, Celtic triquetra, and trefoil ribbon',
+        modes: [FormationMode.BorromeanRings, FormationMode.FigureEightKnotBraid, FormationMode.TriquetraCelticBraid, FormationMode.TrefoilBraidedRibbon]
     },
     {
-        name: 'Topological Prime Knots',
-        description: 'Trefoil knot weaving into (3,5) torus knot, figure-eight knot, and 5-lobe cinqfoil ribbon',
-        modes: [FormationMode.TrefoilKnot, FormationMode.TorusKnot, FormationMode.FigureEightKnot, FormationMode.CinqfoilKnot, FormationMode.SeptafoilKnot]
+        name: 'Helical Pagoda Architecture',
+        description: 'Multi-tiered quad helix braid morphing into concentric sheath, Caduceus vortex, and DNA ladder',
+        modes: [FormationMode.QuadHelixBraid, FormationMode.ConcentricDualHelixSheath, FormationMode.CaduceusVortex, FormationMode.DNALadderBraid]
     },
     {
-        name: 'Organic Kinetic Harmony',
-        description: 'Blooming lotus petals morphing into solar flare arch, Ouroboros dragon, and dancing ribbon',
-        modes: [FormationMode.LotusBlossom, FormationMode.SolarFlareArch, FormationMode.OuroborosSerpent, FormationMode.DancingRibbon, FormationMode.LorenzAttractor]
+        name: 'Hierarchical Multi-Layer Supercoils',
+        description: 'Fractal supercoil transitioning into superhelical torus knot and biological chromatin solenoid',
+        modes: [FormationMode.FractalSupercoil, FormationMode.SuperhelicalTorusKnot, FormationMode.DNAChromatinSolenoid]
     },
     {
         name: 'Higher-Dimensional Immersion',
-        description: 'Self-intersecting Klein bottle unfolding into Calabi-Yau 6D projection, Clifford torus, and Hopf fibration',
-        modes: [FormationMode.KleinBottle4D, FormationMode.CalabiYauManifold, FormationMode.CliffordTorus, FormationMode.HopfFibration, FormationMode.GyroidMinimalSurface]
+        description: 'Klein bottle 4D braid unfolding into Clifford torus braid and Gyroid labyrinth',
+        modes: [FormationMode.KleinBottleBraid, FormationMode.CliffordTorusBraid, FormationMode.GyroidBraidLabyrinth, FormationMode.LorenzChaoticBraid]
     }
 ];
 
