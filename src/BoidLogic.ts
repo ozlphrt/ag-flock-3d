@@ -1324,23 +1324,6 @@ export function computeFormationPoint(
         tz = r * fastSin(p * t);
     }
 
-    // =========================================================================
-    // 🧬 UNIVERSAL LAYER-3: QUANTUM MICRO-FILAMENT STREAMLINE COILING
-    // Every boid in EVERY topology orbits in a fine, braided living micro-helix
-    // =========================================================================
-    const microK = indexInSpecies;
-    const microSlot = microK % 5;
-    const microAngle = (microSlot * (Math.PI * 2.0 / 5.0)) + (u * 28.0 * Math.PI) + (time * 1.8 * speedMult);
-    const microR = 0.13 + 0.035 * fastSin(microK * 0.5 + time * 1.5);
-    
-    const planarR = Math.sqrt(tx * tx + tz * tz) || 1.0;
-    const normX = -tz / planarR;
-    const normZ = tx / planarR;
-    
-    tx += normX * (fastCos(microAngle) * microR);
-    ty += fastSin(microAngle * 1.2) * microR * 0.7;
-    tz += normZ * (fastCos(microAngle) * microR);
-
     if (out) {
         out[0] = tx; out[1] = ty; out[2] = tz;
         return out;
@@ -1394,18 +1377,18 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.MengerSpongeFrame:
         case FormationMode.ApollonianGasketSphere:
         case FormationMode.MandelbulbHarmonicAttractor:
-            return { lerpRate: 0.12, noiseDrift: 0.002, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.20 };
+            return { lerpRate: 0.14, noiseDrift: 0.0002, strayRatio: 0.0, maxSpeedCap: 0.095, volThickness: 0.06 };
 
         // 2. ORGANIC KINETIC LOOPS
         case FormationMode.OuroborosSerpent:
         case FormationMode.DancingRibbon:
         case FormationMode.Procedural:
-            return { lerpRate: 0.08, noiseDrift: 0.008, strayRatio: 0.006, maxSpeedCap: 0.065, volThickness: 0.40 };
+            return { lerpRate: 0.10, noiseDrift: 0.001, strayRatio: 0.0, maxSpeedCap: 0.075, volThickness: 0.12 };
 
         // 3. CHAOTIC ATTRACTOR
         case FormationMode.LorenzAttractor:
         default:
-            return { lerpRate: 0.08, noiseDrift: 0.004, strayRatio: 0.002, maxSpeedCap: 0.075, volThickness: 0.30 };
+            return { lerpRate: 0.10, noiseDrift: 0.0005, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.08 };
     }
 }
 
