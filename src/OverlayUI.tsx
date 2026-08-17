@@ -448,7 +448,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         const state = simState.current;
         state.prevFormationMode = state.formationMode;
         state.prevFormationSeed = state.formationSeed;
-        state.formationMode = (creation.formationMode !== undefined) ? (creation.formationMode as FormationMode) : FormationMode.QuadHelixBraid;
+        state.formationMode = (creation.formationMode !== undefined) ? (creation.formationMode as FormationMode) : FormationMode.SpiralTower;
         state.formationSeed = Math.random() * 10000;
         state.boidShape = creation.boidShape ?? 0;
         state.autoShape = false;
