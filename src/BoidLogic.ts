@@ -79,10 +79,17 @@ export enum FormationMode {
     CliffordTorus = 28,
     OuroborosSerpent = 29,
     DancingRibbon = 30,
-    Procedural = 31
+    Procedural = 31,
+    FractalSupercoil = 32,
+    SuperhelicalTorusKnot = 33,
+    DNAChromatinSolenoid = 34,
+    SierpinskiOctahedron3D = 35,
+    MengerSpongeFrame = 36,
+    ApollonianGasketSphere = 37,
+    MandelbulbHarmonicAttractor = 38
 }
 
-export const TOTAL_FORMATION_COUNT = 32;
+export const TOTAL_FORMATION_COUNT = 39;
 
 export const FORMATION_PRESETS = [
     {
@@ -276,6 +283,48 @@ export const FORMATION_PRESETS = [
         label: 'Infinite Procedural',
         icon: '✨',
         desc: 'Harmonic Fourier superformula manifold generator'
+    },
+    {
+        id: FormationMode.FractalSupercoil,
+        label: 'Fractal Supercoil',
+        icon: '🧬',
+        desc: '3-Tier nested coiled-coil: macro-spine with 4 braided meso-cords & micro-helical filaments'
+    },
+    {
+        id: FormationMode.SuperhelicalTorusKnot,
+        label: 'Superhelical Torus Knot',
+        icon: '🍩',
+        desc: 'Multi-layer (2,3) Trefoil Torus Knot whose strand is an interlocking 4-tube spiraling superhelix'
+    },
+    {
+        id: FormationMode.DNAChromatinSolenoid,
+        label: 'Chromatin Solenoid',
+        icon: '🧬',
+        desc: '3-Level biological supercoiling: solenoid fiber with orbiting nucleosome beads & micro DNA wraps'
+    },
+    {
+        id: FormationMode.SierpinskiOctahedron3D,
+        label: 'Sierpinski Octahedron 3D',
+        icon: '🔺',
+        desc: 'Recursive 3D fractal octahedron with boids circulating along scale-invariant edge corridors'
+    },
+    {
+        id: FormationMode.MengerSpongeFrame,
+        label: 'Menger Sponge Frame',
+        icon: '🧊',
+        desc: 'Recursive 3D cubic lattice corridors with nested 3x3x3 sub-channel orthogonal traffic'
+    },
+    {
+        id: FormationMode.ApollonianGasketSphere,
+        label: 'Apollonian Gasket Sphere',
+        icon: '🫧',
+        desc: '3D fractal sphere packing with osculating tangent orbital shells across 3 recursive scales'
+    },
+    {
+        id: FormationMode.MandelbulbHarmonicAttractor,
+        label: 'Mandelbulb Attractor',
+        icon: '🌌',
+        desc: '3D hypercomplex Power-8 spherical Mandelbulb with self-similar branching bulb filaments'
     }
 ];
 
@@ -1141,6 +1190,130 @@ export function computeFormationPoint(
             ty = (g.r2 * fastSin(g.k4 * th + g.phi2) * fastCos(wTime) + g.a2 * fastSin(g.k5 * th)) * 0.4;
             tz = (g.r3 * fastSin(g.k6 * th + g.phi3) * fastCos(g.k7 * th + wTime) + g.a3 * fastCos(g.k8 * th)) * 0.4;
         }
+    } else if (formation === FormationMode.FractalSupercoil) {
+        // --- 32. Fractal Supercoil: 3-Tier Hierarchical Coiled-Coil ---
+        // Tier 1 (Macro): Grand ascending helical spine
+        const h = (u - 0.5) * 11.5;
+        const tMacro = u * 4.0 * Math.PI + time * 0.45 * speedMult;
+        const rMacro = 3.8 + fastSin(h * 0.35 + time * 0.5) * 0.4;
+        const mx = rMacro * fastCos(tMacro);
+        const my = h;
+        const mz = rMacro * fastSin(tMacro);
+
+        // Tier 2 (Meso): 4 species cables spiraling around the macro-spine
+        const tMeso = u * 20.0 * Math.PI + time * 1.2 * speedMult + (species * Math.PI * 0.5);
+        const rMeso = 1.05;
+        const mesoX = fastCos(tMeso) * rMeso;
+        const mesoY = fastSin(tMeso * 0.5) * 0.4;
+        const mesoZ = fastSin(tMeso) * rMeso;
+
+        const hyp = Math.sqrt(mx * mx + mz * mz) || 1.0;
+        const nx = -mz / hyp, nz = mx / hyp;
+
+        tx = mx + nx * mesoX;
+        ty = my + mesoY;
+        tz = mz + nz * mesoZ;
+    } else if (formation === FormationMode.SuperhelicalTorusKnot) {
+        // --- 33. Superhelical Torus Knot: Multi-Layer (2,3) Trefoil Torus Knot with Interlocking Superhelix Strands ---
+        const p = 2, q = 3;
+        const tKnot = u * 2.0 * Math.PI + time * 0.3 * speedMult;
+        const rKnot = fastCos(q * tKnot) * 1.6 + 3.8;
+        const kx = rKnot * fastCos(p * tKnot);
+        const ky = fastSin(q * tKnot) * 2.2;
+        const kz = rKnot * fastSin(p * tKnot);
+
+        // Tier 2: 4 species tubes coiling around knot cross-section
+        const tCoil = u * 22.0 * Math.PI + time * 1.4 * speedMult + (species * Math.PI * 0.5);
+        const rCoil = 0.75;
+        const hyp = Math.sqrt(kx * kx + kz * kz) || 1.0;
+        const nx = -kz / hyp, nz = kx / hyp;
+
+        tx = kx + nx * (fastCos(tCoil) * rCoil);
+        ty = ky + fastSin(tCoil) * rCoil * 0.85;
+        tz = kz + nz * (fastCos(tCoil) * rCoil);
+    } else if (formation === FormationMode.DNAChromatinSolenoid) {
+        // --- 34. Chromatin Solenoid: 3-Tier Biological Supercoiling (Solenoid -> Nucleosomes -> DNA Double Helix) ---
+        const nBeads = 12;
+        const beadIdx = Math.floor(u * nBeads);
+        const beadU = (u * nBeads) % 1.0;
+        const beadCenterAngle = (beadIdx / nBeads) * Math.PI * 6.0 + time * 0.4 * speedMult;
+        const rSolenoid = 3.6;
+        const bx = rSolenoid * fastCos(beadCenterAngle);
+        const by = (beadIdx / nBeads - 0.5) * 11.0;
+        const bz = rSolenoid * fastSin(beadCenterAngle);
+
+        const dnaWrapAngle = beadU * Math.PI * 3.3 + (species % 2) * Math.PI + time * 1.2;
+        const rBead = 0.85 + (species >= 2 ? 0.35 : 0.0);
+        tx = bx + fastCos(dnaWrapAngle) * rBead;
+        ty = by + (beadU - 0.5) * 0.9 + fastSin(dnaWrapAngle) * 0.35;
+        tz = bz + fastSin(dnaWrapAngle) * rBead;
+    } else if (formation === FormationMode.SierpinskiOctahedron3D) {
+        // --- 35. Sierpinski Octahedron 3D: Recursive 3D Fractal Octahedron Edge Network ---
+        const tCycle = (u * 6.0 + time * 0.4 * speedMult + species * 0.25) % 6.0;
+        const octVertex = Math.floor(tCycle);
+        const subT = tCycle % 1.0;
+        const level = (indexInSpecies % 3);
+
+        const V = [
+            [4.5, 0, 0], [-4.5, 0, 0],
+            [0, 4.5, 0], [0, -4.5, 0],
+            [0, 0, 4.5], [0, 0, -4.5]
+        ];
+        const v1 = V[octVertex];
+        const v2 = V[(octVertex + 2 + species) % 6];
+        
+        const scale = level === 0 ? 1.0 : level === 1 ? 0.5 : 0.25;
+        const ox = v1[0] * (1.0 - scale);
+        const oy = v1[1] * (1.0 - scale);
+        const oz = v1[2] * (1.0 - scale);
+
+        tx = ox + (v1[0] * (1.0 - subT) + v2[0] * subT) * scale;
+        ty = oy + (v1[1] * (1.0 - subT) + v2[1] * subT) * scale;
+        tz = oz + (v1[2] * (1.0 - subT) + v2[2] * subT) * scale;
+    } else if (formation === FormationMode.MengerSpongeFrame) {
+        // --- 36. Menger Sponge Frame: Recursive 3D Cubic Lattice Corridors with Nested Sub-Channels ---
+        const axis = (species + Math.floor(indexInSpecies / 16)) % 3;
+        const tPos = ((u * 4.0 + time * 0.5 * speedMult) % 2.0 - 1.0) * 4.2;
+        
+        const subGrid = (indexInSpecies % 8);
+        const g1 = ((subGrid % 3) - 1) * 2.8;
+        const g2 = (Math.floor(subGrid / 3) - 1) * 2.8;
+        const microOff = ((indexInSpecies % 4) - 1.5) * 0.45;
+
+        if (axis === 0) {
+            tx = tPos; ty = g1 + microOff; tz = g2 + microOff;
+        } else if (axis === 1) {
+            tx = g1 + microOff; ty = tPos; tz = g2 + microOff;
+        } else {
+            tx = g1 + microOff; ty = g2 + microOff; tz = tPos;
+        }
+    } else if (formation === FormationMode.ApollonianGasketSphere) {
+        // --- 37. Apollonian Gasket Sphere: 3D Fractal Sphere Packing with Harmonic Tangent Shells ---
+        const level = species;
+        const rBase = 4.2 / Math.pow(1.5, level);
+        const orbitTheta = u * Math.PI * 2.0 + time * (0.3 + level * 0.15) * speedMult;
+        const orbitPhi = ((((indexInSpecies % 60) / 60.0) - 0.5) * Math.PI * 0.9);
+        
+        const cx = level === 0 ? 0 : fastCos(level * Math.PI * 0.5 + time * 0.2) * (4.2 - rBase);
+        const cy = level === 0 ? 0 : fastSin(level * Math.PI * 0.7) * (3.5 - rBase);
+        const cz = level === 0 ? 0 : fastSin(level * Math.PI * 0.5 + time * 0.2) * (4.2 - rBase);
+
+        tx = cx + rBase * fastCos(orbitPhi) * fastCos(orbitTheta);
+        ty = cy + rBase * fastSin(orbitPhi) * 1.1;
+        tz = cz + rBase * fastCos(orbitPhi) * fastSin(orbitTheta);
+    } else if (formation === FormationMode.MandelbulbHarmonicAttractor) {
+        // --- 38. Mandelbulb Attractor: 3D Hypercomplex Power-8 Spherical Fractal Lobes ---
+        const th = u * Math.PI * 2.0;
+        const ph = ((((indexInSpecies % 120) / 120.0) - 0.5) * Math.PI);
+        const tAnim = time * 0.25 * speedMult;
+        
+        const n = 8;
+        const lobeR = 2.4 + 1.6 * fastSin(n * th + tAnim) * fastCos(n * ph * 0.5);
+        const r = Math.max(0.6, lobeR) + (species - 1.5) * 0.35;
+        
+        tx = r * fastCos(ph) * fastCos(th + tAnim * 0.5);
+        ty = r * fastSin(ph) * 1.35;
+        tz = r * fastCos(ph) * fastSin(th + tAnim * 0.5);
     } else {
         // Default Harmonic Torus stream
         const p = 2, q = 3;
@@ -1150,6 +1323,23 @@ export function computeFormationPoint(
         ty = fastSin(q * t) * 2.4 + (species - 1.5) * 0.5;
         tz = r * fastSin(p * t);
     }
+
+    // =========================================================================
+    // 🧬 UNIVERSAL LAYER-3: QUANTUM MICRO-FILAMENT STREAMLINE COILING
+    // Every boid in EVERY topology orbits in a fine, braided living micro-helix
+    // =========================================================================
+    const microK = indexInSpecies;
+    const microSlot = microK % 5;
+    const microAngle = (microSlot * (Math.PI * 2.0 / 5.0)) + (u * 28.0 * Math.PI) + (time * 1.8 * speedMult);
+    const microR = 0.13 + 0.035 * fastSin(microK * 0.5 + time * 1.5);
+    
+    const planarR = Math.sqrt(tx * tx + tz * tz) || 1.0;
+    const normX = -tz / planarR;
+    const normZ = tx / planarR;
+    
+    tx += normX * (fastCos(microAngle) * microR);
+    ty += fastSin(microAngle * 1.2) * microR * 0.7;
+    tz += normZ * (fastCos(microAngle) * microR);
 
     if (out) {
         out[0] = tx; out[1] = ty; out[2] = tz;
@@ -1168,7 +1358,7 @@ export interface FormationPhysicsProfile {
 
 export function getFormationPhysicsProfile(formation: FormationMode): FormationPhysicsProfile {
     switch (formation) {
-        // 1. TIGHT MATHEMATICAL & INTERTWINED KNOTS
+        // 1. TIGHT MATHEMATICAL & INTERTWINED KNOTS & FRACTAL SUPERCOILS
         case FormationMode.QuadHelixBraid:
         case FormationMode.ConcentricDualHelixSheath:
         case FormationMode.CaduceusVortex:
@@ -1197,6 +1387,13 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.GyroidMinimalSurface:
         case FormationMode.KleinBottle4D:
         case FormationMode.CliffordTorus:
+        case FormationMode.FractalSupercoil:
+        case FormationMode.SuperhelicalTorusKnot:
+        case FormationMode.DNAChromatinSolenoid:
+        case FormationMode.SierpinskiOctahedron3D:
+        case FormationMode.MengerSpongeFrame:
+        case FormationMode.ApollonianGasketSphere:
+        case FormationMode.MandelbulbHarmonicAttractor:
             return { lerpRate: 0.12, noiseDrift: 0.002, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.20 };
 
         // 2. ORGANIC KINETIC LOOPS

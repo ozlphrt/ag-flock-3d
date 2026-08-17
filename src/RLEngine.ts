@@ -647,6 +647,16 @@ export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
         FormationMode.KleinBottle4D,
         FormationMode.CliffordTorus,
         FormationMode.Procedural
+    ],
+    // Suite 5: Hierarchical Multi-Layer Supercoils & 3D Fractals
+    [
+        FormationMode.FractalSupercoil,
+        FormationMode.SuperhelicalTorusKnot,
+        FormationMode.DNAChromatinSolenoid,
+        FormationMode.SierpinskiOctahedron3D,
+        FormationMode.MengerSpongeFrame,
+        FormationMode.ApollonianGasketSphere,
+        FormationMode.MandelbulbHarmonicAttractor
     ]
 ];
 
@@ -906,6 +916,16 @@ export const EMOTIONAL_ARCS: EmotionalArc[] = [
         name: 'Infinite Kinetic Flow',
         description: 'Ascending Caduceus serpents morphing into Ouroboros dragon and chaotic Lorenz butterfly',
         modes: [FormationMode.CaduceusVortex, FormationMode.OuroborosSerpent, FormationMode.LorenzAttractor]
+    },
+    {
+        name: 'Hierarchical Supercoils',
+        description: '3-Tier nested coiled-coils transitioning into superhelical torus knot and biological chromatin solenoid',
+        modes: [FormationMode.FractalSupercoil, FormationMode.SuperhelicalTorusKnot, FormationMode.DNAChromatinSolenoid]
+    },
+    {
+        name: 'Recursive 3D Fractals',
+        description: 'Multi-scale Sierpinski octahedron lattice weaving into Menger cubic corridors and Mandelbulb fractal attractor',
+        modes: [FormationMode.SierpinskiOctahedron3D, FormationMode.MengerSpongeFrame, FormationMode.ApollonianGasketSphere, FormationMode.MandelbulbHarmonicAttractor]
     }
 ];
 
