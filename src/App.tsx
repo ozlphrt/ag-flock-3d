@@ -414,7 +414,16 @@ function App() {
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} isLoading={isLoading} />
-            <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
+            <Canvas
+                dpr={[1, 1.25]}
+                gl={{
+                    antialias: false,
+                    powerPreference: 'high-performance',
+                    depth: true,
+                    stencil: false,
+                    alpha: false
+                }}
+            >
                 <color attach="background" args={['#1a233a']} />
                 <fog attach="fog" args={['#1a233a', 160, 480]} />
                 <CameraRig simState={simState} />

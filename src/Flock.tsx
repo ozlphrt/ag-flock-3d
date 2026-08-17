@@ -1,8 +1,14 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { BoidSwarmData, BlobCenter, SimulationState, SpeciesType, SPECIES_COLORS, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, computeFormationPoint, getFormationPhysicsProfile } from './BoidLogic'
+import { BoidSwarmData, BlobCenter, SimulationState, SpeciesType, SPECIES_COLORS, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, computeFormationPoint, getFormationPhysicsProfile, fastSin, fastCos } from './BoidLogic'
 import { createClockEngine, ClockEngine } from './ClockEngine'
+
+// Precomputed Sheaf Radial Dispersion Table to eliminate 100,000 divisions & Math.sqrt per frame
+const RNORM_LUT = new Float32Array(41);
+for (let k = 0; k <= 40; k++) {
+    RNORM_LUT[k] = Math.sqrt(k / 40.0);
+}
 
 interface FlockProps {
     count: number;
@@ -61,22 +67,6 @@ function oklabToRgb(L: number, a: number, b: number): [number, number, number] {
 }
 
 // High-speed LUT for trigonometric noise & drift (0.1ms execution for 100k boids)
-const TABLE_SIZE = 1024;
-const SINE_LUT = new Float32Array(TABLE_SIZE);
-const RAD_TO_INDEX = TABLE_SIZE / (Math.PI * 2);
-for (let i = 0; i < TABLE_SIZE; i++) {
-    SINE_LUT[i] = Math.sin((i / TABLE_SIZE) * Math.PI * 2);
-}
-
-function fastSin(rad: number): number {
-    const idx = (rad * RAD_TO_INDEX) & (TABLE_SIZE - 1);
-    return SINE_LUT[idx | 0];
-}
-
-function fastCos(rad: number): number {
-    const idx = ((rad * RAD_TO_INDEX) + (TABLE_SIZE >> 2)) & (TABLE_SIZE - 1);
-    return SINE_LUT[idx | 0];
-}
 const curPt = new Float32Array(3);
 const prevPt = new Float32Array(3);
 
@@ -309,7 +299,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             // Volumetric Cross-Section Sheaf Dispersion (Crisp Strands vs Atmospheric Sheath)
             const phi = (spIdx * 2.3999632) + (u * 13.7) + (sp * 1.5707963);
-            const rNorm = Math.sqrt((spIdx % 41) / 40.0);
+            const rNorm = RNORM_LUT[spIdx % 41];
             const volThickness = profile.volThickness;
             tx += fastCos(phi) * (rNorm * volThickness);
             ty += fastSin(phi) * (rNorm * volThickness * 0.75);

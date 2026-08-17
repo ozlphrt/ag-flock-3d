@@ -1,5 +1,23 @@
 import * as THREE from 'three';
 
+// 4096-Entry High-Speed Cyclic Trigonometric Lookup Table for 60 FPS Swarm Vectorization
+const MATH_TABLE_SIZE = 4096;
+const MATH_RAD_TO_INDEX = MATH_TABLE_SIZE / (Math.PI * 2);
+export const MATH_SINE_LUT = new Float32Array(MATH_TABLE_SIZE);
+for (let i = 0; i < MATH_TABLE_SIZE; i++) {
+    MATH_SINE_LUT[i] = Math.sin((i / MATH_TABLE_SIZE) * Math.PI * 2);
+}
+
+export function fastSin(rad: number): number {
+    let idx = ((rad * MATH_RAD_TO_INDEX) % MATH_TABLE_SIZE + MATH_TABLE_SIZE) % MATH_TABLE_SIZE | 0;
+    return MATH_SINE_LUT[idx];
+}
+
+export function fastCos(rad: number): number {
+    let idx = (((rad * MATH_RAD_TO_INDEX + (MATH_TABLE_SIZE / 4)) % MATH_TABLE_SIZE + MATH_TABLE_SIZE) % MATH_TABLE_SIZE) | 0;
+    return MATH_SINE_LUT[idx];
+}
+
 export enum SpeciesType {
     Red = 0,
     Green = 1,
@@ -636,9 +654,9 @@ export function computeFormationPoint(
         // --- 0. Serpent Stream: Sleek Aerodynamic 3D Serpentine Ribbon ---
         const s = (u - 0.5) * 8.0;
         const wave = s * 0.75 - time * 0.8 * speedMult + (species * Math.PI / 4);
-        const waveY = Math.sin(wave * 1.2) * 2.0 + Math.cos(s * 0.5) * 0.8;
-        const waveZ = Math.sin(wave) * 2.2;
-        tx = s * 1.4 + Math.cos(wave) * 0.8;
+        const waveY = fastSin(wave * 1.2) * 2.0 + fastCos(s * 0.5) * 0.8;
+        const waveZ = fastSin(wave) * 2.2;
+        tx = s * 1.4 + fastCos(wave) * 0.8;
         ty = waveY + (species - 1.5) * 0.8;
         tz = waveZ;
     } else if (formation === FormationMode.Spiral) {
@@ -647,10 +665,10 @@ export function computeFormationPoint(
         const armOffset = arm * (Math.PI * 2.0 / 3.0);
         const theta = u * 4.0 * Math.PI + time * 0.45 * speedMult + armOffset;
         const radius = 1.0 + Math.pow(u, 0.8) * 6.0;
-        const height = (u - 0.5) * 3.5 + Math.sin(theta * 2.0) * 0.6;
-        tx = radius * Math.cos(theta);
+        const height = (u - 0.5) * 3.5 + fastSin(theta * 2.0) * 0.6;
+        tx = radius * fastCos(theta);
         ty = height + (species - 1.5) * 0.6;
-        tz = radius * Math.sin(theta);
+        tz = radius * fastSin(theta);
     } else if (formation === FormationMode.DoubleHelix) {
         // --- 2. Double Helix: Intertwined Bio-Macromolecule Stream with Base-Pair Rungs ---
         const h = (u - 0.5) * 11.5;
@@ -659,105 +677,105 @@ export function computeFormationPoint(
         if (isRung) {
             // Horizontal bridging rung connecting the dual strands
             const rungT = ((indexInSpecies % 20) / 20.0 - 0.5) * 2.0; // [-1, 1]
-            tx = (3.4 * rungT) * Math.cos(theta);
+            tx = (3.4 * rungT) * fastCos(theta);
             ty = h;
-            tz = (3.4 * rungT) * Math.sin(theta);
+            tz = (3.4 * rungT) * fastSin(theta);
         } else {
             // Outer intertwined spiral sugar-phosphate backbones
             const strand = (species % 2 === 0) ? 0 : 1;
             const strandAngle = theta + (strand * Math.PI) + (species * 0.1);
-            const r = 3.6 + Math.sin(h * 0.4 + time * 0.5) * 0.4;
-            tx = r * Math.cos(strandAngle);
+            const r = 3.6 + fastSin(h * 0.4 + time * 0.5) * 0.4;
+            tx = r * fastCos(strandAngle);
             ty = h;
-            tz = r * Math.sin(strandAngle);
+            tz = r * fastSin(strandAngle);
         }
     } else if (formation === FormationMode.TorusKnot) {
         // --- 3. Torus Knot Stream: Continuous Seamless Bio-Ring Flow ---
         const p = 2, q = 3;
         const t = u * 2.0 * Math.PI + time * 0.25 * speedMult + (species * 0.15);
-        const r = Math.cos(q * t) * 1.8 + 4.2;
-        tx = r * Math.cos(p * t);
-        ty = Math.sin(q * t) * 2.4 + (species - 1.5) * 0.5;
-        tz = r * Math.sin(p * t);
+        const r = fastCos(q * t) * 1.8 + 4.2;
+        tx = r * fastCos(p * t);
+        ty = fastSin(q * t) * 2.4 + (species - 1.5) * 0.5;
+        tz = r * fastSin(p * t);
     } else if (formation === FormationMode.JellyfishPulse) {
         // --- 4. Jellyfish Veil: Deep-Sea Translucent Bell & Trailing Aquatic Tentacles ---
-        const pulse = Math.sin(time * 1.2 * speedMult) * 0.25 + 1.0;
+        const pulse = fastSin(time * 1.2 * speedMult) * 0.25 + 1.0;
         if (u < 0.38) {
             const phi = (u / 0.38) * Math.PI * 0.48;
             const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + (time * 0.15);
-            const bellR = Math.sin(phi) * 4.8 * pulse;
-            tx = bellR * Math.cos(theta);
-            ty = Math.cos(phi) * 2.8 + 1.5;
-            tz = bellR * Math.sin(theta);
+            const bellR = fastSin(phi) * 4.8 * pulse;
+            tx = bellR * fastCos(theta);
+            ty = fastCos(phi) * 2.8 + 1.5;
+            tz = bellR * fastSin(theta);
         } else {
             const tentacleIdx = indexInSpecies % 10;
             const tentacleAngle = (tentacleIdx / 10.0) * Math.PI * 2.0 + (species * 0.2);
             const lengthParam = ((u - 0.38) / 0.62) * 9.5;
             const wave = lengthParam * 0.7 - time * 1.6 * speedMult;
             const taper = 1.0 - (lengthParam / 11.0) * 0.4;
-            tx = (Math.cos(tentacleAngle) * 2.6 + Math.sin(wave) * 0.9) * taper;
+            tx = (fastCos(tentacleAngle) * 2.6 + fastSin(wave) * 0.9) * taper;
             ty = -lengthParam + 1.5;
-            tz = (Math.sin(tentacleAngle) * 2.6 + Math.cos(wave) * 0.9) * taper;
+            tz = (fastSin(tentacleAngle) * 2.6 + fastCos(wave) * 0.9) * taper;
         }
     } else if (formation === FormationMode.QuantumAtom) {
         // --- 5. Orbital Resonance: Smooth Harmonically Inclined Resonant Rings ---
         const orbitIdx = indexInSpecies % 3;
         const inc = (orbitIdx * Math.PI / 3.0) + (species * 0.1);
         const t = u * Math.PI * 2.0 + time * 0.6 * speedMult;
-        const orbitR = 4.4 + Math.sin(t * 2.0) * 0.6;
-        const rx = orbitR * Math.cos(t);
-        const ry = Math.sin(t * 2.0) * 1.0;
-        const rz = orbitR * Math.sin(t);
-        tx = rx * Math.cos(inc) - ry * Math.sin(inc);
-        ty = rx * Math.sin(inc) + ry * Math.cos(inc);
+        const orbitR = 4.4 + fastSin(t * 2.0) * 0.6;
+        const rx = orbitR * fastCos(t);
+        const ry = fastSin(t * 2.0) * 1.0;
+        const rz = orbitR * fastSin(t);
+        tx = rx * fastCos(inc) - ry * fastSin(inc);
+        ty = rx * fastSin(inc) + ry * fastCos(inc);
         tz = rz;
     } else if (formation === FormationMode.PhoenixWings) {
         // --- 6. Phoenix Wings: Soaring Undulating Biomorphic Wings ---
         const span = (u - 0.5) * 12.0;
         const flapPhase = time * 2.2 * speedMult - Math.abs(span) * 0.25 + (species * 0.2);
-        const wingElev = Math.pow(Math.abs(span) * 0.16, 1.3) * Math.sin(flapPhase) * 2.2;
+        const wingElev = Math.pow(Math.abs(span) * 0.16, 1.3) * fastSin(flapPhase) * 2.2;
         tx = span * 1.25;
-        ty = wingElev + Math.cos(span * 0.25) * 1.2 + (species - 1.5) * 0.6;
-        tz = -Math.abs(span) * 0.45 + Math.sin(flapPhase + 0.4) * 1.2;
+        ty = wingElev + fastCos(span * 0.25) * 1.2 + (species - 1.5) * 0.6;
+        tz = -Math.abs(span) * 0.45 + fastSin(flapPhase + 0.4) * 1.2;
     } else if (formation === FormationMode.BlackHoleJet) {
         // --- 7. Celestial Vortex: Accretion Disk with Relativistic Polar Streams ---
         if (u < 0.65) {
             const diskU = u / 0.65;
             const diskTheta = diskU * Math.PI * 6.0 + time * 1.4 * speedMult + (species * 0.3);
             const diskR = 1.2 + Math.pow(diskU, 0.7) * 5.8;
-            tx = diskR * Math.cos(diskTheta);
-            ty = Math.sin(diskTheta * 2.0) * 0.3 + (species - 1.5) * 0.3;
-            tz = diskR * Math.sin(diskTheta);
+            tx = diskR * fastCos(diskTheta);
+            ty = fastSin(diskTheta * 2.0) * 0.3 + (species - 1.5) * 0.3;
+            tz = diskR * fastSin(diskTheta);
         } else {
             const jetU = (u - 0.65) / 0.35;
             const jetSign = (indexInSpecies % 2 === 0) ? 1 : -1;
             const jetH = jetU * 8.5 * jetSign;
             const jetTheta = jetU * Math.PI * 4.0 + time * 2.5 * speedMult;
             const jetR = 0.5 + jetU * 1.2;
-            tx = jetR * Math.cos(jetTheta);
+            tx = jetR * fastCos(jetTheta);
             ty = jetH;
-            tz = jetR * Math.sin(jetTheta);
+            tz = jetR * fastSin(jetTheta);
         }
     } else if (formation === FormationMode.HourglassVortex) {
         // --- 8. Hyperboloid Vortex: Spinning 3D Hourglass Tornado Stream ---
         const h = (u - 0.5) * 10.0;
         const waistR = Math.sqrt(1.8 + Math.pow(h * 0.3, 2));
         const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + (species * Math.PI / 4);
-        tx = waistR * Math.cos(theta);
+        tx = waistR * fastCos(theta);
         ty = h;
-        tz = waistR * Math.sin(theta);
+        tz = waistR * fastSin(theta);
     } else if (formation === FormationMode.LissajousKnot) {
         // --- 9. Lissajous Ribbon: Smooth Harmonic 3D Kinetic Ribbon Loop ---
         const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        tx = 4.2 * Math.sin(3 * t + (species * 0.3));
-        ty = 3.2 * Math.sin(4 * t + 0.5);
-        tz = 4.2 * Math.sin(5 * t + (species * 0.3));
+        tx = 4.2 * fastSin(3 * t + (species * 0.3));
+        ty = 3.2 * fastSin(4 * t + 0.5);
+        tz = 4.2 * fastSin(5 * t + (species * 0.3));
     } else if (formation === FormationMode.Tesseract4D) {
         // --- 10. Bioluminescent Manta: Expansive Undulating Wings with Trailing Filaments ---
         const wingU = (u - 0.5) * 12.0;
         const waveZ = ((indexInSpecies % 50) / 50.0 - 0.3) * 9.0;
-        const flap = Math.sin(time * 1.8 * speedMult - Math.abs(wingU) * 0.35) * Math.pow(Math.abs(wingU) * 0.18, 1.4) * 2.4;
-        const bodyArch = Math.cos(wingU * 0.22) * 1.4 - (waveZ * 0.15);
+        const flap = fastSin(time * 1.8 * speedMult - Math.abs(wingU) * 0.35) * Math.pow(Math.abs(wingU) * 0.18, 1.4) * 2.4;
+        const bodyArch = fastCos(wingU * 0.22) * 1.4 - (waveZ * 0.15);
         tx = wingU * 1.2;
         ty = flap + bodyArch + (species - 1.5) * 0.5;
         tz = waveZ * 1.2 - Math.abs(wingU) * 0.45;
@@ -766,33 +784,33 @@ export function computeFormationPoint(
         const h = (u - 0.5) * 9.5;
         const funnelR = Math.pow(u, 1.3) * 4.8 + 0.6;
         const theta = u * 12.0 * Math.PI + time * 1.6 * speedMult + (species * 0.4);
-        tx = funnelR * Math.cos(theta);
+        tx = funnelR * fastCos(theta);
         ty = h;
-        tz = funnelR * Math.sin(theta);
+        tz = funnelR * fastSin(theta);
     } else if (formation === FormationMode.NautilusShell) {
         // --- 12. Nautilus Spiral: Golden Ratio Logarithmic Shell Spiral ---
         const theta = u * 4.5 * Math.PI + time * 0.4 * speedMult;
         const r = 0.8 * Math.exp(0.22 * (u * 4.5 * Math.PI));
-        tx = r * Math.cos(theta) * 0.35;
-        ty = (u - 0.5) * 6.0 + Math.sin(theta) * 0.8;
-        tz = r * Math.sin(theta) * 0.35;
+        tx = r * fastCos(theta) * 0.35;
+        ty = (u - 0.5) * 6.0 + fastSin(theta) * 0.8;
+        tz = r * fastSin(theta) * 0.35;
     } else if (formation === FormationMode.BioMushroom) {
         // --- 13. Bio Mushroom: Fungal Umbrella Canopy with Falling Spore Streams ---
         if (u < 0.6) {
             const capU = u / 0.6;
             const phi = capU * Math.PI * 0.48;
             const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + (time * 0.12);
-            const capR = Math.sin(phi) * 4.8;
-            tx = capR * Math.cos(theta);
-            ty = Math.cos(phi) * 2.2 + 1.8;
-            tz = capR * Math.sin(theta);
+            const capR = fastSin(phi) * 4.8;
+            tx = capR * fastCos(theta);
+            ty = fastCos(phi) * 2.2 + 1.8;
+            tz = capR * fastSin(theta);
         } else {
             const stemU = (u - 0.6) / 0.4;
-            const stemR = 1.0 + Math.sin(stemU * 8.0 + time) * 0.15;
+            const stemR = 1.0 + fastSin(stemU * 8.0 + time) * 0.15;
             const theta = (species * Math.PI / 2) + stemU * Math.PI * 2.0;
-            tx = stemR * Math.cos(theta);
+            tx = stemR * fastCos(theta);
             ty = -stemU * 5.2 + 1.8;
-            tz = stemR * Math.sin(theta);
+            tz = stemR * fastSin(theta);
         }
     } else if (formation === FormationMode.BeehiveSwarm) {
         // --- 14. Kelp Forest: Deep-Sea Swaying Kelp Forest Streamlines ---
@@ -801,48 +819,48 @@ export function computeFormationPoint(
         const stalkRadius = 2.0 + (stalk % 3) * 1.5;
         const h = (u - 0.5) * 10.0;
         const swayPhase = h * 0.5 - time * 0.9 * speedMult + stalk;
-        const swayX = Math.sin(swayPhase) * (u * 2.4);
-        const swayZ = Math.cos(swayPhase * 0.8) * (u * 2.4);
-        tx = stalkRadius * Math.cos(stalkAngle) + swayX;
+        const swayX = fastSin(swayPhase) * (u * 2.4);
+        const swayZ = fastCos(swayPhase * 0.8) * (u * 2.4);
+        tx = stalkRadius * fastCos(stalkAngle) + swayX;
         ty = h;
-        tz = stalkRadius * Math.sin(stalkAngle) + swayZ;
+        tz = stalkRadius * fastSin(stalkAngle) + swayZ;
     } else if (formation === FormationMode.DodecahedronShield) {
         // --- 15. Oceanic Whirlpool: Inward Logarithmic Vortex Sink with Rolling Waves ---
         const vortexTheta = u * 8.0 * Math.PI + time * 1.2 * speedMult + (species * Math.PI / 4);
         const vortexR = 1.0 + Math.pow(u, 1.1) * 6.0;
         const vortexDepth = -Math.pow(1.0 - u, 2.0) * 4.8 + 1.0;
-        const rimRoll = Math.sin(vortexTheta * 2.5 - time * 1.8) * (u * 0.8);
-        tx = vortexR * Math.cos(vortexTheta);
+        const rimRoll = fastSin(vortexTheta * 2.5 - time * 1.8) * (u * 0.8);
+        tx = vortexR * fastCos(vortexTheta);
         ty = vortexDepth + rimRoll;
-        tz = vortexR * Math.sin(vortexTheta);
+        tz = vortexR * fastSin(vortexTheta);
     } else if (formation === FormationMode.SaturnRings) {
         // --- 16. Saturn Rings: Planetary Sphere Core & Tilted Shimmering Rings ---
         if (u < 0.3) {
             const phi = Math.acos(2 * (u / 0.3) - 1);
             const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + time * 0.2;
             const coreR = 2.4;
-            tx = coreR * Math.sin(phi) * Math.cos(theta);
-            ty = coreR * Math.cos(phi);
-            tz = coreR * Math.sin(phi) * Math.sin(theta);
+            tx = coreR * fastSin(phi) * fastCos(theta);
+            ty = coreR * fastCos(phi);
+            tz = coreR * fastSin(phi) * fastSin(theta);
         } else {
             const ringU = (u - 0.3) / 0.7;
             const ringR = 3.6 + ringU * 4.5;
             const ringTheta = ringU * Math.PI * 8.0 + time * 0.7 * speedMult + (species * 0.2);
-            const rx = ringR * Math.cos(ringTheta);
-            const ry = Math.sin(ringTheta * 2.0) * 0.15;
-            const rz = ringR * Math.sin(ringTheta);
+            const rx = ringR * fastCos(ringTheta);
+            const ry = fastSin(ringTheta * 2.0) * 0.15;
+            const rz = ringR * fastSin(ringTheta);
             const tilt = 32.0 * (Math.PI / 180.0);
             tx = rx;
-            ty = ry * Math.cos(tilt) - rz * Math.sin(tilt);
-            tz = ry * Math.sin(tilt) + rz * Math.cos(tilt);
+            ty = ry * fastCos(tilt) - rz * fastSin(tilt);
+            tz = ry * fastSin(tilt) + rz * fastCos(tilt);
         }
     } else if (formation === FormationMode.PulsingHeart) {
         // --- 17. Pulsing Heart: 3D Biomorphic Cardioid Heart Chamber ---
         const t = u * Math.PI * 2.0;
-        const pulse = 1.0 + Math.sin(time * 1.6 * speedMult) * 0.10;
-        const hx = 16.0 * Math.pow(Math.sin(t), 3);
-        const hy = 13.0 * Math.cos(t) - 5.0 * Math.cos(2 * t) - 2.0 * Math.cos(3 * t) - Math.cos(4 * t);
-        const hz = Math.sin(t * 3.0 + (species * Math.PI / 4)) * 1.5;
+        const pulse = 1.0 + fastSin(time * 1.6 * speedMult) * 0.10;
+        const hx = 16.0 * Math.pow(fastSin(t), 3);
+        const hy = 13.0 * fastCos(t) - 5.0 * fastCos(2 * t) - 2.0 * fastCos(3 * t) - fastCos(4 * t);
+        const hz = fastSin(t * 3.0 + (species * Math.PI / 4)) * 1.5;
         tx = (hx * 0.28) * pulse;
         ty = (hy * 0.28) * pulse;
         tz = hz * pulse;
@@ -850,26 +868,26 @@ export function computeFormationPoint(
         // --- 18. Tsunami Wave: Surging 3D Breaking Ocean Curl ---
         const xVal = (u - 0.5) * 11.0;
         const curlPhase = xVal * 0.22 - time * 1.1 * speedMult;
-        const waveY = Math.sin(curlPhase) * 2.6 + Math.pow(Math.max(0, Math.cos(curlPhase)), 2.2) * 3.4;
+        const waveY = fastSin(curlPhase) * 2.6 + Math.pow(Math.max(0, fastCos(curlPhase)), 2.2) * 3.4;
         tx = xVal;
         ty = waveY + (species - 1.5) * 0.6;
-        tz = Math.cos(curlPhase) * 2.2;
+        tz = fastCos(curlPhase) * 2.2;
     } else if (formation === FormationMode.SupernovaBurst) {
         // --- 19. Supernova Nebula: Cosmic Breathing Star Shockwave with Radial Streams ---
-        const burstR = (Math.sin(time * 0.9 * speedMult + u * 3.0) * 0.25 + 0.75) * 5.0;
+        const burstR = (fastSin(time * 0.9 * speedMult + u * 3.0) * 0.25 + 0.75) * 5.0;
         const phi = Math.acos(2 * u - 1);
         const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + (species * 0.3);
-        tx = burstR * Math.sin(phi) * Math.cos(theta);
-        ty = burstR * Math.cos(phi);
-        tz = burstR * Math.sin(phi) * Math.sin(theta);
+        tx = burstR * fastSin(phi) * fastCos(theta);
+        ty = burstR * fastCos(phi);
+        tz = burstR * fastSin(phi) * fastSin(theta);
     } else if (formation === FormationMode.CrystalPrism) {
         // --- 20. Mobius Ribbon: Sweeping Aerodynamic 3D Mobius Sash ---
         const mobT = u * Math.PI * 2.0 + time * 0.35 * speedMult;
         const mobW = ((indexInSpecies % 40) / 40.0 - 0.5) * 2.2;
-        const mobR = 4.5 + mobW * Math.cos(mobT * 0.5);
-        tx = mobR * Math.cos(mobT);
-        ty = mobW * Math.sin(mobT * 0.5) * 2.2 + (species - 1.5) * 0.4;
-        tz = mobR * Math.sin(mobT);
+        const mobR = 4.5 + mobW * fastCos(mobT * 0.5);
+        tx = mobR * fastCos(mobT);
+        ty = mobW * fastSin(mobT * 0.5) * 2.2 + (species - 1.5) * 0.4;
+        tz = mobR * fastSin(mobT);
     } else if (formation === FormationMode.VirusCapsid) {
         // --- 21. Lotus Bloom: Sacred Multi-Layered Blooming Lotus Petals ---
         const petals = 8;
@@ -877,65 +895,65 @@ export function computeFormationPoint(
         const layerU = (u * 4) % 1.0;
         const petalAngle = ((indexInSpecies * 137.5) * (Math.PI / 180.0)) + time * 0.15 * speedMult;
         const rBase = (layer + 1) * 1.3;
-        const petalMod = Math.pow(Math.abs(Math.cos(petals * petalAngle * 0.5)), 0.7);
-        const bloomBreath = 1.0 + Math.sin(time * 0.8 * speedMult - layer * 0.4) * 0.14;
+        const petalMod = Math.pow(Math.abs(fastCos(petals * petalAngle * 0.5)), 0.7);
+        const bloomBreath = 1.0 + fastSin(time * 0.8 * speedMult - layer * 0.4) * 0.14;
         const lotusR = (rBase + petalMod * 1.8) * layerU * bloomBreath;
-        const lotusH = Math.sin(layerU * Math.PI * 0.5) * (3.5 - layer * 0.7) - 1.4;
-        tx = lotusR * Math.cos(petalAngle);
+        const lotusH = fastSin(layerU * Math.PI * 0.5) * (3.5 - layer * 0.7) - 1.4;
+        tx = lotusR * fastCos(petalAngle);
         ty = lotusH + (species - 1.5) * 0.35;
-        tz = lotusR * Math.sin(petalAngle);
+        tz = lotusR * fastSin(petalAngle);
     } else if (formation === FormationMode.PlasmaArc) {
         // --- 22. Aurora Stream: Curving Aerodynamic Plasma Filament Ribbon ---
         const arcY = (u - 0.5) * 10.0;
         const wave = arcY * 0.5 - time * 1.2 * speedMult;
-        tx = Math.sin(wave) * 3.2 + Math.cos(arcY * 0.3) * 0.8;
+        tx = fastSin(wave) * 3.2 + fastCos(arcY * 0.3) * 0.8;
         ty = arcY;
-        tz = Math.cos(wave) * 3.2 + (species - 1.5) * 0.6;
+        tz = fastCos(wave) * 3.2 + (species - 1.5) * 0.6;
     } else if (formation === FormationMode.CoralReef) {
         // --- 23. Coral Fan: Graceful Fractal Marine Coral Fan ---
         const branch = indexInSpecies % 6;
         const branchAngle = (branch / 6.0) * Math.PI * 2.0 + (species * 0.2);
         const h = u * 8.5;
-        const r = (Math.sin(h * 0.45) * 1.6 + 1.0);
-        tx = Math.cos(branchAngle) * r + Math.sin(h * 0.7 + time * 0.6) * 0.6;
+        const r = (fastSin(h * 0.45) * 1.6 + 1.0);
+        tx = fastCos(branchAngle) * r + fastSin(h * 0.7 + time * 0.6) * 0.6;
         ty = h - 4.2;
-        tz = Math.sin(branchAngle) * r + Math.cos(h * 0.7 + time * 0.6) * 0.6;
+        tz = fastSin(branchAngle) * r + fastCos(h * 0.7 + time * 0.6) * 0.6;
     } else if (formation === FormationMode.VolcanicColumn) {
         // --- 24. Thermal Plume: Ascending Turbulent Thermal Vortex Plume ---
         const yVal = u * 9.5 - 4.5;
         const plumeR = (yVal > -2.0 ? ((yVal + 2.0) * 0.35 + 1.2) : 1.2);
         const theta = u * Math.PI * 8.0 + time * 1.3 * speedMult;
-        tx = plumeR * Math.cos(theta);
+        tx = plumeR * fastCos(theta);
         ty = yVal;
-        tz = plumeR * Math.sin(theta);
+        tz = plumeR * fastSin(theta);
     } else if (formation === FormationMode.AlienMothership) {
         // --- 25. Cosmic Disk: Undulating Galactic Disc with Central Energy Core ---
         const discR = 1.4 + u * 4.4;
         const theta = u * Math.PI * 6.0 + time * 0.5 * speedMult + (species * 0.3);
-        tx = discR * Math.cos(theta);
-        ty = Math.sin(discR * 0.9 - time * 1.2) * 0.6;
-        tz = discR * Math.sin(theta);
+        tx = discR * fastCos(theta);
+        ty = fastSin(discR * 0.9 - time * 1.2) * 0.6;
+        tz = discR * fastSin(theta);
     } else if (formation === FormationMode.TripleHelix) {
         // --- 26. Triple Helix: Tri-Strand Intertwined Braided Stream ---
         const strand = indexInSpecies % 3;
         const strandOffset = (strand * Math.PI * 2.0 / 3.0);
         const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + strandOffset;
         const h = (u - 0.5) * 10.5;
-        const r = 3.3 + Math.sin(h * 0.3 + time * 0.5) * 0.4;
-        tx = r * Math.cos(theta);
+        const r = 3.3 + fastSin(h * 0.3 + time * 0.5) * 0.4;
+        tx = r * fastCos(theta);
         ty = h;
-        tz = r * Math.sin(theta);
+        tz = r * fastSin(theta);
     } else if (formation === FormationMode.FerrisWheel) {
         // --- 27. Galaxy Vortex: 4-Arm Logarithmic Spiral Galaxy with Density Waves ---
         const arm = indexInSpecies % 4;
         const armOffset = arm * (Math.PI * 0.5);
         const spiralTheta = u * 4.5 * Math.PI + time * 0.4 * speedMult + armOffset;
         const spiralR = 1.0 + Math.pow(u, 0.75) * 6.2;
-        const densityWave = Math.sin(spiralTheta * 2.0 - time * 0.8) * 0.3;
+        const densityWave = fastSin(spiralTheta * 2.0 - time * 0.8) * 0.3;
         const coreH = Math.exp(-spiralR * 0.5) * 2.4 * (species - 1.5) * 0.6;
-        tx = (spiralR + densityWave) * Math.cos(spiralTheta);
-        ty = coreH + Math.sin(spiralTheta * 3.0 + time) * 0.35;
-        tz = (spiralR + densityWave) * Math.sin(spiralTheta);
+        tx = (spiralR + densityWave) * fastCos(spiralTheta);
+        ty = coreH + fastSin(spiralTheta * 3.0 + time) * 0.35;
+        tz = (spiralR + densityWave) * fastSin(spiralTheta);
     } else if (formation === FormationMode.SpiderWeb) {
         // --- 28. Intertwined Infinity Loops: Dual Interlocking 3D Continuous Ribbon Orbits ---
         const loopChoice = species % 2; // Split species into 2 intertwined intersecting loops
@@ -945,29 +963,29 @@ export function computeFormationPoint(
 
         if (loopChoice === 0) {
             // Loop A: Flowing Primary Figure-8 Trefoil Ribbon
-            const cx = Math.sin(loopPhase) * 3.4 + Math.sin(loopPhase * 2.0) * 1.6;
-            const cy = Math.cos(loopPhase * 3.0) * 1.5;
-            const cz = Math.cos(loopPhase) * 3.0 - Math.cos(loopPhase * 2.0) * 1.4;
-            tx = cx + Math.cos(tubeOffset) * crossRadius;
-            ty = cy + Math.sin(tubeOffset) * crossRadius;
-            tz = cz + Math.sin(tubeOffset * 2.0) * crossRadius * 0.5;
+            const cx = fastSin(loopPhase) * 3.4 + fastSin(loopPhase * 2.0) * 1.6;
+            const cy = fastCos(loopPhase * 3.0) * 1.5;
+            const cz = fastCos(loopPhase) * 3.0 - fastCos(loopPhase * 2.0) * 1.4;
+            tx = cx + fastCos(tubeOffset) * crossRadius;
+            ty = cy + fastSin(tubeOffset) * crossRadius;
+            tz = cz + fastSin(tubeOffset * 2.0) * crossRadius * 0.5;
         } else {
             // Loop B: Interlocking Orthogonal Ribbon threading through Loop A's center
-            const cx = Math.cos(loopPhase) * 3.0 - Math.cos(loopPhase * 2.0) * 1.4;
-            const cy = Math.sin(loopPhase * 3.0) * 1.5;
-            const cz = Math.sin(loopPhase) * 3.4 + Math.sin(loopPhase * 2.0) * 1.6;
-            tx = cx + Math.cos(tubeOffset) * crossRadius;
-            ty = cy + Math.sin(tubeOffset) * crossRadius;
-            tz = cz + Math.sin(tubeOffset * 2.0) * crossRadius * 0.5;
+            const cx = fastCos(loopPhase) * 3.0 - fastCos(loopPhase * 2.0) * 1.4;
+            const cy = fastSin(loopPhase * 3.0) * 1.5;
+            const cz = fastSin(loopPhase) * 3.4 + fastSin(loopPhase * 2.0) * 1.6;
+            tx = cx + fastCos(tubeOffset) * crossRadius;
+            ty = cy + fastSin(tubeOffset) * crossRadius;
+            tz = cz + fastSin(tubeOffset * 2.0) * crossRadius * 0.5;
         }
     } else if (formation === FormationMode.NebulaCloud) {
         // --- 29. Cosmic Nebula: Organic Interstellar Gas Cloud ---
         const cloudRadius = 1.6 + u * 4.0;
         const theta = u * Math.PI * 8.0 + time * 0.3 * speedMult;
         const phi = (indexInSpecies * 137.5) * (Math.PI / 180.0);
-        tx = cloudRadius * Math.sin(phi) * Math.cos(theta);
-        ty = cloudRadius * Math.cos(phi) + Math.sin(theta * 1.8) * 1.5;
-        tz = cloudRadius * Math.sin(phi) * Math.sin(theta);
+        tx = cloudRadius * fastSin(phi) * fastCos(theta);
+        ty = cloudRadius * fastCos(phi) + fastSin(theta * 1.8) * 1.5;
+        tz = cloudRadius * fastSin(phi) * fastSin(theta);
     } else if (formation === FormationMode.WireCube) {
         // --- 31. Aurora Borealis Curtain: Billowing 3D Shimmering Light Curtains ---
         const s = (u - 0.5) * 12.0;
@@ -975,40 +993,40 @@ export function computeFormationPoint(
         const wave1 = s * 0.45 - time * 0.6 * speedMult + ribbonLayer * 0.4;
         const wave2 = s * 0.90 + time * 0.4 * speedMult;
         const curtainH = ((indexInSpecies % 80) / 80.0) * 8.0 - 4.0;
-        const curtainSway = Math.sin(wave1) * 3.4 + Math.sin(wave2) * 1.1;
-        tx = s * 1.15 + Math.cos(wave1 * 0.8) * 0.8;
-        ty = curtainH + Math.sin(s * 0.3 + time * 0.5) * 0.8;
+        const curtainSway = fastSin(wave1) * 3.4 + fastSin(wave2) * 1.1;
+        tx = s * 1.15 + fastCos(wave1 * 0.8) * 0.8;
+        ty = curtainH + fastSin(s * 0.3 + time * 0.5) * 0.8;
         tz = curtainSway + ribbonLayer;
     } else if (formation === FormationMode.TreeBranch) {
         // --- 32. Tree of Life: Recursive 3D Branching Canopy ---
         if (u < 0.25) {
             const trunkT = u / 0.25;
-            tx = Math.sin(trunkT * 2.0 + time * 0.4) * 0.25;
+            tx = fastSin(trunkT * 2.0 + time * 0.4) * 0.25;
             ty = (trunkT - 0.5) * 4.0 - 2.0;
-            tz = Math.cos(trunkT * 2.0 + time * 0.4) * 0.25;
+            tz = fastCos(trunkT * 2.0 + time * 0.4) * 0.25;
         } else if (u < 0.65) {
             const boughIdx = indexInSpecies % 4;
             const boughAngle = (boughIdx / 4.0) * Math.PI * 2.0 + (species * 0.3);
             const boughT = (u - 0.25) / 0.40;
             const boughR = boughT * 3.5;
-            const sway = Math.sin(time * 0.6 * speedMult + boughIdx) * 0.3;
-            tx = Math.cos(boughAngle + sway) * boughR;
+            const sway = fastSin(time * 0.6 * speedMult + boughIdx) * 0.3;
+            tx = fastCos(boughAngle + sway) * boughR;
             ty = -1.0 + boughT * 3.2;
-            tz = Math.sin(boughAngle + sway) * boughR;
+            tz = fastSin(boughAngle + sway) * boughR;
         } else {
             const twigIdx = indexInSpecies % 12;
             const twigAngle = (twigIdx / 12.0) * Math.PI * 2.0 + (time * 0.1);
             const canopyR = 2.0 + ((u - 0.65) / 0.35) * 2.8;
             const phi = ((u - 0.65) / 0.35) * Math.PI * 0.4;
-            tx = canopyR * Math.sin(phi) * Math.cos(twigAngle);
-            ty = 2.0 + Math.cos(phi) * 2.5 + Math.sin(time * 0.8 + twigIdx) * 0.2;
-            tz = canopyR * Math.sin(phi) * Math.sin(twigAngle);
+            tx = canopyR * fastSin(phi) * fastCos(twigAngle);
+            ty = 2.0 + fastCos(phi) * 2.5 + fastSin(time * 0.8 + twigIdx) * 0.2;
+            tz = canopyR * fastSin(phi) * fastSin(twigAngle);
         }
     } else if (formation === FormationMode.LightningBolt) {
         // --- 33. Fluid Streamline: High-Energy Aerodynamic Streamline Cascade ---
         const yNorm = (u - 0.5) * 10.0;
-        const streamWave = Math.sin(yNorm * 0.6 - time * 1.5 * speedMult) * 2.8;
-        const streamZ = Math.cos(yNorm * 0.5 + time * 1.2) * 2.4;
+        const streamWave = fastSin(yNorm * 0.6 - time * 1.5 * speedMult) * 2.8;
+        const streamZ = fastCos(yNorm * 0.5 + time * 1.2) * 2.4;
         tx = streamWave + (species - 1.5) * 0.8;
         ty = yNorm;
         tz = streamZ + (species - 1.5) * 0.8;
@@ -1017,9 +1035,9 @@ export function computeFormationPoint(
         const xProgress = (u - 0.5) * 9.5;
         const spreadFactor = Math.max(0.25, (xProgress + 4.75) / 9.5);
         const channel = (indexInSpecies % 7) - 3;
-        const meander = Math.sin(xProgress * 0.8 + channel + time * 0.5 * speedMult) * 0.8;
+        const meander = fastSin(xProgress * 0.8 + channel + time * 0.5 * speedMult) * 0.8;
         tx = xProgress;
-        ty = (species - 1.5) * 0.4 + Math.sin(xProgress * 1.2 + time) * 0.2;
+        ty = (species - 1.5) * 0.4 + fastSin(xProgress * 1.2 + time) * 0.2;
         tz = channel * spreadFactor * 1.5 + meander * spreadFactor;
     } else if (formation === FormationMode.KelvinHelmholtz) {
         // --- 35. Kelvin-Helmholtz Billows: Fluid Shear Layer Rolling Vortices ---
@@ -1027,27 +1045,27 @@ export function computeFormationPoint(
         const waveK = 1.1;
         const wavePhase = xPos * waveK - time * 1.2 * speedMult;
         const shearLayer = Math.sign(species - 1.5);
-        const vortexRoll = Math.sin(wavePhase) * Math.exp(-Math.abs(Math.sin(wavePhase * 0.5)) * 0.45);
+        const vortexRoll = fastSin(wavePhase) * Math.exp(-Math.abs(fastSin(wavePhase * 0.5)) * 0.45);
         tx = xPos;
-        ty = vortexRoll * 2.8 + shearLayer * (0.8 + Math.cos(wavePhase) * 0.4);
-        tz = Math.cos(wavePhase * 1.4) * 1.4 + (species - 1.5) * 0.5;
+        ty = vortexRoll * 2.8 + shearLayer * (0.8 + fastCos(wavePhase) * 0.4);
+        tz = fastCos(wavePhase * 1.4) * 1.4 + (species - 1.5) * 0.5;
     } else if (formation === FormationMode.DNALadder) {
         // --- 36. Triple Braid Helix: 3-Strand Interlocking Chiral Braid Stream ---
         const strand = species % 3;
         const strandAngle = (strand * Math.PI * 2.0 / 3.0);
         const s = (u - 0.5) * 11.5;
         const braidPhase = s * 0.85 - time * 0.7 * speedMult + strandAngle;
-        const braidR = 3.2 + Math.sin(s * 0.5 + time * 0.8) * 0.6;
-        const crossKnot = Math.sin(braidPhase * 2.0) * 0.7;
-        tx = (braidR + crossKnot) * Math.cos(braidPhase);
+        const braidR = 3.2 + fastSin(s * 0.5 + time * 0.8) * 0.6;
+        const crossKnot = fastSin(braidPhase * 2.0) * 0.7;
+        tx = (braidR + crossKnot) * fastCos(braidPhase);
         ty = s * 1.1;
-        tz = (braidR + crossKnot) * Math.sin(braidPhase);
+        tz = (braidR + crossKnot) * fastSin(braidPhase);
     } else if (formation === FormationMode.StarPolygon) {
         // --- 37. Manta Ray Glide: Majestic Oceanic Ray Wings with Undulating Wave Flap ---
         const spanX = (u - 0.5) * 12.0;
         const chordZ = (((indexInSpecies % 60) / 60.0) - 0.4) * 8.0;
-        const wingFlap = Math.sin(time * 1.8 * speedMult - Math.abs(spanX) * 0.35) * Math.pow(Math.abs(spanX) * 0.18, 1.4) * 2.2;
-        const bodyCamber = Math.cos(spanX * 0.25) * 1.2 - Math.pow(chordZ * 0.15, 2.0);
+        const wingFlap = fastSin(time * 1.8 * speedMult - Math.abs(spanX) * 0.35) * Math.pow(Math.abs(spanX) * 0.18, 1.4) * 2.2;
+        const bodyCamber = fastCos(spanX * 0.25) * 1.2 - Math.pow(chordZ * 0.15, 2.0);
         tx = spanX * 1.2;
         ty = wingFlap + bodyCamber + (species - 1.5) * 0.5;
         tz = chordZ * 1.3 - Math.abs(spanX) * 0.4;
@@ -1055,27 +1073,27 @@ export function computeFormationPoint(
         // --- 38. Singularity Breath: Cosmic Breathing Sphere with Fluid Expansion ---
         const phi = Math.acos(2 * u - 1);
         const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + time * 0.2;
-        const collapseCycle = (Math.sin(time * 0.8 * speedMult) + 1.0) * 0.5;
+        const collapseCycle = (fastSin(time * 0.8 * speedMult) + 1.0) * 0.5;
         const breatheR = 1.0 + Math.pow(collapseCycle, 1.8) * 4.6;
-        tx = breatheR * Math.sin(phi) * Math.cos(theta);
-        ty = breatheR * Math.cos(phi);
-        tz = breatheR * Math.sin(phi) * Math.sin(theta);
+        tx = breatheR * fastSin(phi) * fastCos(theta);
+        ty = breatheR * fastCos(phi);
+        tz = breatheR * fastSin(phi) * fastSin(theta);
     } else if (formation === FormationMode.BigBangExpansion) {
         // --- 39. Cosmic Expansion: Radial Expanding Shockwave Shells ---
         const bangPhase = (time * 0.6 * speedMult + seed * 0.01) % 4.0;
         const radialDist = Math.pow(bangPhase / 4.0, 0.75) * 6.5 + 0.6;
         const phi = Math.acos(2 * u - 1);
         const theta = (indexInSpecies * 2.39996) + (species * Math.PI / 4);
-        tx = radialDist * Math.sin(phi) * Math.cos(theta);
-        ty = radialDist * Math.cos(phi);
-        tz = radialDist * Math.sin(phi) * Math.sin(theta);
+        tx = radialDist * fastSin(phi) * fastCos(theta);
+        ty = radialDist * fastCos(phi);
+        tz = radialDist * fastSin(phi) * fastSin(theta);
     } else if (formation === FormationMode.GeologicStrata) {
         // --- 40. Laminar Wave Sheets: Undulating Horizontal Fluid Current Sheets ---
         const layer = Math.floor(u * 4);
         const layerU = (u * 4) % 1.0;
         const planeX = (layerU - 0.5) * 9.0;
         const planeZ = (((indexInSpecies % 25) / 25.0) - 0.5) * 9.0;
-        const topoRipple = Math.sin(planeX * 0.7 + time * 0.5) * Math.cos(planeZ * 0.7) * 0.7;
+        const topoRipple = fastSin(planeX * 0.7 + time * 0.5) * fastCos(planeZ * 0.7) * 0.7;
         const layerY = (layer - 1.5) * 2.0 + topoRipple;
         tx = planeX;
         ty = layerY;
@@ -1084,60 +1102,60 @@ export function computeFormationPoint(
         // --- 41. Trefoil Harmonics: Continuous Canonical (2,3) Cloverleaf Streamline ---
         const t = u * Math.PI * 2.0 + time * 0.3 * speedMult + (species * 0.15);
         const kScale = 1.35;
-        tx = (Math.sin(t) + 2 * Math.sin(2 * t)) * kScale;
-        ty = (Math.cos(t) - 2 * Math.cos(2 * t)) * kScale;
-        tz = (-Math.sin(3 * t) * 1.8) * kScale;
+        tx = (fastSin(t) + 2 * fastSin(2 * t)) * kScale;
+        ty = (fastCos(t) - 2 * fastCos(2 * t)) * kScale;
+        tz = (-fastSin(3 * t) * 1.8) * kScale;
     } else if (formation === FormationMode.MurmurationFlow) {
         // --- 42. Starling Murmuration: Emergent Rolling Starling Swarm Cloud ---
         const swarmPhase = time * 0.5 * speedMult;
-        const sx = Math.sin(u * 6.0 + swarmPhase) * 3.8 + Math.cos(time * 0.3 + species) * 1.4;
-        const sy = Math.cos(u * 4.0 - swarmPhase * 0.8) * 2.8 + Math.sin(u * 8.0) * 0.7;
-        const sz = Math.sin(u * 5.0 + swarmPhase * 1.2) * 3.8 + Math.cos(time * 0.4 + species) * 1.2;
+        const sx = fastSin(u * 6.0 + swarmPhase) * 3.8 + fastCos(time * 0.3 + species) * 1.4;
+        const sy = fastCos(u * 4.0 - swarmPhase * 0.8) * 2.8 + fastSin(u * 8.0) * 0.7;
+        const sz = fastSin(u * 5.0 + swarmPhase * 1.2) * 3.8 + fastCos(time * 0.4 + species) * 1.2;
         tx = sx; ty = sy; tz = sz;
     } else if (formation === FormationMode.OuroborosSerpent) {
         // --- 43. Ouroboros Dragon: Coiling Aerodynamic Dragon Swallowing its Tail ---
         const ringAngle = u * Math.PI * 2.0 + time * 0.4 * speedMult;
         const bodyThickness = (1.0 - Math.pow(u, 1.5)) * 1.2 + 0.3;
-        const spineWave = Math.sin(u * 10.0 - time * 2.0) * 0.45;
+        const spineWave = fastSin(u * 10.0 - time * 2.0) * 0.45;
         const baseR = 4.2 + (species - 1.5) * 0.35;
-        tx = (baseR + spineWave) * Math.cos(ringAngle);
-        ty = Math.sin(u * 7.0 + time) * (bodyThickness * 0.7);
-        tz = (baseR + spineWave) * Math.sin(ringAngle);
+        tx = (baseR + spineWave) * fastCos(ringAngle);
+        ty = fastSin(u * 7.0 + time) * (bodyThickness * 0.7);
+        tz = (baseR + spineWave) * fastSin(ringAngle);
     } else if (formation === FormationMode.DancingRibbon) {
         // --- 44. Dancing Ribbon: Twisting Kinetic Gymnast Sash ---
         const ribT = (u - 0.5) * 11.0;
         const ribWave = ribT * 0.7 - time * 0.8 * speedMult;
         const ribbonWidth = (indexInSpecies % 2 === 0 ? 1 : -1) * 0.85;
         const twistAngle = ribT * 0.9 + time * 0.5;
-        const rx = Math.sin(ribWave) * 3.2;
-        const ry = ribT * 0.85 + Math.cos(ribWave) * 1.2;
-        const rz = Math.cos(ribWave) * 3.0;
-        tx = rx + Math.cos(twistAngle) * ribbonWidth;
+        const rx = fastSin(ribWave) * 3.2;
+        const ry = ribT * 0.85 + fastCos(ribWave) * 1.2;
+        const rz = fastCos(ribWave) * 3.0;
+        tx = rx + fastCos(twistAngle) * ribbonWidth;
         ty = ry;
-        tz = rz + Math.sin(twistAngle) * ribbonWidth;
+        tz = rz + fastSin(twistAngle) * ribbonWidth;
     } else if (formation === FormationMode.CalabiYauManifold) {
         // --- 45. Calabi-Yau Bloom: 6D String Theory Compactification Projection ---
         const n = 5;
         const alpha = u * Math.PI * 2.0;
         const beta = (((indexInSpecies % 100) / 100.0) * Math.PI * 2.0);
         const phaseT = time * 0.3 * speedMult + (species * Math.PI / 4);
-        const z1_r = Math.cos(alpha);
-        const z1_i = Math.sin(alpha);
-        const z2_r = Math.pow(Math.abs(Math.cos(n * alpha)), 1 / n) * Math.cos(beta + phaseT);
-        const z2_i = Math.pow(Math.abs(Math.sin(n * alpha)), 1 / n) * Math.sin(beta + phaseT);
-        const cx = (z1_r * Math.cos(phaseT) - z1_i * Math.sin(phaseT)) * 4.5;
+        const z1_r = fastCos(alpha);
+        const z1_i = fastSin(alpha);
+        const z2_r = Math.pow(Math.abs(fastCos(n * alpha)), 1 / n) * fastCos(beta + phaseT);
+        const z2_i = Math.pow(Math.abs(fastSin(n * alpha)), 1 / n) * fastSin(beta + phaseT);
+        const cx = (z1_r * fastCos(phaseT) - z1_i * fastSin(phaseT)) * 4.5;
         const cy = (z2_r * 3.5) + (species - 1.5) * 0.7;
-        const cz = (z1_r * Math.sin(phaseT) + z2_i * Math.cos(phaseT)) * 4.5;
+        const cz = (z1_r * fastSin(phaseT) + z2_i * fastCos(phaseT)) * 4.5;
         tx = cx; ty = cy; tz = cz;
     } else if (formation === FormationMode.HopfFibration) {
         // --- 46. Hopf Fiber Bundle: Nested Villarceau Circular Fiber Streams ---
         const th = u * Math.PI * 2.0;
         const ph = ((species + 0.5) / 4.0) * Math.PI;
         const psi = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0) + time * 0.5 * speedMult;
-        const x4 = Math.cos((th + psi) * 0.5) * Math.sin(ph * 0.5);
-        const y4 = Math.sin((th + psi) * 0.5) * Math.sin(ph * 0.5);
-        const z4 = Math.cos((th - psi) * 0.5) * Math.cos(ph * 0.5);
-        const w4 = Math.sin((th - psi) * 0.5) * Math.cos(ph * 0.5);
+        const x4 = fastCos((th + psi) * 0.5) * fastSin(ph * 0.5);
+        const y4 = fastSin((th + psi) * 0.5) * fastSin(ph * 0.5);
+        const z4 = fastCos((th - psi) * 0.5) * fastCos(ph * 0.5);
+        const w4 = fastSin((th - psi) * 0.5) * fastCos(ph * 0.5);
         const denom = Math.max(0.2, 1.4 - w4);
         tx = (x4 / denom) * 4.0;
         ty = (y4 / denom) * 4.0;
@@ -1148,17 +1166,17 @@ export function computeFormationPoint(
         const tLor = (u * 16.0) + (species * 0.4) + (time * 0.4 * speedMult);
         const rLor = Math.sqrt(Math.abs(tLor)) * 1.4 + 1.2;
         const thetaLor = tLor * 2.2;
-        const lx = (lobe * 3.2) + rLor * Math.cos(thetaLor) * 0.65;
+        const lx = (lobe * 3.2) + rLor * fastCos(thetaLor) * 0.65;
         const ly = (u - 0.5) * 8.5;
-        const lz = (lobe * 2.0) + rLor * Math.sin(thetaLor) * 0.65;
+        const lz = (lobe * 2.0) + rLor * fastSin(thetaLor) * 0.65;
         tx = lx; ty = ly; tz = lz;
     } else if (formation === FormationMode.GyroidMinimalSurface) {
         // --- 48. Gyroid Flow: Triply Periodic Minimal Surface Streamline ---
         const tG = u * Math.PI * 2.0 + time * 0.3 * speedMult;
         const spG = species * Math.PI * 0.5;
-        const gx = (Math.sin(tG) * Math.cos(tG * 1.5 + spG) + Math.cos(tG * 0.5)) * 3.2;
-        const gy = (Math.sin(tG * 1.5 + spG) * Math.cos(tG * 0.5) + Math.cos(tG)) * 3.2;
-        const gz = (Math.sin(tG * 0.5) * Math.cos(tG) + Math.cos(tG * 1.5 + spG)) * 3.2;
+        const gx = (fastSin(tG) * fastCos(tG * 1.5 + spG) + fastCos(tG * 0.5)) * 3.2;
+        const gy = (fastSin(tG * 1.5 + spG) * fastCos(tG * 0.5) + fastCos(tG)) * 3.2;
+        const gz = (fastSin(tG * 0.5) * fastCos(tG) + fastCos(tG * 1.5 + spG)) * 3.2;
         tx = gx * 1.15;
         ty = gy * 1.15;
         tz = gz * 1.25;
@@ -1167,9 +1185,9 @@ export function computeFormationPoint(
         const ku = u * Math.PI * 2.0;
         const kv = ((((indexInSpecies % 70) / 70.0) * Math.PI * 2.0)) + (time * 0.4 * speedMult);
         const rk = 3.6;
-        const kx = (rk + Math.cos(ku * 0.5) * Math.sin(kv) - Math.sin(ku * 0.5) * Math.sin(2.0 * kv)) * Math.cos(ku);
-        const ky = (rk + Math.cos(ku * 0.5) * Math.sin(kv) - Math.sin(ku * 0.5) * Math.sin(2.0 * kv)) * Math.sin(ku);
-        const kz = (Math.sin(ku * 0.5) * Math.sin(kv) + Math.cos(ku * 0.5) * Math.sin(2.0 * kv)) * 2.2;
+        const kx = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastCos(ku);
+        const ky = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastSin(ku);
+        const kz = (fastSin(ku * 0.5) * fastSin(kv) + fastCos(ku * 0.5) * fastSin(2.0 * kv)) * 2.2;
         tx = kx * 0.75;
         ty = ky * 0.75;
         tz = kz * 0.75;
@@ -1178,26 +1196,26 @@ export function computeFormationPoint(
         const thC = u * Math.PI * 2.0;
         const phiC = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0);
         const tRot = time * 0.35 * speedMult;
-        const x1 = Math.cos(thC + tRot);
-        const y1 = Math.sin(thC + tRot);
-        const x2 = Math.cos(phiC + (species * Math.PI / 4));
-        const y2 = Math.sin(phiC + (species * Math.PI / 4));
-        const wC = (x1 * Math.cos(tRot) - y2 * Math.sin(tRot));
+        const x1 = fastCos(thC + tRot);
+        const y1 = fastSin(thC + tRot);
+        const x2 = fastCos(phiC + (species * Math.PI / 4));
+        const y2 = fastSin(phiC + (species * Math.PI / 4));
+        const wC = (x1 * fastCos(tRot) - y2 * fastSin(tRot));
         const denomC = Math.max(0.3, 1.6 - wC * 0.5);
         tx = ((y1) / denomC) * 3.8;
         ty = ((x2) / denomC) * 3.8;
-        tz = ((x1 * Math.sin(tRot) + y2 * Math.cos(tRot)) / denomC) * 3.8;
+        tz = ((x1 * fastSin(tRot) + y2 * fastCos(tRot)) / denomC) * 3.8;
     } else if (formation === FormationMode.QuadHelixBraid) {
         // --- 51. Quad Helix Braid: 4 Intertwined Species Helical Strands with Harmonic Cross-Ladders ---
         const strandOffset = species * (Math.PI * 0.5);
         const theta = u * 10.0 * Math.PI + time * 0.65 * speedMult + strandOffset;
         const h = (u - 0.5) * 11.5;
-        const helixR = 3.6 + Math.sin(h * 0.4 + time * 0.6) * 0.5;
+        const helixR = 3.6 + fastSin(h * 0.4 + time * 0.6) * 0.5;
         const isRung = (indexInSpecies % 8 === 0);
         const rungFactor = isRung ? ((indexInSpecies % 32) / 32.0 - 0.5) : 0.0;
-        tx = (helixR + rungFactor * 1.8) * Math.cos(theta);
+        tx = (helixR + rungFactor * 1.8) * fastCos(theta);
         ty = h;
-        tz = (helixR + rungFactor * 1.8) * Math.sin(theta);
+        tz = (helixR + rungFactor * 1.8) * fastSin(theta);
     } else if (formation === FormationMode.ConcentricDualHelixSheath) {
         // --- 52. Concentric Dual Helix Sheath: Inner Double-Helix with Outer Counter-Rotating Cage & Radial Rungs ---
         const h = (u - 0.5) * 11.5;
@@ -1205,37 +1223,37 @@ export function computeFormationPoint(
         if (isInner) {
             // Inner double helix core
             const thetaIn = u * 10.0 * Math.PI + time * 0.8 * speedMult + (species * Math.PI);
-            const rIn = 2.2 + Math.sin(h * 0.5 + time) * 0.3;
-            tx = rIn * Math.cos(thetaIn);
+            const rIn = 2.2 + fastSin(h * 0.5 + time) * 0.3;
+            tx = rIn * fastCos(thetaIn);
             ty = h;
-            tz = rIn * Math.sin(thetaIn);
+            tz = rIn * fastSin(thetaIn);
         } else {
             // Outer counter-rotating quad sheath
             const thetaOut = -u * 7.0 * Math.PI - time * 0.5 * speedMult + ((species - 2) * Math.PI * 0.5);
-            const rOut = 4.4 + Math.cos(h * 0.4 - time * 0.4) * 0.4;
+            const rOut = 4.4 + fastCos(h * 0.4 - time * 0.4) * 0.4;
             const isSpoke = (indexInSpecies % 10 === 0);
             const spokeFactor = isSpoke ? ((indexInSpecies % 30) / 30.0) : 1.0;
             const finalR = 2.2 + spokeFactor * (rOut - 2.2);
-            tx = finalR * Math.cos(thetaOut);
+            tx = finalR * fastCos(thetaOut);
             ty = h;
-            tz = finalR * Math.sin(thetaOut);
+            tz = finalR * fastSin(thetaOut);
         }
     } else if (formation === FormationMode.CaduceusVortex) {
         // --- 53. Caduceus Vortex: Dual Intertwined Helical Serpents with Ascending Central Spine ---
         if (u < 0.22) {
             const spineT = (u / 0.22 - 0.5) * 11.0;
-            tx = Math.sin(spineT * 2.0 + time) * 0.35;
+            tx = fastSin(spineT * 2.0 + time) * 0.35;
             ty = spineT;
-            tz = Math.cos(spineT * 2.0 + time) * 0.35;
+            tz = fastCos(spineT * 2.0 + time) * 0.35;
         } else {
             const helixU = (u - 0.22) / 0.78;
             const strand = (indexInSpecies % 2 === 0) ? 0 : 1;
             const theta = helixU * 8.0 * Math.PI + time * 0.8 * speedMult + (strand * Math.PI) + (species * 0.2);
             const h = (helixU - 0.5) * 11.0;
-            const loopScale = Math.sin(helixU * Math.PI * 3.0) * 1.8 + 2.6;
-            tx = loopScale * Math.cos(theta);
+            const loopScale = fastSin(helixU * Math.PI * 3.0) * 1.8 + 2.6;
+            tx = loopScale * fastCos(theta);
             ty = h;
-            tz = loopScale * Math.sin(theta);
+            tz = loopScale * fastSin(theta);
         }
     } else if (formation === FormationMode.ToroidalHelixBraid) {
         // --- 54. Toroidal Helix Braid: Closed Continuous 4-Strand Braided Torus Ring ---
@@ -1244,51 +1262,51 @@ export function computeFormationPoint(
         const tRing = u * Math.PI * 2.0 + time * 0.3 * speedMult;
         const strandOffset = species * (Math.PI * 0.5);
         const tTwist = u * 8.0 * Math.PI + strandOffset + time * 0.7 * speedMult;
-        const rLocal = r_min + Math.sin(tTwist * 2.0) * 0.3;
-        tx = (R_maj + rLocal * Math.cos(tTwist)) * Math.cos(tRing);
-        ty = rLocal * Math.sin(tTwist) * 1.4;
-        tz = (R_maj + rLocal * Math.cos(tTwist)) * Math.sin(tRing);
+        const rLocal = r_min + fastSin(tTwist * 2.0) * 0.3;
+        tx = (R_maj + rLocal * fastCos(tTwist)) * fastCos(tRing);
+        ty = rLocal * fastSin(tTwist) * 1.4;
+        tz = (R_maj + rLocal * fastCos(tTwist)) * fastSin(tRing);
     } else if (formation === FormationMode.TrefoilBraidedRibbon) {
         // --- 55. Trefoil Braided Ribbon: 4-Strand Braided Cable Woven Around 3D Trefoil Knot ---
         const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        const cx = (Math.sin(t) + 2.0 * Math.sin(2.0 * t)) * 1.5;
-        const cy = (Math.cos(t) - 2.0 * Math.cos(2.0 * t)) * 1.5;
-        const cz = (-Math.sin(3.0 * t)) * 2.0;
+        const cx = (fastSin(t) + 2.0 * fastSin(2.0 * t)) * 1.5;
+        const cy = (fastCos(t) - 2.0 * fastCos(2.0 * t)) * 1.5;
+        const cz = (-fastSin(3.0 * t)) * 2.0;
         const strandPhase = species * (Math.PI * 0.5);
         const braidTwist = t * 6.0 + strandPhase + time * 0.6;
         const rBraid = 0.65;
-        tx = cx + rBraid * Math.cos(braidTwist) * Math.cos(t);
-        ty = cy + rBraid * Math.cos(braidTwist) * Math.sin(t);
-        tz = cz + rBraid * Math.sin(braidTwist) * 1.4;
+        tx = cx + rBraid * fastCos(braidTwist) * fastCos(t);
+        ty = cy + rBraid * fastCos(braidTwist) * fastSin(t);
+        tz = cz + rBraid * fastSin(braidTwist) * 1.4;
     } else if (formation === FormationMode.HexaHelixVortexTower) {
         // --- 56. Hexa Helix Vortex Tower: 6 Intertwined Ascending Helical Pillars with Cross-Tiers ---
         const strandID = (species * 2 + (indexInSpecies % 2)) % 6;
         const phiStrand = strandID * (Math.PI / 3.0);
         const h = (u - 0.5) * 12.0;
-        const rTower = 3.2 + Math.sin(h * 0.3 + time * 0.4) * 0.8;
+        const rTower = 3.2 + fastSin(h * 0.3 + time * 0.4) * 0.8;
         const theta = u * 10.0 * Math.PI + phiStrand + time * 0.55 * speedMult;
         const isCrossTier = (indexInSpecies % 12 === 0);
         const tierFactor = isCrossTier ? ((indexInSpecies % 24) / 24.0 - 0.5) * 1.2 : 0.0;
-        tx = (rTower + tierFactor) * Math.cos(theta);
+        tx = (rTower + tierFactor) * fastCos(theta);
         ty = h;
-        tz = (rTower + tierFactor) * Math.sin(theta);
+        tz = (rTower + tierFactor) * fastSin(theta);
     } else if (formation === FormationMode.MobiusHelixBraid) {
         // --- 57. Mobius Helix Braid: Continuous 3D Mobius Ribbon with 3 Braided Helical Sub-Currents ---
         const tMob = u * Math.PI * 2.0 + time * 0.35 * speedMult;
         const strand = indexInSpecies % 3;
         const strandPhase = strand * (Math.PI * 2.0 / 3.0) + (species * 0.25);
-        const braidTwist = Math.sin(tMob * 3.0 + strandPhase) * 1.2;
-        const rMob = 4.5 + Math.cos(tMob * 0.5) * (1.6 + braidTwist);
-        tx = rMob * Math.cos(tMob);
-        ty = Math.sin(tMob * 0.5) * (2.2 + braidTwist) + (species - 1.5) * 0.4;
-        tz = rMob * Math.sin(tMob);
+        const braidTwist = fastSin(tMob * 3.0 + strandPhase) * 1.2;
+        const rMob = 4.5 + fastCos(tMob * 0.5) * (1.6 + braidTwist);
+        tx = rMob * fastCos(tMob);
+        ty = fastSin(tMob * 0.5) * (2.2 + braidTwist) + (species - 1.5) * 0.4;
+        tz = rMob * fastSin(tMob);
     } else if (formation === FormationMode.LissajousIntertwinedKnot) {
         // --- 58. Lissajous Intertwined Knot: 4 Harmonic Ribbon Streams in 3D 8-Knot ---
         const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
         const delta = species * (Math.PI * 0.5);
-        tx = 4.3 * Math.sin(2.0 * t + delta);
-        ty = 3.5 * Math.cos(3.0 * t + delta * 0.5) + Math.sin(t * 5.0) * 0.3;
-        tz = 2.8 * Math.sin(4.0 * t + time * 0.2 + delta);
+        tx = 4.3 * fastSin(2.0 * t + delta);
+        ty = 3.5 * fastCos(3.0 * t + delta * 0.5) + fastSin(t * 5.0) * 0.3;
+        tz = 2.8 * fastSin(4.0 * t + time * 0.2 + delta);
     } else if (formation === FormationMode.BorromeanRings) {
         // --- 59. Borromean Rings: Three Mutually Intertwined Orthogonal Elliptical Loops ---
         const ringIdx = (species + Math.floor(u * 3)) % 3;
@@ -1296,63 +1314,63 @@ export function computeFormationPoint(
         const spOffset = (species - 1.5) * 0.18;
         if (ringIdx === 0) {
             // Ring 0: XY-dominant, weaves in Z
-            tx = (4.4 + spOffset) * Math.cos(t);
-            ty = (2.5 + spOffset) * Math.sin(t);
-            tz = 1.4 * Math.sin(2.0 * t) + 0.9;
+            tx = (4.4 + spOffset) * fastCos(t);
+            ty = (2.5 + spOffset) * fastSin(t);
+            tz = 1.4 * fastSin(2.0 * t) + 0.9;
         } else if (ringIdx === 1) {
             // Ring 1: YZ-dominant, weaves in X
-            ty = (4.4 + spOffset) * Math.cos(t);
-            tz = (2.5 + spOffset) * Math.sin(t);
-            tx = 1.4 * Math.sin(2.0 * t) + 0.9;
+            ty = (4.4 + spOffset) * fastCos(t);
+            tz = (2.5 + spOffset) * fastSin(t);
+            tx = 1.4 * fastSin(2.0 * t) + 0.9;
         } else {
             // Ring 2: ZX-dominant, weaves in Y
-            tz = (4.4 + spOffset) * Math.cos(t);
-            tx = (2.5 + spOffset) * Math.sin(t);
-            ty = 1.4 * Math.sin(2.0 * t) + 0.9;
+            tz = (4.4 + spOffset) * fastCos(t);
+            tx = (2.5 + spOffset) * fastSin(t);
+            ty = 1.4 * fastSin(2.0 * t) + 0.9;
         }
     } else if (formation === FormationMode.FigureEightKnot) {
         // --- 60. Figure-Eight Knot Braid: Canonical 4_1 Alternating Prime Knot with Multi-Strand Braid ---
         const t = u * Math.PI * 2.0 + time * 0.38 * speedMult;
-        const rBase = 2.8 + 1.3 * Math.cos(2.0 * t);
-        const cx = rBase * Math.cos(3.0 * t);
-        const cy = rBase * Math.sin(3.0 * t);
-        const cz = 2.4 * Math.sin(4.0 * t);
+        const rBase = 2.8 + 1.3 * fastCos(2.0 * t);
+        const cx = rBase * fastCos(3.0 * t);
+        const cy = rBase * fastSin(3.0 * t);
+        const cz = 2.4 * fastSin(4.0 * t);
         const twistAngle = t * 6.0 + species * (Math.PI * 0.5);
-        tx = cx + 0.5 * Math.cos(twistAngle) * Math.cos(3.0 * t);
-        ty = cy + 0.5 * Math.cos(twistAngle) * Math.sin(3.0 * t);
-        tz = cz + 0.55 * Math.sin(twistAngle);
+        tx = cx + 0.5 * fastCos(twistAngle) * fastCos(3.0 * t);
+        ty = cy + 0.5 * fastCos(twistAngle) * fastSin(3.0 * t);
+        tz = cz + 0.55 * fastSin(twistAngle);
     } else if (formation === FormationMode.CinqfoilKnot) {
         // --- 61. Cinqfoil Knot: (5,2) Torus Knot / Solomon's Seal 5-Lobe Intertwined Ribbon ---
         const t = u * Math.PI * 2.0 + time * 0.32 * speedMult;
-        const r = 3.6 + 1.5 * Math.cos(5.0 * t);
-        const cx = r * Math.cos(2.0 * t);
-        const cy = r * Math.sin(2.0 * t);
-        const cz = -2.5 * Math.sin(5.0 * t);
+        const r = 3.6 + 1.5 * fastCos(5.0 * t);
+        const cx = r * fastCos(2.0 * t);
+        const cy = r * fastSin(2.0 * t);
+        const cz = -2.5 * fastSin(5.0 * t);
         const spAngle = species * (Math.PI * 0.5) + t * 5.0;
-        tx = cx + 0.45 * Math.cos(spAngle) * Math.cos(2.0 * t);
-        ty = cy + 0.45 * Math.cos(spAngle) * Math.sin(2.0 * t);
-        tz = cz + 0.45 * Math.sin(spAngle);
+        tx = cx + 0.45 * fastCos(spAngle) * fastCos(2.0 * t);
+        ty = cy + 0.45 * fastCos(spAngle) * fastSin(2.0 * t);
+        tz = cz + 0.45 * fastSin(spAngle);
     } else if (formation === FormationMode.SeptafoilKnot) {
         // --- 62. Septafoil Knot: (7,3) Torus Knot - 7-Point Intertwined Stellar Ribbon ---
         const t = u * Math.PI * 2.0 + time * 0.28 * speedMult;
-        const r = 3.8 + 1.6 * Math.cos(7.0 * t);
-        const cx = r * Math.cos(3.0 * t);
-        const cy = r * Math.sin(3.0 * t);
-        const cz = -2.6 * Math.sin(7.0 * t);
+        const r = 3.8 + 1.6 * fastCos(7.0 * t);
+        const cx = r * fastCos(3.0 * t);
+        const cy = r * fastSin(3.0 * t);
+        const cz = -2.6 * fastSin(7.0 * t);
         const phi = t * 7.0 + species * (Math.PI * 0.5);
-        tx = cx + 0.45 * Math.cos(phi) * Math.cos(3.0 * t);
-        ty = cy + 0.45 * Math.cos(phi) * Math.sin(3.0 * t);
-        tz = cz + 0.5 * Math.sin(phi);
+        tx = cx + 0.45 * fastCos(phi) * fastCos(3.0 * t);
+        ty = cy + 0.45 * fastCos(phi) * fastSin(3.0 * t);
+        tz = cz + 0.5 * fastSin(phi);
     } else if (formation === FormationMode.OlympicChainLink) {
         // --- 63. Olympic Chain Link: 4 Interlocked Elliptical Rings in Toroidal Space ---
         const ringK = (species + Math.floor(u * 4)) % 4;
         const ringTheta = ringK * (Math.PI * 0.5) + time * 0.25 * speedMult;
-        const cx = 3.4 * Math.cos(ringTheta);
-        const cz = 3.4 * Math.sin(ringTheta);
-        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6) * Math.sin(time * 0.4 + ringK);
+        const cx = 3.4 * fastCos(ringTheta);
+        const cz = 3.4 * fastSin(ringTheta);
+        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6) * fastSin(time * 0.4 + ringK);
         const tau = ((u * 4) % 1.0) * Math.PI * 2.0 + time * 0.6;
-        const cosTau = Math.cos(tau), sinTau = Math.sin(tau);
-        const cosTh = Math.cos(ringTheta), sinTh = Math.sin(ringTheta);
+        const cosTau = fastCos(tau), sinTau = fastSin(tau);
+        const cosTh = fastCos(ringTheta), sinTh = fastSin(ringTheta);
         const lx = 2.0 * cosTau * (-sinTh) + 0.5 * sinTau * cosTh;
         const ly = 2.0 * sinTau;
         const lz = 2.0 * cosTau * cosTh + 0.5 * sinTau * sinTh;
@@ -1362,25 +1380,25 @@ export function computeFormationPoint(
     } else if (formation === FormationMode.TriquetraCelticBraid) {
         // --- 64. Triquetra Celtic Braid: 3D Celtic Trinity Knot with Over-Under Crossings ---
         const t = u * Math.PI * 2.0 + time * 0.38 * speedMult;
-        const r = 3.3 * (1.0 + 0.48 * Math.cos(3.0 * t));
-        const cx = r * Math.cos(t);
-        const cy = r * Math.sin(t);
-        const cz = 2.3 * Math.sin(3.0 * t);
+        const r = 3.3 * (1.0 + 0.48 * fastCos(3.0 * t));
+        const cx = r * fastCos(t);
+        const cy = r * fastSin(t);
+        const cz = 2.3 * fastSin(3.0 * t);
         const dr = (species - 1.5) * 0.32;
-        tx = (r + dr) * Math.cos(t) - dr * Math.sin(3.0 * t) * Math.sin(t) * 0.5;
-        ty = (r + dr) * Math.sin(t) + dr * Math.sin(3.0 * t) * Math.cos(t) * 0.5;
-        tz = cz + dr * Math.cos(3.0 * t);
+        tx = (r + dr) * fastCos(t) - dr * fastSin(3.0 * t) * fastSin(t) * 0.5;
+        ty = (r + dr) * fastSin(t) + dr * fastSin(3.0 * t) * fastCos(t) * 0.5;
+        tz = cz + dr * fastCos(3.0 * t);
     } else if (formation === FormationMode.SolarFlareProminence) {
         // --- 65. Solar Flare Prominence: Intertwined Magnetic Flux Ropes with Reconnection Cusp ---
         const s = (u - 0.5) * Math.PI;
-        const cx = 5.2 * Math.sin(s);
-        const cy = 4.6 * Math.cos(s) - 1.2;
-        const cz = Math.sin(s * 2.0) * 1.6;
+        const cx = 5.2 * fastSin(s);
+        const cy = 4.6 * fastCos(s) - 1.2;
+        const cz = fastSin(s * 2.0) * 1.6;
         const thetaMag = s * 7.0 + time * 0.75 * speedMult + species * (Math.PI * 0.5);
-        const rRope = 0.85 + 0.35 * Math.cos(s * 2.0);
-        tx = cx + rRope * Math.cos(thetaMag) * Math.cos(s);
-        ty = cy - rRope * Math.cos(thetaMag) * Math.sin(s);
-        tz = cz + rRope * Math.sin(thetaMag) * 1.3;
+        const rRope = 0.85 + 0.35 * fastCos(s * 2.0);
+        tx = cx + rRope * fastCos(thetaMag) * fastCos(s);
+        ty = cy - rRope * fastCos(thetaMag) * fastSin(s);
+        tz = cz + rRope * fastSin(thetaMag) * 1.3;
     } else if (formation === FormationMode.WhiteheadLink) {
         // --- 66. Whitehead Link: Circular Ring Intertwined with 3D Figure-8 Loop ---
         const isRing = (species < 2);
@@ -1388,42 +1406,42 @@ export function computeFormationPoint(
         if (isRing) {
             // Ring component (horizontal planar saddle)
             const rRing = 4.0 + (species === 1 ? 0.35 : -0.35);
-            tx = rRing * Math.cos(t);
-            ty = rRing * Math.sin(t);
-            tz = 0.7 * Math.sin(2.0 * t);
+            tx = rRing * fastCos(t);
+            ty = rRing * fastSin(t);
+            tz = 0.7 * fastSin(2.0 * t);
         } else {
             // Figure-8 component threading through the ring
             const spOff = (species === 3 ? 0.3 : -0.3);
-            tx = 2.4 * Math.sin(2.0 * t) + spOff;
-            ty = 0.9 * Math.sin(4.0 * t);
-            tz = 3.6 * Math.cos(t);
+            tx = 2.4 * fastSin(2.0 * t) + spOff;
+            ty = 0.9 * fastSin(4.0 * t);
+            tz = 3.6 * fastCos(t);
         }
     } else if (formation === FormationMode.QuatrefoilKnotBraid) {
         // --- 67. Quatrefoil Knot Braid: (4,3) Torus Knot / 4-Leaf Intertwined Clover Ribbon ---
         const t = u * Math.PI * 2.0 + time * 0.34 * speedMult;
-        const r = 3.6 + 1.5 * Math.cos(4.0 * t);
-        const cx = r * Math.cos(3.0 * t);
-        const cy = r * Math.sin(3.0 * t);
-        const cz = 2.3 * Math.sin(4.0 * t);
+        const r = 3.6 + 1.5 * fastCos(4.0 * t);
+        const cx = r * fastCos(3.0 * t);
+        const cy = r * fastSin(3.0 * t);
+        const cz = 2.3 * fastSin(4.0 * t);
         const phi = t * 4.0 + species * (Math.PI * 0.5);
-        tx = cx + 0.42 * Math.cos(phi) * Math.cos(3.0 * t);
-        ty = cy + 0.42 * Math.cos(phi) * Math.sin(3.0 * t);
-        tz = cz + 0.45 * Math.sin(phi);
+        tx = cx + 0.42 * fastCos(phi) * fastCos(3.0 * t);
+        ty = cy + 0.42 * fastCos(phi) * fastSin(3.0 * t);
+        tz = cz + 0.45 * fastSin(phi);
     } else if (formation === FormationMode.GrannyKnotBraid) {
         // --- 68. Granny Knot Braid: Dual Linked Trefoil Knots in Tandem with Bridge Threads ---
         const isUpper = (u < 0.5);
         const segU = isUpper ? u * 2.0 : (u - 0.5) * 2.0;
         const t = segU * Math.PI * 2.0 + time * 0.4 * speedMult;
         const yOffset = isUpper ? 2.2 : -2.2;
-        const cx = (Math.sin(t) + 1.6 * Math.sin(2.0 * t)) * 1.25;
-        const cy = (Math.cos(t) - 1.6 * Math.cos(2.0 * t)) * 1.25 + yOffset;
-        const cz = (-Math.sin(3.0 * t)) * 1.8;
+        const cx = (fastSin(t) + 1.6 * fastSin(2.0 * t)) * 1.25;
+        const cy = (fastCos(t) - 1.6 * fastCos(2.0 * t)) * 1.25 + yOffset;
+        const cz = (-fastSin(3.0 * t)) * 1.8;
         const phi = t * 3.0 + species * (Math.PI * 0.5);
         const isBridge = (indexInSpecies % 8 === 0 && Math.abs(u - 0.5) < 0.15);
         const bridgeShift = isBridge ? ((species - 1.5) * 0.8) : 0.0;
-        tx = cx + 0.38 * Math.cos(phi);
-        ty = cy + 0.38 * Math.sin(phi) + bridgeShift;
-        tz = cz + 0.42 * Math.sin(phi);
+        tx = cx + 0.38 * fastCos(phi);
+        ty = cy + 0.38 * fastSin(phi) + bridgeShift;
+        tz = cz + 0.42 * fastSin(phi);
 
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
@@ -1434,37 +1452,37 @@ export function computeFormationPoint(
             const m = g.m || 6;
             const n1 = g.n1 || 1.0, n2 = g.n2 || 1.0, n3 = g.n3 || 1.0;
             const a = g.a || 1.0, b = g.b || 1.0;
-            const t1 = Math.pow(Math.abs(Math.cos(m * th / 4) / a), n2);
-            const t2 = Math.pow(Math.abs(Math.sin(m * th / 4) / b), n3);
+            const t1 = Math.pow(Math.abs(fastCos(m * th / 4) / a), n2);
+            const t2 = Math.pow(Math.abs(fastSin(m * th / 4) / b), n3);
             const sfR = Math.pow(t1 + t2, -1 / n1) * 0.4;
-            const h = (species - 1.5) * 1.8 + Math.sin(th * 3.0 + wTime) * 0.8;
+            const h = (species - 1.5) * 1.8 + fastSin(th * 3.0 + wTime) * 0.8;
 
-            tx = sfR * Math.cos(th + wTime) * 3.5;
+            tx = sfR * fastCos(th + wTime) * 3.5;
             ty = h;
-            tz = sfR * Math.sin(th + wTime) * 3.5;
+            tz = sfR * fastSin(th + wTime) * 3.5;
         } else if (g.family === 'branching') {
             const segment = Math.floor(u * (g.k1 || 4));
             const segT = (u * (g.k1 || 4)) % 1.0;
             const angle = (segment / (g.k1 || 4)) * Math.PI * 2.0 + wTime;
             const r = segT * (g.r1 || 8.0) * 0.35;
 
-            tx = r * Math.cos(angle + Math.sin(segT * 3.0) * 0.4);
-            ty = (segT - 0.5) * 6.0 + Math.sin(angle * 2.0) * 0.5;
-            tz = r * Math.sin(angle + Math.cos(segT * 3.0) * 0.4);
+            tx = r * fastCos(angle + fastSin(segT * 3.0) * 0.4);
+            ty = (segT - 0.5) * 6.0 + fastSin(angle * 2.0) * 0.5;
+            tz = r * fastSin(angle + fastCos(segT * 3.0) * 0.4);
         } else {
             // Fourier Harmonic family
-            tx = (g.r1 * Math.cos(g.k1 * th + g.phi1) * Math.sin(g.k2 * th + wTime) + g.a1 * Math.cos(g.k3 * th)) * 0.4;
-            ty = (g.r2 * Math.sin(g.k4 * th + g.phi2) * Math.cos(wTime) + g.a2 * Math.sin(g.k5 * th)) * 0.4;
-            tz = (g.r3 * Math.sin(g.k6 * th + g.phi3) * Math.cos(g.k7 * th + wTime) + g.a3 * Math.cos(g.k8 * th)) * 0.4;
+            tx = (g.r1 * fastCos(g.k1 * th + g.phi1) * fastSin(g.k2 * th + wTime) + g.a1 * fastCos(g.k3 * th)) * 0.4;
+            ty = (g.r2 * fastSin(g.k4 * th + g.phi2) * fastCos(wTime) + g.a2 * fastSin(g.k5 * th)) * 0.4;
+            tz = (g.r3 * fastSin(g.k6 * th + g.phi3) * fastCos(g.k7 * th + wTime) + g.a3 * fastCos(g.k8 * th)) * 0.4;
         }
     } else {
         const cloudRadius = 1.5 + u * 3.5;
         const theta = u * Math.PI * 8.0 + time * 0.25 * speedMult;
         const phi = (indexInSpecies * 137.5) * (Math.PI / 180.0);
 
-        tx = cloudRadius * Math.sin(phi) * Math.cos(theta);
-        ty = cloudRadius * Math.cos(phi) + Math.sin(theta * 2.0) * 2.0;
-        tz = cloudRadius * Math.sin(phi) * Math.sin(theta);
+        tx = cloudRadius * fastSin(phi) * fastCos(theta);
+        ty = cloudRadius * fastCos(phi) + fastSin(theta * 2.0) * 2.0;
+        tz = cloudRadius * fastSin(phi) * fastSin(theta);
     }
 
     const targetOut = out || DEFAULT_OUT_PT;
@@ -1700,7 +1718,7 @@ export class Boid {
         const rawU = this.indexInSpecies / total;
 
         // Density gradient remapping: concentrate particles near center or smooth distribution
-        const u = Math.sin(rawU * Math.PI * 0.5);
+        const u = fastSin(rawU * Math.PI * 0.5);
 
         // Smooth Ease-In and Ease-Out Quintic S-Curve morphing over 9.0 seconds
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
@@ -1717,9 +1735,9 @@ export class Boid {
         // If this boid is a stray, orbit freely in a halo
         if (this.isStray && p > 0.8) {
             const strayAngle = time * this.strayOrbitSpeed + this.noiseSeed;
-            txCurr = this.strayOrbitRadius * Math.cos(strayAngle);
-            tyCurr = Math.sin(strayAngle * 2.0) * 2.5 + (this.species - 1.5) * 1.5;
-            tzCurr = this.strayOrbitRadius * Math.sin(strayAngle);
+            txCurr = this.strayOrbitRadius * fastCos(strayAngle);
+            tyCurr = fastSin(strayAngle * 2.0) * 2.5 + (this.species - 1.5) * 1.5;
+            tzCurr = this.strayOrbitRadius * fastSin(strayAngle);
         }
 
         let tx = txCurr, ty = tyCurr, tz = tzCurr;
@@ -1770,9 +1788,9 @@ export class Boid {
         }
 
         // Subtle organic 3D drift (0.015)
-        const driftX = Math.sin(time * 1.5 + this.noiseSeed) * 0.015 * speedMult;
-        const driftY = Math.cos(time * 1.2 + this.noiseSeed * 1.3) * 0.015 * speedMult;
-        const driftZ = Math.sin(time * 1.8 + this.noiseSeed * 0.7) * 0.015 * speedMult;
+        const driftX = fastSin(time * 1.5 + this.noiseSeed) * 0.015 * speedMult;
+        const driftY = fastCos(time * 1.2 + this.noiseSeed * 1.3) * 0.015 * speedMult;
+        const driftZ = fastSin(time * 1.8 + this.noiseSeed * 0.7) * 0.015 * speedMult;
 
         // Silky smooth speed cap (0.04 at start -> 0.06 steady state)
         const activeMaxDisp = (state && state.prevFormationMode !== undefined && p < 1.0)
