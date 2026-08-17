@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Stars, Environment } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Stars } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
@@ -266,7 +266,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
-            ambientRef.current.intensity = curAmbient.current;
+            ambientRef.current.intensity = Math.max(0.40, curAmbient.current * 2.5);
             ambientRef.current.color.copy(curFillColor.current);
         }
         if (keyRef.current) {
@@ -382,9 +382,6 @@ function App() {
         autoMode: true, // Auto timer is ON by default
         autoShape: false, // Geodesic Ico-Sphere is fixed default unless user manually changes
         autoMaterial: true,
-        tornadoCount: 1, // 1 grand supermassive Milky Way spiral galaxy active by default
-        tornadoStrength: 1.5,
-        tornadoCentrifugal: 1.6,
         lightingProfileIndex: initialLightIdx,
         lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0],
         onInitialLoadComplete: () => {
@@ -436,7 +433,7 @@ function App() {
 
                 <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
 
-                <Environment preset="city" environmentIntensity={0.85} />
+                <hemisphereLight args={['#88aadd', '#1a2233', 1.3]} />
 
                 <DynamicStudioLighting simState={simState} />
 

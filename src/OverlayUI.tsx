@@ -32,7 +32,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [activeCatalogTab, setActiveCatalogTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'bloom' | 'tornado' | 'physics' | null>(null);
+    const [activeCatalogTab, setActiveCatalogTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'bloom' | 'physics' | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
@@ -257,7 +257,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast('Advancing Unlocked Dimensions ⏭️');
     };
 
-    const handleLikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom' | 'tornado') => {
+    const handleLikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let id: number | string = 0;
         let label = 'Trait';
@@ -283,19 +283,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         } else if (dim === 'bloom') {
             id = state.bloomPreset ?? 0;
             label = BLOOM_PRESETS[Number(id)]?.label || 'Bloom';
-        } else if (dim === 'tornado') {
-            id = state.tornadoCount ?? 2;
-            label = `${id} Local Tornadoes`;
         }
 
-        if (dim !== 'tornado') {
-            likeDimension(dim, id);
-        }
+        likeDimension(dim, id);
         showToast(`+1 ${label} added to Taste Profile! 👍`);
         setTick(t => t + 1);
     };
 
-    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom' | 'tornado') => {
+    const handleDislikeDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let id: number | string = 0;
         let label = 'Trait';
@@ -324,19 +319,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             const nextPreset = (Number(id) + 1 + Math.floor(Math.random() * (BLOOM_PRESETS.length - 1))) % BLOOM_PRESETS.length;
             state.bloomPreset = nextPreset;
             state.bloomSettings = { ...BLOOM_PRESETS[nextPreset].settings };
-        } else if (dim === 'tornado') {
-            id = state.tornadoCount ?? 2;
-            label = 'Tornado Storm';
-            const currentC = state.tornadoCount ?? 2;
-            state.tornadoCount = (currentC + 1) % 4;
         }
 
-        if (dim !== 'tornado') {
-            dislikeDimension(dim, id);
-        }
+        dislikeDimension(dim, id);
 
         // Immediately morph to a fresh AI-selected creation without waiting for timer!
-        if (state.clockEngine?.skipDimension && dim !== 'bloom' && dim !== 'tornado') {
+        if (state.clockEngine?.skipDimension && dim !== 'bloom') {
             state.clockEngine.skipDimension(dim);
         }
 
@@ -344,7 +332,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         setTick(t => t + 1);
     };
 
-    const handleToggleLockDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom' | 'tornado') => {
+    const handleToggleLockDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let isLocked = false;
         let label = 'Trait';
@@ -377,9 +365,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             state.isBloomLocked = !state.isBloomLocked;
             isLocked = !!state.isBloomLocked;
             label = 'Optical Bloom';
-        } else if (dim === 'tornado') {
-            label = 'Tornado Field';
-            isLocked = false;
         }
 
         setTick(t => t + 1);
@@ -409,7 +394,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         showToast(nextLock ? '🔒 All Dimensions LOCKED (Total Freeze)' : '🔓 All Dimensions UNLOCKED (Full AI Flow)');
     };
 
-    const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom' | 'tornado') => {
+    const handleRerollDimension = (dim: 'formation' | 'palette' | 'material' | 'lighting' | 'shape' | 'camera' | 'bloom') => {
         const state = simState.current;
         let result = '';
 
@@ -418,10 +403,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             state.bloomPreset = nextPreset;
             state.bloomSettings = { ...BLOOM_PRESETS[nextPreset].settings };
             result = `Bloom: ${BLOOM_PRESETS[nextPreset].label}`;
-        } else if (dim === 'tornado') {
-            const nextC = (Math.floor(Math.random() * 3) + 1);
-            state.tornadoCount = nextC;
-            result = `Tornadoes: ${nextC} Active`;
         } else if (state.clockEngine?.skipDimension) {
             result = state.clockEngine.skipDimension(dim);
         }
@@ -1148,24 +1129,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         </div>
 
-                        {/* 8. Local 3D Tornado Storm Row */}
-                        <div className="ephemeral-row">
-                            <div
-                                className="dimension-info"
-                                onClick={() => setActiveCatalogTab('tornado')}
-                                title="Click to configure Local 3D Tornado Cyclones, Updrafts, and Crown Slingshots"
-                            >
-                                <span className="dimension-name">🌪️ TORNADO VORTEX</span>
-                                <span className="dimension-value">
-                                    {(simState.current.tornadoCount ?? 2) === 0 ? 'Calm (Off)' : (simState.current.tornadoCount ?? 2) === 1 ? '1 Solitary Twister' : (simState.current.tornadoCount ?? 2) === 2 ? '2 Dual Cyclones' : '3 Tri-Vortex Storm'}
-                                </span>
-                            </div>
-                            <div className="matrix-actions">
-                                <button className="matrix-action-btn like" onClick={() => handleLikeDimension('tornado')} title="Like Tornado Dynamic (+1 RL Weight)">👍</button>
-                                <button className="matrix-action-btn dislike" onClick={() => handleDislikeDimension('tornado')} title="Cycle Tornado Count">👎</button>
-                                <button className="matrix-action-btn reroll" onClick={() => handleRerollDimension('tornado')} title="Randomize Tornado Setup">🎲</button>
-                            </div>
-                        </div>
+
 
                         {/* Footer Actions: Save Masterpiece, Lock All & Masterpiece Gallery in tidy 3-column Grid */}
                         <div className="matrix-footer-grid">
@@ -1834,102 +1798,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         )}
 
-                        {/* Sub-Catalog: Local 3D Tornado Storm */}
-                        {activeCatalogTab === 'tornado' && (
-                            <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '420px', overflowY: 'auto', overflowX: 'hidden', padding: '4px 2px', boxSizing: 'border-box' }}>
-                                {/* Mode Selection Grid */}
-                                <div>
-                                    <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                                        TORNADO CYCLONE PRESETS
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-                                        {[
-                                            { id: 0, label: 'Calm Skies', icon: '☀️', desc: 'Zero tornados (pure laminar topological flow)' },
-                                            { id: 1, label: 'Solitary Twister', icon: '🌪️', desc: '1 wandering high-speed cyclonic vortex' },
-                                            { id: 2, label: 'Dual Binary Cyclones', icon: '🌀', desc: '2 counter-rotating orbital supercell twisters' },
-                                            { id: 3, label: 'Tri-Vortex Storm', icon: '⚡', desc: '3 multi-vortex hyper-cyclones with massive slingshots' }
-                                        ].map(t => {
-                                            const currentCount = simState.current.tornadoCount ?? 2;
-                                            const isSelected = currentCount === t.id;
-                                            return (
-                                                <button
-                                                    key={t.id}
-                                                    onClick={() => {
-                                                        simState.current.tornadoCount = t.id;
-                                                        setTick(tk => tk + 1);
-                                                        showToast(`🌪️ ${t.label} Activated`);
-                                                    }}
-                                                    style={{
-                                                        background: isSelected ? 'rgba(0, 255, 204, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                                                        border: isSelected ? '1px solid rgba(0, 255, 204, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-                                                        borderRadius: '10px',
-                                                        padding: '10px',
-                                                        textAlign: 'left',
-                                                        cursor: 'pointer',
-                                                        color: '#fff',
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                >
-                                                    <div style={{ fontSize: '12px', fontWeight: 700, color: isSelected ? '#00ffcc' : '#fff' }}>{t.icon} {t.label}</div>
-                                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px' }}>{t.desc}</div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
 
-                                {/* Dynamic Kinetic Sliders */}
-                                <div style={{ background: 'rgba(0, 0, 0, 0.35)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#00ffcc', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                        KINETIC FORCE & SLINGSHOT TUNING
-                                    </div>
-
-                                    {/* Swirl & Updraft Power */}
-                                    <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '3px' }}>
-                                            <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Swirl & Helical Updraft Speed:</span>
-                                            <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>
-                                                {(simState.current.tornadoStrength ?? 1.2).toFixed(2)}x
-                                            </span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="0.2"
-                                            max="3.0"
-                                            step="0.05"
-                                            value={simState.current.tornadoStrength ?? 1.2}
-                                            onChange={e => {
-                                                simState.current.tornadoStrength = parseFloat(e.target.value);
-                                                setTick(tk => tk + 1);
-                                            }}
-                                            style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                                        />
-                                    </div>
-
-                                    {/* Crown Centrifugal Ejection Force */}
-                                    <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '3px' }}>
-                                            <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Crown Centrifugal Slingshot:</span>
-                                            <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>
-                                                {(simState.current.tornadoCentrifugal ?? 1.4).toFixed(2)}x
-                                            </span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="0.2"
-                                            max="3.5"
-                                            step="0.05"
-                                            value={simState.current.tornadoCentrifugal ?? 1.4}
-                                            onChange={e => {
-                                                simState.current.tornadoCentrifugal = parseFloat(e.target.value);
-                                                setTick(tk => tk + 1);
-                                            }}
-                                            style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Sub-Catalog 8: Physics */}
                         {activeCatalogTab === 'physics' && (

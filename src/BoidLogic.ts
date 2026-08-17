@@ -433,59 +433,59 @@ export const COLOR_PALETTES = [
 export const MATERIAL_PRESETS = [
     {
         id: 0,
-        label: 'Titanium Mirror',
-        icon: '✨',
-        desc: 'Refined metallic specular mirror with sharp geometric facets and gleaming highlights',
-        settings: { roughness: 0.05, metalness: 0.92, wireframe: false, flatShading: true, emissiveIntensity: 0.25 }
+        label: 'Vibrant Satin Porcelain',
+        icon: '🍶',
+        desc: 'Deep vibrant color saturation with a smooth delicate satin surface sheen',
+        settings: { roughness: 0.28, metalness: 0.04, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
     },
     {
         id: 1,
-        label: 'Champagne Gold',
-        icon: '🏆',
-        desc: 'Polished golden mirror specularity with vivid multi-angled studio highlights',
-        settings: { roughness: 0.04, metalness: 0.95, wireframe: false, flatShading: true, emissiveIntensity: 0.30 }
+        label: 'Candy Gloss Enamel',
+        icon: '🍬',
+        desc: 'Ultra-glossy automotive candy coat with vivid saturated base colors and crisp white highlights',
+        settings: { roughness: 0.12, metalness: 0.06, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
     },
     {
         id: 2,
-        label: 'Glass Crystal Glaze',
-        icon: '🔮',
-        desc: 'Brilliant glassy faceted sheen with rich tonal refraction highlights',
-        settings: { roughness: 0.08, metalness: 0.40, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
+        label: 'Matte Velvet Clay',
+        icon: '🎨',
+        desc: 'Non-metallic pure matte finish that showcases 100% true, rich palette colors',
+        settings: { roughness: 0.68, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.02 }
     },
     {
         id: 3,
-        label: 'Cyber Obsidian Blade',
-        icon: '🖤',
-        desc: 'Deep dark obsidian with razor-sharp directional rim reflections',
-        settings: { roughness: 0.15, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.06 }
+        label: 'Faceted Jewel Gem',
+        icon: '💎',
+        desc: 'Geometric crystalline facets with crisp highlights that let gemstone colors pop',
+        settings: { roughness: 0.20, metalness: 0.10, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
     },
     {
         id: 4,
-        label: 'Satin Cyber Chrome',
-        icon: '🛡️',
-        desc: 'Satin platinum chrome finish with powerful rim definition',
-        settings: { roughness: 0.08, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.28 }
+        label: 'Silicone Soft-Touch',
+        icon: '🧽',
+        desc: 'Smooth tactile matte finish with zero glare, displaying pure unmuted pigments',
+        settings: { roughness: 0.78, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 5,
-        label: 'Frost Crystal Shard',
-        icon: '❄️',
-        desc: 'Ice-cold platinum mirror with brilliant luminous rim glints',
-        settings: { roughness: 0.04, metalness: 0.90, wireframe: false, flatShading: true, emissiveIntensity: 0.32 }
+        label: 'Pearlescent Luster',
+        icon: '🦪',
+        desc: 'Soft iridescent pearl luster with rich chromatic depth and gentle luminous rim glints',
+        settings: { roughness: 0.24, metalness: 0.14, wireframe: false, flatShading: false, emissiveIntensity: 0.12 }
     },
     {
         id: 6,
-        label: 'Raw Jade & Malachite',
-        icon: '🪨',
-        desc: 'Deep mineral geological translucency with smooth satin specular finish',
-        settings: { roughness: 0.10, metalness: 0.45, wireframe: false, flatShading: true, emissiveIntensity: 0.18 }
+        label: 'Frosted Glass Crystal',
+        icon: '🧊',
+        desc: 'Modern frosted geometric glass with brilliant saturated diffuse color tone',
+        settings: { roughness: 0.35, metalness: 0.08, wireframe: false, flatShading: true, emissiveIntensity: 0.08 }
     },
     {
         id: 7,
-        label: 'Cosmic Starlight Mirror',
-        icon: '🌌',
-        desc: 'Ultra-dark specular finish with high-contrast diamond peaks',
-        settings: { roughness: 0.02, metalness: 0.96, wireframe: false, flatShading: true, emissiveIntensity: 0.35 }
+        label: 'Polished Amber Resin',
+        icon: '🍯',
+        desc: 'Smooth deep resin with clear specular definition and luminous warm highlights',
+        settings: { roughness: 0.16, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 0.06 }
     }
 ];
 
@@ -544,29 +544,6 @@ export interface SimulationState {
     bloomSettings?: { luminanceThreshold: number; radius: number; intensity: number; levels: number; };
     bloomPreset?: number;
     isBloomLocked?: boolean;
-    // 🌪️ Local 3D Tornado Vortex Storm Fields
-    tornadoCount?: number; // 0 (Off), 1, 2, 3
-    tornadoStrength?: number; // Swirl & updraft multiplier (0.5 to 3.0)
-    tornadoCentrifugal?: number; // Crown slingshot multiplier (0.5 to 3.0)
-    tornadoVisibility?: boolean; // Show luminous tornado core filaments
-}
-
-export interface TornadoFunnel {
-    baseX: number;
-    baseY: number;
-    baseZ: number;
-    topX: number;
-    topY: number;
-    topZ: number;
-    height: number;
-    neckRadius: number;
-    crownRadius: number;
-    swirlStrength: number;
-    updraftStrength: number;
-    centrifugalFactor: number;
-    axisX: number;
-    axisY: number;
-    axisZ: number;
 }
 
 // Helper to convert HSL to Hex
