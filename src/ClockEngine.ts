@@ -163,22 +163,15 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.proceduralGenome = generateProceduralGenome();
             }
 
-            // Auto Shape Mutation (only if autoShape enabled AND shape is NOT locked)
-            // 70% probability for Geodesic Ico-Sphere (0) as the flagship star polyhedron
-            if (state.autoShape !== false && !state.isShapeLocked) {
-                if (Math.random() < 0.70) {
-                    state.boidShape = 0; // Geodesic Ico-Sphere
-                } else if (Math.random() < 0.25) {
-                    state.boidShape = 99; // Multi-Species Diverse (with Ico-Sphere dominant)
-                } else {
-                    state.boidShape = sampleRLAttribute(
-                        4,
-                        prefs.shapeLikes,
-                        prefs.shapeDislikes,
-                        prefs.totalLikes,
-                        prefs.totalDislikes
-                    );
-                }
+            // Auto Shape Mutation (only if user explicitly enabled autoShape AND shape is NOT locked)
+            if (state.autoShape === true && !state.isShapeLocked) {
+                state.boidShape = sampleRLAttribute(
+                    4,
+                    prefs.shapeLikes,
+                    prefs.shapeDislikes,
+                    prefs.totalLikes,
+                    prefs.totalDislikes
+                );
             }
         }
 

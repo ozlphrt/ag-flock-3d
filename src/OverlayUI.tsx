@@ -110,7 +110,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         ...MATERIAL_PRESETS
     ];
 
-    const isAutoShape = simState.current.autoShape !== false;
+    const isAutoShape = simState.current.autoShape === true;
     const isAutoMaterial = simState.current.autoMaterial !== false;
     const currentShapeId = isAutoShape ? -1 : (simState.current.boidShape !== undefined ? simState.current.boidShape : 0);
     const currentMaterialId = isAutoMaterial ? -1 : (simState.current.materialPreset !== undefined ? Math.abs(simState.current.materialPreset) % MATERIAL_PRESETS.length : 0);

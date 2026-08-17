@@ -144,23 +144,36 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const geometries = useMemo(() => {
         // 0: Geodesic Ico-Sphere Level-0 (20 flat triangular mirror facets for rotating diamond glints - 20 tris) — FLAGSHIP
         const g0 = new THREE.IcosahedronGeometry(0.16, 0);
+        g0.computeVertexNormals();
 
         // 1: Faceted Gemstone (8-faced dual-pointed crystal octahedron - 8 tris)
         const g1 = new THREE.OctahedronGeometry(0.15, 0);
         g1.scale(0.8, 0.8, 1.4);
+        g1.computeVertexNormals();
 
         // 2: Stealth Arrowhead Jet (3-sided aerodynamic low-poly wedge - 6 tris)
         const g2 = new THREE.ConeGeometry(0.13, 0.42, 3);
         g2.rotateX(Math.PI / 2);
         g2.scale(1.1, 0.75, 1.0);
+        g2.computeVertexNormals();
 
         // 3: Swept Delta Wing (wide wingspan, sleek flat blade with swept-back wings - 6 tris)
         const g3 = new THREE.ConeGeometry(0.16, 0.44, 4);
         g3.rotateX(Math.PI / 2);
         g3.scale(2.2, 0.45, 1.0);
+        g3.computeVertexNormals();
 
         return [g0, g1, g2, g3];
     }, []);
+
+    useEffect(() => {
+        meshRefs.forEach(ref => {
+            if (ref.current) {
+                ref.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+                ref.current.frustumCulled = false;
+            }
+        });
+    }, [meshRefs]);
 
     const getSpeciesShapes = (): [number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
@@ -374,59 +387,83 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 posZ[i] *= inv;
             }
 
-            // Inline Column-Major Orientation Matrix (Forward Z points along velocity vector +vel)
+            const spShape = activeSpeciesShapes[sp] % geometries.length;
             const boidScale = sizeArr[i] * baseScale;
-
-            let zx = velX[i];
-            let zy = velY[i];
-            let zz = velZ[i];
-            let zLenSq = zx * zx + zy * zy + zz * zz;
-            if (zLenSq < 1e-8) {
-                zx = 0; zy = 0; zz = 1;
-            } else {
-                const invZ = 1.0 / Math.sqrt(zLenSq);
-                zx *= invZ; zy *= invZ; zz *= invZ;
-            }
-
-            // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
-            let xx = zz;
-            let xy = 0;
-            let xz = -zx;
-            let xLenSq = xx * xx + xz * xz;
-            if (xLenSq < 1e-6) {
-                xx = 0; xy = zz; xz = -zy;
-                xLenSq = xy * xy + xz * xz;
-            }
-            const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
-            xx *= invX; xy *= invX; xz *= invX;
-
-            // Up vector y = z x x
-            const yx = zy * xz - zz * xy;
-            const yy = zz * xx - zx * xz;
-            const yz = zx * xy - zy * xx;
-
             const matArray = matArrays[sp];
             const offset = spIdx * 16;
 
-            matArray[offset + 0] = xx * boidScale;
-            matArray[offset + 1] = xy * boidScale;
-            matArray[offset + 2] = xz * boidScale;
-            matArray[offset + 3] = 0;
+            if (spShape === 0) {
+                // Shape 0: Geodesic 20-Facet Ico-Sphere (Flagship)
+                // Spherically symmetric 20-facet crystal — direct matrix transform eliminates 200,000 Math.sqrt & cross products
+                matArray[offset + 0] = boidScale;
+                matArray[offset + 1] = 0;
+                matArray[offset + 2] = 0;
+                matArray[offset + 3] = 0;
 
-            matArray[offset + 4] = yx * boidScale;
-            matArray[offset + 5] = yy * boidScale;
-            matArray[offset + 6] = yz * boidScale;
-            matArray[offset + 7] = 0;
+                matArray[offset + 4] = 0;
+                matArray[offset + 5] = boidScale;
+                matArray[offset + 6] = 0;
+                matArray[offset + 7] = 0;
 
-            matArray[offset + 8] = zx * boidScale;
-            matArray[offset + 9] = zy * boidScale;
-            matArray[offset + 10] = zz * boidScale;
-            matArray[offset + 11] = 0;
+                matArray[offset + 8] = 0;
+                matArray[offset + 9] = 0;
+                matArray[offset + 10] = boidScale;
+                matArray[offset + 11] = 0;
 
-            matArray[offset + 12] = posX[i];
-            matArray[offset + 13] = posY[i];
-            matArray[offset + 14] = posZ[i];
-            matArray[offset + 15] = 1;
+                matArray[offset + 12] = posX[i];
+                matArray[offset + 13] = posY[i];
+                matArray[offset + 14] = posZ[i];
+                matArray[offset + 15] = 1;
+            } else {
+                // Directional shapes (Jets, Wings): align nose vector with velocity
+                let zx = velX[i];
+                let zy = velY[i];
+                let zz = velZ[i];
+                let zLenSq = zx * zx + zy * zy + zz * zz;
+                if (zLenSq < 1e-8) {
+                    zx = 0; zy = 0; zz = 1;
+                } else {
+                    const invZ = 1.0 / Math.sqrt(zLenSq);
+                    zx *= invZ; zy *= invZ; zz *= invZ;
+                }
+
+                // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
+                let xx = zz;
+                let xy = 0;
+                let xz = -zx;
+                let xLenSq = xx * xx + xz * xz;
+                if (xLenSq < 1e-6) {
+                    xx = 0; xy = zz; xz = -zy;
+                    xLenSq = xy * xy + xz * xz;
+                }
+                const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
+                xx *= invX; xy *= invX; xz *= invX;
+
+                // Up vector y = z x x
+                const yx = zy * xz - zz * xy;
+                const yy = zz * xx - zx * xz;
+                const yz = zx * xy - zy * xx;
+
+                matArray[offset + 0] = xx * boidScale;
+                matArray[offset + 1] = xy * boidScale;
+                matArray[offset + 2] = xz * boidScale;
+                matArray[offset + 3] = 0;
+
+                matArray[offset + 4] = yx * boidScale;
+                matArray[offset + 5] = yy * boidScale;
+                matArray[offset + 6] = yz * boidScale;
+                matArray[offset + 7] = 0;
+
+                matArray[offset + 8] = zx * boidScale;
+                matArray[offset + 9] = zy * boidScale;
+                matArray[offset + 10] = zz * boidScale;
+                matArray[offset + 11] = 0;
+
+                matArray[offset + 12] = posX[i];
+                matArray[offset + 13] = posY[i];
+                matArray[offset + 14] = posZ[i];
+                matArray[offset + 15] = 1;
+            }
         }
 
         if (sampleCount > 0) {
@@ -525,6 +562,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                         key={`sp-${sp}-${shapeId}`}
                         ref={meshRefs[sp]}
                         args={[activeGeometry, undefined, MAX_SPECIES_CAPACITY]}
+                        frustumCulled={false}
                     >
                         <meshStandardMaterial
                             key={`${mat.flatShading ? 'f' : 's'}-${emissiveInt > 1.0 ? 'p' : 'n'}`}
@@ -534,7 +572,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                             flatShading={mat.flatShading}
                             emissiveIntensity={emissiveInt}
                             toneMapped={true}
-                            side={THREE.DoubleSide}
+                            side={THREE.FrontSide}
                         />
                     </instancedMesh>
                 );

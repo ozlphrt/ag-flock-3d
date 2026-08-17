@@ -340,7 +340,7 @@ function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
 
 function App() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const [population, setPopulation] = useState(isMobile ? 35000 : 100000);
+    const [population, setPopulation] = useState(isMobile ? 25000 : 50000);
     const [fps, setFps] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -349,9 +349,8 @@ function App() {
     const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
     const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    // Geodesic Ico-Sphere (0) is dominant (75% startup probability)
-    const randShape = Math.random();
-    const initialShape = randShape < 0.75 ? 0 : (randShape < 0.90 ? 99 : (1 + Math.floor(Math.random() * 3)));
+    // Geodesic Ico-Sphere (0) is the default flagship shape (unless user manually changes)
+    const initialShape = 0;
     const initialCameraIdx = Math.floor(Math.random() * CAMERA_PRESETS.length);
     const initialBloomIdx = Math.floor(Math.random() * BLOOM_PRESETS.length);
     const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
@@ -381,7 +380,7 @@ function App() {
             ...initialBloom.settings
         },
         autoMode: true, // Auto timer is ON by default
-        autoShape: true,
+        autoShape: false, // Geodesic Ico-Sphere is fixed default unless user manually changes
         autoMaterial: true,
         lightingProfileIndex: initialLightIdx,
         lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0],
