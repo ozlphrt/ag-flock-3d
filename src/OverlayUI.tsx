@@ -97,13 +97,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
     const shapes = [
         { id: -1, label: 'Auto (Mutate Cycle)', icon: '🤖', desc: 'Randomize shape every formation cycle' },
-        { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive 3D geometric archetype' },
-        // 5 Curated 3D Volumetric Archetypes
-        { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
+        // Curated 3D Volumetric Archetypes — Geodesic Ico-Sphere is the Flagship
+        { id: 0, label: 'Geodesic Ico-Sphere', icon: '🌐', desc: '20-facet diamond geodesic sphere with rotating multi-angle mirror glints (20 tris) — Flagship' },
         { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal octahedron (8 tris)' },
-        { id: 2, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
+        { id: 2, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
         { id: 3, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
-        { id: 4, label: 'Geodesic Ico-Sphere', icon: '🌐', desc: '20-facet diamond geodesic sphere with multi-angle glints (20 tris)' }
+        { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Distinct geometric archetypes per species with Geodesic Ico-Sphere dominant' }
     ];
 
     const materialOptions = [
@@ -540,7 +539,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         const s = simState.current.speciesShapes;
         const currentShapes: [number, number, number, number] = s
             ? [s[0], s[1], s[2], s[3]]
-            : (simState.current.boidShape === 99 ? [0, 1, 2, 4] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
+            : (simState.current.boidShape === 99 ? [0, 0, 1, 2] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
         currentShapes[speciesIdx] = shapeId;
         simState.current.speciesShapes = currentShapes;
         simState.current.boidShape = 99; // Differentiated
@@ -1073,7 +1072,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             >
                                 <span className="dimension-name">📐 SHAPE</span>
                                 <span className="dimension-value" title={simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label)}>
-                                    {simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Arrowhead Jet')}
+                                    {simState.current.customShapeName || (simState.current.boidShape === 99 ? 'Multi-Species Diverse' : shapes.find(s => s.id === (simState.current.boidShape ?? 0))?.label || 'Geodesic Ico-Sphere')}
                                 </span>
                             </div>
                             <div className="matrix-actions">
@@ -1397,7 +1396,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
                                         {[0, 1, 2, 3].map((spIdx) => {
                                             const spColors = simState.current.speciesColors || SPECIES_COLORS;
-                                            const currentShapes = simState.current.speciesShapes || (simState.current.boidShape === 99 ? [0, 1, 2, 4] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
+                                            const currentShapes = simState.current.speciesShapes || (simState.current.boidShape === 99 ? [0, 0, 1, 2] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
                                             const currentSpShape = currentShapes[spIdx] ?? 0;
                                             const shapeDef = shapes.find(s => s.id === currentSpShape) || shapes[2];
 

@@ -164,14 +164,21 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             }
 
             // Auto Shape Mutation (only if autoShape enabled AND shape is NOT locked)
+            // 70% probability for Geodesic Ico-Sphere (0) as the flagship star polyhedron
             if (state.autoShape !== false && !state.isShapeLocked) {
-                state.boidShape = sampleRLAttribute(
-                    5,
-                    prefs.shapeLikes,
-                    prefs.shapeDislikes,
-                    prefs.totalLikes,
-                    prefs.totalDislikes
-                );
+                if (Math.random() < 0.70) {
+                    state.boidShape = 0; // Geodesic Ico-Sphere
+                } else if (Math.random() < 0.25) {
+                    state.boidShape = 99; // Multi-Species Diverse (with Ico-Sphere dominant)
+                } else {
+                    state.boidShape = sampleRLAttribute(
+                        4,
+                        prefs.shapeLikes,
+                        prefs.shapeDislikes,
+                        prefs.totalLikes,
+                        prefs.totalDislikes
+                    );
+                }
             }
         }
 
@@ -426,18 +433,18 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             } else {
                 state.customShapeName = undefined;
                 state.speciesShapes = undefined;
-                const shapeChoices = [0, 1, 2, 3, 4, 99];
+                // Geodesic Ico-Sphere (0) heavily weighted
+                const shapeChoices = [0, 0, 0, 0, 1, 2, 3, 99];
                 const nextShape = shapeChoices[Math.floor(Math.random() * shapeChoices.length)];
                 state.boidShape = nextShape;
                 const shapeLabels: Record<number, string> = {
-                    0: 'Stealth Arrowhead Jet',
+                    0: 'Geodesic Ico-Sphere',
                     1: 'Faceted Gemstone',
-                    2: 'Hex Shield Interceptor',
+                    2: 'Stealth Arrowhead Jet',
                     3: 'Swept Delta Wing',
-                    4: 'Geodesic Ico-Sphere',
                     99: 'Multi-Species Diverse'
                 };
-                return `Shape: ${shapeLabels[nextShape] || 'Arrowhead Jet'}`;
+                return `Shape: ${shapeLabels[nextShape] || 'Geodesic Ico-Sphere'}`;
             }
         } else if (dim === 'camera') {
             if (state.isCameraLocked) return 'Camera is Locked';

@@ -139,39 +139,34 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         swarm.setPopulation(count, state);
     }, []);
 
-    // 5 Curated High-Performance 3D Volumetric Geometries
-    // Scaled for maximum silhouette definition, distinct styles, and 120k boid throughput
+    // Curated High-Performance 3D Volumetric Geometries
+    // Flagship: Geodesic 20-Facet Ico-Sphere (Shape 0 - Primary / Dominant)
     const geometries = useMemo(() => {
-        // 0: Stealth Arrowhead Jet (3-sided aerodynamic low-poly wedge - 6 tris)
-        const g0 = new THREE.ConeGeometry(0.13, 0.42, 3);
-        g0.rotateX(Math.PI / 2);
-        g0.scale(1.1, 0.75, 1.0);
+        // 0: Geodesic Ico-Sphere Level-0 (20 flat triangular mirror facets for rotating diamond glints - 20 tris) — FLAGSHIP
+        const g0 = new THREE.IcosahedronGeometry(0.16, 0);
 
         // 1: Faceted Gemstone (8-faced dual-pointed crystal octahedron - 8 tris)
         const g1 = new THREE.OctahedronGeometry(0.15, 0);
         g1.scale(0.8, 0.8, 1.4);
 
-        // 2: Hex Shield Interceptor (6-sided faceted shield jet - 12 tris)
-        const g2 = new THREE.CylinderGeometry(0.0, 0.16, 0.38, 6);
+        // 2: Stealth Arrowhead Jet (3-sided aerodynamic low-poly wedge - 6 tris)
+        const g2 = new THREE.ConeGeometry(0.13, 0.42, 3);
         g2.rotateX(Math.PI / 2);
-        g2.scale(1.3, 0.65, 1.0);
+        g2.scale(1.1, 0.75, 1.0);
 
         // 3: Swept Delta Wing (wide wingspan, sleek flat blade with swept-back wings - 6 tris)
         const g3 = new THREE.ConeGeometry(0.16, 0.44, 4);
         g3.rotateX(Math.PI / 2);
         g3.scale(2.2, 0.45, 1.0);
 
-        // 4: Geodesic Ico-Sphere Level-0 (20 flat triangular mirror facets for rotating diamond glints - 20 tris)
-        const g4 = new THREE.IcosahedronGeometry(0.16, 0);
-
-        return [g0, g1, g2, g3, g4];
+        return [g0, g1, g2, g3];
     }, []);
 
     const getSpeciesShapes = (): [number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
         if (state.boidShape === 99) {
-            // Multi-Species Diverse: 4 distinct volumetric 3D geometric archetypes
-            return [0, 1, 3, 4]; // Stealth Jet, Faceted Gem, Swept Delta Wing, Geodesic Ico-Sphere
+            // Multi-Species Diverse: Geodesic Ico-Sphere dominant with Gem & Jet accents
+            return [0, 0, 1, 2];
         }
         const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % geometries.length) : 0;
         return [s, s, s, s];

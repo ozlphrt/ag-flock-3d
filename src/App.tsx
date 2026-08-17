@@ -349,7 +349,9 @@ function App() {
     const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
     const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    const initialShape = Math.random() < 0.20 ? 99 : Math.floor(Math.random() * 5);
+    // Geodesic Ico-Sphere (0) is dominant (75% startup probability)
+    const randShape = Math.random();
+    const initialShape = randShape < 0.75 ? 0 : (randShape < 0.90 ? 99 : (1 + Math.floor(Math.random() * 3)));
     const initialCameraIdx = Math.floor(Math.random() * CAMERA_PRESETS.length);
     const initialBloomIdx = Math.floor(Math.random() * BLOOM_PRESETS.length);
     const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];

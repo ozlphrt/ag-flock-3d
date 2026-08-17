@@ -694,13 +694,13 @@ export function generateProceduralLightingSurprise(): LightingProfile {
     };
 }
 
-// 5. Infinite Procedural 4-Species Shape Hybridization
+// 5. Infinite Procedural 4-Species Shape Hybridization (Ico-Sphere dominant)
 export function generateProceduralShapeSurprise(): { shapes: [number, number, number, number]; name: string } {
-    const pool = [0, 1, 2, 3, 4, 5];
+    const pool = [0, 0, 0, 1, 2, 3];
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const shapes: [number, number, number, number] = [shuffled[0], shuffled[1], shuffled[2], shuffled[3]];
-    const names = ['Arrowhead', 'Gem', 'Pyramid', 'Shield', 'Delta Wing', 'Shard'];
-    const name = `✨ Hybrid [${names[shapes[0]]}, ${names[shapes[1]]}, ${names[shapes[2]]}, ${names[shapes[3]]}]`;
+    const names = ['Ico-Sphere', 'Gemstone', 'Stealth Jet', 'Delta Wing'];
+    const name = `✨ Hybrid [${names[shapes[0]] || 'Ico-Sphere'}, ${names[shapes[1]] || 'Ico-Sphere'}, ${names[shapes[2]] || 'Gemstone'}, ${names[shapes[3]] || 'Stealth Jet'}]`;
     return { shapes, name };
 }
 
