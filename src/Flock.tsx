@@ -139,48 +139,39 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         swarm.setPopulation(count, state);
     }, []);
 
-    // 6 High-Performance 3D Volumetric Geometries (Zero 2D geometries)
+    // 5 Curated High-Performance 3D Volumetric Geometries
     // Scaled for maximum silhouette definition, distinct styles, and 120k boid throughput
     const geometries = useMemo(() => {
-        // --- 6 3D Volumetric Geometries ---
-        // 0: Stealth Arrowhead Jet (3-sided wedge)
+        // 0: Stealth Arrowhead Jet (3-sided aerodynamic low-poly wedge - 6 tris)
         const g0 = new THREE.ConeGeometry(0.13, 0.42, 3);
         g0.rotateX(Math.PI / 2);
         g0.scale(1.1, 0.75, 1.0);
 
-        // 1: Faceted Gemstone (8-faced double pyramid)
+        // 1: Faceted Gemstone (8-faced dual-pointed crystal octahedron - 8 tris)
         const g1 = new THREE.OctahedronGeometry(0.15, 0);
         g1.scale(0.8, 0.8, 1.4);
 
-        // 2: Angular Prism Pyramid (4-sided sharp pyramid)
-        const g2 = new THREE.ConeGeometry(0.14, 0.40, 4);
+        // 2: Hex Shield Interceptor (6-sided faceted shield jet - 12 tris)
+        const g2 = new THREE.CylinderGeometry(0.0, 0.16, 0.38, 6);
         g2.rotateX(Math.PI / 2);
+        g2.scale(1.3, 0.65, 1.0);
 
-        // 3: Hex Shield Interceptor (faceted 6-sided shield)
-        const g3 = new THREE.CylinderGeometry(0.0, 0.16, 0.38, 6);
+        // 3: Swept Delta Wing (wide wingspan, sleek flat blade with swept-back wings - 6 tris)
+        const g3 = new THREE.ConeGeometry(0.16, 0.44, 4);
         g3.rotateX(Math.PI / 2);
-        g3.scale(1.3, 0.65, 1.0);
+        g3.scale(2.2, 0.45, 1.0);
 
-        // 4: Swept Delta Wing (wide wingspan, sleek flat blade with swept-back wings)
-        const g4 = new THREE.ConeGeometry(0.16, 0.44, 4);
-        g4.rotateX(Math.PI / 2);
-        g4.scale(2.2, 0.45, 1.0);
+        // 4: Geodesic Ico-Sphere Level-0 (20 flat triangular mirror facets for rotating diamond glints - 20 tris)
+        const g4 = new THREE.IcosahedronGeometry(0.16, 0);
 
-        // 5: Tetrahedral Shard (sharp elongated wedge shard)
-        const g5 = new THREE.TetrahedronGeometry(0.17, 0);
-        g5.scale(0.65, 0.65, 1.6);
-
-        // 6: Geodesic Ico-Sphere Level-0 (20 flat triangular mirror facets for disco-ball diamond glints)
-        const g6 = new THREE.IcosahedronGeometry(0.16, 0);
-
-        return [g0, g1, g2, g3, g4, g5, g6];
+        return [g0, g1, g2, g3, g4];
     }, []);
 
     const getSpeciesShapes = (): [number, number, number, number] => {
         if (state.speciesShapes) return state.speciesShapes;
         if (state.boidShape === 99) {
             // Multi-Species Diverse: 4 distinct volumetric 3D geometric archetypes
-            return [0, 1, 4, 6]; // Stealth Jet (3D), Faceted Gem (3D), Swept Delta Wing (3D), Geodesic Ico-Sphere (3D)
+            return [0, 1, 3, 4]; // Stealth Jet, Faceted Gem, Swept Delta Wing, Geodesic Ico-Sphere
         }
         const s = (state.boidShape !== undefined && state.boidShape >= 0) ? (state.boidShape % geometries.length) : 0;
         return [s, s, s, s];
@@ -223,7 +214,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             speedMult *= 2.2;
         }
 
-        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.Serpent;
+        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;

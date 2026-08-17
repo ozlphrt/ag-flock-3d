@@ -602,68 +602,9 @@ export function getLastState(): PersistedLastState | null {
 }
 
 // 5 Curated Organic Aesthetic Symphony Suites
+// 4 Curated Intertwined Aesthetic Symphony Suites
 export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
-    // Suite 1: Ocean Aerodynamics & Sovereign Flight
-    [
-        FormationMode.MurmurationFlow,    // Starling Murmuration (42)
-        FormationMode.StarPolygon,        // Manta Ray Glide (37)
-        FormationMode.PhoenixWings,       // Phoenix Wings (6)
-        FormationMode.JellyfishPulse,     // Jellyfish Veil (4)
-        FormationMode.OuroborosSerpent,   // Ouroboros Dragon (43)
-        FormationMode.DancingRibbon,      // Dancing Ribbon (44)
-        FormationMode.NautilusShell,      // Nautilus Spiral (12)
-        FormationMode.Serpent,            // Serpent Stream (0)
-        FormationMode.TsunamiWave         // Tsunami Wave (18)
-    ],
-    // Suite 2: Aurora & Celestial Luminescence
-    [
-        FormationMode.WireCube,           // Aurora Borealis Curtain (31)
-        FormationMode.Spiral,             // Galactic Spiral (1)
-        FormationMode.FerrisWheel,        // Galaxy Vortex (27)
-        FormationMode.NebulaCloud,        // Cosmic Nebula (29)
-        FormationMode.SaturnRings,        // Saturn Rings (16)
-        FormationMode.BlackHoleJet,       // Celestial Vortex (7)
-        FormationMode.SupernovaBurst,     // Supernova Nebula (19)
-        FormationMode.BigBangExpansion,   // Cosmic Expansion (39)
-        FormationMode.AlienMothership     // Cosmic Disk (25)
-    ],
-    // Suite 3: Sacred Botanical & Living Growth
-    [
-        FormationMode.VirusCapsid,        // Lotus Bloom (21)
-        FormationMode.CoralReef,          // Coral Fan (23)
-        FormationMode.BioMushroom,        // Bio Mushroom (13)
-        FormationMode.BeehiveSwarm,       // Kelp Forest (14)
-        FormationMode.TreeBranch,         // Tree of Life (32)
-        FormationMode.RiverDelta,         // River Delta (34)
-        FormationMode.PulsingHeart,       // Pulsing Heart (17)
-        FormationMode.SpiderWeb           // Dewdrop Web (28)
-    ],
-    // Suite 4: Resonant Harmonic Manifolds & Sacred Geometry
-    [
-        FormationMode.DoubleHelix,        // Double Helix (2)
-        FormationMode.TorusKnot,          // Torus Knot Stream (3)
-        FormationMode.TrefoilKnot,        // Trefoil Harmonics (41)
-        FormationMode.CalabiYauManifold,  // Calabi-Yau Bloom (45)
-        FormationMode.HopfFibration,      // Hopf Fiber Bundle (46)
-        FormationMode.LorenzAttractor,    // Lorenz Butterfly (47)
-        FormationMode.GyroidMinimalSurface,// Gyroid Flow (48)
-        FormationMode.CliffordTorus,      // Clifford Torus (50)
-        FormationMode.KleinBottle4D,      // Klein Bottle Loop (49)
-        FormationMode.TripleHelix,        // Triple Helix (26)
-        FormationMode.LissajousKnot,      // Lissajous Ribbon (9)
-        FormationMode.HourglassVortex,    // Hyperboloid Vortex (8)
-        FormationMode.QuantumAtom,        // Orbital Resonance (5)
-        FormationMode.CrystalPrism,       // Mobius Ribbon (20)
-        FormationMode.DNALadder,          // Braided Stream (36)
-        FormationMode.KelvinHelmholtz,    // Kelvin-Helmholtz Billows (35)
-        FormationMode.CollapsingSphere,   // Singularity Breath (38)
-        FormationMode.GeologicStrata      // Laminar Wave Sheets (40)
-    ],
-    // Suite 5: Infinite Algorithmic DNA
-    [
-        FormationMode.Procedural          // Infinite Procedural (30)
-    ],
-    // Suite 6: Intertwined Multi-Helix & Topological Knots / Braids
+    // Suite 1: Intertwined Multi-Helices & Braided Towers
     [
         FormationMode.QuadHelixBraid,
         FormationMode.ConcentricDualHelixSheath,
@@ -672,7 +613,10 @@ export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
         FormationMode.TrefoilBraidedRibbon,
         FormationMode.HexaHelixVortexTower,
         FormationMode.MobiusHelixBraid,
-        FormationMode.LissajousIntertwinedKnot,
+        FormationMode.LissajousIntertwinedKnot
+    ],
+    // Suite 2: Prime Knots, Multi-Links & Celtic Braids
+    [
         FormationMode.BorromeanRings,
         FormationMode.FigureEightKnot,
         FormationMode.CinqfoilKnot,
@@ -683,6 +627,26 @@ export const HARMONIC_FORMATION_SUITES: FormationMode[][] = [
         FormationMode.WhiteheadLink,
         FormationMode.QuatrefoilKnotBraid,
         FormationMode.GrannyKnotBraid
+    ],
+    // Suite 3: Biological Helices & Seamless Kinetic Loops
+    [
+        FormationMode.DoubleHelix,
+        FormationMode.TripleHelix,
+        FormationMode.DNALadder,
+        FormationMode.TrefoilKnot,
+        FormationMode.TorusKnot,
+        FormationMode.OuroborosSerpent,
+        FormationMode.DancingRibbon
+    ],
+    // Suite 4: Higher-Order Topological Manifolds & Attractors
+    [
+        FormationMode.CalabiYauManifold,
+        FormationMode.HopfFibration,
+        FormationMode.LorenzAttractor,
+        FormationMode.GyroidMinimalSurface,
+        FormationMode.KleinBottle4D,
+        FormationMode.CliffordTorus,
+        FormationMode.Procedural
     ]
 ];
 
@@ -914,46 +878,6 @@ export interface EmotionalArc {
 
 export const EMOTIONAL_ARCS: EmotionalArc[] = [
     {
-        name: 'Chaos to Order',
-        description: 'From free dynamic murmuration into structured geometric lattice',
-        modes: [FormationMode.MurmurationFlow, FormationMode.SpiderWeb, FormationMode.GeologicStrata]
-    },
-    {
-        name: 'Birth & Cosmic Expansion',
-        description: 'From central singularity into shockwave burst and nebula dust',
-        modes: [FormationMode.BigBangExpansion, FormationMode.SupernovaBurst, FormationMode.NebulaCloud]
-    },
-    {
-        name: 'Organic Biome Growth',
-        description: 'From rooted forest tree to deep coral reef and fungal mushroom',
-        modes: [FormationMode.TreeBranch, FormationMode.CoralReef, FormationMode.BioMushroom]
-    },
-    {
-        name: 'Crystalline Synthesis',
-        description: 'Imploding into diamond prism and multi-faceted platonic polyhedron',
-        modes: [FormationMode.CollapsingSphere, FormationMode.StarPolygon, FormationMode.WireCube]
-    },
-    {
-        name: 'Storm & Celestial Calm',
-        description: 'Fractal lightning bolt crashing into ocean wave and settling into planetary rings',
-        modes: [FormationMode.LightningBolt, FormationMode.TsunamiWave, FormationMode.SaturnRings]
-    },
-    {
-        name: 'Fluid Kinetic Architecture',
-        description: 'Rolling shear wave vortices evolving into dancing ribbons and trefoil knot',
-        modes: [FormationMode.KelvinHelmholtz, FormationMode.DancingRibbon, FormationMode.TrefoilKnot]
-    },
-    {
-        name: 'Molecular Genetics',
-        description: 'Linear DNA ladder morphing into rotating double helix and quantum orbital',
-        modes: [FormationMode.DNALadder, FormationMode.DoubleHelix, FormationMode.QuantumAtom]
-    },
-    {
-        name: 'Digital Hyper-Geometry',
-        description: 'Clean wireframe cube unfolding into 4D tesseract and star prism',
-        modes: [FormationMode.WireCube, FormationMode.Tesseract4D, FormationMode.StarPolygon]
-    },
-    {
         name: 'Topological Links & Knots',
         description: 'Orthogonal Borromean rings weaving into figure-eight prime knot and Celtic triquetra braid',
         modes: [FormationMode.BorromeanRings, FormationMode.FigureEightKnot, FormationMode.TriquetraCelticBraid]
@@ -962,6 +886,26 @@ export const EMOTIONAL_ARCS: EmotionalArc[] = [
         name: 'Helical Pagoda Architecture',
         description: 'Multi-tiered quad helix morphing into concentric sheath and soaring hexa-helix vortex tower',
         modes: [FormationMode.QuadHelixBraid, FormationMode.ConcentricDualHelixSheath, FormationMode.HexaHelixVortexTower]
+    },
+    {
+        name: 'Molecular Genetics',
+        description: 'Intertwined DNA ladder rails transitioning into double helix and collagen triple helix',
+        modes: [FormationMode.DNALadder, FormationMode.DoubleHelix, FormationMode.TripleHelix]
+    },
+    {
+        name: 'Higher-Dimensional Immersion',
+        description: 'Self-intersecting Klein bottle unfolding into Calabi-Yau 6D projection and Clifford torus',
+        modes: [FormationMode.KleinBottle4D, FormationMode.CalabiYauManifold, FormationMode.CliffordTorus]
+    },
+    {
+        name: 'Toroidal Ribbon Harmonics',
+        description: 'Trefoil braided cable woven into toroidal helix cable and seamless torus flow',
+        modes: [FormationMode.TrefoilBraidedRibbon, FormationMode.ToroidalHelixBraid, FormationMode.TorusKnot]
+    },
+    {
+        name: 'Infinite Kinetic Flow',
+        description: 'Ascending Caduceus serpents morphing into Ouroboros dragon and chaotic Lorenz butterfly',
+        modes: [FormationMode.CaduceusVortex, FormationMode.OuroborosSerpent, FormationMode.LorenzAttractor]
     }
 ];
 

@@ -48,83 +48,236 @@ export enum DefeatScenario {
 }
 
 export enum FormationMode {
-    Serpent = 0,
-    Spiral = 1,
-    DoubleHelix = 2,
-    TorusKnot = 3,
-    JellyfishPulse = 4,
-    QuantumAtom = 5,
-    PhoenixWings = 6,
-    BlackHoleJet = 7,
-    HourglassVortex = 8,
-    LissajousKnot = 9,
-    Tesseract4D = 10,
-    TornadoFunnel = 11,
-    NautilusShell = 12,
-    BioMushroom = 13,
-    BeehiveSwarm = 14,
-    DodecahedronShield = 15,
-    SaturnRings = 16,
-    PulsingHeart = 17,
-    TsunamiWave = 18,
-    SupernovaBurst = 19,
-    CrystalPrism = 20,
-    VirusCapsid = 21,
-    PlasmaArc = 22,
-    CoralReef = 23,
-    VolcanicColumn = 24,
-    AlienMothership = 25,
-    TripleHelix = 26,
-    FerrisWheel = 27,
-    SpiderWeb = 28,
-    NebulaCloud = 29,
-    Procedural = 30,
-    // --- 14 New Non-Circular / Planar / Dynamic Formations ---
-    WireCube = 31,
-    TreeBranch = 32,
-    LightningBolt = 33,
-    RiverDelta = 34,
-    KelvinHelmholtz = 35,
-    DNALadder = 36,
-    StarPolygon = 37,
-    CollapsingSphere = 38,
-    BigBangExpansion = 39,
-    GeologicStrata = 40,
-    TrefoilKnot = 41,
-    MurmurationFlow = 42,
-    OuroborosSerpent = 43,
-    DancingRibbon = 44,
-    // --- High-Order Sophisticated & Complex Mathematical Topologies ---
-    CalabiYauManifold = 45,
-    HopfFibration = 46,
-    LorenzAttractor = 47,
-    GyroidMinimalSurface = 48,
-    KleinBottle4D = 49,
-    CliffordTorus = 50,
-    // --- Intertwined Multi-Helix & Braided Formations ---
-    QuadHelixBraid = 51,
-    ConcentricDualHelixSheath = 52,
-    CaduceusVortex = 53,
-    ToroidalHelixBraid = 54,
-    TrefoilBraidedRibbon = 55,
-    HexaHelixVortexTower = 56,
-    MobiusHelixBraid = 57,
-    LissajousIntertwinedKnot = 58,
-    // --- Advanced Intertwined Loops, Knots & Links ---
-    BorromeanRings = 59,
-    FigureEightKnot = 60,
-    CinqfoilKnot = 61,
-    SeptafoilKnot = 62,
-    OlympicChainLink = 63,
-    TriquetraCelticBraid = 64,
-    SolarFlareProminence = 65,
-    WhiteheadLink = 66,
-    QuatrefoilKnotBraid = 67,
-    GrannyKnotBraid = 68
+    QuadHelixBraid = 0,
+    ConcentricDualHelixSheath = 1,
+    CaduceusVortex = 2,
+    ToroidalHelixBraid = 3,
+    TrefoilBraidedRibbon = 4,
+    HexaHelixVortexTower = 5,
+    MobiusHelixBraid = 6,
+    LissajousIntertwinedKnot = 7,
+    BorromeanRings = 8,
+    FigureEightKnot = 9,
+    CinqfoilKnot = 10,
+    SeptafoilKnot = 11,
+    OlympicChainLink = 12,
+    TriquetraCelticBraid = 13,
+    SolarFlareProminence = 14,
+    WhiteheadLink = 15,
+    QuatrefoilKnotBraid = 16,
+    GrannyKnotBraid = 17,
+    DoubleHelix = 18,
+    TripleHelix = 19,
+    DNALadder = 20,
+    TrefoilKnot = 21,
+    TorusKnot = 22,
+    CalabiYauManifold = 23,
+    HopfFibration = 24,
+    LorenzAttractor = 25,
+    GyroidMinimalSurface = 26,
+    KleinBottle4D = 27,
+    CliffordTorus = 28,
+    OuroborosSerpent = 29,
+    DancingRibbon = 30,
+    Procedural = 31
 }
 
-export const TOTAL_FORMATION_COUNT = 69;
+export const TOTAL_FORMATION_COUNT = 32;
 
+export const FORMATION_PRESETS = [
+    {
+        id: FormationMode.QuadHelixBraid,
+        label: 'Quad Helix Braid',
+        icon: '🧬',
+        desc: '4-Strand species intertwined helix with cross-ladder rungs'
+    },
+    {
+        id: FormationMode.ConcentricDualHelixSheath,
+        label: 'Concentric Dual Helix Sheath',
+        icon: '🧬',
+        desc: 'Inner double-helix nested inside outer counter-rotating helix cage'
+    },
+    {
+        id: FormationMode.CaduceusVortex,
+        label: 'Caduceus Vortex',
+        icon: '⚕️',
+        desc: 'Dual intertwined serpents ascending around central spine & wings'
+    },
+    {
+        id: FormationMode.ToroidalHelixBraid,
+        label: 'Toroidal Helix Braid',
+        icon: '🍩',
+        desc: 'Closed continuous 4-strand braided torus cable'
+    },
+    {
+        id: FormationMode.TrefoilBraidedRibbon,
+        label: 'Trefoil Braided Ribbon',
+        icon: '🎗️',
+        desc: '4-Strand braided cable woven around 3D Trefoil knot'
+    },
+    {
+        id: FormationMode.HexaHelixVortexTower,
+        label: 'Hexa Helix Vortex Tower',
+        icon: '🌪️',
+        desc: 'Multi-tiered ascending celestial helix staircase'
+    },
+    {
+        id: FormationMode.MobiusHelixBraid,
+        label: 'Mobius Helix Braid',
+        icon: '🎗️',
+        desc: 'Continuous 3D Mobius ribbon with 4 braided sub-currents'
+    },
+    {
+        id: FormationMode.LissajousIntertwinedKnot,
+        label: 'Lissajous Intertwined Knot',
+        icon: '🔮',
+        desc: '4 Weaving harmonic ribbons in 3D 8-knot'
+    },
+    {
+        id: FormationMode.BorromeanRings,
+        label: 'Borromean Rings',
+        icon: '⭕',
+        desc: 'Three mutually intertwined orthogonal elliptical rings (Brunnian link)'
+    },
+    {
+        id: FormationMode.FigureEightKnot,
+        label: 'Figure-Eight Knot Braid',
+        icon: '♾️',
+        desc: 'Canonical Listing 4_1 alternating prime knot with multi-strand braid'
+    },
+    {
+        id: FormationMode.CinqfoilKnot,
+        label: 'Cinqfoil Knot Braid',
+        icon: '⭐',
+        desc: '5-Lobed intertwined Torus (5,2) Solomon seal ribbon'
+    },
+    {
+        id: FormationMode.SeptafoilKnot,
+        label: 'Septafoil Stellar Knot',
+        icon: '🌟',
+        desc: 'High-frequency 7-point intertwined Torus (7,3) stellar knot'
+    },
+    {
+        id: FormationMode.OlympicChainLink,
+        label: 'Olympic Chain Link',
+        icon: '🔗',
+        desc: '4 Interlocked elliptical rings linked sequentially in 3D toroidal space'
+    },
+    {
+        id: FormationMode.TriquetraCelticBraid,
+        label: 'Triquetra Celtic Braid',
+        icon: '☘️',
+        desc: '3 Intertwined Vesica Piscis arcs forming 3D Celtic trinity knot'
+    },
+    {
+        id: FormationMode.SolarFlareProminence,
+        label: 'Solar Flare Prominence',
+        icon: '☀️',
+        desc: 'Intertwined magnetic flux ropes arching with counter-helicity twisting'
+    },
+    {
+        id: FormationMode.WhiteheadLink,
+        label: 'Whitehead Link',
+        icon: '🪢',
+        desc: 'Canonical Whitehead link of circular ring interlocked with 3D figure-8'
+    },
+    {
+        id: FormationMode.QuatrefoilKnotBraid,
+        label: 'Quatrefoil Knot Braid',
+        icon: '🍀',
+        desc: '4-Leaf intertwined Torus (4,3) architectural clover ribbon'
+    },
+    {
+        id: FormationMode.GrannyKnotBraid,
+        label: 'Granny Knot Braid',
+        icon: '🧵',
+        desc: 'Dual intertwined composite trefoils linked in tandem with bridge threads'
+    },
+    {
+        id: FormationMode.DoubleHelix,
+        label: 'Double Helix',
+        icon: '🧬',
+        desc: 'Intertwined bio-macromolecule dual strand with ladder bridges'
+    },
+    {
+        id: FormationMode.TripleHelix,
+        label: 'Triple Helix',
+        icon: '🧬',
+        desc: 'Tri-strand intertwined braided collagen stream'
+    },
+    {
+        id: FormationMode.DNALadder,
+        label: 'DNA Ladder Braid',
+        icon: '🧬',
+        desc: 'Dual helical sugar-phosphate rails with base-pair rungs'
+    },
+    {
+        id: FormationMode.TrefoilKnot,
+        label: 'Trefoil Harmonics',
+        icon: '🎗️',
+        desc: 'Continuous canonical (2,3) cloverleaf streamline'
+    },
+    {
+        id: FormationMode.TorusKnot,
+        label: 'Torus Knot Stream',
+        icon: '🍩',
+        desc: 'Continuous seamless (3,5) toroidal loop flow'
+    },
+    {
+        id: FormationMode.CalabiYauManifold,
+        label: 'Calabi-Yau Bloom',
+        icon: '🌌',
+        desc: '6D String theory compactification projection with complex cross-folds'
+    },
+    {
+        id: FormationMode.HopfFibration,
+        label: 'Hopf Fiber Bundle',
+        icon: '🫧',
+        desc: 'Nested Villarceau circular fiber streams filling 3-sphere space'
+    },
+    {
+        id: FormationMode.LorenzAttractor,
+        label: 'Lorenz Butterfly',
+        icon: '🦋',
+        desc: 'Continuous dual-scroll chaotic butterfly wings with non-intersecting orbits'
+    },
+    {
+        id: FormationMode.GyroidMinimalSurface,
+        label: 'Gyroid Flow',
+        icon: '🧬',
+        desc: 'Triply periodic minimal surface streamline with labyrinthine tunnels'
+    },
+    {
+        id: FormationMode.KleinBottle4D,
+        label: 'Klein Bottle Loop',
+        icon: '♾️',
+        desc: 'Continuous self-intersecting topological immersion'
+    },
+    {
+        id: FormationMode.CliffordTorus,
+        label: 'Clifford Torus',
+        icon: '💫',
+        desc: 'Flat 4D hyper-torus stereographic projection'
+    },
+    {
+        id: FormationMode.OuroborosSerpent,
+        label: 'Ouroboros Dragon',
+        icon: '🐉',
+        desc: 'Coiling aerodynamic dragon swallowing its tail in a continuous loop'
+    },
+    {
+        id: FormationMode.DancingRibbon,
+        label: 'Dancing Ribbon',
+        icon: '🎀',
+        desc: 'Twisting closed 3D harmonic gymnast loop'
+    },
+    {
+        id: FormationMode.Procedural,
+        label: 'Infinite Procedural',
+        icon: '✨',
+        desc: 'Harmonic Fourier superformula manifold generator'
+    }
+];
 
 export interface ProceduralGenome {
     family?: 'harmonic' | 'superformula' | 'branching';
@@ -232,42 +385,6 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
     },
     {
         id: 6,
-        label: 'Moonlight Cyber',
-        ambientIntensity: 0.09,
-        keyIntensity: 3.5,
-        keyColor: '#e0f0ff',
-        fillIntensity: 0.22,
-        fillColor: '#08101e',
-        rimIntensity: 3.8,
-        rimColor: '#00e0ff',
-        fogDensity: 0.004
-    },
-    {
-        id: 7,
-        label: 'Sunrise Horizon',
-        ambientIntensity: 0.14,
-        keyIntensity: 3.8,
-        keyColor: '#ffb888',
-        fillIntensity: 0.32,
-        fillColor: '#181228',
-        rimIntensity: 3.4,
-        rimColor: '#70a0ff',
-        fogDensity: 0.0035
-    },
-    {
-        id: 8,
-        label: 'Neon Synthwave',
-        ambientIntensity: 0.11,
-        keyIntensity: 4.0,
-        keyColor: '#00ffdd',
-        fillIntensity: 0.28,
-        fillColor: '#180028',
-        rimIntensity: 4.0,
-        rimColor: '#ff0088',
-        fogDensity: 0.0045
-    },
-    {
-        id: 9,
         label: 'Cinematic Noir',
         ambientIntensity: 0.08,
         keyIntensity: 3.6,
@@ -279,19 +396,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         fogDensity: 0.005
     },
     {
-        id: 10,
-        label: 'Bioluminescent',
-        ambientIntensity: 0.09,
-        keyIntensity: 3.8,
-        keyColor: '#50ff90',
-        fillIntensity: 0.24,
-        fillColor: '#001810',
-        rimIntensity: 3.8,
-        rimColor: '#00f0ff',
-        fogDensity: 0.006
-    },
-    {
-        id: 11,
+        id: 7,
         label: 'Solar Eclipse',
         ambientIntensity: 0.07,
         keyIntensity: 3.2,
@@ -317,18 +422,12 @@ export const COLOR_PALETTES = [
     ['#071930', '#184775', '#7ca1c4', '#f06d48'], // 10. Deep Cobalt & Coral Sunset
     ['#18333b', '#258f82', '#e86a48', '#f5b573'], // 11. Terracotta & Emerald Lagoon
     ['#261f25', '#355f61', '#9868c7', '#8ed48c'], // 12. Twilight Lavender & Sage
-    ['#132559', '#3b8da0', '#f78d3b', '#ffea6c'], // 13. Solar Flare & Electric Sapphire
-    ['#1e2f42', '#584463', '#8ecff0', '#f06e73'], // 14. Icelandic Glacial Fiord
-    ['#033b52', '#007585', '#00bfa8', '#f2f7b8'], // 15. Bioluminescent Mint Reef
-    ['#211929', '#4d323e', '#8a5f49', '#d1aa8c'], // 16. Earthy Obsidian & Smoked Amber
-    ['#0c232b', '#0a6b6d', '#cf7b19', '#d6342b'], // 17. Volcanic Copper & Patina
-    ['#2d1706', '#5e3818', '#996333', '#dbae85'], // 18. Ancient Teak & Sandstone
-    ['#18210e', '#49542a', '#c7924e', '#fff6cc'], // 19. Olive Grove & Golden Barley
-    ['#140402', '#7a1908', '#d64512', '#ffa33a'], // 20. Magma Obsidian & Crimson Amber (High-Contrast Strands)
-    ['#191b29', '#63748e', '#d0d8e0', '#f01a34'], // 21. Nordic Winter & Ruby Spark
-    ['#001e30', '#a81616', '#eb6800', '#ffd04d'], // 22. Celestial Sunspot & Midnight
-    ['#0a001c', '#2b0054', '#7a22cc', '#ebb8ff'], // 23. Imperial Violet & Pearl Nebula
-    ['#002b13', '#006100', '#30b800', '#d8ff40']  // 24. Hyper-Emerald & Lime Moss
+    ['#1e2f42', '#584463', '#8ecff0', '#f06e73'], // 13. Icelandic Glacial Fjord
+    ['#211929', '#4d323e', '#8a5f49', '#d1aa8c'], // 14. Earthy Obsidian & Smoked Amber
+    ['#0c232b', '#0a6b6d', '#cf7b19', '#d6342b'], // 15. Volcanic Copper & Patina
+    ['#2d1706', '#5e3818', '#996333', '#dbae85'], // 16. Ancient Teak & Sandstone
+    ['#18210e', '#49542a', '#c7924e', '#fff6cc'], // 17. Olive Grove & Golden Barley
+    ['#140402', '#7a1908', '#d64512', '#ffa33a']  // 18. Magma Obsidian & Crimson Amber
 ];
 
 export const MATERIAL_PRESETS = [
@@ -341,80 +440,52 @@ export const MATERIAL_PRESETS = [
     },
     {
         id: 1,
-        label: 'Faceted Ceramic',
-        icon: '🏺',
-        desc: 'High-contrast glazed ceramic with sharp facet reflections and crisp specular sheen',
-        settings: { roughness: 0.12, metalness: 0.35, wireframe: false, flatShading: true, emissiveIntensity: 0.08 }
-    },
-    {
-        id: 2,
-        label: 'Glossy Injection Polymer',
-        icon: '🧩',
-        desc: 'Vibrant glossy polymer with crisp directional glints and deep facet shadows',
-        settings: { roughness: 0.14, metalness: 0.22, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
-    },
-    {
-        id: 3,
         label: 'Champagne Gold',
         icon: '🏆',
         desc: 'Polished golden mirror specularity with vivid multi-angled studio highlights',
         settings: { roughness: 0.04, metalness: 0.95, wireframe: false, flatShading: true, emissiveIntensity: 0.30 }
     },
     {
-        id: 4,
+        id: 2,
         label: 'Glass Crystal Glaze',
         icon: '🔮',
         desc: 'Brilliant glassy faceted sheen with rich tonal refraction highlights',
         settings: { roughness: 0.08, metalness: 0.40, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
     },
     {
-        id: 5,
-        label: 'Satin Anodized Alloy',
-        icon: '⚡',
-        desc: 'Smooth satin brushed alloy with strong directional highlights along edges',
-        settings: { roughness: 0.22, metalness: 0.78, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
-    },
-    {
-        id: 6,
-        label: 'Faceted Gemstone',
-        icon: '💎',
-        desc: 'High-index faceted gemstone with razor-sharp specular glints',
-        settings: { roughness: 0.03, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.35 }
-    },
-    {
-        id: 7,
+        id: 3,
         label: 'Cyber Obsidian Blade',
         icon: '🖤',
         desc: 'Deep dark obsidian with razor-sharp directional rim reflections',
         settings: { roughness: 0.15, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.06 }
     },
     {
-        id: 8,
+        id: 4,
         label: 'Satin Cyber Chrome',
         icon: '🛡️',
-        desc: 'Satin cyber chrome finish with powerful rim definition',
+        desc: 'Satin platinum chrome finish with powerful rim definition',
         settings: { roughness: 0.08, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.28 }
     },
     {
-        id: 9,
-        label: 'Carbon Composite',
-        icon: '🏎️',
-        desc: 'Stealth dark composite with crisp directional facet sheen',
-        settings: { roughness: 0.20, metalness: 0.50, wireframe: false, flatShading: true, emissiveIntensity: 0.08 }
-    },
-    {
-        id: 10,
+        id: 5,
         label: 'Frost Crystal Shard',
         icon: '❄️',
         desc: 'Ice-cold platinum mirror with brilliant luminous rim glints',
         settings: { roughness: 0.04, metalness: 0.90, wireframe: false, flatShading: true, emissiveIntensity: 0.32 }
     },
     {
-        id: 11,
-        label: 'Neon Quantum Crystal',
-        icon: '💫',
-        desc: 'Quantum crystal with high specular gloss and edge reflections',
-        settings: { roughness: 0.05, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.40 }
+        id: 6,
+        label: 'Raw Jade & Malachite',
+        icon: '🪨',
+        desc: 'Deep mineral geological translucency with smooth satin specular finish',
+        settings: { roughness: 0.10, metalness: 0.45, wireframe: false, flatShading: true, emissiveIntensity: 0.18 }
+    },
+    {
+        id: 7,
+        label: 'Cosmic Starlight Mirror',
+        icon: '🌌',
+        desc: 'Ultra-dark specular finish with high-contrast diamond peaks',
+        settings: { roughness: 0.02, metalness: 0.96, wireframe: false, flatShading: true, emissiveIntensity: 0.35 }
     }
 ];
 
@@ -633,6 +704,7 @@ export function generateProceduralShapeSurprise(): { shapes: [number, number, nu
     return { shapes, name };
 }
 
+
 const DEFAULT_OUT_PT: [number, number, number] = [0, 0, 0];
 
 export function computeFormationPoint(
@@ -649,563 +721,8 @@ export function computeFormationPoint(
 ): [number, number, number] | Float32Array | number[] {
     let tx = 0, ty = 0, tz = 0;
     const freqMult = 1.0;
-    
-    if (formation === FormationMode.Serpent) {
-        // --- 0. Serpent Stream: Sleek Aerodynamic 3D Serpentine Ribbon ---
-        const s = (u - 0.5) * 8.0;
-        const wave = s * 0.75 - time * 0.8 * speedMult + (species * Math.PI / 4);
-        const waveY = fastSin(wave * 1.2) * 2.0 + fastCos(s * 0.5) * 0.8;
-        const waveZ = fastSin(wave) * 2.2;
-        tx = s * 1.4 + fastCos(wave) * 0.8;
-        ty = waveY + (species - 1.5) * 0.8;
-        tz = waveZ;
-    } else if (formation === FormationMode.Spiral) {
-        // --- 1. Galactic Spiral: Multi-Arm Logarithmic Celestial Galaxy ---
-        const arm = indexInSpecies % 3;
-        const armOffset = arm * (Math.PI * 2.0 / 3.0);
-        const theta = u * 4.0 * Math.PI + time * 0.45 * speedMult + armOffset;
-        const radius = 1.0 + Math.pow(u, 0.8) * 6.0;
-        const height = (u - 0.5) * 3.5 + fastSin(theta * 2.0) * 0.6;
-        tx = radius * fastCos(theta);
-        ty = height + (species - 1.5) * 0.6;
-        tz = radius * fastSin(theta);
-    } else if (formation === FormationMode.DoubleHelix) {
-        // --- 2. Double Helix: Intertwined Bio-Macromolecule Stream with Base-Pair Rungs ---
-        const h = (u - 0.5) * 11.5;
-        const theta = u * 8.0 * Math.PI + time * 0.6 * speedMult;
-        const isRung = (indexInSpecies % 5 === 0);
-        if (isRung) {
-            // Horizontal bridging rung connecting the dual strands
-            const rungT = ((indexInSpecies % 20) / 20.0 - 0.5) * 2.0; // [-1, 1]
-            tx = (3.4 * rungT) * fastCos(theta);
-            ty = h;
-            tz = (3.4 * rungT) * fastSin(theta);
-        } else {
-            // Outer intertwined spiral sugar-phosphate backbones
-            const strand = (species % 2 === 0) ? 0 : 1;
-            const strandAngle = theta + (strand * Math.PI) + (species * 0.1);
-            const r = 3.6 + fastSin(h * 0.4 + time * 0.5) * 0.4;
-            tx = r * fastCos(strandAngle);
-            ty = h;
-            tz = r * fastSin(strandAngle);
-        }
-    } else if (formation === FormationMode.TorusKnot) {
-        // --- 3. Torus Knot Stream: Continuous Seamless Bio-Ring Flow ---
-        const p = 2, q = 3;
-        const t = u * 2.0 * Math.PI + time * 0.25 * speedMult + (species * 0.15);
-        const r = fastCos(q * t) * 1.8 + 4.2;
-        tx = r * fastCos(p * t);
-        ty = fastSin(q * t) * 2.4 + (species - 1.5) * 0.5;
-        tz = r * fastSin(p * t);
-    } else if (formation === FormationMode.JellyfishPulse) {
-        // --- 4. Jellyfish Veil: Deep-Sea Translucent Bell & Trailing Aquatic Tentacles ---
-        const pulse = fastSin(time * 1.2 * speedMult) * 0.25 + 1.0;
-        if (u < 0.38) {
-            const phi = (u / 0.38) * Math.PI * 0.48;
-            const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + (time * 0.15);
-            const bellR = fastSin(phi) * 4.8 * pulse;
-            tx = bellR * fastCos(theta);
-            ty = fastCos(phi) * 2.8 + 1.5;
-            tz = bellR * fastSin(theta);
-        } else {
-            const tentacleIdx = indexInSpecies % 10;
-            const tentacleAngle = (tentacleIdx / 10.0) * Math.PI * 2.0 + (species * 0.2);
-            const lengthParam = ((u - 0.38) / 0.62) * 9.5;
-            const wave = lengthParam * 0.7 - time * 1.6 * speedMult;
-            const taper = 1.0 - (lengthParam / 11.0) * 0.4;
-            tx = (fastCos(tentacleAngle) * 2.6 + fastSin(wave) * 0.9) * taper;
-            ty = -lengthParam + 1.5;
-            tz = (fastSin(tentacleAngle) * 2.6 + fastCos(wave) * 0.9) * taper;
-        }
-    } else if (formation === FormationMode.QuantumAtom) {
-        // --- 5. Orbital Resonance: Smooth Harmonically Inclined Resonant Rings ---
-        const orbitIdx = indexInSpecies % 3;
-        const inc = (orbitIdx * Math.PI / 3.0) + (species * 0.1);
-        const t = u * Math.PI * 2.0 + time * 0.6 * speedMult;
-        const orbitR = 4.4 + fastSin(t * 2.0) * 0.6;
-        const rx = orbitR * fastCos(t);
-        const ry = fastSin(t * 2.0) * 1.0;
-        const rz = orbitR * fastSin(t);
-        tx = rx * fastCos(inc) - ry * fastSin(inc);
-        ty = rx * fastSin(inc) + ry * fastCos(inc);
-        tz = rz;
-    } else if (formation === FormationMode.PhoenixWings) {
-        // --- 6. Phoenix Wings: Soaring Undulating Biomorphic Wings ---
-        const span = (u - 0.5) * 12.0;
-        const flapPhase = time * 2.2 * speedMult - Math.abs(span) * 0.25 + (species * 0.2);
-        const wingElev = Math.pow(Math.abs(span) * 0.16, 1.3) * fastSin(flapPhase) * 2.2;
-        tx = span * 1.25;
-        ty = wingElev + fastCos(span * 0.25) * 1.2 + (species - 1.5) * 0.6;
-        tz = -Math.abs(span) * 0.45 + fastSin(flapPhase + 0.4) * 1.2;
-    } else if (formation === FormationMode.BlackHoleJet) {
-        // --- 7. Celestial Vortex: Accretion Disk with Relativistic Polar Streams ---
-        if (u < 0.65) {
-            const diskU = u / 0.65;
-            const diskTheta = diskU * Math.PI * 6.0 + time * 1.4 * speedMult + (species * 0.3);
-            const diskR = 1.2 + Math.pow(diskU, 0.7) * 5.8;
-            tx = diskR * fastCos(diskTheta);
-            ty = fastSin(diskTheta * 2.0) * 0.3 + (species - 1.5) * 0.3;
-            tz = diskR * fastSin(diskTheta);
-        } else {
-            const jetU = (u - 0.65) / 0.35;
-            const jetSign = (indexInSpecies % 2 === 0) ? 1 : -1;
-            const jetH = jetU * 8.5 * jetSign;
-            const jetTheta = jetU * Math.PI * 4.0 + time * 2.5 * speedMult;
-            const jetR = 0.5 + jetU * 1.2;
-            tx = jetR * fastCos(jetTheta);
-            ty = jetH;
-            tz = jetR * fastSin(jetTheta);
-        }
-    } else if (formation === FormationMode.HourglassVortex) {
-        // --- 8. Hyperboloid Vortex: Spinning 3D Hourglass Tornado Stream ---
-        const h = (u - 0.5) * 10.0;
-        const waistR = Math.sqrt(1.8 + Math.pow(h * 0.3, 2));
-        const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + (species * Math.PI / 4);
-        tx = waistR * fastCos(theta);
-        ty = h;
-        tz = waistR * fastSin(theta);
-    } else if (formation === FormationMode.LissajousKnot) {
-        // --- 9. Lissajous Ribbon: Smooth Harmonic 3D Kinetic Ribbon Loop ---
-        const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        tx = 4.2 * fastSin(3 * t + (species * 0.3));
-        ty = 3.2 * fastSin(4 * t + 0.5);
-        tz = 4.2 * fastSin(5 * t + (species * 0.3));
-    } else if (formation === FormationMode.Tesseract4D) {
-        // --- 10. Bioluminescent Manta: Expansive Undulating Wings with Trailing Filaments ---
-        const wingU = (u - 0.5) * 12.0;
-        const waveZ = ((indexInSpecies % 50) / 50.0 - 0.3) * 9.0;
-        const flap = fastSin(time * 1.8 * speedMult - Math.abs(wingU) * 0.35) * Math.pow(Math.abs(wingU) * 0.18, 1.4) * 2.4;
-        const bodyArch = fastCos(wingU * 0.22) * 1.4 - (waveZ * 0.15);
-        tx = wingU * 1.2;
-        ty = flap + bodyArch + (species - 1.5) * 0.5;
-        tz = waveZ * 1.2 - Math.abs(wingU) * 0.45;
-    } else if (formation === FormationMode.TornadoFunnel) {
-        // --- 11. Vortex Funnel: Aerodynamic Spinning Whirlwind Stream ---
-        const h = (u - 0.5) * 9.5;
-        const funnelR = Math.pow(u, 1.3) * 4.8 + 0.6;
-        const theta = u * 12.0 * Math.PI + time * 1.6 * speedMult + (species * 0.4);
-        tx = funnelR * fastCos(theta);
-        ty = h;
-        tz = funnelR * fastSin(theta);
-    } else if (formation === FormationMode.NautilusShell) {
-        // --- 12. Nautilus Spiral: Golden Ratio Logarithmic Shell Spiral ---
-        const theta = u * 4.5 * Math.PI + time * 0.4 * speedMult;
-        const r = 0.8 * Math.exp(0.22 * (u * 4.5 * Math.PI));
-        tx = r * fastCos(theta) * 0.35;
-        ty = (u - 0.5) * 6.0 + fastSin(theta) * 0.8;
-        tz = r * fastSin(theta) * 0.35;
-    } else if (formation === FormationMode.BioMushroom) {
-        // --- 13. Bio Mushroom: Fungal Umbrella Canopy with Falling Spore Streams ---
-        if (u < 0.6) {
-            const capU = u / 0.6;
-            const phi = capU * Math.PI * 0.48;
-            const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + (time * 0.12);
-            const capR = fastSin(phi) * 4.8;
-            tx = capR * fastCos(theta);
-            ty = fastCos(phi) * 2.2 + 1.8;
-            tz = capR * fastSin(theta);
-        } else {
-            const stemU = (u - 0.6) / 0.4;
-            const stemR = 1.0 + fastSin(stemU * 8.0 + time) * 0.15;
-            const theta = (species * Math.PI / 2) + stemU * Math.PI * 2.0;
-            tx = stemR * fastCos(theta);
-            ty = -stemU * 5.2 + 1.8;
-            tz = stemR * fastSin(theta);
-        }
-    } else if (formation === FormationMode.BeehiveSwarm) {
-        // --- 14. Kelp Forest: Deep-Sea Swaying Kelp Forest Streamlines ---
-        const stalk = indexInSpecies % 12;
-        const stalkAngle = (stalk / 12.0) * Math.PI * 2.0;
-        const stalkRadius = 2.0 + (stalk % 3) * 1.5;
-        const h = (u - 0.5) * 10.0;
-        const swayPhase = h * 0.5 - time * 0.9 * speedMult + stalk;
-        const swayX = fastSin(swayPhase) * (u * 2.4);
-        const swayZ = fastCos(swayPhase * 0.8) * (u * 2.4);
-        tx = stalkRadius * fastCos(stalkAngle) + swayX;
-        ty = h;
-        tz = stalkRadius * fastSin(stalkAngle) + swayZ;
-    } else if (formation === FormationMode.DodecahedronShield) {
-        // --- 15. Oceanic Whirlpool: Inward Logarithmic Vortex Sink with Rolling Waves ---
-        const vortexTheta = u * 8.0 * Math.PI + time * 1.2 * speedMult + (species * Math.PI / 4);
-        const vortexR = 1.0 + Math.pow(u, 1.1) * 6.0;
-        const vortexDepth = -Math.pow(1.0 - u, 2.0) * 4.8 + 1.0;
-        const rimRoll = fastSin(vortexTheta * 2.5 - time * 1.8) * (u * 0.8);
-        tx = vortexR * fastCos(vortexTheta);
-        ty = vortexDepth + rimRoll;
-        tz = vortexR * fastSin(vortexTheta);
-    } else if (formation === FormationMode.SaturnRings) {
-        // --- 16. Saturn Rings: Planetary Sphere Core & Tilted Shimmering Rings ---
-        if (u < 0.3) {
-            const phi = Math.acos(2 * (u / 0.3) - 1);
-            const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + time * 0.2;
-            const coreR = 2.4;
-            tx = coreR * fastSin(phi) * fastCos(theta);
-            ty = coreR * fastCos(phi);
-            tz = coreR * fastSin(phi) * fastSin(theta);
-        } else {
-            const ringU = (u - 0.3) / 0.7;
-            const ringR = 3.6 + ringU * 4.5;
-            const ringTheta = ringU * Math.PI * 8.0 + time * 0.7 * speedMult + (species * 0.2);
-            const rx = ringR * fastCos(ringTheta);
-            const ry = fastSin(ringTheta * 2.0) * 0.15;
-            const rz = ringR * fastSin(ringTheta);
-            const tilt = 32.0 * (Math.PI / 180.0);
-            tx = rx;
-            ty = ry * fastCos(tilt) - rz * fastSin(tilt);
-            tz = ry * fastSin(tilt) + rz * fastCos(tilt);
-        }
-    } else if (formation === FormationMode.PulsingHeart) {
-        // --- 17. Pulsing Heart: 3D Biomorphic Cardioid Heart Chamber ---
-        const t = u * Math.PI * 2.0;
-        const pulse = 1.0 + fastSin(time * 1.6 * speedMult) * 0.10;
-        const hx = 16.0 * Math.pow(fastSin(t), 3);
-        const hy = 13.0 * fastCos(t) - 5.0 * fastCos(2 * t) - 2.0 * fastCos(3 * t) - fastCos(4 * t);
-        const hz = fastSin(t * 3.0 + (species * Math.PI / 4)) * 1.5;
-        tx = (hx * 0.28) * pulse;
-        ty = (hy * 0.28) * pulse;
-        tz = hz * pulse;
-    } else if (formation === FormationMode.TsunamiWave) {
-        // --- 18. Tsunami Wave: Surging 3D Breaking Ocean Curl ---
-        const xVal = (u - 0.5) * 11.0;
-        const curlPhase = xVal * 0.22 - time * 1.1 * speedMult;
-        const waveY = fastSin(curlPhase) * 2.6 + Math.pow(Math.max(0, fastCos(curlPhase)), 2.2) * 3.4;
-        tx = xVal;
-        ty = waveY + (species - 1.5) * 0.6;
-        tz = fastCos(curlPhase) * 2.2;
-    } else if (formation === FormationMode.SupernovaBurst) {
-        // --- 19. Supernova Nebula: Cosmic Breathing Star Shockwave with Radial Streams ---
-        const burstR = (fastSin(time * 0.9 * speedMult + u * 3.0) * 0.25 + 0.75) * 5.0;
-        const phi = Math.acos(2 * u - 1);
-        const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + (species * 0.3);
-        tx = burstR * fastSin(phi) * fastCos(theta);
-        ty = burstR * fastCos(phi);
-        tz = burstR * fastSin(phi) * fastSin(theta);
-    } else if (formation === FormationMode.CrystalPrism) {
-        // --- 20. Mobius Ribbon: Sweeping Aerodynamic 3D Mobius Sash ---
-        const mobT = u * Math.PI * 2.0 + time * 0.35 * speedMult;
-        const mobW = ((indexInSpecies % 40) / 40.0 - 0.5) * 2.2;
-        const mobR = 4.5 + mobW * fastCos(mobT * 0.5);
-        tx = mobR * fastCos(mobT);
-        ty = mobW * fastSin(mobT * 0.5) * 2.2 + (species - 1.5) * 0.4;
-        tz = mobR * fastSin(mobT);
-    } else if (formation === FormationMode.VirusCapsid) {
-        // --- 21. Lotus Bloom: Sacred Multi-Layered Blooming Lotus Petals ---
-        const petals = 8;
-        const layer = Math.floor(u * 4);
-        const layerU = (u * 4) % 1.0;
-        const petalAngle = ((indexInSpecies * 137.5) * (Math.PI / 180.0)) + time * 0.15 * speedMult;
-        const rBase = (layer + 1) * 1.3;
-        const petalMod = Math.pow(Math.abs(fastCos(petals * petalAngle * 0.5)), 0.7);
-        const bloomBreath = 1.0 + fastSin(time * 0.8 * speedMult - layer * 0.4) * 0.14;
-        const lotusR = (rBase + petalMod * 1.8) * layerU * bloomBreath;
-        const lotusH = fastSin(layerU * Math.PI * 0.5) * (3.5 - layer * 0.7) - 1.4;
-        tx = lotusR * fastCos(petalAngle);
-        ty = lotusH + (species - 1.5) * 0.35;
-        tz = lotusR * fastSin(petalAngle);
-    } else if (formation === FormationMode.PlasmaArc) {
-        // --- 22. Aurora Stream: Curving Aerodynamic Plasma Filament Ribbon ---
-        const arcY = (u - 0.5) * 10.0;
-        const wave = arcY * 0.5 - time * 1.2 * speedMult;
-        tx = fastSin(wave) * 3.2 + fastCos(arcY * 0.3) * 0.8;
-        ty = arcY;
-        tz = fastCos(wave) * 3.2 + (species - 1.5) * 0.6;
-    } else if (formation === FormationMode.CoralReef) {
-        // --- 23. Coral Fan: Graceful Fractal Marine Coral Fan ---
-        const branch = indexInSpecies % 6;
-        const branchAngle = (branch / 6.0) * Math.PI * 2.0 + (species * 0.2);
-        const h = u * 8.5;
-        const r = (fastSin(h * 0.45) * 1.6 + 1.0);
-        tx = fastCos(branchAngle) * r + fastSin(h * 0.7 + time * 0.6) * 0.6;
-        ty = h - 4.2;
-        tz = fastSin(branchAngle) * r + fastCos(h * 0.7 + time * 0.6) * 0.6;
-    } else if (formation === FormationMode.VolcanicColumn) {
-        // --- 24. Thermal Plume: Ascending Turbulent Thermal Vortex Plume ---
-        const yVal = u * 9.5 - 4.5;
-        const plumeR = (yVal > -2.0 ? ((yVal + 2.0) * 0.35 + 1.2) : 1.2);
-        const theta = u * Math.PI * 8.0 + time * 1.3 * speedMult;
-        tx = plumeR * fastCos(theta);
-        ty = yVal;
-        tz = plumeR * fastSin(theta);
-    } else if (formation === FormationMode.AlienMothership) {
-        // --- 25. Cosmic Disk: Undulating Galactic Disc with Central Energy Core ---
-        const discR = 1.4 + u * 4.4;
-        const theta = u * Math.PI * 6.0 + time * 0.5 * speedMult + (species * 0.3);
-        tx = discR * fastCos(theta);
-        ty = fastSin(discR * 0.9 - time * 1.2) * 0.6;
-        tz = discR * fastSin(theta);
-    } else if (formation === FormationMode.TripleHelix) {
-        // --- 26. Triple Helix: Tri-Strand Intertwined Braided Stream ---
-        const strand = indexInSpecies % 3;
-        const strandOffset = (strand * Math.PI * 2.0 / 3.0);
-        const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + strandOffset;
-        const h = (u - 0.5) * 10.5;
-        const r = 3.3 + fastSin(h * 0.3 + time * 0.5) * 0.4;
-        tx = r * fastCos(theta);
-        ty = h;
-        tz = r * fastSin(theta);
-    } else if (formation === FormationMode.FerrisWheel) {
-        // --- 27. Galaxy Vortex: 4-Arm Logarithmic Spiral Galaxy with Density Waves ---
-        const arm = indexInSpecies % 4;
-        const armOffset = arm * (Math.PI * 0.5);
-        const spiralTheta = u * 4.5 * Math.PI + time * 0.4 * speedMult + armOffset;
-        const spiralR = 1.0 + Math.pow(u, 0.75) * 6.2;
-        const densityWave = fastSin(spiralTheta * 2.0 - time * 0.8) * 0.3;
-        const coreH = Math.exp(-spiralR * 0.5) * 2.4 * (species - 1.5) * 0.6;
-        tx = (spiralR + densityWave) * fastCos(spiralTheta);
-        ty = coreH + fastSin(spiralTheta * 3.0 + time) * 0.35;
-        tz = (spiralR + densityWave) * fastSin(spiralTheta);
-    } else if (formation === FormationMode.SpiderWeb) {
-        // --- 28. Intertwined Infinity Loops: Dual Interlocking 3D Continuous Ribbon Orbits ---
-        const loopChoice = species % 2; // Split species into 2 intertwined intersecting loops
-        const loopPhase = u * Math.PI * 2.0 + (time * 0.45 * speedMult);
-        const crossRadius = 0.35 + (species === 1 || species === 3 ? 0.15 : 0.0);
-        const tubeOffset = ((indexInSpecies % 12) / 12.0) * Math.PI * 2.0;
 
-        if (loopChoice === 0) {
-            // Loop A: Flowing Primary Figure-8 Trefoil Ribbon
-            const cx = fastSin(loopPhase) * 3.4 + fastSin(loopPhase * 2.0) * 1.6;
-            const cy = fastCos(loopPhase * 3.0) * 1.5;
-            const cz = fastCos(loopPhase) * 3.0 - fastCos(loopPhase * 2.0) * 1.4;
-            tx = cx + fastCos(tubeOffset) * crossRadius;
-            ty = cy + fastSin(tubeOffset) * crossRadius;
-            tz = cz + fastSin(tubeOffset * 2.0) * crossRadius * 0.5;
-        } else {
-            // Loop B: Interlocking Orthogonal Ribbon threading through Loop A's center
-            const cx = fastCos(loopPhase) * 3.0 - fastCos(loopPhase * 2.0) * 1.4;
-            const cy = fastSin(loopPhase * 3.0) * 1.5;
-            const cz = fastSin(loopPhase) * 3.4 + fastSin(loopPhase * 2.0) * 1.6;
-            tx = cx + fastCos(tubeOffset) * crossRadius;
-            ty = cy + fastSin(tubeOffset) * crossRadius;
-            tz = cz + fastSin(tubeOffset * 2.0) * crossRadius * 0.5;
-        }
-    } else if (formation === FormationMode.NebulaCloud) {
-        // --- 29. Cosmic Nebula: Organic Interstellar Gas Cloud ---
-        const cloudRadius = 1.6 + u * 4.0;
-        const theta = u * Math.PI * 8.0 + time * 0.3 * speedMult;
-        const phi = (indexInSpecies * 137.5) * (Math.PI / 180.0);
-        tx = cloudRadius * fastSin(phi) * fastCos(theta);
-        ty = cloudRadius * fastCos(phi) + fastSin(theta * 1.8) * 1.5;
-        tz = cloudRadius * fastSin(phi) * fastSin(theta);
-    } else if (formation === FormationMode.WireCube) {
-        // --- 31. Aurora Borealis Curtain: Billowing 3D Shimmering Light Curtains ---
-        const s = (u - 0.5) * 12.0;
-        const ribbonLayer = (species - 1.5) * 1.2;
-        const wave1 = s * 0.45 - time * 0.6 * speedMult + ribbonLayer * 0.4;
-        const wave2 = s * 0.90 + time * 0.4 * speedMult;
-        const curtainH = ((indexInSpecies % 80) / 80.0) * 8.0 - 4.0;
-        const curtainSway = fastSin(wave1) * 3.4 + fastSin(wave2) * 1.1;
-        tx = s * 1.15 + fastCos(wave1 * 0.8) * 0.8;
-        ty = curtainH + fastSin(s * 0.3 + time * 0.5) * 0.8;
-        tz = curtainSway + ribbonLayer;
-    } else if (formation === FormationMode.TreeBranch) {
-        // --- 32. Tree of Life: Recursive 3D Branching Canopy ---
-        if (u < 0.25) {
-            const trunkT = u / 0.25;
-            tx = fastSin(trunkT * 2.0 + time * 0.4) * 0.25;
-            ty = (trunkT - 0.5) * 4.0 - 2.0;
-            tz = fastCos(trunkT * 2.0 + time * 0.4) * 0.25;
-        } else if (u < 0.65) {
-            const boughIdx = indexInSpecies % 4;
-            const boughAngle = (boughIdx / 4.0) * Math.PI * 2.0 + (species * 0.3);
-            const boughT = (u - 0.25) / 0.40;
-            const boughR = boughT * 3.5;
-            const sway = fastSin(time * 0.6 * speedMult + boughIdx) * 0.3;
-            tx = fastCos(boughAngle + sway) * boughR;
-            ty = -1.0 + boughT * 3.2;
-            tz = fastSin(boughAngle + sway) * boughR;
-        } else {
-            const twigIdx = indexInSpecies % 12;
-            const twigAngle = (twigIdx / 12.0) * Math.PI * 2.0 + (time * 0.1);
-            const canopyR = 2.0 + ((u - 0.65) / 0.35) * 2.8;
-            const phi = ((u - 0.65) / 0.35) * Math.PI * 0.4;
-            tx = canopyR * fastSin(phi) * fastCos(twigAngle);
-            ty = 2.0 + fastCos(phi) * 2.5 + fastSin(time * 0.8 + twigIdx) * 0.2;
-            tz = canopyR * fastSin(phi) * fastSin(twigAngle);
-        }
-    } else if (formation === FormationMode.LightningBolt) {
-        // --- 33. Fluid Streamline: High-Energy Aerodynamic Streamline Cascade ---
-        const yNorm = (u - 0.5) * 10.0;
-        const streamWave = fastSin(yNorm * 0.6 - time * 1.5 * speedMult) * 2.8;
-        const streamZ = fastCos(yNorm * 0.5 + time * 1.2) * 2.4;
-        tx = streamWave + (species - 1.5) * 0.8;
-        ty = yNorm;
-        tz = streamZ + (species - 1.5) * 0.8;
-    } else if (formation === FormationMode.RiverDelta) {
-        // --- 34. River Delta: Planar Branching Meandering Channels ---
-        const xProgress = (u - 0.5) * 9.5;
-        const spreadFactor = Math.max(0.25, (xProgress + 4.75) / 9.5);
-        const channel = (indexInSpecies % 7) - 3;
-        const meander = fastSin(xProgress * 0.8 + channel + time * 0.5 * speedMult) * 0.8;
-        tx = xProgress;
-        ty = (species - 1.5) * 0.4 + fastSin(xProgress * 1.2 + time) * 0.2;
-        tz = channel * spreadFactor * 1.5 + meander * spreadFactor;
-    } else if (formation === FormationMode.KelvinHelmholtz) {
-        // --- 35. Kelvin-Helmholtz Billows: Fluid Shear Layer Rolling Vortices ---
-        const xPos = (u - 0.5) * 10.5;
-        const waveK = 1.1;
-        const wavePhase = xPos * waveK - time * 1.2 * speedMult;
-        const shearLayer = Math.sign(species - 1.5);
-        const vortexRoll = fastSin(wavePhase) * Math.exp(-Math.abs(fastSin(wavePhase * 0.5)) * 0.45);
-        tx = xPos;
-        ty = vortexRoll * 2.8 + shearLayer * (0.8 + fastCos(wavePhase) * 0.4);
-        tz = fastCos(wavePhase * 1.4) * 1.4 + (species - 1.5) * 0.5;
-    } else if (formation === FormationMode.DNALadder) {
-        // --- 36. Triple Braid Helix: 3-Strand Interlocking Chiral Braid Stream ---
-        const strand = species % 3;
-        const strandAngle = (strand * Math.PI * 2.0 / 3.0);
-        const s = (u - 0.5) * 11.5;
-        const braidPhase = s * 0.85 - time * 0.7 * speedMult + strandAngle;
-        const braidR = 3.2 + fastSin(s * 0.5 + time * 0.8) * 0.6;
-        const crossKnot = fastSin(braidPhase * 2.0) * 0.7;
-        tx = (braidR + crossKnot) * fastCos(braidPhase);
-        ty = s * 1.1;
-        tz = (braidR + crossKnot) * fastSin(braidPhase);
-    } else if (formation === FormationMode.StarPolygon) {
-        // --- 37. Manta Ray Glide: Majestic Oceanic Ray Wings with Undulating Wave Flap ---
-        const spanX = (u - 0.5) * 12.0;
-        const chordZ = (((indexInSpecies % 60) / 60.0) - 0.4) * 8.0;
-        const wingFlap = fastSin(time * 1.8 * speedMult - Math.abs(spanX) * 0.35) * Math.pow(Math.abs(spanX) * 0.18, 1.4) * 2.2;
-        const bodyCamber = fastCos(spanX * 0.25) * 1.2 - Math.pow(chordZ * 0.15, 2.0);
-        tx = spanX * 1.2;
-        ty = wingFlap + bodyCamber + (species - 1.5) * 0.5;
-        tz = chordZ * 1.3 - Math.abs(spanX) * 0.4;
-    } else if (formation === FormationMode.CollapsingSphere) {
-        // --- 38. Singularity Breath: Cosmic Breathing Sphere with Fluid Expansion ---
-        const phi = Math.acos(2 * u - 1);
-        const theta = (indexInSpecies * 137.5) * (Math.PI / 180.0) + time * 0.2;
-        const collapseCycle = (fastSin(time * 0.8 * speedMult) + 1.0) * 0.5;
-        const breatheR = 1.0 + Math.pow(collapseCycle, 1.8) * 4.6;
-        tx = breatheR * fastSin(phi) * fastCos(theta);
-        ty = breatheR * fastCos(phi);
-        tz = breatheR * fastSin(phi) * fastSin(theta);
-    } else if (formation === FormationMode.BigBangExpansion) {
-        // --- 39. Cosmic Expansion: Radial Expanding Shockwave Shells ---
-        const bangPhase = (time * 0.6 * speedMult + seed * 0.01) % 4.0;
-        const radialDist = Math.pow(bangPhase / 4.0, 0.75) * 6.5 + 0.6;
-        const phi = Math.acos(2 * u - 1);
-        const theta = (indexInSpecies * 2.39996) + (species * Math.PI / 4);
-        tx = radialDist * fastSin(phi) * fastCos(theta);
-        ty = radialDist * fastCos(phi);
-        tz = radialDist * fastSin(phi) * fastSin(theta);
-    } else if (formation === FormationMode.GeologicStrata) {
-        // --- 40. Laminar Wave Sheets: Undulating Horizontal Fluid Current Sheets ---
-        const layer = Math.floor(u * 4);
-        const layerU = (u * 4) % 1.0;
-        const planeX = (layerU - 0.5) * 9.0;
-        const planeZ = (((indexInSpecies % 25) / 25.0) - 0.5) * 9.0;
-        const topoRipple = fastSin(planeX * 0.7 + time * 0.5) * fastCos(planeZ * 0.7) * 0.7;
-        const layerY = (layer - 1.5) * 2.0 + topoRipple;
-        tx = planeX;
-        ty = layerY;
-        tz = planeZ;
-    } else if (formation === FormationMode.TrefoilKnot) {
-        // --- 41. Trefoil Harmonics: Continuous Canonical (2,3) Cloverleaf Streamline ---
-        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult + (species * 0.15);
-        const kScale = 1.35;
-        tx = (fastSin(t) + 2 * fastSin(2 * t)) * kScale;
-        ty = (fastCos(t) - 2 * fastCos(2 * t)) * kScale;
-        tz = (-fastSin(3 * t) * 1.8) * kScale;
-    } else if (formation === FormationMode.MurmurationFlow) {
-        // --- 42. Starling Murmuration: Emergent Rolling Starling Swarm Cloud ---
-        const swarmPhase = time * 0.5 * speedMult;
-        const sx = fastSin(u * 6.0 + swarmPhase) * 3.8 + fastCos(time * 0.3 + species) * 1.4;
-        const sy = fastCos(u * 4.0 - swarmPhase * 0.8) * 2.8 + fastSin(u * 8.0) * 0.7;
-        const sz = fastSin(u * 5.0 + swarmPhase * 1.2) * 3.8 + fastCos(time * 0.4 + species) * 1.2;
-        tx = sx; ty = sy; tz = sz;
-    } else if (formation === FormationMode.OuroborosSerpent) {
-        // --- 43. Ouroboros Dragon: Coiling Aerodynamic Dragon Swallowing its Tail ---
-        const ringAngle = u * Math.PI * 2.0 + time * 0.4 * speedMult;
-        const bodyThickness = (1.0 - Math.pow(u, 1.5)) * 1.2 + 0.3;
-        const spineWave = fastSin(u * 10.0 - time * 2.0) * 0.45;
-        const baseR = 4.2 + (species - 1.5) * 0.35;
-        tx = (baseR + spineWave) * fastCos(ringAngle);
-        ty = fastSin(u * 7.0 + time) * (bodyThickness * 0.7);
-        tz = (baseR + spineWave) * fastSin(ringAngle);
-    } else if (formation === FormationMode.DancingRibbon) {
-        // --- 44. Dancing Ribbon: Twisting Kinetic Gymnast Sash ---
-        const ribT = (u - 0.5) * 11.0;
-        const ribWave = ribT * 0.7 - time * 0.8 * speedMult;
-        const ribbonWidth = (indexInSpecies % 2 === 0 ? 1 : -1) * 0.85;
-        const twistAngle = ribT * 0.9 + time * 0.5;
-        const rx = fastSin(ribWave) * 3.2;
-        const ry = ribT * 0.85 + fastCos(ribWave) * 1.2;
-        const rz = fastCos(ribWave) * 3.0;
-        tx = rx + fastCos(twistAngle) * ribbonWidth;
-        ty = ry;
-        tz = rz + fastSin(twistAngle) * ribbonWidth;
-    } else if (formation === FormationMode.CalabiYauManifold) {
-        // --- 45. Calabi-Yau Bloom: 6D String Theory Compactification Projection ---
-        const n = 5;
-        const alpha = u * Math.PI * 2.0;
-        const beta = (((indexInSpecies % 100) / 100.0) * Math.PI * 2.0);
-        const phaseT = time * 0.3 * speedMult + (species * Math.PI / 4);
-        const z1_r = fastCos(alpha);
-        const z1_i = fastSin(alpha);
-        const z2_r = Math.pow(Math.abs(fastCos(n * alpha)), 1 / n) * fastCos(beta + phaseT);
-        const z2_i = Math.pow(Math.abs(fastSin(n * alpha)), 1 / n) * fastSin(beta + phaseT);
-        const cx = (z1_r * fastCos(phaseT) - z1_i * fastSin(phaseT)) * 4.5;
-        const cy = (z2_r * 3.5) + (species - 1.5) * 0.7;
-        const cz = (z1_r * fastSin(phaseT) + z2_i * fastCos(phaseT)) * 4.5;
-        tx = cx; ty = cy; tz = cz;
-    } else if (formation === FormationMode.HopfFibration) {
-        // --- 46. Hopf Fiber Bundle: Nested Villarceau Circular Fiber Streams ---
-        const th = u * Math.PI * 2.0;
-        const ph = ((species + 0.5) / 4.0) * Math.PI;
-        const psi = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0) + time * 0.5 * speedMult;
-        const x4 = fastCos((th + psi) * 0.5) * fastSin(ph * 0.5);
-        const y4 = fastSin((th + psi) * 0.5) * fastSin(ph * 0.5);
-        const z4 = fastCos((th - psi) * 0.5) * fastCos(ph * 0.5);
-        const w4 = fastSin((th - psi) * 0.5) * fastCos(ph * 0.5);
-        const denom = Math.max(0.2, 1.4 - w4);
-        tx = (x4 / denom) * 4.0;
-        ty = (y4 / denom) * 4.0;
-        tz = (z4 / denom) * 4.0;
-    } else if (formation === FormationMode.LorenzAttractor) {
-        // --- 47. Lorenz Butterfly: Continuous Dual-Scroll Chaotic Wings ---
-        const lobe = (indexInSpecies % 2 === 0) ? 1 : -1;
-        const tLor = (u * 16.0) + (species * 0.4) + (time * 0.4 * speedMult);
-        const rLor = Math.sqrt(Math.abs(tLor)) * 1.4 + 1.2;
-        const thetaLor = tLor * 2.2;
-        const lx = (lobe * 3.2) + rLor * fastCos(thetaLor) * 0.65;
-        const ly = (u - 0.5) * 8.5;
-        const lz = (lobe * 2.0) + rLor * fastSin(thetaLor) * 0.65;
-        tx = lx; ty = ly; tz = lz;
-    } else if (formation === FormationMode.GyroidMinimalSurface) {
-        // --- 48. Gyroid Flow: Triply Periodic Minimal Surface Streamline ---
-        const tG = u * Math.PI * 2.0 + time * 0.3 * speedMult;
-        const spG = species * Math.PI * 0.5;
-        const gx = (fastSin(tG) * fastCos(tG * 1.5 + spG) + fastCos(tG * 0.5)) * 3.2;
-        const gy = (fastSin(tG * 1.5 + spG) * fastCos(tG * 0.5) + fastCos(tG)) * 3.2;
-        const gz = (fastSin(tG * 0.5) * fastCos(tG) + fastCos(tG * 1.5 + spG)) * 3.2;
-        tx = gx * 1.15;
-        ty = gy * 1.15;
-        tz = gz * 1.25;
-    } else if (formation === FormationMode.KleinBottle4D) {
-        // --- 49. Klein Bottle Loop: Continuous Self-Intersecting Topological Immersion ---
-        const ku = u * Math.PI * 2.0;
-        const kv = ((((indexInSpecies % 70) / 70.0) * Math.PI * 2.0)) + (time * 0.4 * speedMult);
-        const rk = 3.6;
-        const kx = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastCos(ku);
-        const ky = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastSin(ku);
-        const kz = (fastSin(ku * 0.5) * fastSin(kv) + fastCos(ku * 0.5) * fastSin(2.0 * kv)) * 2.2;
-        tx = kx * 0.75;
-        ty = ky * 0.75;
-        tz = kz * 0.75;
-    } else if (formation === FormationMode.CliffordTorus) {
-        // --- 50. Clifford Torus: Flat 4D Torus with Hyper-Rotation Projection ---
-        const thC = u * Math.PI * 2.0;
-        const phiC = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0);
-        const tRot = time * 0.35 * speedMult;
-        const x1 = fastCos(thC + tRot);
-        const y1 = fastSin(thC + tRot);
-        const x2 = fastCos(phiC + (species * Math.PI / 4));
-        const y2 = fastSin(phiC + (species * Math.PI / 4));
-        const wC = (x1 * fastCos(tRot) - y2 * fastSin(tRot));
-        const denomC = Math.max(0.3, 1.6 - wC * 0.5);
-        tx = ((y1) / denomC) * 3.8;
-        ty = ((x2) / denomC) * 3.8;
-        tz = ((x1 * fastSin(tRot) + y2 * fastCos(tRot)) / denomC) * 3.8;
-    } else if (formation === FormationMode.QuadHelixBraid) {
+    if (formation === FormationMode.QuadHelixBraid) {
         // --- 51. Quad Helix Braid: 4 Intertwined Species Helical Strands with Harmonic Cross-Ladders ---
         const strandOffset = species * (Math.PI * 0.5);
         const theta = u * 10.0 * Math.PI + time * 0.65 * speedMult + strandOffset;
@@ -1443,6 +960,155 @@ export function computeFormationPoint(
         ty = cy + 0.38 * fastSin(phi) + bridgeShift;
         tz = cz + 0.42 * fastSin(phi);
 
+    } else if (formation === FormationMode.DoubleHelix) {
+        // --- 2. Double Helix: Intertwined Bio-Macromolecule Stream with Base-Pair Rungs ---
+        const h = (u - 0.5) * 11.5;
+        const theta = u * 8.0 * Math.PI + time * 0.6 * speedMult;
+        const isRung = (indexInSpecies % 5 === 0);
+        if (isRung) {
+            // Horizontal bridging rung connecting the dual strands
+            const rungT = ((indexInSpecies % 20) / 20.0 - 0.5) * 2.0; // [-1, 1]
+            tx = (3.4 * rungT) * fastCos(theta);
+            ty = h;
+            tz = (3.4 * rungT) * fastSin(theta);
+        } else {
+            // Outer intertwined spiral sugar-phosphate backbones
+            const strand = (species % 2 === 0) ? 0 : 1;
+            const strandAngle = theta + (strand * Math.PI) + (species * 0.1);
+            const r = 3.6 + fastSin(h * 0.4 + time * 0.5) * 0.4;
+            tx = r * fastCos(strandAngle);
+            ty = h;
+            tz = r * fastSin(strandAngle);
+        }
+    } else if (formation === FormationMode.TripleHelix) {
+        // --- 26. Triple Helix: Tri-Strand Intertwined Braided Stream ---
+        const strand = indexInSpecies % 3;
+        const strandOffset = (strand * Math.PI * 2.0 / 3.0);
+        const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + strandOffset;
+        const h = (u - 0.5) * 10.5;
+        const r = 3.3 + fastSin(h * 0.3 + time * 0.5) * 0.4;
+        tx = r * fastCos(theta);
+        ty = h;
+        tz = r * fastSin(theta);
+    } else if (formation === FormationMode.DNALadder) {
+        // --- 36. Triple Braid Helix: 3-Strand Interlocking Chiral Braid Stream ---
+        const strand = species % 3;
+        const strandAngle = (strand * Math.PI * 2.0 / 3.0);
+        const s = (u - 0.5) * 11.5;
+        const braidPhase = s * 0.85 - time * 0.7 * speedMult + strandAngle;
+        const braidR = 3.2 + fastSin(s * 0.5 + time * 0.8) * 0.6;
+        const crossKnot = fastSin(braidPhase * 2.0) * 0.7;
+        tx = (braidR + crossKnot) * fastCos(braidPhase);
+        ty = s * 1.1;
+        tz = (braidR + crossKnot) * fastSin(braidPhase);
+    } else if (formation === FormationMode.TrefoilKnot) {
+        // --- 41. Trefoil Harmonics: Continuous Canonical (2,3) Cloverleaf Streamline ---
+        const t = u * Math.PI * 2.0 + time * 0.3 * speedMult + (species * 0.15);
+        const kScale = 1.35;
+        tx = (fastSin(t) + 2 * fastSin(2 * t)) * kScale;
+        ty = (fastCos(t) - 2 * fastCos(2 * t)) * kScale;
+        tz = (-fastSin(3 * t) * 1.8) * kScale;
+    } else if (formation === FormationMode.TorusKnot) {
+        // --- 3. Torus Knot Stream: Continuous Seamless Bio-Ring Flow ---
+        const p = 2, q = 3;
+        const t = u * 2.0 * Math.PI + time * 0.25 * speedMult + (species * 0.15);
+        const r = fastCos(q * t) * 1.8 + 4.2;
+        tx = r * fastCos(p * t);
+        ty = fastSin(q * t) * 2.4 + (species - 1.5) * 0.5;
+        tz = r * fastSin(p * t);
+    } else if (formation === FormationMode.CalabiYauManifold) {
+        // --- 45. Calabi-Yau Bloom: 6D String Theory Compactification Projection ---
+        const n = 5;
+        const alpha = u * Math.PI * 2.0;
+        const beta = (((indexInSpecies % 100) / 100.0) * Math.PI * 2.0);
+        const phaseT = time * 0.3 * speedMult + (species * Math.PI / 4);
+        const z1_r = fastCos(alpha);
+        const z1_i = fastSin(alpha);
+        const z2_r = Math.pow(Math.abs(fastCos(n * alpha)), 1 / n) * fastCos(beta + phaseT);
+        const z2_i = Math.pow(Math.abs(fastSin(n * alpha)), 1 / n) * fastSin(beta + phaseT);
+        const cx = (z1_r * fastCos(phaseT) - z1_i * fastSin(phaseT)) * 4.5;
+        const cy = (z2_r * 3.5) + (species - 1.5) * 0.7;
+        const cz = (z1_r * fastSin(phaseT) + z2_i * fastCos(phaseT)) * 4.5;
+        tx = cx; ty = cy; tz = cz;
+    } else if (formation === FormationMode.HopfFibration) {
+        // --- 46. Hopf Fiber Bundle: Nested Villarceau Circular Fiber Streams ---
+        const th = u * Math.PI * 2.0;
+        const ph = ((species + 0.5) / 4.0) * Math.PI;
+        const psi = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0) + time * 0.5 * speedMult;
+        const x4 = fastCos((th + psi) * 0.5) * fastSin(ph * 0.5);
+        const y4 = fastSin((th + psi) * 0.5) * fastSin(ph * 0.5);
+        const z4 = fastCos((th - psi) * 0.5) * fastCos(ph * 0.5);
+        const w4 = fastSin((th - psi) * 0.5) * fastCos(ph * 0.5);
+        const denom = Math.max(0.2, 1.4 - w4);
+        tx = (x4 / denom) * 4.0;
+        ty = (y4 / denom) * 4.0;
+        tz = (z4 / denom) * 4.0;
+    } else if (formation === FormationMode.LorenzAttractor) {
+        // --- 47. Lorenz Butterfly: Continuous Dual-Scroll Chaotic Wings ---
+        const lobe = (indexInSpecies % 2 === 0) ? 1 : -1;
+        const tLor = (u * 16.0) + (species * 0.4) + (time * 0.4 * speedMult);
+        const rLor = Math.sqrt(Math.abs(tLor)) * 1.4 + 1.2;
+        const thetaLor = tLor * 2.2;
+        const lx = (lobe * 3.2) + rLor * fastCos(thetaLor) * 0.65;
+        const ly = (u - 0.5) * 8.5;
+        const lz = (lobe * 2.0) + rLor * fastSin(thetaLor) * 0.65;
+        tx = lx; ty = ly; tz = lz;
+    } else if (formation === FormationMode.GyroidMinimalSurface) {
+        // --- 48. Gyroid Flow: Triply Periodic Minimal Surface Streamline ---
+        const tG = u * Math.PI * 2.0 + time * 0.3 * speedMult;
+        const spG = species * Math.PI * 0.5;
+        const gx = (fastSin(tG) * fastCos(tG * 1.5 + spG) + fastCos(tG * 0.5)) * 3.2;
+        const gy = (fastSin(tG * 1.5 + spG) * fastCos(tG * 0.5) + fastCos(tG)) * 3.2;
+        const gz = (fastSin(tG * 0.5) * fastCos(tG) + fastCos(tG * 1.5 + spG)) * 3.2;
+        tx = gx * 1.15;
+        ty = gy * 1.15;
+        tz = gz * 1.25;
+    } else if (formation === FormationMode.KleinBottle4D) {
+        // --- 49. Klein Bottle Loop: Continuous Self-Intersecting Topological Immersion ---
+        const ku = u * Math.PI * 2.0;
+        const kv = ((((indexInSpecies % 70) / 70.0) * Math.PI * 2.0)) + (time * 0.4 * speedMult);
+        const rk = 3.6;
+        const kx = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastCos(ku);
+        const ky = (rk + fastCos(ku * 0.5) * fastSin(kv) - fastSin(ku * 0.5) * fastSin(2.0 * kv)) * fastSin(ku);
+        const kz = (fastSin(ku * 0.5) * fastSin(kv) + fastCos(ku * 0.5) * fastSin(2.0 * kv)) * 2.2;
+        tx = kx * 0.75;
+        ty = ky * 0.75;
+        tz = kz * 0.75;
+    } else if (formation === FormationMode.CliffordTorus) {
+        // --- 50. Clifford Torus: Flat 4D Torus with Hyper-Rotation Projection ---
+        const thC = u * Math.PI * 2.0;
+        const phiC = (((indexInSpecies % 80) / 80.0) * Math.PI * 2.0);
+        const tRot = time * 0.35 * speedMult;
+        const x1 = fastCos(thC + tRot);
+        const y1 = fastSin(thC + tRot);
+        const x2 = fastCos(phiC + (species * Math.PI / 4));
+        const y2 = fastSin(phiC + (species * Math.PI / 4));
+        const wC = (x1 * fastCos(tRot) - y2 * fastSin(tRot));
+        const denomC = Math.max(0.3, 1.6 - wC * 0.5);
+        tx = ((y1) / denomC) * 3.8;
+        ty = ((x2) / denomC) * 3.8;
+        tz = ((x1 * fastSin(tRot) + y2 * fastCos(tRot)) / denomC) * 3.8;
+    } else if (formation === FormationMode.OuroborosSerpent) {
+        // --- 43. Ouroboros Dragon: Coiling Aerodynamic Dragon Swallowing its Tail ---
+        const ringAngle = u * Math.PI * 2.0 + time * 0.4 * speedMult;
+        const bodyThickness = (1.0 - Math.pow(u, 1.5)) * 1.2 + 0.3;
+        const spineWave = fastSin(u * 10.0 - time * 2.0) * 0.45;
+        const baseR = 4.2 + (species - 1.5) * 0.35;
+        tx = (baseR + spineWave) * fastCos(ringAngle);
+        ty = fastSin(u * 7.0 + time) * (bodyThickness * 0.7);
+        tz = (baseR + spineWave) * fastSin(ringAngle);
+    } else if (formation === FormationMode.DancingRibbon) {
+        // --- 44. Dancing Ribbon: Twisting Kinetic Gymnast Sash ---
+        const ribT = (u - 0.5) * 11.0;
+        const ribWave = ribT * 0.7 - time * 0.8 * speedMult;
+        const ribbonWidth = (indexInSpecies % 2 === 0 ? 1 : -1) * 0.85;
+        const twistAngle = ribT * 0.9 + time * 0.5;
+        const rx = fastSin(ribWave) * 3.2;
+        const ry = ribT * 0.85 + fastCos(ribWave) * 1.2;
+        const rz = fastCos(ribWave) * 3.0;
+        tx = rx + fastCos(twistAngle) * ribbonWidth;
+        ty = ry;
+        tz = rz + fastSin(twistAngle) * ribbonWidth;
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;
@@ -1476,20 +1142,74 @@ export function computeFormationPoint(
             tz = (g.r3 * fastSin(g.k6 * th + g.phi3) * fastCos(g.k7 * th + wTime) + g.a3 * fastCos(g.k8 * th)) * 0.4;
         }
     } else {
-        const cloudRadius = 1.5 + u * 3.5;
-        const theta = u * Math.PI * 8.0 + time * 0.25 * speedMult;
-        const phi = (indexInSpecies * 137.5) * (Math.PI / 180.0);
-
-        tx = cloudRadius * fastSin(phi) * fastCos(theta);
-        ty = cloudRadius * fastCos(phi) + fastSin(theta * 2.0) * 2.0;
-        tz = cloudRadius * fastSin(phi) * fastSin(theta);
+        // Default Harmonic Torus stream
+        const p = 2, q = 3;
+        const t = u * 2.0 * Math.PI + time * 0.25 * speedMult + (species * 0.15);
+        const r = fastCos(q * t) * 1.8 + 4.2;
+        tx = r * fastCos(p * t);
+        ty = fastSin(q * t) * 2.4 + (species - 1.5) * 0.5;
+        tz = r * fastSin(p * t);
     }
 
-    const targetOut = out || DEFAULT_OUT_PT;
-    targetOut[0] = tx;
-    targetOut[1] = ty;
-    targetOut[2] = tz;
-    return targetOut;
+    if (out) {
+        out[0] = tx; out[1] = ty; out[2] = tz;
+        return out;
+    }
+    return [tx, ty, tz];
+}
+
+export interface FormationPhysicsProfile {
+    lerpRate: number;
+    noiseDrift: number;
+    strayRatio: number;
+    maxSpeedCap: number;
+    volThickness: number;
+}
+
+export function getFormationPhysicsProfile(formation: FormationMode): FormationPhysicsProfile {
+    switch (formation) {
+        // 1. TIGHT MATHEMATICAL & INTERTWINED KNOTS
+        case FormationMode.QuadHelixBraid:
+        case FormationMode.ConcentricDualHelixSheath:
+        case FormationMode.CaduceusVortex:
+        case FormationMode.ToroidalHelixBraid:
+        case FormationMode.TrefoilBraidedRibbon:
+        case FormationMode.HexaHelixVortexTower:
+        case FormationMode.MobiusHelixBraid:
+        case FormationMode.LissajousIntertwinedKnot:
+        case FormationMode.BorromeanRings:
+        case FormationMode.FigureEightKnot:
+        case FormationMode.CinqfoilKnot:
+        case FormationMode.SeptafoilKnot:
+        case FormationMode.OlympicChainLink:
+        case FormationMode.TriquetraCelticBraid:
+        case FormationMode.SolarFlareProminence:
+        case FormationMode.WhiteheadLink:
+        case FormationMode.QuatrefoilKnotBraid:
+        case FormationMode.GrannyKnotBraid:
+        case FormationMode.DoubleHelix:
+        case FormationMode.TripleHelix:
+        case FormationMode.DNALadder:
+        case FormationMode.TrefoilKnot:
+        case FormationMode.TorusKnot:
+        case FormationMode.CalabiYauManifold:
+        case FormationMode.HopfFibration:
+        case FormationMode.GyroidMinimalSurface:
+        case FormationMode.KleinBottle4D:
+        case FormationMode.CliffordTorus:
+            return { lerpRate: 0.12, noiseDrift: 0.002, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.20 };
+
+        // 2. ORGANIC KINETIC LOOPS
+        case FormationMode.OuroborosSerpent:
+        case FormationMode.DancingRibbon:
+        case FormationMode.Procedural:
+            return { lerpRate: 0.08, noiseDrift: 0.008, strayRatio: 0.006, maxSpeedCap: 0.065, volThickness: 0.40 };
+
+        // 3. CHAOTIC ATTRACTOR
+        case FormationMode.LorenzAttractor:
+        default:
+            return { lerpRate: 0.08, noiseDrift: 0.004, strayRatio: 0.002, maxSpeedCap: 0.075, volThickness: 0.30 };
+    }
 }
 
 export class BlobCenter {
@@ -1711,7 +1431,7 @@ export class Boid {
             speedMult *= 2.2;
         }
 
-        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.Serpent;
+        const formation = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const total = this.totalInSpecies > 0 ? this.totalInSpecies : 100;
@@ -1863,85 +1583,3 @@ export class Boid {
     }
 }
 
-export interface FormationPhysicsProfile {
-    lerpRate: number;      // How quickly boids snap to target curve
-    noiseDrift: number;    // Subtle alive turbulence
-    strayRatio: number;    // Percentage of loose aura particles (0.0 to 0.02)
-    maxSpeedCap: number;   // Max displacement per tick
-    volThickness: number;  // Volumetric sheaf thickness (0.18 for sharp strands, 0.55 for cloud)
-}
-
-export function getFormationPhysicsProfile(formation: FormationMode): FormationPhysicsProfile {
-    switch (formation) {
-        // 1. ULTRA-TIGHT INTERTWINED HELICES, BRAIDS & GEOMETRIC (0% Strays, Razor-Sharp Woven Strands)
-        case FormationMode.QuadHelixBraid:
-        case FormationMode.ConcentricDualHelixSheath:
-        case FormationMode.CaduceusVortex:
-        case FormationMode.ToroidalHelixBraid:
-        case FormationMode.TrefoilBraidedRibbon:
-        case FormationMode.HexaHelixVortexTower:
-        case FormationMode.MobiusHelixBraid:
-        case FormationMode.LissajousIntertwinedKnot:
-        case FormationMode.DoubleHelix:
-        case FormationMode.TripleHelix:
-        case FormationMode.DNALadder:
-        case FormationMode.TrefoilKnot:
-        case FormationMode.TorusKnot:
-        case FormationMode.LissajousKnot:
-        case FormationMode.KleinBottle4D:
-        case FormationMode.CalabiYauManifold:
-        case FormationMode.CliffordTorus:
-        case FormationMode.GyroidMinimalSurface:
-        case FormationMode.WireCube:
-        case FormationMode.Tesseract4D:
-        case FormationMode.DodecahedronShield:
-        case FormationMode.StarPolygon:
-        case FormationMode.SaturnRings:
-        case FormationMode.PulsingHeart:
-        case FormationMode.FerrisWheel:
-        case FormationMode.HopfFibration:
-        case FormationMode.AlienMothership:
-        case FormationMode.BorromeanRings:
-        case FormationMode.FigureEightKnot:
-        case FormationMode.CinqfoilKnot:
-        case FormationMode.SeptafoilKnot:
-        case FormationMode.OlympicChainLink:
-        case FormationMode.TriquetraCelticBraid:
-        case FormationMode.SolarFlareProminence:
-        case FormationMode.WhiteheadLink:
-        case FormationMode.QuatrefoilKnotBraid:
-        case FormationMode.GrannyKnotBraid:
-            return { lerpRate: 0.12, noiseDrift: 0.002, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.20 };
-
-        // 2. ORGANIC BALANCED (Crisp silhouette with graceful aerodynamic breathing)
-        case FormationMode.PhoenixWings:
-        case FormationMode.JellyfishPulse:
-        case FormationMode.BioMushroom:
-        case FormationMode.CoralReef:
-        case FormationMode.OuroborosSerpent:
-        case FormationMode.DancingRibbon:
-        case FormationMode.NautilusShell:
-        case FormationMode.SpiderWeb:
-        case FormationMode.HourglassVortex:
-        case FormationMode.Spiral:
-        case FormationMode.GeologicStrata:
-        case FormationMode.TreeBranch:
-        case FormationMode.Procedural:
-            return { lerpRate: 0.08, noiseDrift: 0.008, strayRatio: 0.006, maxSpeedCap: 0.065, volThickness: 0.40 };
-
-        // 3. FLUID / DYNAMIC LOOSE (Expansive cosmic & turbulent flow)
-        case FormationMode.MurmurationFlow:
-        case FormationMode.LightningBolt:
-        case FormationMode.SupernovaBurst:
-        case FormationMode.BigBangExpansion:
-        case FormationMode.CollapsingSphere:
-        case FormationMode.TornadoFunnel:
-        case FormationMode.TsunamiWave:
-        case FormationMode.KelvinHelmholtz:
-        case FormationMode.BlackHoleJet:
-        case FormationMode.RiverDelta:
-        case FormationMode.LorenzAttractor:
-        default:
-            return { lerpRate: 0.06, noiseDrift: 0.015, strayRatio: 0.018, maxSpeedCap: 0.06, volThickness: 0.65 };
-    }
-}

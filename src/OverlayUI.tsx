@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
+import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, FORMATION_PRESETS, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
 import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences, getCentralRLStore, exportCentralRLJSON, importCentralRLJSON, resetCentralRLStore, likeCompositionCombination, dislikeCompositionCombination } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
 import { BLOOM_PRESETS, BloomPreset } from './BloomControlPanel';
@@ -93,91 +93,17 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const currentFormation = simState.current.formationMode;
     const isAutoMode = simState.current.autoMode !== false;
 
-    const formations = [
-        // --- Intertwined Multi-Helix & Braided Multi-Layer Formations (Featured) ---
-        { id: FormationMode.QuadHelixBraid, label: 'Quad Helix Braid', icon: '🧬', desc: '4-Strand species intertwined helix with cross-ladder rungs' },
-        { id: FormationMode.ConcentricDualHelixSheath, label: 'Concentric Dual Helix Sheath', icon: '🧬', desc: 'Inner double-helix nested inside outer counter-rotating helix cage' },
-        { id: FormationMode.CaduceusVortex, label: 'Caduceus Vortex', icon: '⚕️', desc: 'Dual intertwined serpents ascending around central spine & wings' },
-        { id: FormationMode.ToroidalHelixBraid, label: 'Toroidal Helix Braid', icon: '🍩', desc: 'Closed continuous 4-strand braided torus cable' },
-        { id: FormationMode.TrefoilBraidedRibbon, label: 'Trefoil Braided Ribbon', icon: '🎗️', desc: '4-Strand braided cable woven around 3D Trefoil knot' },
-        { id: FormationMode.HexaHelixVortexTower, label: 'Hexa Helix Vortex Tower', icon: '🌪️', desc: 'Multi-tiered ascending celestial helix staircase' },
-        { id: FormationMode.MobiusHelixBraid, label: 'Mobius Helix Braid', icon: '🎗️', desc: 'Continuous 3D Mobius ribbon with 4 braided sub-currents' },
-        { id: FormationMode.LissajousIntertwinedKnot, label: 'Lissajous Intertwined Knot', icon: '🔮', desc: '4 Weaving harmonic ribbons in 3D 8-knot' },
-        { id: FormationMode.BorromeanRings, label: 'Borromean Rings', icon: '⭕', desc: 'Three mutually intertwined orthogonal elliptical rings (Brunnian link)' },
-        { id: FormationMode.FigureEightKnot, label: 'Figure-Eight Knot Braid', icon: '♾️', desc: 'Canonical Listing 4_1 alternating prime knot with multi-strand braid' },
-        { id: FormationMode.CinqfoilKnot, label: 'Cinqfoil Knot Braid', icon: '⭐', desc: '5-Lobed intertwined Torus (5,2) Solomon seal ribbon' },
-        { id: FormationMode.SeptafoilKnot, label: 'Septafoil Stellar Knot', icon: '🌟', desc: 'High-frequency 7-point intertwined Torus (7,3) stellar knot' },
-        { id: FormationMode.OlympicChainLink, label: 'Olympic Chain Link', icon: '🔗', desc: '4 Interlocked elliptical rings linked sequentially in 3D toroidal space' },
-        { id: FormationMode.TriquetraCelticBraid, label: 'Triquetra Celtic Braid', icon: '☘️', desc: '3 Intertwined Vesica Piscis arcs forming 3D Celtic trinity knot' },
-        { id: FormationMode.SolarFlareProminence, label: 'Solar Flare Prominence', icon: '☀️', desc: 'Intertwined magnetic flux ropes arching with counter-helicity twisting' },
-        { id: FormationMode.WhiteheadLink, label: 'Whitehead Link', icon: '🪢', desc: 'Canonical Whitehead link of circular ring interlocked with 3D figure-8' },
-        { id: FormationMode.QuatrefoilKnotBraid, label: 'Quatrefoil Knot Braid', icon: '🍀', desc: '4-Leaf intertwined Torus (4,3) architectural clover ribbon' },
-        { id: FormationMode.GrannyKnotBraid, label: 'Granny Knot Braid', icon: '🧵', desc: 'Dual intertwined composite trefoils linked in tandem with bridge threads' },
-        { id: FormationMode.DoubleHelix, label: 'Double Helix', icon: '🧬', desc: 'Intertwined bio-macromolecule dual strand' },
-        { id: FormationMode.TripleHelix, label: 'Triple Helix', icon: '🧬', desc: 'Tri-strand intertwined braided stream' },
-        { id: FormationMode.DNALadder, label: 'DNA Ladder Braid', icon: '🧬', desc: 'Dual helical sugar-phosphate rails with base-pair rungs' },
-        { id: FormationMode.TrefoilKnot, label: 'Trefoil Harmonics', icon: '🎗️', desc: 'Continuous canonical (2,3) cloverleaf streamline' },
-        { id: FormationMode.TorusKnot, label: 'Torus Knot Stream', icon: '🍩', desc: 'Continuous seamless bio-ring flow' },
-        { id: FormationMode.CalabiYauManifold, label: 'Calabi-Yau Bloom', icon: '🌌', desc: '6D String theory compactification projection' },
-        { id: FormationMode.HopfFibration, label: 'Hopf Fiber Bundle', icon: '🫧', desc: 'Nested Villarceau circular fiber streams' },
-        { id: FormationMode.LorenzAttractor, label: 'Lorenz Butterfly', icon: '🦋', desc: 'Continuous dual-scroll chaotic wings' },
-        { id: FormationMode.GyroidMinimalSurface, label: 'Gyroid Flow', icon: '🧬', desc: 'Triply periodic minimal surface streamline' },
-        { id: FormationMode.KleinBottle4D, label: 'Klein Bottle Loop', icon: '♾️', desc: 'Continuous self-intersecting topological immersion' },
-        { id: FormationMode.CliffordTorus, label: 'Clifford Torus', icon: '💫', desc: 'Flat 4D hyper-torus projection' },
-        // --- Kinetic Biomorphic & Fluid Formations ---
-        { id: FormationMode.Serpent, label: 'Serpent Stream', icon: '🐍', desc: 'Sleek aerodynamic 3D serpentine ribbon' },
-        { id: FormationMode.Spiral, label: 'Galactic Spiral', icon: '🌀', desc: 'Multi-arm logarithmic celestial galaxy' },
-        { id: FormationMode.JellyfishPulse, label: 'Jellyfish Veil', icon: '🪼', desc: 'Deep-sea translucent bell with tentacles' },
-        { id: FormationMode.QuantumAtom, label: 'Orbital Resonance', icon: '⚛️', desc: 'Harmonically inclined resonant orbital rings' },
-        { id: FormationMode.PhoenixWings, label: 'Phoenix Wings', icon: '🪽', desc: 'Soaring undulating biomorphic wings' },
-        { id: FormationMode.BlackHoleJet, label: 'Celestial Vortex', icon: '🌌', desc: 'Accretion disk with relativistic polar streams' },
-        { id: FormationMode.HourglassVortex, label: 'Hyperboloid Vortex', icon: '⏳', desc: 'Spinning 3D hourglass tornado stream' },
-        { id: FormationMode.LissajousKnot, label: 'Lissajous Ribbon', icon: '🔮', desc: 'Smooth harmonic 3D kinetic ribbon loop' },
-        { id: FormationMode.Tesseract4D, label: 'Bioluminescent Manta', icon: '🌊', desc: 'Expansive undulating wings with trailing filaments' },
-        { id: FormationMode.TornadoFunnel, label: 'Vortex Funnel', icon: '🌪️', desc: 'Aerodynamic spinning whirlwind stream' },
-        { id: FormationMode.NautilusShell, label: 'Nautilus Spiral', icon: '🐚', desc: 'Golden ratio logarithmic shell spiral' },
-        { id: FormationMode.BioMushroom, label: 'Bio Mushroom', icon: '🍄', desc: 'Fungal umbrella canopy with spore streams' },
-        { id: FormationMode.BeehiveSwarm, label: 'Kelp Forest', icon: '🌿', desc: 'Deep-sea swaying kelp forest streamlines' },
-        { id: FormationMode.DodecahedronShield, label: 'Oceanic Whirlpool', icon: '🌀', desc: 'Inward logarithmic vortex with rolling waves' },
-        { id: FormationMode.SaturnRings, label: 'Saturn Rings', icon: '🪐', desc: 'Planetary core with tilted shimmering rings' },
-        { id: FormationMode.PulsingHeart, label: 'Pulsing Heart', icon: '🫀', desc: '3D biomorphic cardioid heart chamber' },
-        { id: FormationMode.TsunamiWave, label: 'Tsunami Wave', icon: '🌊', desc: 'Surging 3D breaking ocean curl' },
-        { id: FormationMode.SupernovaBurst, label: 'Supernova Nebula', icon: '🎆', desc: 'Cosmic breathing star shockwave with radial streams' },
-        { id: FormationMode.CrystalPrism, label: 'Mobius Ribbon', icon: '🎗️', desc: 'Sweeping aerodynamic 3D Mobius sash' },
-        { id: FormationMode.VirusCapsid, label: 'Lotus Bloom', icon: '🌸', desc: 'Sacred multi-layered blooming lotus petals' },
-        { id: FormationMode.PlasmaArc, label: 'Aurora Stream', icon: '⚡', desc: 'Curving aerodynamic plasma filament ribbon' },
-        { id: FormationMode.CoralReef, label: 'Coral Fan', icon: '🪸', desc: 'Graceful fractal marine coral fan' },
-        { id: FormationMode.VolcanicColumn, label: 'Thermal Plume', icon: '🌋', desc: 'Ascending turbulent thermal vortex plume' },
-        { id: FormationMode.AlienMothership, label: 'Cosmic Disk', icon: '🛸', desc: 'Undulating galactic disc with central energy core' },
-        { id: FormationMode.FerrisWheel, label: 'Galaxy Vortex', icon: '🌌', desc: '4-arm logarithmic spiral galaxy with density waves' },
-        { id: FormationMode.SpiderWeb, label: 'Intertwined Loops', icon: '♾️', desc: 'Dual intertwined continuous ribbon loops threading through each other' },
-        { id: FormationMode.NebulaCloud, label: 'Cosmic Nebula', icon: '🌌', desc: 'Organic interstellar gas and dust cloud' },
-        { id: FormationMode.Procedural, label: 'Infinite Procedural', icon: '✨', desc: 'Harmonic Fourier superformula manifold' },
-        { id: FormationMode.WireCube, label: 'Aurora Borealis Curtain', icon: '✨', desc: 'Billowing 3D shimmering light curtains' },
-        { id: FormationMode.TreeBranch, label: 'Tree of Life', icon: '🌳', desc: 'Recursive 3D branching trunk and canopy' },
-        { id: FormationMode.LightningBolt, label: 'Fluid Streamline', icon: '⚡', desc: 'High-energy aerodynamic streamline cascade' },
-        { id: FormationMode.RiverDelta, label: 'River Delta', icon: '🏞️', desc: 'Planar branching meandering channels' },
-        { id: FormationMode.KelvinHelmholtz, label: 'Kelvin-Helmholtz Billows', icon: '🌊', desc: 'Fluid shear layer rolling vortices' },
-        { id: FormationMode.StarPolygon, label: 'Manta Ray Glide', icon: '🦈', desc: 'Majestic oceanic ray with undulating wingtips' },
-        { id: FormationMode.CollapsingSphere, label: 'Singularity Breath', icon: '🕳️', desc: 'Cosmic breathing sphere with fluid expansion' },
-        { id: FormationMode.BigBangExpansion, label: 'Cosmic Expansion', icon: '💥', desc: 'Radial expanding shockwave shells' },
-        { id: FormationMode.GeologicStrata, label: 'Laminar Wave Sheets', icon: '🌊', desc: 'Undulating horizontal fluid current sheets' },
-        { id: FormationMode.MurmurationFlow, label: 'Starling Murmuration', icon: '🕊️', desc: 'Emergent rolling starling swarm cloud' },
-        { id: FormationMode.OuroborosSerpent, label: 'Ouroboros Dragon', icon: '🐉', desc: 'Coiling aerodynamic dragon swallowing its tail' },
-        { id: FormationMode.DancingRibbon, label: 'Dancing Ribbon', icon: '🎀', desc: 'Twisting kinetic gymnast sash' }
-    ];
+    const formations = FORMATION_PRESETS;
 
     const shapes = [
         { id: -1, label: 'Auto (Mutate Cycle)', icon: '🤖', desc: 'Randomize shape every formation cycle' },
         { id: 99, label: 'Multi-Species Diverse', icon: '🧬', desc: 'Each species has its own distinctive 3D geometric archetype' },
-        // 3D Volumetric Archetypes
+        // 5 Curated 3D Volumetric Archetypes
         { id: 0, label: 'Stealth Arrowhead Jet', icon: '🚀', desc: 'Aerodynamic 3-sided low-poly wedge (6 tris)' },
-        { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal (8 tris)' },
-        { id: 2, label: 'Angular Prism Pyramid', icon: '🧊', desc: '4-sided sharp pyramid crystal (6 tris)' },
-        { id: 3, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
-        { id: 4, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
-        { id: 5, label: 'Tetrahedral Shard', icon: '📐', desc: 'Ultra-sharp 4-faced wedge shard (4 tris)' },
-        { id: 6, label: 'Geodesic Ico-Sphere', icon: '🌐', desc: '20-facet diamond geodesic sphere with multi-angle glints (20 tris)' }
+        { id: 1, label: 'Faceted Gemstone', icon: '💎', desc: '8-faced dual-pointed crystal octahedron (8 tris)' },
+        { id: 2, label: 'Hex Shield Interceptor', icon: '🛸', desc: '6-sided faceted shield jet (12 tris)' },
+        { id: 3, label: 'Swept Delta Wing', icon: '🪽', desc: '4-sided swept-back wing blade (6 tris)' },
+        { id: 4, label: 'Geodesic Ico-Sphere', icon: '🌐', desc: '20-facet diamond geodesic sphere with multi-angle glints (20 tris)' }
     ];
 
     const materialOptions = [
@@ -342,13 +268,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             label = formations.find(f => f.id === id)?.label || 'Topology';
         } else if (dim === 'palette') {
             id = state.paletteIndex ?? 0;
-            label = `Palette #${id + 1}`;
+            label = `Palette #${Number(id) + 1}`;
         } else if (dim === 'material') {
             id = state.materialPreset ?? 0;
-            label = MATERIAL_PRESETS[id]?.label || 'Material';
+            label = MATERIAL_PRESETS[Number(id)]?.label || 'Material';
         } else if (dim === 'lighting') {
             id = state.lightingProfileIndex ?? 0;
-            label = LIGHTING_PROFILES[id]?.label || 'Lighting';
+            label = LIGHTING_PROFILES[Number(id)]?.label || 'Lighting';
         } else if (dim === 'shape') {
             id = state.boidShape ?? 0;
             label = shapes.find(s => s.id === id)?.label || 'Shape';
@@ -611,8 +537,9 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     };
 
     const handleSetSpeciesShape = (speciesIdx: number, shapeId: number) => {
-        const currentShapes: [number, number, number, number] = simState.current.speciesShapes
-            ? [...simState.current.speciesShapes]
+        const s = simState.current.speciesShapes;
+        const currentShapes: [number, number, number, number] = s
+            ? [s[0], s[1], s[2], s[3]]
             : (simState.current.boidShape === 99 ? [0, 1, 2, 4] : [simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0, simState.current.boidShape ?? 0]);
         currentShapes[speciesIdx] = shapeId;
         simState.current.speciesShapes = currentShapes;
@@ -1074,7 +1001,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 <span className="dimension-name">🎨 PALETTE</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                                     <div style={{ display: 'flex', height: '8px', width: '48px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
-                                        {(simState.current.speciesColors || SPECIES_COLORS).map((c, i) => (
+                                        {(simState.current.speciesColors || SPECIES_COLORS).map((c: string, i: number) => (
                                             <div key={i} style={{ flex: 1, background: c }} />
                                         ))}
                                     </div>
