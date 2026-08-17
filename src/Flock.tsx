@@ -95,88 +95,117 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const colorTransitionStartTime = useRef<number>(0);
     const smoothRadius = useRef<number>(8.0);
 
-    const tornadoDust0 = useRef<THREE.Points>(null);
-    const tornadoDust1 = useRef<THREE.Points>(null);
-    const tornadoDust2 = useRef<THREE.Points>(null);
+    const galaxyMesh0 = useRef<THREE.Group>(null);
+    const galaxyMesh1 = useRef<THREE.Group>(null);
+    const galaxyMesh2 = useRef<THREE.Group>(null);
 
-    const GALAXY_COUNT = 900;
-    const galaxyData = useMemo(() => {
-        return [0, 1, 2].map(() => {
-            const radii = new Float32Array(GALAXY_COUNT);
-            const baseAngles = new Float32Array(GALAXY_COUNT);
-            const zOffsets = new Float32Array(GALAXY_COUNT);
-            const speedScales = new Float32Array(GALAXY_COUNT);
-            const colors = new Float32Array(GALAXY_COUNT * 3);
-
-            for (let p = 0; p < GALAXY_COUNT; p++) {
-                if (p < 220) {
-                    // 1. Dense Radiant Galactic Bulge / Nucleus (Diamond White-Gold Starlight)
-                    const r = Math.sqrt(Math.random()) * 0.20;
-                    radii[p] = r;
-                    baseAngles[p] = Math.random() * Math.PI * 2;
-                    zOffsets[p] = (Math.random() - 0.5) * 0.14 * (1.0 - r / 0.22);
-                    speedScales[p] = 0.9 + Math.random() * 0.2;
-
-                    const t = r / 0.20;
-                    colors[p * 3] = 1.0;
-                    colors[p * 3 + 1] = 0.95 - t * 0.15;
-                    colors[p * 3 + 2] = 0.85 - t * 0.45;
-                } else if (p < 800) {
-                    // 2. Majestic Logarithmic Spiral Arms (Sapphire Blue -> Interstellar Violet -> Nebula Magenta)
-                    const armIdx = p % 3; // 3 major spiral arms
-                    const baseArmAngle = armIdx * (Math.PI * 2 / 3);
-                    const s = (p - 220) / 580; // 0 to 1 along the arm
-                    const r = 0.14 + 0.62 * Math.pow(s, 1.15);
-                    radii[p] = r;
-                    baseAngles[p] = baseArmAngle + 3.6 * Math.log(1.0 + 4.2 * s) + (Math.random() - 0.5) * 0.28;
-                    zOffsets[p] = (Math.random() - 0.5) * 0.16 * (1.0 - 0.4 * s);
-                    speedScales[p] = 0.85 + Math.random() * 0.3;
-
-                    if (s < 0.35) {
-                        // Inner spiral arm: Celestial Starlight Blue
-                        const f = s / 0.35;
-                        colors[p * 3] = 0.70 + f * 0.15;
-                        colors[p * 3 + 1] = 0.85 - f * 0.15;
-                        colors[p * 3 + 2] = 1.0;
-                    } else if (s < 0.75) {
-                        // Mid arm: Interstellar Violet / Cosmic Lavender
-                        const f = (s - 0.35) / 0.40;
-                        colors[p * 3] = 0.85 + f * 0.12;
-                        colors[p * 3 + 1] = 0.70 - f * 0.15;
-                        colors[p * 3 + 2] = 1.0 - f * 0.25;
-                    } else {
-                        // Outer arm tips & star-forming nebulae: Cosmic Pink / Golden Amber Dust
-                        const f = (s - 0.75) / 0.25;
-                        colors[p * 3] = 1.0;
-                        colors[p * 3 + 1] = 0.55 + f * 0.25;
-                        colors[p * 3 + 2] = 0.75 - f * 0.40;
-                    }
-                } else {
-                    // 3. Diffuse Outer Halo & Stardust Veil
-                    const r = 0.20 + Math.random() * 0.65;
-                    radii[p] = r;
-                    baseAngles[p] = Math.random() * Math.PI * 2;
-                    zOffsets[p] = (Math.random() - 0.5) * 0.26;
-                    speedScales[p] = 0.7 + Math.random() * 0.4;
-
-                    colors[p * 3] = 0.75;
-                    colors[p * 3 + 1] = 0.80;
-                    colors[p * 3 + 2] = 0.95;
-                }
+    const MilkyWayShader = useMemo(() => ({
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
-            return { radii, baseAngles, zOffsets, speedScales, colors };
-        });
-    }, []);
+        `,
+        fragmentShader: `
+            uniform float uTime;
+            uniform float uSwirlDir;
+            varying vec2 vUv;
 
-    const galaxyGeometries = useMemo(() => {
-        return [0, 1, 2].map((idx) => {
-            const geo = new THREE.BufferGeometry();
-            const pos = new Float32Array(GALAXY_COUNT * 3);
-            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            geo.setAttribute('color', new THREE.BufferAttribute(galaxyData[idx].colors, 3));
-            return geo;
-        });
-    }, [galaxyData]);
+            // 2D Simplex Noise for procedural interstellar gas turbulence
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+            float snoise(vec2 v) {
+                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                vec2 i  = floor(v + dot(v, C.yy) );
+                vec2 x0 = v -   i + dot(i, C.xx);
+                vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                vec4 x12 = x0.xyxy + C.xxzz;
+                x12.xy -= i1;
+                i = mod289(i);
+                vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                m = m*m ;
+                m = m*m ;
+                vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                vec3 h = abs(x) - 0.5;
+                vec3 ox = floor(x + 0.5);
+                vec3 a0 = x - ox;
+                m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                vec3 g;
+                g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                return 130.0 * dot(m, g);
+            }
+
+            void main() {
+                vec2 center = vUv - vec2(0.5);
+                float r = length(center) * 2.0; // 0 at core, 1.0 at outer border
+                if (r > 1.0) discard;
+
+                float theta = atan(center.y, center.x);
+                
+                // Differential Keplarian rotation
+                float timeSpeed = uTime * 0.45;
+                float omega = 1.6 / sqrt(r + 0.05);
+                float rotTheta = theta - (timeSpeed * omega) * uSwirlDir;
+
+                // Logarithmic Spiral Arms trailing behind rotation direction
+                // As r increases outward, arms lag behind the rotation: (+3.6 * ln(1 + 3.2 * r) * uSwirlDir)
+                float armPhase = 2.0 * (rotTheta + (3.6 * log(1.0 + 3.2 * r)) * uSwirlDir);
+                float armPattern = cos(armPhase);
+                float armMask = smoothstep(-0.25, 0.85, armPattern);
+
+                // Multi-octave Volumetric Gaseous Smoke Noise
+                vec2 noiseUv = center * 4.0;
+                float smoke1 = snoise(noiseUv + vec2(uTime * 0.15, -uTime * 0.1));
+                float smoke2 = snoise(noiseUv * 2.2 - vec2(uTime * 0.2, uTime * 0.15));
+                float smoke = (smoke1 * 0.65 + smoke2 * 0.35) * 0.5 + 0.5;
+
+                // Volumetric Radial Density Falloffs (Supermassive Core + Gaseous Disc)
+                float coreBulge = exp(-r * r / 0.022);
+                float discEnvelope = exp(-r * r / 0.30) * (1.0 - smoothstep(0.75, 1.0, r));
+                float armGas = discEnvelope * (0.28 + 0.72 * armMask) * (0.45 + 0.55 * smoke);
+
+                float totalDensity = coreBulge * 3.2 + armGas * 1.8;
+
+                // Spectral Astronomical Color Palette with High HDR Blooming Radiance
+                vec3 coreColor = vec3(5.2, 4.8, 3.8); // Blazing diamond-white & gold starlight
+                vec3 innerArmColor = vec3(2.6, 3.6, 6.0); // Electric sapphire cyan starlight
+                vec3 midArmColor = vec3(3.8, 2.2, 5.5); // Glowing interstellar violet/lavender
+                vec3 outerNebulaColor = vec3(4.5, 1.8, 3.5); // Radiant cosmic nebula magenta
+
+                vec3 armGrad;
+                if (r < 0.35) {
+                    armGrad = mix(innerArmColor, midArmColor, r / 0.35);
+                } else {
+                    armGrad = mix(midArmColor, outerNebulaColor, (r - 0.35) / 0.65);
+                }
+
+                vec3 finalColor = mix(armGrad, coreColor, clamp(coreBulge * 1.5, 0.0, 1.0));
+                float finalAlpha = clamp(totalDensity * 0.60, 0.0, 0.98);
+
+                gl_FragColor = vec4(finalColor, finalAlpha);
+            }
+        `
+    }), []);
+
+    const galaxyMaterials = useMemo(() => {
+        return [0, 1, 2].map(() => new THREE.ShaderMaterial({
+            vertexShader: MilkyWayShader.vertexShader,
+            fragmentShader: MilkyWayShader.fragmentShader,
+            uniforms: {
+                uTime: { value: 0 },
+                uSwirlDir: { value: 1.0 }
+            },
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        }));
+    }, [MilkyWayShader]);
 
     const initialPalette = state.speciesColors || COLOR_PALETTES[17];
     const startColors = useRef<THREE.Color[]>([
@@ -329,7 +358,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
-        // 🌪️ Local 3D Tornado Cyclone Field (SLOW DRIFT ACROSS TOPOLOGIES, ULTRA-COMPACT H=1.5, COILING WHIRLPOOL STREAM)
+        // 🌪️ Local 3D Tornado Cyclone Field (SLOW DRIFT, DIFFERENTIATED SIZES & STRENGTHS)
         const tornadoCount = state.tornadoCount !== undefined ? state.tornadoCount : 2;
         const tornadoStrength = (state.tornadoStrength ?? 2.2) * (state.speedMultiplier || 1.0);
         const tornadoCentrifugal = (state.tornadoCentrifugal ?? 2.5);
@@ -342,10 +371,11 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             neckR: number; crownR: number;
             infRSq: number;
             swirlDir: number;
+            strengthMult: number;
         }[] = [];
 
         if (tornadoCount > 0) {
-            // Cyclone 1: Slow graceful drift through topological ribbon stream
+            // Cyclone 1: Major Grand Spiral Galaxy (Large Scale, Supermassive Gravitational Well)
             if (tornadoCount >= 1) {
                 const a0 = time * 0.07;
                 const cx0 = 2.8 * fastCos(a0) - 0.4 * fastSin(a0 * 1.4);
@@ -359,7 +389,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const uLen0 = Math.sqrt(rawUx0 * rawUx0 + rawUy0 * rawUy0 + rawUz0 * rawUz0);
                 const ux0 = rawUx0 / uLen0, uy0 = rawUy0 / uLen0, uz0 = rawUz0 / uLen0;
 
-                const H0 = 1.5; // Mini-vortex height
+                const H0 = 1.85; // Large Grand Spiral
                 const halfH0 = H0 * 0.5;
                 const bx0 = cx0 - ux0 * halfH0, by0 = cy0 - uy0 * halfH0, bz0 = cz0 - uz0 * halfH0;
                 const tx0 = cx0 + ux0 * halfH0, ty0 = cy0 + uy0 * halfH0, tz0 = cz0 + uz0 * halfH0;
@@ -369,13 +399,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx0, ty: ty0, tz: tz0,
                     ux: ux0, uy: uy0, uz: uz0,
                     H: H0, invH: 1.0 / H0,
-                    neckR: 0.10, crownR: 0.48,
-                    infRSq: 0.81, // R = 0.9 tight capture radius
-                    swirlDir: 1.0
+                    neckR: 0.14, crownR: 0.65,
+                    infRSq: 1.32, // R = 1.15 wide capture radius
+                    swirlDir: 1.0,
+                    strengthMult: 1.35
                 });
             }
 
-            // Cyclone 2: Slow counter-drifting cross-slice
+            // Cyclone 2: Compact High-Spin Dwarf Galaxy (Fast Rotational Spin, Snappy Capture)
             if (tornadoCount >= 2) {
                 const a1 = time * -0.06 + Math.PI;
                 const cx1 = -2.5 * fastCos(a1) + 0.45 * fastSin(a1 * 1.3);
@@ -389,7 +420,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const uLen1 = Math.sqrt(rawUx1 * rawUx1 + rawUy1 * rawUy1 + rawUz1 * rawUz1);
                 const ux1 = rawUx1 / uLen1, uy1 = rawUy1 / uLen1, uz1 = rawUz1 / uLen1;
 
-                const H1 = 1.4; // Mini-vortex height
+                const H1 = 1.05; // Compact Dwarf Galaxy
                 const halfH1 = H1 * 0.5;
                 const bx1 = cx1 - ux1 * halfH1, by1 = cy1 - uy1 * halfH1, bz1 = cz1 - uz1 * halfH1;
                 const tx1 = cx1 + ux1 * halfH1, ty1 = cy1 + uy1 * halfH1, tz1 = cz1 + uz1 * halfH1;
@@ -399,13 +430,14 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx1, ty: ty1, tz: tz1,
                     ux: ux1, uy: uy1, uz: uz1,
                     H: H1, invH: 1.0 / H1,
-                    neckR: 0.10, crownR: 0.48,
-                    infRSq: 0.81,
-                    swirlDir: -1.0
+                    neckR: 0.08, crownR: 0.36,
+                    infRSq: 0.49, // R = 0.70 concentrated capture radius
+                    swirlDir: -1.0,
+                    strengthMult: 1.75
                 });
             }
 
-            // Cyclone 3: Slow inverted wandering gyre
+            // Cyclone 3: Medium Inclined Nebula Gyre
             if (tornadoCount >= 3) {
                 const a2 = time * 0.05 + 2.2;
                 const cx2 = 0.45 * fastSin(a2 * 1.2);
@@ -419,7 +451,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 const uLen2 = Math.sqrt(rawUx2 * rawUx2 + rawUy2 * rawUy2 + rawUz2 * rawUz2);
                 const ux2 = rawUx2 / uLen2, uy2 = rawUy2 / uLen2, uz2 = rawUz2 / uLen2;
 
-                const H2 = 1.45; // Mini-vortex height
+                const H2 = 1.45; // Medium Gyre
                 const halfH2 = H2 * 0.5;
                 const bx2 = cx2 - ux2 * halfH2, by2 = cy2 - uy2 * halfH2, bz2 = cz2 - uz2 * halfH2;
                 const tx2 = cx2 + ux2 * halfH2, ty2 = cy2 + uy2 * halfH2, tz2 = cz2 + uz2 * halfH2;
@@ -429,66 +461,43 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                     tx: tx2, ty: ty2, tz: tz2,
                     ux: ux2, uy: uy2, uz: uz2,
                     H: H2, invH: 1.0 / H2,
-                    neckR: 0.10, crownR: 0.45,
-                    infRSq: 0.81,
-                    swirlDir: 1.0
+                    neckR: 0.10, crownR: 0.50,
+                    infRSq: 0.81, // R = 0.90
+                    swirlDir: 1.0,
+                    strengthMult: 1.15
                 });
             }
         }
 
-        // Update visual Milky Way galaxy spiral vortices (multi-arm logarithmic spiral with differential rotation)
-        const tDusts = [tornadoDust0.current, tornadoDust1.current, tornadoDust2.current];
+        // Update visual volumetric Milky Way galaxy spiral nebulae
+        const gMeshes = [galaxyMesh0.current, galaxyMesh1.current, galaxyMesh2.current];
+        const tempQuat = new THREE.Quaternion();
+        const upVec = new THREE.Vector3(0, 0, 1);
+        const axisVec = new THREE.Vector3();
+
         for (let tIdx = 0; tIdx < 3; tIdx++) {
-            const pointsMesh = tDusts[tIdx];
-            if (!pointsMesh) continue;
+            const gMesh = gMeshes[tIdx];
+            if (!gMesh) continue;
             if (tIdx < tActive.length) {
-                pointsMesh.visible = true;
+                gMesh.visible = true;
                 const T = tActive[tIdx];
-                const geo = galaxyGeometries[tIdx];
-                const posAttr = geo.attributes.position as THREE.BufferAttribute;
-                const posArr = posAttr.array as Float32Array;
-                const gData = galaxyData[tIdx];
-
-                // Build local orthonormal basis (normal1, axis, normal2)
-                const ux = T.ux, uy = T.uy, uz = T.uz;
-                const refX = Math.abs(uy) < 0.9 ? 0 : 1;
-                const refY = Math.abs(uy) < 0.9 ? 1 : 0;
-                const refZ = 0;
-                let n1x = refY * uz - refZ * uy;
-                let n1y = refZ * ux - refX * uz;
-                let n1z = refX * uy - refY * ux;
-                const invN1 = 1.0 / Math.max(1e-4, Math.sqrt(n1x * n1x + n1y * n1y + n1z * n1z));
-                n1x *= invN1; n1y *= invN1; n1z *= invN1;
-                const n2x = uy * n1z - uz * n1y;
-                const n2y = uz * n1x - ux * n1z;
-                const n2z = ux * n1y - uy * n1x;
-
-                const timeSpd = time * 0.35;
                 const midX = (T.bx + T.tx) * 0.5;
                 const midY = (T.by + T.ty) * 0.5;
                 const midZ = (T.bz + T.tz) * 0.5;
 
-                for (let p = 0; p < GALAXY_COUNT; p++) {
-                    const r = gData.radii[p];
-                    const spd = gData.speedScales[p];
-                    // Differential Keplarian rotation (inner core orbits faster, outer spiral arms trail majestically)
-                    const omega = (1.4 / Math.sqrt(r + 0.06)) * spd;
-                    const theta = gData.baseAngles[p] + (timeSpd * omega) * T.swirlDir;
+                gMesh.position.set(midX, midY, midZ);
 
-                    const cosA = fastCos(theta) * r;
-                    const sinA = fastSin(theta) * r;
-                    // Vertical funnel warp matching the 3D vortex column
-                    const z = gData.zOffsets[p] + (r / 0.8) * 0.22;
+                // Align normal axis with tornado orientation
+                axisVec.set(T.ux, T.uy, T.uz).normalize();
+                tempQuat.setFromUnitVectors(upVec, axisVec);
+                gMesh.quaternion.copy(tempQuat);
 
-                    posArr[p * 3] = midX + n1x * cosA + n2x * sinA + ux * z;
-                    posArr[p * 3 + 1] = midY + n1y * cosA + n2y * sinA + uy * z;
-                    posArr[p * 3 + 2] = midZ + n1z * cosA + n2z * sinA + uz * z;
-                }
-                posAttr.needsUpdate = true;
-                pointsMesh.position.set(0, 0, 0);
-                pointsMesh.quaternion.identity();
+                // Update procedural shader uniforms
+                const mat = galaxyMaterials[tIdx];
+                mat.uniforms.uTime.value = time;
+                mat.uniforms.uSwirlDir.value = T.swirlDir;
             } else {
-                pointsMesh.visible = false;
+                gMesh.visible = false;
             }
         }
 
@@ -658,22 +667,24 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                         const vTan = velX[i] * txNorm + velY[i] * tyNorm + velZ[i] * tzNorm;
                         const vUp = velX[i] * T.ux + velY[i] * T.uy + velZ[i] * T.uz;
 
+                        const localStr = tornadoStrength * T.strengthMult;
+
                         // 1. Radial Confinement: Keeps boids locked on the circular orbit around the vortex eye
-                        const targetRadSpeed = -rDiff * 0.25 * tornadoStrength;
+                        const targetRadSpeed = -rDiff * 0.25 * localStr;
                         const radDelta = (targetRadSpeed - vRad) * 0.35 * proximity;
                         velX[i] += rxNorm * radDelta;
                         velY[i] += ryNorm * radDelta;
                         velZ[i] += rzNorm * radDelta;
 
                         // 2. High-Angular Tangential Swirl: Generates 3 to 4 full coiling 360° revolutions
-                        const targetTanSpeed = (0.16 + (1.0 - hClamped) * 0.08) * tornadoStrength;
+                        const targetTanSpeed = (0.16 + (1.0 - hClamped) * 0.08) * localStr;
                         const tanDelta = (targetTanSpeed - vTan) * 0.40 * proximity;
                         velX[i] += txNorm * tanDelta;
                         velY[i] += tyNorm * tanDelta;
                         velZ[i] += tzNorm * tanDelta;
 
                         // 3. Gentle Helical Ascent: Boid climbs smoothly over 1.5 seconds instead of rushing through
-                        const targetUpSpeed = (0.028 + hClamped * 0.018) * tornadoStrength;
+                        const targetUpSpeed = (0.028 + hClamped * 0.018) * localStr;
                         const upDelta = (targetUpSpeed - vUp) * 0.30 * proximity;
                         velX[i] += T.ux * upDelta;
                         velY[i] += T.uy * upDelta;
@@ -682,7 +693,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                         // 4. Graceful Centrifugal Crown Ejection (Only after full helical ascent at h > 0.82)
                         if (hNorm > 0.82) {
                             const crownProg = (hNorm - 0.82) / 0.18;
-                            const slingshotMag = crownProg * 0.12 * tornadoCentrifugal;
+                            const slingshotMag = crownProg * 0.12 * tornadoCentrifugal * T.strengthMult;
                             velX[i] += (rxNorm * 1.5 + txNorm * 0.8) * slingshotMag;
                             velY[i] += (ryNorm * 0.4 + T.uy * 0.6) * slingshotMag;
                             velZ[i] += (rzNorm * 1.5 + tzNorm * 0.8) * slingshotMag;
@@ -905,40 +916,22 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 );
             })}
 
-            {/* Ethereal Luminous Milky Way Galaxy Spiral Vortices */}
-            <points ref={tornadoDust0} geometry={galaxyGeometries[0]} visible={false}>
-                <pointsMaterial
-                    size={0.018}
-                    vertexColors={true}
-                    transparent={true}
-                    opacity={0.92}
-                    blending={THREE.AdditiveBlending}
-                    depthWrite={false}
-                    sizeAttenuation={true}
-                />
-            </points>
-            <points ref={tornadoDust1} geometry={galaxyGeometries[1]} visible={false}>
-                <pointsMaterial
-                    size={0.018}
-                    vertexColors={true}
-                    transparent={true}
-                    opacity={0.92}
-                    blending={THREE.AdditiveBlending}
-                    depthWrite={false}
-                    sizeAttenuation={true}
-                />
-            </points>
-            <points ref={tornadoDust2} geometry={galaxyGeometries[2]} visible={false}>
-                <pointsMaterial
-                    size={0.018}
-                    vertexColors={true}
-                    transparent={true}
-                    opacity={0.92}
-                    blending={THREE.AdditiveBlending}
-                    depthWrite={false}
-                    sizeAttenuation={true}
-                />
-            </points>
+            {/* Continuous Volumetric Fluid Milky Way Spiral Galaxies (Single Plane Rotation) */}
+            <group ref={galaxyMesh0} visible={false}>
+                <mesh material={galaxyMaterials[0]}>
+                    <planeGeometry args={[3.4, 3.4, 64, 64]} />
+                </mesh>
+            </group>
+            <group ref={galaxyMesh1} visible={false}>
+                <mesh material={galaxyMaterials[1]}>
+                    <planeGeometry args={[2.2, 2.2, 64, 64]} />
+                </mesh>
+            </group>
+            <group ref={galaxyMesh2} visible={false}>
+                <mesh material={galaxyMaterials[2]}>
+                    <planeGeometry args={[2.8, 2.8, 64, 64]} />
+                </mesh>
+            </group>
         </group>
     );
 }

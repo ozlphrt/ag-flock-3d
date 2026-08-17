@@ -382,9 +382,9 @@ function App() {
         autoMode: true, // Auto timer is ON by default
         autoShape: false, // Geodesic Ico-Sphere is fixed default unless user manually changes
         autoMaterial: true,
-        tornadoCount: 2, // 2 wandering dual-cyclone twisters active by default
-        tornadoStrength: 1.2,
-        tornadoCentrifugal: 1.4,
+        tornadoCount: 1, // 1 grand supermassive Milky Way spiral galaxy active by default
+        tornadoStrength: 1.5,
+        tornadoCentrifugal: 1.6,
         lightingProfileIndex: initialLightIdx,
         lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0],
         onInitialLoadComplete: () => {
