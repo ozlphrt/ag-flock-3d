@@ -246,6 +246,97 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
+        // 🌪️ Local 3D Tornado Cyclone Field (Wandering Twisters with Updraft & Crown Slingshots)
+        const tornadoCount = state.tornadoCount !== undefined ? state.tornadoCount : 2;
+        const tornadoStrength = (state.tornadoStrength ?? 1.2) * (state.speedMultiplier || 1.0);
+        const tornadoCentrifugal = (state.tornadoCentrifugal ?? 1.4);
+
+        const tActive: {
+            bx: number; by: number; bz: number;
+            ux: number; uy: number; uz: number;
+            H: number; invH: number;
+            neckR: number; crownR: number;
+            infRSq: number;
+            swirlDir: number;
+        }[] = [];
+
+        if (tornadoCount > 0) {
+            // Cyclone 1: Wandering elliptical cyclone with dynamic precession tilt
+            if (tornadoCount >= 1) {
+                const a0 = time * 0.24;
+                const bx0 = fastCos(a0) * 6.2;
+                const bz0 = fastSin(a0) * 5.0;
+                const by0 = -7.5 + fastSin(time * 0.4) * 1.5;
+
+                const tx0 = bx0 + fastCos(a0 + 0.6) * 2.4;
+                const tz0 = bz0 + fastSin(a0 + 0.6) * 2.4;
+                const ty0 = by0 + 13.8;
+
+                const ax0 = tx0 - bx0, ay0 = ty0 - by0, az0 = tz0 - bz0;
+                const H0 = Math.sqrt(ax0 * ax0 + ay0 * ay0 + az0 * az0);
+                const invH0 = 1.0 / Math.max(1e-4, H0);
+
+                tActive.push({
+                    bx: bx0, by: by0, bz: bz0,
+                    ux: ax0 * invH0, uy: ay0 * invH0, uz: az0 * invH0,
+                    H: H0, invH: invH0,
+                    neckR: 1.1, crownR: 4.8,
+                    infRSq: 32.0,
+                    swirlDir: 1.0
+                });
+            }
+
+            // Cyclone 2: Counter-rotating orbital twister on complementary angle
+            if (tornadoCount >= 2) {
+                const a1 = time * -0.20 + Math.PI;
+                const bx1 = fastCos(a1) * 7.0;
+                const bz1 = fastSin(a1 * 1.3) * 5.8;
+                const by1 = -7.0 + fastCos(time * 0.35) * 1.6;
+
+                const tx1 = bx1 + fastSin(a1) * 2.6;
+                const tz1 = bz1 + fastCos(a1) * 2.6;
+                const ty1 = by1 + 14.0;
+
+                const ax1 = tx1 - bx1, ay1 = ty1 - by1, az1 = tz1 - bz1;
+                const H1 = Math.sqrt(ax1 * ax1 + ay1 * ay1 + az1 * az1);
+                const invH1 = 1.0 / Math.max(1e-4, H1);
+
+                tActive.push({
+                    bx: bx1, by: by1, bz: bz1,
+                    ux: ax1 * invH1, uy: ay1 * invH1, uz: az1 * invH1,
+                    H: H1, invH: invH1,
+                    neckR: 1.2, crownR: 5.0,
+                    infRSq: 34.0,
+                    swirlDir: -1.0
+                });
+            }
+
+            // Cyclone 3: Inclined sweeping gyre
+            if (tornadoCount >= 3) {
+                const a2 = time * 0.16 + 2.2;
+                const bx2 = fastSin(a2 * 1.2) * 5.2;
+                const bz2 = fastCos(a2) * 7.2;
+                const by2 = -7.2 + fastSin(time * 0.3) * 1.8;
+
+                const tx2 = bx2 + fastCos(a2 * 0.8) * 3.0;
+                const tz2 = bz2 + fastSin(a2 * 0.8) * 3.0;
+                const ty2 = by2 + 13.5;
+
+                const ax2 = tx2 - bx2, ay2 = ty2 - by2, az2 = tz2 - bz2;
+                const H2 = Math.sqrt(ax2 * ax2 + ay2 * ay2 + az2 * az2);
+                const invH2 = 1.0 / Math.max(1e-4, H2);
+
+                tActive.push({
+                    bx: bx2, by: by2, bz: bz2,
+                    ux: ax2 * invH2, uy: ay2 * invH2, uz: az2 * invH2,
+                    H: H2, invH: invH2,
+                    neckR: 0.95, crownR: 4.6,
+                    infRSq: 30.0,
+                    swirlDir: 1.0
+                });
+            }
+        }
+
         // Centroid & Bounding Radius sampling registers
         let sumX = 0, sumY = 0, sumZ = 0;
         let sumDistSq = 0;
@@ -366,6 +457,76 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             velX[i] += ax;
             velY[i] += ay;
             velZ[i] += az;
+
+            // --- 🌪️ Local Tornado Physical Interaction (Funnel Suction, Cyclonic Swirl, Helical Updraft & Crown Slingshot) ---
+            const tLen = tActive.length;
+            for (let tIdx = 0; tIdx < tLen; tIdx++) {
+                const T = tActive[tIdx];
+                const vbx = posX[i] - T.bx;
+                const vby = posY[i] - T.by;
+                const vbz = posZ[i] - T.bz;
+
+                const s = vbx * T.ux + vby * T.uy + vbz * T.uz;
+                const hNorm = s * T.invH;
+
+                if (hNorm >= -0.05 && hNorm <= 1.20) {
+                    const axPtX = T.bx + T.ux * s;
+                    const axPtY = T.by + T.uy * s;
+                    const axPtZ = T.bz + T.uz * s;
+
+                    const rx = posX[i] - axPtX;
+                    const ry = posY[i] - axPtY;
+                    const rz = posZ[i] - axPtZ;
+                    const rSq = rx * rx + ry * ry + rz * rz;
+
+                    if (rSq < T.infRSq) {
+                        const r = Math.sqrt(Math.max(1e-4, rSq));
+                        const invR = 1.0 / r;
+                        const rxNorm = rx * invR;
+                        const ryNorm = ry * invR;
+                        const rzNorm = rz * invR;
+
+                        // Tangential swirl vector: Axis x rNorm
+                        const txNorm = (T.uy * rzNorm - T.uz * ryNorm) * T.swirlDir;
+                        const tyNorm = (T.uz * rxNorm - T.ux * rzNorm) * T.swirlDir;
+                        const tzNorm = (T.ux * ryNorm - T.uy * rxNorm) * T.swirlDir;
+
+                        const hClamped = Math.max(0.0, Math.min(1.0, hNorm));
+                        // Hyperboloid funnel geometry: narrow throat at base, expanding to wide crown
+                        const targetR = T.neckR + (T.crownR - T.neckR) * (hClamped * hClamped);
+
+                        const rDiff = r - targetR;
+                        const proximity = Math.max(0.0, 1.0 - r / 6.0);
+
+                        // 1. Inward suction pull to funnel wall
+                        const suctionMag = -rDiff * 0.085 * tornadoStrength * proximity;
+                        velX[i] += rxNorm * suctionMag;
+                        velY[i] += ryNorm * suctionMag;
+                        velZ[i] += rzNorm * suctionMag;
+
+                        // 2. High-speed Cyclonic Swirl
+                        const swirlMag = (0.055 + (1.0 - hClamped) * 0.040) * tornadoStrength * proximity;
+                        velX[i] += txNorm * swirlMag;
+                        velY[i] += tyNorm * swirlMag;
+                        velZ[i] += tzNorm * swirlMag;
+
+                        // 3. Helical Updraft (propelling boid up the column)
+                        const updraftMag = (0.048 + (1.0 - hClamped * 0.5) * 0.036) * tornadoStrength * proximity;
+                        velX[i] += T.ux * updraftMag;
+                        velY[i] += T.uy * updraftMag;
+                        velZ[i] += T.uz * updraftMag;
+
+                        // 4. Centrifugal Crown Slingshot Ejection
+                        if (hNorm > 0.65) {
+                            const crownProg = (hNorm - 0.65) / 0.40;
+                            const slingshotMag = crownProg * crownProg * 0.14 * tornadoCentrifugal;
+                            velX[i] += (rxNorm * 1.35 + txNorm * 0.75) * slingshotMag;
+                            velY[i] += (ryNorm * 0.35 + T.uy * 0.65) * slingshotMag;
+                            velZ[i] += (rzNorm * 1.35 + tzNorm * 0.75) * slingshotMag;
+                        }
+                    }
+                }
+            }
 
             const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
             if (speedSq > maxDispSq && speedSq > 1e-6) {

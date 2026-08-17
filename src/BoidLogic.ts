@@ -544,6 +544,29 @@ export interface SimulationState {
     bloomSettings?: { luminanceThreshold: number; radius: number; intensity: number; levels: number; };
     bloomPreset?: number;
     isBloomLocked?: boolean;
+    // 🌪️ Local 3D Tornado Vortex Storm Fields
+    tornadoCount?: number; // 0 (Off), 1, 2, 3
+    tornadoStrength?: number; // Swirl & updraft multiplier (0.5 to 3.0)
+    tornadoCentrifugal?: number; // Crown slingshot multiplier (0.5 to 3.0)
+    tornadoVisibility?: boolean; // Show luminous tornado core filaments
+}
+
+export interface TornadoFunnel {
+    baseX: number;
+    baseY: number;
+    baseZ: number;
+    topX: number;
+    topY: number;
+    topZ: number;
+    height: number;
+    neckRadius: number;
+    crownRadius: number;
+    swirlStrength: number;
+    updraftStrength: number;
+    centrifugalFactor: number;
+    axisX: number;
+    axisY: number;
+    axisZ: number;
 }
 
 // Helper to convert HSL to Hex
