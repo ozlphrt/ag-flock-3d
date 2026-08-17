@@ -528,44 +528,50 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                         const tzNorm = (T.ux * ryNorm - T.uy * rxNorm) * T.swirlDir;
 
                         const hClamped = Math.max(0.0, Math.min(1.0, hNorm));
-                        // Hyperboloid funnel geometry: tight narrow neck at base, expanding to wide crown
                         const targetR = T.neckR + (T.crownR - T.neckR) * (hClamped * hClamped);
-
                         const rDiff = r - targetR;
                         const proximity = Math.max(0.0, 1.0 - r / Math.sqrt(T.infRSq));
 
-                        // 1. Ultra-Strong Magnetic Inward Suction: Aggressively draws passing boids into the vortex
-                        const suctionMag = -rDiff * 2.8 * tornadoStrength * proximity;
-                        velX[i] += rxNorm * suctionMag;
-                        velY[i] += ryNorm * suctionMag;
-                        velZ[i] += rzNorm * suctionMag;
+                        // Velocity Decomposition into Radial, Tangential (Swirl), and Axial (Updraft) vectors
+                        const vRad = velX[i] * rxNorm + velY[i] * ryNorm + velZ[i] * rzNorm;
+                        const vTan = velX[i] * txNorm + velY[i] * tyNorm + velZ[i] * tzNorm;
+                        const vUp = velX[i] * T.ux + velY[i] * T.uy + velZ[i] * T.uz;
 
-                        // 2. Ultra-Fast Cyclonic Swirl (Hyper-Rotational Velocity)
-                        const swirlMag = (1.6 + (1.0 - hClamped) * 0.8) * tornadoStrength * proximity;
-                        velX[i] += txNorm * swirlMag;
-                        velY[i] += tyNorm * swirlMag;
-                        velZ[i] += tzNorm * swirlMag;
+                        // 1. Radial Confinement: Keeps boids locked on the circular orbit around the vortex eye
+                        const targetRadSpeed = -rDiff * 0.25 * tornadoStrength;
+                        const radDelta = (targetRadSpeed - vRad) * 0.35 * proximity;
+                        velX[i] += rxNorm * radDelta;
+                        velY[i] += ryNorm * radDelta;
+                        velZ[i] += rzNorm * radDelta;
 
-                        // 3. Helical Updraft (Accelerates boids through the compact funnel)
-                        const updraftMag = (1.4 + (1.0 - hClamped * 0.5) * 0.6) * tornadoStrength * proximity;
-                        velX[i] += T.ux * updraftMag;
-                        velY[i] += T.uy * updraftMag;
-                        velZ[i] += T.uz * updraftMag;
+                        // 2. High-Angular Tangential Swirl: Generates 3 to 4 full coiling 360° revolutions
+                        const targetTanSpeed = (0.16 + (1.0 - hClamped) * 0.08) * tornadoStrength;
+                        const tanDelta = (targetTanSpeed - vTan) * 0.40 * proximity;
+                        velX[i] += txNorm * tanDelta;
+                        velY[i] += tyNorm * tanDelta;
+                        velZ[i] += tzNorm * tanDelta;
 
-                        // 4. Violent Centrifugal Crown Slingshot Ejection
-                        if (hNorm > 0.60) {
-                            const crownProg = (hNorm - 0.60) / 0.40;
-                            const slingshotMag = crownProg * crownProg * 2.8 * tornadoCentrifugal;
-                            velX[i] += (rxNorm * 2.5 + txNorm * 1.8) * slingshotMag;
-                            velY[i] += (ryNorm * 0.8 + T.uy * 1.5) * slingshotMag;
-                            velZ[i] += (rzNorm * 2.5 + tzNorm * 1.8) * slingshotMag;
+                        // 3. Gentle Helical Ascent: Boid climbs smoothly over 1.5 seconds instead of rushing through
+                        const targetUpSpeed = (0.028 + hClamped * 0.018) * tornadoStrength;
+                        const upDelta = (targetUpSpeed - vUp) * 0.30 * proximity;
+                        velX[i] += T.ux * upDelta;
+                        velY[i] += T.uy * upDelta;
+                        velZ[i] += T.uz * upDelta;
+
+                        // 4. Graceful Centrifugal Crown Ejection (Only after full helical ascent at h > 0.82)
+                        if (hNorm > 0.82) {
+                            const crownProg = (hNorm - 0.82) / 0.18;
+                            const slingshotMag = crownProg * 0.12 * tornadoCentrifugal;
+                            velX[i] += (rxNorm * 1.5 + txNorm * 0.8) * slingshotMag;
+                            velY[i] += (ryNorm * 0.4 + T.uy * 0.6) * slingshotMag;
+                            velZ[i] += (rzNorm * 1.5 + tzNorm * 0.8) * slingshotMag;
                             inTornadoCrown = true;
                         }
                     }
                 }
             }
 
-            const currentMaxDisp = inTornadoCrown ? (activeMaxDisp * 6.0) : activeMaxDisp;
+            const currentMaxDisp = inTornadoCrown ? (activeMaxDisp * 2.5) : activeMaxDisp;
             const currentMaxDispSq = currentMaxDisp * currentMaxDisp;
             const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
             if (speedSq > currentMaxDispSq && speedSq > 1e-6) {
