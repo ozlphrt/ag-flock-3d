@@ -95,9 +95,29 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const colorTransitionStartTime = useRef<number>(0);
     const smoothRadius = useRef<number>(8.0);
 
-    const tornadoMesh0 = useRef<THREE.Mesh>(null);
-    const tornadoMesh1 = useRef<THREE.Mesh>(null);
-    const tornadoMesh2 = useRef<THREE.Mesh>(null);
+    const tornadoDust0 = useRef<THREE.Points>(null);
+    const tornadoDust1 = useRef<THREE.Points>(null);
+    const tornadoDust2 = useRef<THREE.Points>(null);
+
+    const dustGeometries = useMemo(() => {
+        const PARTICLE_COUNT = 180;
+        return [0, 1, 2].map(() => {
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(PARTICLE_COUNT * 3);
+            for (let p = 0; p < PARTICLE_COUNT; p++) {
+                const hNorm = p / PARTICLE_COUNT;
+                const y = (hNorm - 0.5) * 1.5;
+                const funnelR = 0.08 + 0.40 * (hNorm * hNorm);
+                const r = funnelR * (0.35 + Math.random() * 0.75);
+                const theta = Math.random() * Math.PI * 2;
+                pos[p * 3] = Math.cos(theta) * r;
+                pos[p * 3 + 1] = y + (Math.random() - 0.5) * 0.12;
+                pos[p * 3 + 2] = Math.sin(theta) * r;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            return geo;
+        });
+    }, []);
 
     const initialPalette = state.speciesColors || COLOR_PALETTES[17];
     const startColors = useRef<THREE.Color[]>([
@@ -354,18 +374,18 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
         }
 
-        // Update visual tornado meshes with exact 3D orientation & ultra-compact height
-        const tMeshes = [tornadoMesh0.current, tornadoMesh1.current, tornadoMesh2.current];
+        // Update visual tornado dust clouds with exact 3D orientation & orbital spin
+        const tDusts = [tornadoDust0.current, tornadoDust1.current, tornadoDust2.current];
         const upVec = new THREE.Vector3(0, 1, 0);
         for (let tIdx = 0; tIdx < 3; tIdx++) {
-            const m = tMeshes[tIdx];
+            const m = tDusts[tIdx];
             if (!m) continue;
             if (tIdx < tActive.length) {
                 m.visible = true;
                 const T = tActive[tIdx];
                 m.position.set((T.bx + T.tx) * 0.5, (T.by + T.ty) * 0.5, (T.bz + T.tz) * 0.5);
                 m.quaternion.setFromUnitVectors(upVec, new THREE.Vector3(T.ux, T.uy, T.uz));
-                m.rotation.y += 0.15 * T.swirlDir;
+                m.rotation.y += 0.06 * T.swirlDir;
             } else {
                 m.visible = false;
             }
@@ -784,40 +804,40 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 );
             })}
 
-            {/* Ethereal Luminous Golden Mini-Vortex Funnel Indicators */}
-            <mesh ref={tornadoMesh0} visible={false}>
-                <cylinderGeometry args={[0.48, 0.10, 1.5, 16, 6, true]} />
-                <meshBasicMaterial
+            {/* Ethereal Luminous Swirling Golden Dust Clouds */}
+            <points ref={tornadoDust0} geometry={dustGeometries[0]} visible={false}>
+                <pointsMaterial
+                    size={0.06}
                     color="#ffb700"
-                    wireframe={true}
                     transparent={true}
-                    opacity={0.42}
+                    opacity={0.55}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
+                    sizeAttenuation={true}
                 />
-            </mesh>
-            <mesh ref={tornadoMesh1} visible={false}>
-                <cylinderGeometry args={[0.48, 0.10, 1.4, 16, 6, true]} />
-                <meshBasicMaterial
+            </points>
+            <points ref={tornadoDust1} geometry={dustGeometries[1]} visible={false}>
+                <pointsMaterial
+                    size={0.06}
                     color="#ffb700"
-                    wireframe={true}
                     transparent={true}
-                    opacity={0.42}
+                    opacity={0.55}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
+                    sizeAttenuation={true}
                 />
-            </mesh>
-            <mesh ref={tornadoMesh2} visible={false}>
-                <cylinderGeometry args={[0.45, 0.10, 1.45, 16, 6, true]} />
-                <meshBasicMaterial
+            </points>
+            <points ref={tornadoDust2} geometry={dustGeometries[2]} visible={false}>
+                <pointsMaterial
+                    size={0.06}
                     color="#ffb700"
-                    wireframe={true}
                     transparent={true}
-                    opacity={0.42}
+                    opacity={0.55}
                     blending={THREE.AdditiveBlending}
                     depthWrite={false}
+                    sizeAttenuation={true}
                 />
-            </mesh>
+            </points>
         </group>
     );
 }
