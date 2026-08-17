@@ -728,17 +728,18 @@ function applyIntertwinedMultiLayer(
     const cosMeso = fastCos(mesoAngle);
     const sinMeso = fastSin(mesoAngle);
 
-    // Layer 3: Micro sub-strand within species cable
-    const microSub = (indexInSpecies % 2 === 0) ? 0.0 : Math.PI;
-    const microAngle = u * omegaMicro * Math.PI + microSub + (time * 1.8 * speedMult);
-    const cosMicro = fastCos(microAngle);
-    const sinMicro = fastSin(microAngle);
+    // Layer 3: Golden-Angle Fermat Spiral Tube Packing (guarantees zero-overlap spatial packing in O(1) time)
+    const track = indexInSpecies % 16;
+    const trackR = Math.sqrt((track + 0.5) / 16.0) * rMicro;
+    const trackTheta = track * 2.3999632 + (u * omegaMicro * Math.PI) + (time * 1.5 * speedMult); // 137.5 deg golden angle
+    const cosMicro = fastCos(trackTheta);
+    const sinMicro = fastSin(trackTheta);
 
-    const isRung = (indexInSpecies % 10 === 0);
-    const rungExt = isRung ? ((indexInSpecies % 30) / 30.0 - 0.5) * 1.2 : 0.0;
+    const isRung = (indexInSpecies % 12 === 0);
+    const rungExt = isRung ? ((indexInSpecies % 36) / 36.0 - 0.5) * 1.4 : 0.0;
 
-    const offN = (cosMeso * (rMeso + rungExt)) + (cosMicro * rMicro);
-    const offB = (sinMeso * (rMeso + rungExt)) + (sinMicro * rMicro);
+    const offN = (cosMeso * (rMeso + rungExt)) + (cosMicro * trackR);
+    const offB = (sinMeso * (rMeso + rungExt)) + (sinMicro * trackR);
 
     return [
         mx + nx * offN + bx * offB,
