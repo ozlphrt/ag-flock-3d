@@ -92,6 +92,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
 
         const uvs = new Float32Array(actualCapacity * 2);
         const species = new Float32Array(actualCapacity);
+        const sizes = new Float32Array(actualCapacity);
 
         for (let i = 0; i < actualCapacity; i++) {
             const x = (i % sizeX) + 0.5;
@@ -99,10 +100,24 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uvs[i * 2 + 0] = x / sizeX;
             uvs[i * 2 + 1] = y / sizeY;
             species[i] = i % 4;
+
+            // Box-Muller Gaussian Bell Curve Distribution:
+            // - Few giant alphas (~2.4x - 3.2x)
+            // - Some big ones (~1.5x - 2.2x)
+            // - Majority mid-size (~0.8x - 1.3x)
+            // - Some small ones (~0.5x - 0.7x)
+            // - Few tiny micro-specks (~0.35x - 0.45x)
+            const u1 = Math.max(1e-6, Math.random());
+            const u2 = Math.random();
+            const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+            let scale = Math.exp(z0 * 0.48);
+            scale = Math.min(3.2, Math.max(0.35, scale));
+            sizes[i] = scale;
         }
 
         instGeom.setAttribute('aReferenceUV', new THREE.InstancedBufferAttribute(uvs, 2));
         instGeom.setAttribute('aSpecies', new THREE.InstancedBufferAttribute(species, 1));
+        instGeom.setAttribute('aSizeScale', new THREE.InstancedBufferAttribute(sizes, 1));
         return instGeom;
     }, [actualCapacity, sizeX, sizeY]);
 
@@ -163,6 +178,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             shader.vertexShader = `
                 attribute vec2 aReferenceUV;
                 attribute float aSpecies;
+                attribute float aSizeScale;
                 uniform sampler2D texturePosition;
                 uniform sampler2D textureVelocity;
                 uniform float uBoidScale;
@@ -191,8 +207,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                     vInstanceColor = uColor3;
                 }
 
-                // Transform vertex with scale and instance position
-                vec3 transformed = position * uBoidScale + instancePos;
+                // Transform vertex with Gaussian bell curve scale and instance position
+                vec3 transformed = position * (uBoidScale * aSizeScale) + instancePos;
                 `
             );
 

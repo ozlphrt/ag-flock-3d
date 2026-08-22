@@ -1649,11 +1649,12 @@ export class BoidSwarmData {
                 this.species[i] = sp;
 
                 const baseSize = speciesBaseSizes[sp];
-                const sizeVariance = 0.5 + Math.pow(Math.random(), 2.0) * 0.4;
-                const isAlphaLeader = (i % 16 === 0);
-                const isTitanLeader = (i % 60 === 0);
-                const leaderMult = isTitanLeader ? 1.15 : (isAlphaLeader ? 1.08 : 1.0);
-                this.size[i] = baseSize * sizeVariance * leaderMult;
+                const u1 = Math.max(1e-6, Math.random());
+                const u2 = Math.random();
+                const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                let bellScale = Math.exp(z0 * 0.48);
+                bellScale = Math.min(3.2, Math.max(0.35, bellScale));
+                this.size[i] = baseSize * bellScale;
 
                 this.noiseSeed[i] = Math.random() * 1000.0;
                 this.isStray[i] = 0;
