@@ -94,6 +94,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
     const lastPaletteKey = useRef<string>('');
     const colorTransitionStartTime = useRef<number>(0);
     const smoothRadius = useRef<number>(8.0);
+    const lastScale = useRef<number>(-1);
+    const lastShapeKey = useRef<string>('');
+    const lastInitializedCount = useRef<number>(-1);
+    const frameCounter = useRef<number>(0); // Temporal batching frame parity
 
     const initialPalette = state.speciesColors || COLOR_PALETTES[17];
     const startColors = useRef<THREE.Color[]>([
@@ -226,7 +230,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
-        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 9.0;
+        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 7.0;
         const elapsed = Math.max(0.0, time - startTime);
         const p = Math.min(1.0, elapsed / duration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
@@ -247,10 +251,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
         // Centroid & Bounding Radius sampling registers
-        let sumX = 0, sumY = 0, sumZ = 0;
         let sumDistSq = 0;
         const sampleStep = Math.max(1, Math.floor(boidCount / 128));
         let sampleCount = 0;
+
+        // Convergence measured cleanly when settled
+        let convergedCount = 0;
+        const measureConvergence = !isMorphing && p > 0.92;
 
         const posX = swarm.posX;
         const posY = swarm.posY;
@@ -264,6 +271,9 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const noiseSeed = swarm.noiseSeed;
         const isLeader = swarm.isLeader;
         const sizeArr = swarm.size;
+        const sheathOffsetX = swarm.sheathOffsetX;
+        const sheathOffsetY = swarm.sheathOffsetY;
+        const sheathOffsetZ = swarm.sheathOffsetZ;
 
         const matArrays = [
             meshRef0.current.instanceMatrix.array as Float32Array,
@@ -272,20 +282,30 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             meshRef3.current.instanceMatrix.array as Float32Array
         ];
 
+        const volThickness = profile.volThickness;
+        const dAmp = profile.noiseDrift * speedMult;
+        const hasDrift = (dAmp > 1e-5);
+        const hasStray = profile.strayRatio > 0 && p > 0.8;
+        const strayMod = hasStray ? Math.floor(1.0 / profile.strayRatio) : 0;
+
         for (let i = 0; i < boidCount; i++) {
-            const px = posX[i];
-            const py = posY[i];
-            const pz = posZ[i];
-
-            if (i % sampleStep === 0) {
-                sumX += px; sumY += py; sumZ += pz;
-                sumDistSq += (px * px + py * py + pz * pz);
-                sampleCount++;
-            }
-
             const sp = species[i];
             const spIdx = indexInSpecies[i];
             if (spIdx >= speciesCount) continue;
+
+            const matArray = matArrays[sp];
+            const offset = spIdx * 16;
+            const spShape = activeSpeciesShapes[sp] % geometries.length;
+
+            if (i % sampleStep === 0) {
+                const px0 = posX[i], py0 = posY[i], pz0 = posZ[i];
+                sumDistSq += (px0 * px0 + py0 * py0 + pz0 * pz0);
+                sampleCount++;
+            }
+
+            const px = posX[i];
+            const py = posY[i];
+            const pz = posZ[i];
 
             const sepWeight = (state && state.attributes && state.attributes[sp])
                 ? state.attributes[sp].separationWeight
@@ -296,32 +316,28 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             computeFormationPoint(formation, seed, u, time, sp, spIdx, sepWeight, speedMult, state, curPt);
             let tx = curPt[0], ty = curPt[1], tz = curPt[2];
 
-            // Volumetric Cross-Section Sheaf Dispersion (Crisp Strands vs Atmospheric Sheath)
-            const phi = (spIdx * 2.3999632) + (u * 13.7) + (sp * 1.5707963);
-            const rNorm = RNORM_LUT[spIdx % 41];
-            const volThickness = profile.volThickness;
-            tx += fastCos(phi) * (rNorm * volThickness);
-            ty += fastSin(phi) * (rNorm * volThickness * 0.75);
-            tz += fastSin(phi * 1.33) * (rNorm * volThickness * 0.65);
+            // Zero-Math Volumetric Cross-Section Sheaf Lookup
+            const shX = sheathOffsetX[i] * volThickness;
+            const shY = sheathOffsetY[i] * volThickness;
+            const shZ = sheathOffsetZ[i] * volThickness;
+            tx += shX;
+            ty += shY;
+            tz += shZ;
 
-            // Controlled loose aura particles only if formation profile allows it (0% for geometric formations)
-            if (profile.strayRatio > 0 && p > 0.8) {
-                const strayMod = Math.floor(1.0 / profile.strayRatio);
-                if (i % strayMod === 0) {
-                    const strayAngle = time * (0.3 + (i % 5) * 0.08) + noiseSeed[i];
-                    const rAura = 7.0 + (i % 6) * 0.8;
-                    tx = rAura * fastCos(strayAngle);
-                    ty = fastSin(strayAngle * 1.5) * 1.8 + (sp - 1.5) * 1.0;
-                    tz = rAura * fastSin(strayAngle);
-                }
+            // Controlled loose aura particles
+            if (hasStray && i % strayMod === 0) {
+                const strayAngle = time * (0.3 + (i % 5) * 0.08) + noiseSeed[i];
+                const rAura = 7.0 + (i % 6) * 0.8;
+                tx = rAura * fastCos(strayAngle);
+                ty = fastSin(strayAngle * 1.5) * 1.8 + (sp - 1.5) * 1.0;
+                tz = rAura * fastSin(strayAngle);
             }
 
             if (isMorphing && prevMode !== undefined) {
                 computeFormationPoint(prevMode, prevSeed, u, time, sp, spIdx, sepWeight, speedMult, state, prevPt);
-                // Apply volumetric sheath to previous point as well during morph
-                prevPt[0] += fastCos(phi) * (rNorm * volThickness);
-                prevPt[1] += fastSin(phi) * (rNorm * volThickness * 0.75);
-                prevPt[2] += fastSin(phi * 1.33) * (rNorm * volThickness * 0.65);
+                prevPt[0] += shX;
+                prevPt[1] += shY;
+                prevPt[2] += shZ;
 
                 tx = prevPt[0] + (tx - prevPt[0]) * sCurve;
                 ty = prevPt[1] + (ty - prevPt[1]) * sCurve;
@@ -335,23 +351,29 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 tx *= invT; ty *= invT; tz *= invT;
             }
 
-            let dx = (tx - px) * activeLerpRate;
-            let dy = (ty - py) * activeLerpRate;
-            let dz = (tz - pz) * activeLerpRate;
+            const errX = tx - px, errY = ty - py, errZ = tz - pz;
+            if (measureConvergence && (errX * errX + errY * errY + errZ * errZ) < 0.45) {
+                convergedCount++;
+            }
+
+            let dx = errX * activeLerpRate;
+            let dy = errY * activeLerpRate;
+            let dz = errZ * activeLerpRate;
 
             if (isLeader[i] === 1) {
                 dx *= 1.08; dy *= 1.08; dz *= 1.08;
             }
 
-            const nSeed = noiseSeed[i];
-            const dAmp = profile.noiseDrift * speedMult;
-            const driftX = fastSin(time * 1.5 + nSeed) * dAmp;
-            const driftY = fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
-            const driftZ = fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
+            let targetVelX = dx;
+            let targetVelY = dy;
+            let targetVelZ = dz;
 
-            const targetVelX = dx + driftX;
-            const targetVelY = dy + driftY;
-            const targetVelZ = dz + driftZ;
+            if (hasDrift) {
+                const nSeed = noiseSeed[i];
+                targetVelX += fastSin(time * 1.5 + nSeed) * dAmp;
+                targetVelY += fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
+                targetVelZ += fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
+            }
 
             let ax = targetVelX - velX[i];
             let ay = targetVelY - velY[i];
@@ -387,82 +409,49 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 posZ[i] *= inv;
             }
 
-            const spShape = activeSpeciesShapes[sp] % geometries.length;
             const boidScale = sizeArr[i] * baseScale;
-            const matArray = matArrays[sp];
-            const offset = spIdx * 16;
 
             if (spShape === 0) {
-                // Shape 0: Geodesic 20-Facet Ico-Sphere (Flagship)
-                // Spherically symmetric 20-facet crystal — direct matrix transform eliminates 200,000 Math.sqrt & cross products
                 matArray[offset + 0] = boidScale;
                 matArray[offset + 1] = 0;
                 matArray[offset + 2] = 0;
                 matArray[offset + 3] = 0;
-
                 matArray[offset + 4] = 0;
                 matArray[offset + 5] = boidScale;
                 matArray[offset + 6] = 0;
                 matArray[offset + 7] = 0;
-
                 matArray[offset + 8] = 0;
                 matArray[offset + 9] = 0;
                 matArray[offset + 10] = boidScale;
                 matArray[offset + 11] = 0;
-
                 matArray[offset + 12] = posX[i];
                 matArray[offset + 13] = posY[i];
                 matArray[offset + 14] = posZ[i];
                 matArray[offset + 15] = 1;
             } else {
-                // Directional shapes (Jets, Wings): align nose vector with velocity
-                let zx = velX[i];
-                let zy = velY[i];
-                let zz = velZ[i];
-                let zLenSq = zx * zx + zy * zy + zz * zz;
-                if (zLenSq < 1e-8) {
-                    zx = 0; zy = 0; zz = 1;
-                } else {
-                    const invZ = 1.0 / Math.sqrt(zLenSq);
-                    zx *= invZ; zy *= invZ; zz *= invZ;
-                }
+                let zx = velX[i], zy = velY[i], zz = velZ[i];
+                const zLenSq = zx * zx + zy * zy + zz * zz;
+                if (zLenSq < 1e-8) { zx = 0; zy = 0; zz = 1; }
+                else { const invZ = 1.0 / Math.sqrt(zLenSq); zx *= invZ; zy *= invZ; zz *= invZ; }
 
-                // Right vector x = up x z = (0,1,0) x (zx,zy,zz) = (zz, 0, -zx)
-                let xx = zz;
-                let xy = 0;
-                let xz = -zx;
+                let xx = zz, xy = 0, xz = -zx;
                 let xLenSq = xx * xx + xz * xz;
-                if (xLenSq < 1e-6) {
-                    xx = 0; xy = zz; xz = -zy;
-                    xLenSq = xy * xy + xz * xz;
-                }
+                if (xLenSq < 1e-6) { xx = 0; xy = zz; xz = -zy; xLenSq = xy * xy + xz * xz; }
                 const invX = 1.0 / Math.sqrt(Math.max(1e-8, xLenSq));
                 xx *= invX; xy *= invX; xz *= invX;
 
-                // Up vector y = z x x
                 const yx = zy * xz - zz * xy;
                 const yy = zz * xx - zx * xz;
                 const yz = zx * xy - zy * xx;
 
-                matArray[offset + 0] = xx * boidScale;
-                matArray[offset + 1] = xy * boidScale;
-                matArray[offset + 2] = xz * boidScale;
-                matArray[offset + 3] = 0;
-
-                matArray[offset + 4] = yx * boidScale;
-                matArray[offset + 5] = yy * boidScale;
-                matArray[offset + 6] = yz * boidScale;
-                matArray[offset + 7] = 0;
-
-                matArray[offset + 8] = zx * boidScale;
-                matArray[offset + 9] = zy * boidScale;
-                matArray[offset + 10] = zz * boidScale;
-                matArray[offset + 11] = 0;
-
-                matArray[offset + 12] = posX[i];
-                matArray[offset + 13] = posY[i];
-                matArray[offset + 14] = posZ[i];
-                matArray[offset + 15] = 1;
+                matArray[offset + 0] = xx * boidScale; matArray[offset + 1] = xy * boidScale;
+                matArray[offset + 2] = xz * boidScale; matArray[offset + 3] = 0;
+                matArray[offset + 4] = yx * boidScale; matArray[offset + 5] = yy * boidScale;
+                matArray[offset + 6] = yz * boidScale; matArray[offset + 7] = 0;
+                matArray[offset + 8] = zx * boidScale; matArray[offset + 9] = zy * boidScale;
+                matArray[offset + 10] = zz * boidScale; matArray[offset + 11] = 0;
+                matArray[offset + 12] = posX[i]; matArray[offset + 13] = posY[i];
+                matArray[offset + 14] = posZ[i]; matArray[offset + 15] = 1;
             }
         }
 
@@ -472,6 +461,15 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             smoothRadius.current = THREE.MathUtils.lerp(smoothRadius.current, estimatedBoundingRadius, 0.04);
             state.formationRadius = smoothRadius.current;
         }
+
+        // Convergence — only update when measured (not during morph)
+        if (measureConvergence) {
+            const measuredConvergence = boidCount > 0 ? (convergedCount / (boidCount * 0.5)) : 1.0; // *0.5 since we measured half
+            state.physicalConvergence = THREE.MathUtils.lerp(state.physicalConvergence ?? measuredConvergence, measuredConvergence, 0.10);
+        }
+        // Map 20%..85% convergence smoothly to 0%..100% progress
+        const computedProgress = Math.min(1.0, Math.max(0.0, ((state.physicalConvergence ?? 0) - 0.20) / 0.65));
+        state.morphProgress = computedProgress;
 
         // 4. Perceptual Oklab Asynchronous Species Color Morphing with Random Staggered Lag
         const newPalette = state.speciesColors || SPECIES_COLORS;

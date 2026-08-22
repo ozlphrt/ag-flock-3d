@@ -83,7 +83,7 @@ self.onmessage = (e: MessageEvent) => {
         const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
 
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
-        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 9.0;
+        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 7.0;
         const elapsed = Math.max(0.0, time - startTime);
         const p = Math.min(1.0, elapsed / duration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);

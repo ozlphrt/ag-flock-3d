@@ -45,12 +45,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             if (state.clockEngine && state.clockEngine.getCountdownProgress) {
                 const info = state.clockEngine.getCountdownProgress();
                 setProgress(info.formationProgress);
-                setCountdown(info.formationRemaining ?? 30);
+                setCountdown(info.formationRemaining ?? 14);
             } else {
                 const now = (state.currentTime !== undefined) ? state.currentTime : (performance.now() / 1000.0);
                 const start = state.transitionStartTime ?? 0.0;
                 const elapsed = Math.max(0, now - start);
-                const totalCycle = 32.0;
+                const totalCycle = (state.transitionDuration ?? 7.0) + (state.holdDuration ?? 7.0);
                 const p = Math.min(1.0, elapsed / totalCycle);
                 setProgress(p);
                 const rem = Math.max(0, Math.ceil(totalCycle - elapsed));
@@ -123,7 +123,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.formationSeed = Math.random() * 10000;
         simState.current.customFormationName = undefined;
         simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
-        simState.current.transitionDuration = 5.0;
+        simState.current.transitionDuration = 6.0;
+        simState.current.holdDuration = 7.0;
 
         if (id === FormationMode.Procedural || !simState.current.proceduralGenome) {
             simState.current.proceduralGenome = generateProceduralGenome();
@@ -136,6 +137,37 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         setTick(t => t + 1);
         setActiveCatalogTab(null);
         showToast(`🌀 Topology Applied`);
+    };
+
+    const handleDiceProcedural = () => {
+        const genome = generateProceduralGenome();
+        const familyNames: Record<string, string> = {
+            'superformula': 'Gielis Superformula Manifold',
+            'harmonic': 'Multidimensional Fourier Harmonic',
+            'branching': 'Fractal Bifurcation Manifold'
+        };
+        const customName = `✨ ${familyNames[genome.family || 'harmonic'] || 'Procedural Synthesis'}`;
+
+        simState.current.prevFormationMode = simState.current.formationMode;
+        simState.current.prevFormationSeed = simState.current.formationSeed;
+        simState.current.formationMode = FormationMode.Procedural;
+        simState.current.proceduralGenome = genome;
+        simState.current.formationSeed = Math.random() * 10000;
+        simState.current.customFormationName = customName;
+        simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
+        simState.current.transitionDuration = 5.0; // Snappy 5s morph
+        simState.current.holdDuration = 16.0;
+        simState.current.isTopologyFormed = false;
+        simState.current.formedTimestamp = null;
+        simState.current.physicalConvergence = 0.0;
+        simState.current.morphProgress = 0.0;
+
+        if (simState.current.clockEngine?.setManualOverride) {
+            simState.current.clockEngine.setManualOverride('formation');
+        }
+
+        setTick(t => t + 1);
+        showToast(`🎲 Synthesized: ${customName}`);
     };
 
     const selectShape = (id: number) => {
@@ -482,7 +514,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             state.proceduralGenome = creation.genome;
         }
         state.transitionStartTime = state.currentTime || 0;
-        state.transitionDuration = 9.0;
+        state.transitionDuration = 6.0;
+        state.holdDuration = 7.0;
 
         setIsGalleryOpen(false);
         setTick(t => t + 1);
@@ -808,7 +841,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
-        {/* Top-Right Active Topology Display & Morph Convergence Progress Bar */}
+        {/* Top-Right Overall Combination Like / Dislike Bar */}
         {(() => {
             const rawProgress = simState.current?.morphProgress !== undefined ? simState.current.morphProgress : 1.0;
             const morphPercent = Math.min(100, Math.max(0, Math.round(rawProgress * 100)));
@@ -823,7 +856,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         right: '18px',
                         display: 'flex',
                         flexDirection: 'column',
-                        width: '275px',
                         boxSizing: 'border-box',
                         background: 'rgba(12, 16, 26, 0.88)',
                         backdropFilter: 'blur(20px)',
@@ -839,69 +871,29 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '8px',
-                        padding: '6px 12px',
-                        width: '100%',
+                        gap: '6px',
+                        padding: '6px 8px',
                         boxSizing: 'border-box'
                     }}>
-                        <div
-                            onClick={() => {
-                                setIsSettingsOpen(true);
-                                setActiveCatalogTab('topology');
-                            }}
-                            title={`Click to view and choose from all ${formations.length} Topologies`}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                cursor: 'pointer',
-                                flex: 1,
-                                minWidth: 0
-                            }}
+                        <button
+                            className="matrix-action-btn like"
+                            onClick={handleLikeOverallCombination}
+                            title="Like this composition combination 👍"
+                            style={{ width: '32px', height: '32px', fontSize: '15px' }}
                         >
-                            <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 6px rgba(0,255,204,0.35))', flexShrink: 0 }}>
-                                {activePreset.icon || '🌀'}
-                            </span>
-                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                                <span style={{ fontSize: '9px', fontWeight: 800, color: '#00ffcc', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span>TOPOLOGY</span>
-                                    <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>• #{Number(simState.current.formationMode ?? 0) + 1}</span>
-                                    {isMorphing && (
-                                        <span style={{ fontSize: '8.5px', color: '#00ffcc', fontWeight: 900, background: 'rgba(0, 255, 204, 0.15)', padding: '0 3px', borderRadius: '4px' }}>
-                                            {morphPercent}%
-                                        </span>
-                                    )}
-                                </span>
-                                <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {simState.current.customFormationName || activePreset.label || 'Formation'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 1px', flexShrink: 0 }} />
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                            <button
-                                className="matrix-action-btn like"
-                                onClick={handleLikeOverallCombination}
-                                title="Like this overall composition combination (+2 RL synergy to all active traits)"
-                                style={{ width: '30px', height: '30px', fontSize: '14px' }}
-                            >
-                                👍
-                            </button>
-                            <button
-                                className="matrix-action-btn dislike"
-                                onClick={handleDislikeOverallCombination}
-                                title="Dislike this overall composition combination & morph immediately to next"
-                                style={{ width: '30px', height: '30px', fontSize: '14px' }}
-                            >
-                                👎
-                            </button>
-                        </div>
+                            👍
+                        </button>
+                        <button
+                            className="matrix-action-btn dislike"
+                            onClick={handleDislikeOverallCombination}
+                            title="Dislike this composition combination & morph to next 👎"
+                            style={{ width: '32px', height: '32px', fontSize: '15px' }}
+                        >
+                            👎
+                        </button>
                     </div>
 
-                    {/* Progress Bar for Completion of the Topology */}
+                    {/* Progress Bar for Completion of the Morph */}
                     <div
                         style={{
                             width: '100%',
@@ -909,7 +901,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             background: 'rgba(255, 255, 255, 0.08)',
                             position: 'relative'
                         }}
-                        title={`Topology Formation Morph: ${morphPercent}% completed`}
+                        title={`Morph: ${morphPercent}% completed`}
                     >
                         <div
                             style={{
@@ -1861,112 +1853,31 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
         {/* Floating Bottom Right Controls */}
         <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
-            {/* Auto Mode Toggle Button with Radial Timer Progress Ring */}
+            {/* Infinite Procedural Dice Button */}
             <button
-                className={`defeat-selector-btn ${isAutoMode ? 'timer-active-pulse' : ''}`}
-                onClick={handleToggleAuto}
-                title={isAutoMode ? `Auto-cycle is ON (${countdown}s remaining) — Click to Turn Auto OFF (Pause)` : "Auto-cycle is OFF — Click to Turn Auto ON (Resume)"}
+                className="defeat-selector-btn dice-spin-btn"
+                onClick={handleDiceProcedural}
+                title="🎲 Synthesize New Infinite Procedural Topology (Real-Time Generation)"
                 style={{
-                    position: 'relative',
-                    width: '56px',
-                    height: '56px',
+                    width: '52px',
+                    height: '52px',
                     padding: 0,
                     borderRadius: '50%',
-                    background: isAutoMode ? 'rgba(12, 16, 26, 0.85)' : 'rgba(18, 22, 34, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(12, 16, 26, 0.85)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
-                    border: isAutoMode ? 'none' : '1.5px solid rgba(255, 255, 255, 0.18)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    boxShadow: isAutoMode ? '0 0 20px rgba(0, 255, 204, 0.35)' : '0 4px 16px rgba(0,0,0,0.5)',
-                    transition: 'all 0.3s ease'
+                    border: '1.5px solid rgba(255, 215, 0, 0.35)',
+                    color: '#ffd700',
+                    fontSize: '22px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    cursor: 'pointer'
                 }}
             >
-                {/* Radial Animated Progress SVG Ring */}
-                <svg width="56" height="56" viewBox="0 0 56 56" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
-                    {/* Background Track Circle */}
-                    <circle
-                        cx="28"
-                        cy="28"
-                        r="24"
-                        fill="none"
-                        stroke="rgba(255, 255, 255, 0.12)"
-                        strokeWidth="3.5"
-                    />
-                    {/* Animated Countdown Progress Ring */}
-                    <circle
-                        cx="28"
-                        cy="28"
-                        r="24"
-                        fill="none"
-                        stroke={isAutoMode ? '#00ffcc' : 'rgba(255, 255, 255, 0.25)'}
-                        strokeWidth="3.5"
-                        strokeDasharray="150.796"
-                        strokeDashoffset={isAutoMode ? (150.796 * progress).toFixed(2) : '150.796'}
-                        strokeLinecap="round"
-                        style={{
-                            transition: 'stroke-dashoffset 0.15s linear, stroke 0.3s ease'
-                        }}
-                    />
-                </svg>
-
-                {/* Center Content */}
-                <div style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: 1
-                }}>
-                    {isAutoMode ? (
-                        <>
-                            <span style={{
-                                fontSize: '18px',
-                                fontWeight: 900,
-                                fontFamily: 'monospace',
-                                color: '#00ffcc',
-                                letterSpacing: '-0.5px'
-                            }}>
-                                {countdown}
-                            </span>
-                            <span style={{
-                                fontSize: '8px',
-                                fontWeight: 800,
-                                color: 'rgba(0, 255, 204, 0.7)',
-                                letterSpacing: '0.5px',
-                                marginTop: '1px'
-                            }}>
-                                SEC
-                            </span>
-                        </>
-                    ) : (
-                        <>
-                            <span style={{
-                                fontSize: '12px',
-                                fontWeight: 900,
-                                fontFamily: 'system-ui, -apple-system, sans-serif',
-                                color: 'rgba(255, 255, 255, 0.8)',
-                                letterSpacing: '0.5px'
-                            }}>
-                                OFF
-                            </span>
-                            <span style={{
-                                fontSize: '7.5px',
-                                fontWeight: 800,
-                                color: 'rgba(255, 255, 255, 0.45)',
-                                letterSpacing: '0.5px',
-                                marginTop: '1px'
-                            }}>
-                                AUTO
-                            </span>
-                        </>
-                    )}
-                </div>
+                🎲
             </button>
 
             {/* Main Settings Toggle Button with Settings Cog */}

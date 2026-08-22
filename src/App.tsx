@@ -163,11 +163,12 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             flashBoost = 2.4;
         }
 
-        // Low ambient wash + high directional key & rim for deep sculptural chiaroscuro
-        const tAmb = (profile.ambientIntensity * 0.40 + 0.08) * mult;
-        const tKey = (profile.keyIntensity * 1.35) * mult * flashBoost;
-        const tFill = (profile.fillIntensity * 0.40 + 0.12) * mult;
-        const tRim = (profile.rimIntensity * 1.75) * mult * flashBoost;
+        // Deep sculptural chiaroscuro: low ambient/fill to preserve 100% color saturation,
+        // calibrated key/rim directional lighting for crisp facet glints without wide washouts
+        const tAmb = (profile.ambientIntensity * 0.40 + 0.04) * mult;
+        const tKey = (profile.keyIntensity * 0.50) * mult * flashBoost;
+        const tFill = (profile.fillIntensity * 0.25) * mult;
+        const tRim = (profile.rimIntensity * 0.60) * mult * flashBoost;
 
         if (lastProfileId.current !== profile.id) {
             lastProfileId.current = profile.id;
@@ -226,35 +227,35 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
         const lightDist = 65.0;
 
-        // 1. Key Light: 70° Cross-Side Rake Angle (illuminates one facet steeply while casting distinct shadow on the other).
+        // 1. Key Light: 45° Cross-Front Angle with wide spherical wrap
         _idealKey.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.28)
-            .addScaledVector(_rightVec, 0.82)
-            .addScaledVector(_upVec, 0.50)
+            .addScaledVector(_viewVec, 0.52)
+            .addScaledVector(_rightVec, 0.60)
+            .addScaledVector(_upVec, 0.48)
             .normalize()
             .multiplyScalar(lightDist);
 
-        // 2. Fill Light: 65° Low Counter-Angle with Deep Complementary Shadow Tint.
+        // 2. Fill Light: Broad counter-angle fill to softly define the shadow side
         _idealFill.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.40)
-            .addScaledVector(_rightVec, -0.78)
-            .addScaledVector(_upVec, -0.25)
+            .addScaledVector(_viewVec, 0.48)
+            .addScaledVector(_rightVec, -0.62)
+            .addScaledVector(_upVec, -0.20)
             .normalize()
-            .multiplyScalar(lightDist * 0.9);
+            .multiplyScalar(lightDist * 0.95);
 
-        // 3. Rim / Kicker Light: 155° High Silhouette Backlight (produces razor-sharp glowing edge separation).
+        // 3. Rim / Kicker Light: Wide sweeping halo backlight
         _idealRim.set(0, 0, 0)
-            .addScaledVector(_viewVec, -0.80)
-            .addScaledVector(_rightVec, -0.38)
-            .addScaledVector(_upVec, 0.52)
+            .addScaledVector(_viewVec, -0.65)
+            .addScaledVector(_rightVec, -0.45)
+            .addScaledVector(_upVec, 0.55)
             .normalize()
-            .multiplyScalar(lightDist * 1.15);
+            .multiplyScalar(lightDist * 1.1);
 
-        // 4. Bounce / Ground Uplight: Underside specular definition.
+        // 4. Bounce / Ground Uplight: Wide underside definition
         _idealBounce.set(0, 0, 0)
-            .addScaledVector(_viewVec, -0.10)
-            .addScaledVector(_rightVec, 0.35)
-            .addScaledVector(_upVec, -0.90)
+            .addScaledVector(_viewVec, 0.15)
+            .addScaledVector(_rightVec, 0.25)
+            .addScaledVector(_upVec, -0.85)
             .normalize()
             .multiplyScalar(lightDist * 0.85);
 
@@ -266,7 +267,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
-            ambientRef.current.intensity = Math.max(0.40, curAmbient.current * 2.5);
+            ambientRef.current.intensity = Math.max(0.06, curAmbient.current);
             ambientRef.current.color.copy(curFillColor.current);
         }
         if (keyRef.current) {
@@ -286,36 +287,36 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         }
         if (bounceRef.current) {
             bounceRef.current.position.copy(curBouncePos.current);
-            bounceRef.current.intensity = curFillInt.current * 0.70;
+            bounceRef.current.intensity = curFillInt.current * 0.50;
             bounceRef.current.color.copy(curFillColor.current);
         }
     });
 
     return (
         <>
-            <ambientLight ref={ambientRef} intensity={0.20} color="#0c1220" />
+            <ambientLight ref={ambientRef} intensity={0.08} color="#0c1220" />
             <directionalLight
                 ref={keyRef}
                 position={[45, 35, 20]}
-                intensity={4.2}
+                intensity={1.8}
                 color="#ffffff"
             />
             <directionalLight
                 ref={fillRef}
                 position={[-45, -15, -20]}
-                intensity={0.45}
+                intensity={0.20}
                 color="#101828"
             />
             <directionalLight
                 ref={rimRef}
                 position={[-20, 45, -50]}
-                intensity={3.8}
+                intensity={2.0}
                 color="#ffffff"
             />
             <directionalLight
                 ref={bounceRef}
                 position={[20, -45, -10]}
-                intensity={0.35}
+                intensity={0.12}
                 color="#0c1424"
             />
         </>
@@ -363,7 +364,7 @@ function App() {
         attributes: SPECIES_CONFIG,
         interactions: INITIAL_MATRIX,
         bounds: 50,
-        speedMultiplier: 0.28,
+        speedMultiplier: 0.14,
         sizeMultiplier: 1.5,
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
@@ -416,7 +417,7 @@ function App() {
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} isLoading={isLoading} />
             <Canvas
-                dpr={[1, 1.25]}
+                dpr={1.0}
                 gl={{
                     antialias: false,
                     powerPreference: 'high-performance',
@@ -433,7 +434,7 @@ function App() {
 
                 <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
 
-                <hemisphereLight args={['#88aadd', '#1a2233', 1.3]} />
+                <hemisphereLight args={['#446699', '#080e1c', 0.28]} />
 
                 <DynamicStudioLighting simState={simState} />
 

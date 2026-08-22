@@ -2,6 +2,7 @@ import {
     SimulationState,
     FormationMode,
     TOTAL_FORMATION_COUNT,
+    FORMATION_PRESETS,
     COLOR_PALETTES,
     MATERIAL_PRESETS,
     LIGHTING_PROFILES,
@@ -55,6 +56,11 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         camera: -9999.0
     };
 
+    // Initialize formation lifecycle parameters if not set
+    if (state.transitionDuration === undefined) state.transitionDuration = 7.0;
+    if (state.holdDuration === undefined) state.holdDuration = 7.0;
+    if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
+
     // Recent Histories for Forbidden Repeat Buffers
     const recentFormations: number[] = [state.formationMode];
     const recentPalettes: number[] = [state.paletteIndex ?? 0];
@@ -74,7 +80,13 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         manualOverrides[dimension] = curTime;
         if (dimension === 'formation') {
             lastFormationTime = curTime;
-            formationInterval = rndJitter(activeArc ? 20.0 : 32.0, 0.2);
+            state.isTopologyFormed = false;
+            state.formedTimestamp = null;
+            state.physicalConvergence = 0.0;
+            state.morphProgress = 0.0;
+            state.transitionStartTime = curTime;
+            state.transitionDuration = 6.0;
+            state.holdDuration = rndJitter(6.0, 0.15);
         } else if (dimension === 'palette') {
             lastColorTime = curTime;
             colorInterval = rndJitter(54.0, 0.25);
@@ -88,6 +100,48 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             lastCameraPresetTime = curTime;
             cameraPresetInterval = rndJitter(26.0, 0.2);
         }
+    };
+
+    // Randomized Topology Playlist (Shuffled on launch, reshuffled on exhaustion)
+    let randomizedTopologyPlaylist: number[] = [];
+
+    const getNextRandomizedTopology = (prefs: any, currentMode: number): number => {
+        if (randomizedTopologyPlaylist.length === 0) {
+            const pool: number[] = [];
+            const likes = prefs.formationLikes || {};
+            const dislikes = prefs.formationDislikes || {};
+
+            for (let i = 0; i < TOTAL_FORMATION_COUNT; i++) {
+                const likeCount = likes[i] || 0;
+                const dislikeCount = dislikes[i] || 0;
+                if (dislikeCount > likeCount) continue; // Skip disliked formations
+
+                pool.push(i);
+                // Extra entry for liked formations
+                if (likeCount > 0) {
+                    pool.push(i);
+                }
+            }
+
+            // Always add a couple of Procedural chances
+            pool.push(FormationMode.Procedural);
+            pool.push(FormationMode.Procedural);
+
+            // Fisher-Yates shuffle for completely random order
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            randomizedTopologyPlaylist = pool;
+        }
+
+        let next = randomizedTopologyPlaylist.shift() ?? Math.floor(Math.random() * TOTAL_FORMATION_COUNT);
+        if (next === currentMode && randomizedTopologyPlaylist.length > 0) {
+            const alt = randomizedTopologyPlaylist.shift()!;
+            randomizedTopologyPlaylist.push(next);
+            next = alt;
+        }
+        return next;
     };
 
     const update = (time: number) => {
@@ -109,22 +163,43 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
         // If Auto Mode is OFF or user is holding in inspect mode, freeze all autonomous clocks!
         if (state.autoMode === false || state.isInspecting) {
-            // Keep last times tracking current time while paused so countdown doesn't immediately snap to 0 upon resume
-            lastFormationTime = time - (formationInterval * (1.0 - (getCountdownProgress().formationProgress || 0)));
+            const formTotal = (state.transitionDuration ?? 7.0) + (state.holdDuration ?? 7.0);
+            lastFormationTime = time - (formTotal * (1.0 - (getCountdownProgress().formationProgress || 0)));
             return;
         }
 
         const prefs = getRLPreferences();
 
-        // 1. FORMATION CLOCK (Every 28-40s or Harmonic Suite step)
-        if (!state.isFormationLocked && (time - lastFormationTime) >= formationInterval) {
+        // 1. TRUE TOPOLOGY PHYSICAL COMPLETION LIFECYCLE:
+        // Wait until the swarm physically converges into the target geometry
+        const conv = state.physicalConvergence ?? 0;
+        const isConverged = conv >= 0.82;
+
+        if (isConverged && !state.isTopologyFormed) {
+            state.isTopologyFormed = true;
+            state.formedTimestamp = time;
+        }
+
+        const holdDur = state.holdDuration ?? 16.0;
+        const isHoldComplete = state.isTopologyFormed && state.formedTimestamp !== null && (time - (state.formedTimestamp || 0)) >= holdDur;
+
+        // Failsafe max timeout (38s) in case extreme speed/turbulence prevents threshold
+        const transStart = state.transitionStartTime ?? lastFormationTime;
+        const isMaxTimeout = (time - transStart) > 38.0;
+
+        if (!state.isFormationLocked && (isHoldComplete || isMaxTimeout)) {
             lastFormationTime = time;
-            formationInterval = rndJitter(activeArc ? 20.0 : 32.0, 0.2);
+            state.isTopologyFormed = false;
+            state.formedTimestamp = null;
+            state.physicalConvergence = 0.0;
+            state.morphProgress = 0.0;
+            state.transitionStartTime = time;
+            state.holdDuration = rndJitter(activeArc ? 12.0 : 16.0, 0.15);
 
             let nextMode: FormationMode;
 
-            // 20% Chance to trigger a new Emotional Arc if not currently in one
-            if (!activeArc && Math.random() < 0.22) {
+            // 15% Chance to trigger a new Emotional Arc if not currently in one
+            if (!activeArc && Math.random() < 0.15) {
                 activeArc = getRandomEmotionalArc();
                 arcStepIndex = 0;
             }
@@ -136,28 +211,25 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                     activeArc = null; // Arc complete!
                 }
             } else {
-                // Curated Organic Harmonic Suite Selection with forbidden repeat buffer
-                nextMode = sampleHarmonicFormation(
-                    state.formationMode,
-                    prefs,
-                    recentFormations
-                ) as FormationMode;
+                // Completely random order topology selection
+                nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
             }
 
             if (nextMode === state.formationMode) {
-                nextMode = ((state.formationMode + 1) % TOTAL_FORMATION_COUNT) as FormationMode;
+                nextMode = ((state.formationMode + 1 + Math.floor(Math.random() * (TOTAL_FORMATION_COUNT - 1))) % TOTAL_FORMATION_COUNT) as FormationMode;
             }
 
             recentFormations.push(nextMode);
             if (recentFormations.length > 5) recentFormations.shift();
 
-            // Smooth C2 Quintic S-Curve Morph Setup
+            // Setup new topology morph
             state.prevFormationMode = state.formationMode;
             state.prevFormationSeed = state.formationSeed;
             state.formationMode = nextMode;
             state.formationSeed = Math.random() * 10000;
+            state.customFormationName = undefined;
             state.transitionStartTime = time;
-            state.transitionDuration = 9.0;
+            state.transitionDuration = 7.0;
 
             if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                 state.proceduralGenome = generateProceduralGenome();
@@ -271,12 +343,24 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     const getCountdownProgress = () => {
         const now = (state.currentTime !== undefined) ? state.currentTime : (performance.now() / 1000.0);
-        const formElapsed = Math.max(0, now - lastFormationTime);
         const colElapsed = Math.max(0, now - lastColorTime);
-        const formRem = Math.max(0, Math.ceil(formationInterval - formElapsed));
+        const holdDur = state.holdDuration ?? 6.0;
+
+        let formProg = 0;
+        let formRem = 0;
+
+        if (!state.isTopologyFormed) {
+            formProg = state.morphProgress ?? 0;
+            formRem = Math.max(1, Math.ceil((1.0 - formProg) * 8.0) + Math.ceil(holdDur));
+        } else {
+            const holdElapsed = Math.max(0, now - (state.formedTimestamp ?? now));
+            formProg = 1.0;
+            formRem = Math.max(0, Math.ceil(holdDur - holdElapsed));
+        }
 
         return {
-            formationProgress: Math.min(1.0, formElapsed / Math.max(1, formationInterval)),
+            formationProgress: formProg,
+            morphProgress: state.morphProgress ?? 0,
             colorProgress: Math.min(1.0, colElapsed / Math.max(1, colorInterval)),
             formationRemaining: formRem,
             currentArcName: activeArc ? activeArc.name : undefined
@@ -291,12 +375,16 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         if (dim === 'formation') {
             if (state.isFormationLocked) return 'Topology is Locked';
             lastFormationTime = time;
-            formationInterval = rndJitter(32.0, 0.2);
+            state.isTopologyFormed = false;
+            state.formedTimestamp = null;
+            state.physicalConvergence = 0.0;
+            state.morphProgress = 0.0;
 
             state.prevFormationMode = state.formationMode;
             state.prevFormationSeed = state.formationSeed;
             state.transitionStartTime = time;
             state.transitionDuration = 5.0; // Snappy 5s morph right away
+            state.holdDuration = 5.5; // 5.5s appreciation window
 
             if (isSurprise) {
                 const surprise = generateProceduralTopologySurprise();
@@ -307,14 +395,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 return `Topology: ${surprise.name}`;
             } else {
                 state.customFormationName = undefined;
-                let nextMode = sampleHarmonicFormation(
-                    state.formationMode,
-                    prefs,
-                    recentFormations
-                ) as FormationMode;
+                let nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
 
                 if (nextMode === state.formationMode) {
-                    nextMode = ((state.formationMode + 1) % TOTAL_FORMATION_COUNT) as FormationMode;
+                    nextMode = ((state.formationMode + 1 + Math.floor(Math.random() * (TOTAL_FORMATION_COUNT - 1))) % TOTAL_FORMATION_COUNT) as FormationMode;
                 }
 
                 recentFormations.push(nextMode);
@@ -325,7 +409,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                     state.proceduralGenome = generateProceduralGenome();
                 }
-                return `Topology: ${FormationMode[nextMode] || 'Formation #' + nextMode}`;
+                const presetObj = FORMATION_PRESETS.find(f => f.id === nextMode);
+                return `Topology: ${presetObj?.label || 'Topology #' + nextMode}`;
             }
         } else if (dim === 'palette') {
             if (state.isPaletteLocked) return 'Palette is Locked';

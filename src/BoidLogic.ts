@@ -77,10 +77,16 @@ export enum FormationMode {
     DancingRibbonBraid = 26,
     SolarFlareProminence = 27,
     OlympicChainLink = 28,
-    Procedural = 29
+    SaturnianRings = 29,
+    SphericalSurfaceVortex = 30,
+    VillarceauTorus = 31,
+    GalacticSpiral = 32,
+    DysonSphereLattice = 33,
+    BlackHoleAccretion = 34,
+    Procedural = 35
 }
 
-export const TOTAL_FORMATION_COUNT = 30;
+export const TOTAL_FORMATION_COUNT = 36;
 
 export const FORMATION_PRESETS = [
     {
@@ -258,6 +264,42 @@ export const FORMATION_PRESETS = [
         desc: '4 Interlocked elliptical rings linked sequentially in 3D toroidal space'
     },
     {
+        id: FormationMode.SaturnianRings,
+        label: 'Saturnian Planetary Rings',
+        icon: '🪐',
+        desc: 'Oblate planetary sphere with counter-rotating Keplerian dust rings & Cassini division'
+    },
+    {
+        id: FormationMode.SphericalSurfaceVortex,
+        label: 'Spherical Surface Vortices',
+        icon: '🌐',
+        desc: 'Global spherical mantle with Rossby wave atmospheric currents & polar vortex jets'
+    },
+    {
+        id: FormationMode.VillarceauTorus,
+        label: 'Villarceau Torus Mantle',
+        icon: '🍩',
+        desc: 'Full 2D torus surface flow with Villarceau circles & poloidal-toroidal lattice'
+    },
+    {
+        id: FormationMode.GalacticSpiral,
+        label: '4-Arm Galactic Spiral',
+        icon: '🌌',
+        desc: 'Logarithmic Milky Way galaxy with 4 distinct spiral arms & dense central nucleus'
+    },
+    {
+        id: FormationMode.DysonSphereLattice,
+        label: 'Dyson Sphere Cage',
+        icon: '🔮',
+        desc: 'Pulsating plasma core inside orthogonal great-circle orbital rings & energy mesh'
+    },
+    {
+        id: FormationMode.BlackHoleAccretion,
+        label: 'Black Hole & Polar Jets',
+        icon: '🕳️',
+        desc: 'Event horizon with swirling relativistic accretion disc & twin collimated polar jets'
+    },
+    {
         id: FormationMode.Procedural,
         label: 'Infinite Procedural',
         icon: '✨',
@@ -422,56 +464,56 @@ export const MATERIAL_PRESETS = [
         label: 'Vibrant Satin Porcelain',
         icon: '🍶',
         desc: 'Deep vibrant color saturation with a smooth delicate satin surface sheen',
-        settings: { roughness: 0.28, metalness: 0.04, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
+        settings: { roughness: 0.32, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 1,
         label: 'Candy Gloss Enamel',
         icon: '🍬',
-        desc: 'Ultra-glossy automotive candy coat with vivid saturated base colors and crisp white highlights',
-        settings: { roughness: 0.12, metalness: 0.06, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
+        desc: 'Glossy automotive coat with vivid saturated base colors and broad highlights',
+        settings: { roughness: 0.22, metalness: 0.08, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 2,
         label: 'Matte Velvet Clay',
         icon: '🎨',
         desc: 'Non-metallic pure matte finish that showcases 100% true, rich palette colors',
-        settings: { roughness: 0.68, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.02 }
+        settings: { roughness: 0.65, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 3,
         label: 'Faceted Jewel Gem',
         icon: '💎',
-        desc: 'Geometric crystalline facets with crisp highlights that let gemstone colors pop',
-        settings: { roughness: 0.20, metalness: 0.10, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
+        desc: 'Geometric crystalline facets with broad highlights that let gemstone colors pop',
+        settings: { roughness: 0.26, metalness: 0.12, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 4,
         label: 'Silicone Soft-Touch',
         icon: '🧽',
         desc: 'Smooth tactile matte finish with zero glare, displaying pure unmuted pigments',
-        settings: { roughness: 0.78, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.75, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 5,
         label: 'Pearlescent Luster',
         icon: '🦪',
-        desc: 'Soft iridescent pearl luster with rich chromatic depth and gentle luminous rim glints',
-        settings: { roughness: 0.24, metalness: 0.14, wireframe: false, flatShading: false, emissiveIntensity: 0.12 }
+        desc: 'Soft iridescent pearl luster with rich chromatic depth and luminous rim glints',
+        settings: { roughness: 0.28, metalness: 0.15, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 6,
         label: 'Frosted Glass Crystal',
         icon: '🧊',
         desc: 'Modern frosted geometric glass with brilliant saturated diffuse color tone',
-        settings: { roughness: 0.35, metalness: 0.08, wireframe: false, flatShading: true, emissiveIntensity: 0.08 }
+        settings: { roughness: 0.38, metalness: 0.10, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 7,
         label: 'Polished Amber Resin',
         icon: '🍯',
         desc: 'Smooth deep resin with clear specular definition and luminous warm highlights',
-        settings: { roughness: 0.16, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 0.06 }
+        settings: { roughness: 0.24, metalness: 0.06, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     }
 ];
 
@@ -490,6 +532,7 @@ export interface SimulationState {
     materialSettings: MaterialSettings;
     transitionStartTime?: number;
     transitionDuration?: number;
+    holdDuration?: number;
     currentTime?: number;
     boidShape?: number;
     materialPreset?: number;
@@ -518,6 +561,9 @@ export interface SimulationState {
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
     morphProgress?: number;
+    physicalConvergence?: number;
+    isTopologyFormed?: boolean;
+    formedTimestamp?: number | null;
     isReady?: boolean;
     onInitialLoadComplete?: () => void;
     formationRadius?: number;
@@ -691,8 +737,7 @@ export function generateProceduralShapeSurprise(): { shapes: [number, number, nu
 }
 
 
-// Stable normal/binormal braiding offset around a macro-spine point [mx, my, mz]
-// with tangent vector [tanX, tanY, tanZ]
+// True Cascaded Orthonormal Reference Frame for 3-Tier and 4-Tier Nested Helices
 function applyIntertwinedMultiLayer(
     mx: number, my: number, mz: number,
     tanX: number, tanY: number, tanZ: number,
@@ -706,6 +751,7 @@ function applyIntertwinedMultiLayer(
     rMicro: number,
     omegaMicro: number
 ): [number, number, number] {
+    // 1. Order-1: Macro Unit Tangent, Normal & Binormal
     const tLen = Math.sqrt(tanX * tanX + tanY * tanY + tanZ * tanZ) || 1.0;
     const tx = tanX / tLen, ty = tanY / tLen, tz = tanZ / tLen;
 
@@ -723,28 +769,124 @@ function applyIntertwinedMultiLayer(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
-    // Layer 2: Meso species braid phase
-    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.9 * speedMult);
+    // 2. Order-2 (Meso Helix): Species cord spiraling around macro spine
+    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.85 * speedMult);
     const cosMeso = fastCos(mesoAngle);
     const sinMeso = fastSin(mesoAngle);
 
-    // Layer 3: Golden-Angle Fermat Spiral Tube Packing (guarantees zero-overlap spatial packing in O(1) time)
-    const track = indexInSpecies % 16;
-    const trackR = Math.sqrt((track + 0.5) / 16.0) * rMicro;
-    const trackTheta = track * 2.3999632 + (u * omegaMicro * Math.PI) + (time * 1.5 * speedMult); // 137.5 deg golden angle
-    const cosMicro = fastCos(trackTheta);
-    const sinMicro = fastSin(trackTheta);
+    // Dynamic local radial basis vectors (N2, B2) that rotate with the Meso Helix
+    const n2x = nx * cosMeso + bx * sinMeso;
+    const n2y = ny * cosMeso + by * sinMeso;
+    const n2z = nz * cosMeso + bz * sinMeso;
+
+    const b2x = -nx * sinMeso + bx * cosMeso;
+    const b2y = -ny * sinMeso + by * cosMeso;
+    const b2z = -nz * sinMeso + bz * cosMeso;
 
     const isRung = (indexInSpecies % 12 === 0);
     const rungExt = isRung ? ((indexInSpecies % 36) / 36.0 - 0.5) * 1.4 : 0.0;
+    const mesoR = rMeso + rungExt;
 
-    const offN = (cosMeso * (rMeso + rungExt)) + (cosMicro * trackR);
-    const offB = (sinMeso * (rMeso + rungExt)) + (sinMicro * trackR);
+    // Meso Centerline Position
+    const p2x = mx + n2x * mesoR;
+    const p2y = my + n2y * mesoR;
+    const p2z = mz + n2z * mesoR;
+
+    // 3. Order-3 (Micro Helix): Particles form tight golden-spiral micro-tubes orbiting the Meso strand
+    const track = indexInSpecies % 16;
+    const trackR = Math.sqrt((track + 0.5) / 16.0) * rMicro;
+    const trackTheta = (track * 2.3999632) + (u * omegaMicro * Math.PI) + (time * 1.6 * speedMult);
+    const cosMicro = fastCos(trackTheta);
+    const sinMicro = fastSin(trackTheta);
 
     return [
-        mx + nx * offN + bx * offB,
-        my + ny * offN + by * offB,
-        mz + nz * offN + bz * offB
+        p2x + (n2x * cosMicro + b2x * sinMicro) * trackR,
+        p2y + (n2y * cosMicro + b2y * sinMicro) * trackR,
+        p2z + (n2z * cosMicro + b2z * sinMicro) * trackR
+    ];
+}
+
+// 4-Tier True Hierarchical Recursive Super-Helix:
+// Grand Helix -> Secondary Coiled-Coil -> 3-Strand Tertiary Micro-Spirals -> Quaternary Coaxial Boid Streamlines
+function applyRecursiveTripleHelix(
+    mx: number, my: number, mz: number,
+    tanX: number, tanY: number, tanZ: number,
+    u: number,
+    time: number,
+    species: number,
+    indexInSpecies: number,
+    speedMult: number,
+    rMeso: number = 1.35,
+    omegaMeso: number = 14.0,
+    rMicro: number = 0.44,
+    omegaMicro: number = 56.0,
+    rNano: number = 0.14,
+    omegaNano: number = 160.0
+): [number, number, number] {
+    // 1. Order-1: Macro Orthonormal Frame (T1, N1, B1)
+    const tLen = Math.sqrt(tanX * tanX + tanY * tanY + tanZ * tanZ) || 1.0;
+    const tx = tanX / tLen, ty = tanY / tLen, tz = tanZ / tLen;
+
+    let upX = 0, upY = 1, upZ = 0;
+    if (Math.abs(ty) > 0.92) {
+        upX = 1; upY = 0; upZ = 0;
+    }
+    let nx = upY * tz - upZ * ty;
+    let ny = upZ * tx - upX * tz;
+    let nz = upX * ty - upY * tx;
+    const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1.0;
+    nx /= nLen; ny /= nLen; nz /= nLen;
+
+    const bx = ty * nz - tz * ny;
+    const by = tz * nx - tx * nz;
+    const bz = tx * ny - ty * nx;
+
+    // 2. Order-2 (Meso Helix): 4 Species Cords spiraling around macro spine with 90° phase offsets
+    const thetaMeso = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.75 * speedMult);
+    const cosMeso = fastCos(thetaMeso);
+    const sinMeso = fastSin(thetaMeso);
+
+    const n2x = nx * cosMeso + bx * sinMeso;
+    const n2y = ny * cosMeso + by * sinMeso;
+    const n2z = nz * cosMeso + bz * sinMeso;
+
+    const b2x = -nx * sinMeso + bx * cosMeso;
+    const b2y = -ny * sinMeso + by * cosMeso;
+    const b2z = -nz * sinMeso + bz * cosMeso;
+
+    const p2x = mx + n2x * rMeso;
+    const p2y = my + n2y * rMeso;
+    const p2z = mz + n2z * rMeso;
+
+    // 3. Order-3 (Micro Helix): Inside each species cord, 3 sub-strands twist in high-frequency tertiary coils
+    const subStrandId = indexInSpecies % 3;
+    const thetaMicro = u * omegaMicro * Math.PI + (subStrandId * (Math.PI * 2.0 / 3.0)) + (time * 0.6 * speedMult);
+    const cosMicro = fastCos(thetaMicro);
+    const sinMicro = fastSin(thetaMicro);
+
+    const n3x = n2x * cosMicro + b2x * sinMicro;
+    const n3y = n2y * cosMicro + b2y * sinMicro;
+    const n3z = n2z * cosMicro + b2z * sinMicro;
+
+    const b3x = -n2x * sinMicro + b2x * cosMicro;
+    const b3y = -n2y * sinMicro + b2y * cosMicro;
+    const b3z = -n2z * sinMicro + b2z * cosMicro;
+
+    const p3x = p2x + n3x * rMicro;
+    const p3y = p2y + n3y * rMicro;
+    const p3z = p2z + n3z * rMicro;
+
+    // 4. Order-4 (Nano Streamlines): Golden-angle concentric boid swarm particles inside each tertiary strand
+    const track = Math.floor(indexInSpecies / 3) % 8;
+    const trackR = Math.sqrt((track + 0.5) / 8.0) * rNano;
+    const trackTheta = (track * 2.3999632) + (u * omegaNano * Math.PI) + (time * 0.8 * speedMult);
+    const cosNano = fastCos(trackTheta);
+    const sinNano = fastSin(trackTheta);
+
+    return [
+        p3x + (n3x * cosNano + b3x * sinNano) * trackR,
+        p3y + (n3y * cosNano + b3y * sinNano) * trackR,
+        p3z + (n3z * cosNano + b3z * sinNano) * trackR
     ];
 }
 
@@ -914,18 +1056,20 @@ export function computeFormationPoint(
         const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 7.0, 0.24, 18.0);
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.FractalSupercoil) {
-        // --- 11. Fractal Supercoil: 3-Tier Nested Coiled-Coil ---
-        const h = (u - 0.5) * 11.5;
-        const tMacro = u * 4.0 * Math.PI + time * 0.45 * speedMult;
-        const rMacro = 3.8 + fastSin(h * 0.35 + time * 0.5) * 0.4;
+        // --- 11. Fractal Supercoil: 4-Tier True Recursive Nested Helix-of-Helices ---
+        const h = (u - 0.5) * 12.0;
+        const tMacro = u * 4.0 * Math.PI + time * 0.4 * speedMult;
+        const rMacro = 3.8;
         const mx = rMacro * fastCos(tMacro);
         const my = h;
         const mz = rMacro * fastSin(tMacro);
-        const tanX = -rMacro * fastSin(tMacro), tanY = 1.0, tanZ = rMacro * fastCos(tMacro);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.25, 12.0, 0.32, 24.0);
+        const tanX = -rMacro * fastSin(tMacro);
+        const tanY = 1.2;
+        const tanZ = rMacro * fastCos(tMacro);
+        const pt = applyRecursiveTripleHelix(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.35, 14.0, 0.44, 56.0, 0.14, 160.0);
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.SuperhelicalTorusKnot) {
-        // --- 12. Superhelical Torus Knot: Multi-Layer (3,5) Torus Knot with Interlocking Superhelix Strands ---
+        // --- 12. Superhelical Torus Knot: Multi-Layer (3,5) Torus Knot with Recursive 4-Tier Superhelix Strands ---
         const p = 3, q = 5;
         const t = u * Math.PI * 2.0 + time * 0.3 * speedMult;
         const r = fastCos(q * t) * 1.6 + 4.0;
@@ -935,7 +1079,7 @@ export function computeFormationPoint(
         const tanX = -p * r * fastSin(p * t);
         const tanY = q * fastCos(q * t) * 2.2;
         const tanZ = p * r * fastCos(p * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.1, 10.0, 0.28, 20.0);
+        const pt = applyRecursiveTripleHelix(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.15, 14.0, 0.38, 48.0, 0.12, 140.0);
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.DNAChromatinSolenoid) {
         // --- 13. Chromatin Solenoid: 3-Tier Biological Supercoiling ---
@@ -1152,6 +1296,117 @@ export function computeFormationPoint(
         tx = cx + lx;
         ty = cy + ly;
         tz = cz + lz;
+    } else if (formation === FormationMode.SaturnianRings) {
+        // --- 29. Saturnian Planetary Rings: Oblate Core Sphere + Keplerian Dust Rings & Cassini Division ---
+        const tiltAlpha = 0.466; // 26.7 deg axial tilt
+        const cosTilt = fastCos(tiltAlpha);
+        const sinTilt = fastSin(tiltAlpha);
+        let px = 0, py = 0, pz = 0;
+
+        if (species < 2) {
+            // Planet Core Sphere (Species 0 & 1): Golden-spiral oblate sphere with banded differential rotation
+            const yCore = (u * 2.0 - 1.0) * 2.2;
+            const rLat = Math.sqrt(Math.max(0, 1.0 - (yCore / 2.2) * (yCore / 2.2))) * 2.4;
+            const bandSpeed = (0.35 - Math.abs(yCore) * 0.08) * (species === 0 ? 1.0 : 0.85);
+            const theta = (u * 32.0 * Math.PI) + (time * bandSpeed * speedMult) + (species * Math.PI);
+            px = rLat * fastCos(theta);
+            py = yCore * 0.88; // Oblate spheroid flattening
+            pz = rLat * fastSin(theta);
+        } else {
+            // Keplerian Dust Cloud Rings (Species 2 & 3): Flat disc with Cassini Division
+            const isInnerRing = (species === 2);
+            // Inner Ring: R in [3.6, 5.0], Outer Ring: R in [5.6, 8.4] (Cassini gap between 5.0 and 5.6)
+            const rRing = isInnerRing ? (3.6 + u * 1.4) : (5.6 + u * 2.8);
+            const keplerSpeed = Math.sqrt(3.2 / (rRing * rRing * rRing));
+            const ringTheta = (u * 36.0 * Math.PI) + (time * keplerSpeed * speedMult) + (indexInSpecies * 0.04);
+            px = rRing * fastCos(ringTheta);
+            py = fastSin(ringTheta * 2.0 + rRing) * 0.05; // Ultra-flat ring plane with subtle gravitational ripple
+            pz = rRing * fastSin(ringTheta);
+        }
+
+        // Apply 26.7 deg Planetary Tilt
+        tx = px;
+        ty = py * cosTilt - pz * sinTilt;
+        tz = py * sinTilt + pz * cosTilt;
+    } else if (formation === FormationMode.SphericalSurfaceVortex) {
+        // --- 30. Spherical Surface Vortices: Atmospheric & Rossby Wave Currents on 3D Sphere Surface ---
+        const phi = (u - 0.5) * Math.PI * 0.94; // Latitude (-85 deg to +85 deg)
+        const lambda = (u * 12.0 * Math.PI) + (species * (Math.PI * 0.5)) + (time * (0.2 + fastCos(phi) * 0.5) * speedMult);
+        const rSurf = 5.2 + fastSin(3.0 * lambda + time * 0.3) * fastCos(2.0 * phi) * 0.25;
+        tx = rSurf * fastCos(phi) * fastCos(lambda);
+        ty = rSurf * fastSin(phi) + fastCos(lambda * 2.0 + time * 0.4) * 0.1;
+        tz = rSurf * fastCos(phi) * fastSin(lambda);
+    } else if (formation === FormationMode.VillarceauTorus) {
+        // --- 31. Villarceau Torus Mantle: Full 2D Torus Surface Flow with Poloidal-Toroidal Lattice ---
+        const thetaTor = (u * 3.0 * Math.PI) + (time * 0.2 * speedMult);
+        const phiPol = (u * 8.0 * Math.PI) + (species * (Math.PI * 0.5)) + (time * 0.45 * speedMult);
+        const rMajor = 4.6, rMinor = 2.0;
+        const rEff = rMajor + rMinor * fastCos(phiPol);
+        tx = rEff * fastCos(thetaTor);
+        ty = rMinor * fastSin(phiPol);
+        tz = rEff * fastSin(thetaTor);
+    } else if (formation === FormationMode.GalacticSpiral) {
+        // --- 32. 4-Arm Galactic Spiral: Logarithmic Milky Way Disc with Central Nucleus ---
+        const armOffset = species * (Math.PI * 0.5);
+        const rDisc = 0.8 + (u * 7.2);
+        const winding = armOffset + (2.6 * Math.log(rDisc / 0.8)) + (time * (0.75 / Math.sqrt(rDisc + 0.3)) * speedMult);
+        const bulgeThickness = Math.exp(-rDisc / 1.8) * 2.0 + 0.15;
+        const zJitter = fastSin(indexInSpecies * 2.3999) * 0.4 * bulgeThickness;
+        tx = rDisc * fastCos(winding);
+        ty = zJitter;
+        tz = rDisc * fastSin(winding);
+    } else if (formation === FormationMode.DysonSphereLattice) {
+        // --- 33. Dyson Sphere Cage: Central Plasma Star with Orthogonal Great-Circle Rings & Energy Mesh ---
+        if (species === 0) {
+            // Central Star: Pulsating spherical core at R=1.8
+            const yStar = (u * 2.0 - 1.0) * 1.8;
+            const rStar = Math.sqrt(Math.max(0, 1.0 - (yStar / 1.8) * (yStar / 1.8))) * 1.8;
+            const thStar = (u * 16.0 * Math.PI) + (time * 0.35 * speedMult);
+            tx = rStar * fastCos(thStar);
+            ty = yStar;
+            tz = rStar * fastSin(thStar);
+        } else {
+            // 3 Orthogonal Orbital Energy Cages at R=5.2 (Equatorial, Polar-X, Polar-Z)
+            const rCage = 5.2;
+            const thCage = (u * 4.0 * Math.PI) + (time * 0.25 * speedMult) + (indexInSpecies * 0.02);
+            if (species === 1) {
+                // Equatorial Ring
+                tx = rCage * fastCos(thCage);
+                ty = fastSin(thCage * 4.0) * 0.15;
+                tz = rCage * fastSin(thCage);
+            } else if (species === 2) {
+                // Polar X-Y Ring
+                tx = rCage * fastCos(thCage);
+                ty = rCage * fastSin(thCage);
+                tz = fastSin(thCage * 4.0) * 0.15;
+            } else {
+                // Polar Y-Z Ring
+                tx = fastSin(thCage * 4.0) * 0.15;
+                ty = rCage * fastCos(thCage);
+                tz = rCage * fastSin(thCage);
+            }
+        }
+    } else if (formation === FormationMode.BlackHoleAccretion) {
+        // --- 34. Black Hole & Relativistic Jets: Event Horizon Void + Swirling Accretion Disc + Polar Beams ---
+        if (species < 3) {
+            // Accretion Disc (Species 0, 1, 2): Relativistic swirling disc around black hole event horizon
+            const rAcc = 1.8 + (u * 4.8);
+            const keplerV = Math.sqrt(6.0 / (rAcc * rAcc * rAcc));
+            const thAcc = (u * 24.0 * Math.PI) + (time * keplerV * speedMult) + (species * (Math.PI * 2.0 / 3.0));
+            const warpY = fastSin(thAcc + time * 0.5) * 0.2 * (1.0 / (rAcc * 0.5)); // Gravitational vertical lensing warp
+            tx = rAcc * fastCos(thAcc);
+            ty = warpY;
+            tz = rAcc * fastSin(thAcc);
+        } else {
+            // Relativistic Polar Jets (Species 3): Collimated high-velocity magnetic beams along +/- Y axis
+            const isUpJet = (indexInSpecies % 2 === 0);
+            const jetY = (u * 7.5 + 1.2) * (isUpJet ? 1.0 : -1.0);
+            const jetR = (0.3 + (u * 0.6)) * (1.0 + fastSin(jetY * 3.0 + time * 1.5) * 0.2); // Magnetic pinch constriction
+            const jetTheta = (jetY * 2.0) + (time * 1.8 * speedMult) + (indexInSpecies * 0.3);
+            tx = jetR * fastCos(jetTheta);
+            ty = jetY;
+            tz = jetR * fastSin(jetTheta);
+        }
     } else if (formation === FormationMode.Procedural && state && state.proceduralGenome) {
         const g = state.proceduralGenome;
         const th = u * Math.PI * 2.0;
@@ -1240,13 +1495,22 @@ export function getFormationPhysicsProfile(formation: FormationMode): FormationP
         case FormationMode.OlympicChainLink:
             return { lerpRate: 0.14, noiseDrift: 0.0002, strayRatio: 0.0, maxSpeedCap: 0.095, volThickness: 0.05 };
 
-        // 2. ORGANIC KINETIC LOOPS
+        // 2. CELESTIAL, PLANETARY, SPHERICAL & TOROIDAL SURFACE MANIFOLDS
+        case FormationMode.SaturnianRings:
+        case FormationMode.SphericalSurfaceVortex:
+        case FormationMode.VillarceauTorus:
+        case FormationMode.GalacticSpiral:
+        case FormationMode.DysonSphereLattice:
+        case FormationMode.BlackHoleAccretion:
+            return { lerpRate: 0.12, noiseDrift: 0.0003, strayRatio: 0.0, maxSpeedCap: 0.090, volThickness: 0.02 };
+
+        // 3. ORGANIC KINETIC LOOPS
         case FormationMode.OuroborosDragonBraid:
         case FormationMode.DancingRibbonBraid:
         case FormationMode.Procedural:
             return { lerpRate: 0.10, noiseDrift: 0.001, strayRatio: 0.0, maxSpeedCap: 0.075, volThickness: 0.08 };
 
-        // 3. CHAOTIC ATTRACTOR
+        // 4. CHAOTIC ATTRACTOR
         case FormationMode.LorenzChaoticBraid:
         default:
             return { lerpRate: 0.10, noiseDrift: 0.0005, strayRatio: 0.0, maxSpeedCap: 0.085, volThickness: 0.06 };
@@ -1344,6 +1608,9 @@ export class BoidSwarmData {
     strayOrbitSpeed: Float32Array;
     isLeader: Uint8Array;
     u: Float32Array;
+    sheathOffsetX: Float32Array;
+    sheathOffsetY: Float32Array;
+    sheathOffsetZ: Float32Array;
 
     constructor(maxCapacity: number = 100000) {
         this.count = 0;
@@ -1363,6 +1630,9 @@ export class BoidSwarmData {
         this.strayOrbitSpeed = new Float32Array(maxCapacity);
         this.isLeader = new Uint8Array(maxCapacity);
         this.u = new Float32Array(maxCapacity);
+        this.sheathOffsetX = new Float32Array(maxCapacity);
+        this.sheathOffsetY = new Float32Array(maxCapacity);
+        this.sheathOffsetZ = new Float32Array(maxCapacity);
     }
 
     setPopulation(targetCount: number, state: SimulationState) {
@@ -1406,18 +1676,31 @@ export class BoidSwarmData {
         const mode = state && state.formationMode !== undefined ? state.formationMode : 0;
         const seed = state && state.formationSeed !== undefined ? state.formationSeed : 42;
 
+        const RNORM_LUT = new Float32Array(41);
+        for (let k = 0; k <= 40; k++) {
+            RNORM_LUT[k] = Math.sqrt(k / 40.0);
+        }
+
         for (let i = 0; i < targetCount; i++) {
             const sp = this.species[i];
+            const spIdx = this.indexInSpecies[i];
             const tot = speciesCounts[sp] > 0 ? speciesCounts[sp] : 100;
             this.totalInSpecies[i] = tot;
-            this.u[i] = this.indexInSpecies[i] / tot;
+            this.u[i] = spIdx / tot;
+
+            // Precompute deterministic static sheaf offsets once
+            const phi = (spIdx * 2.3999632) + (this.u[i] * 13.7) + (sp * 1.5707963);
+            const rNorm = RNORM_LUT[spIdx % 41];
+            this.sheathOffsetX[i] = fastCos(phi) * rNorm;
+            this.sheathOffsetY[i] = fastSin(phi) * (rNorm * 0.75);
+            this.sheathOffsetZ[i] = fastSin(phi * 1.33) * (rNorm * 0.65);
 
             // If newly initialized, snap to formation point
             if (i >= prevCount) {
-                const [tx, ty, tz] = computeFormationPoint(mode, seed, this.u[i], 0, sp, this.indexInSpecies[i], 3.5, state.speedMultiplier || 0.28, state);
-                this.posX[i] = tx;
-                this.posY[i] = ty;
-                this.posZ[i] = tz;
+                const [tx, ty, tz] = computeFormationPoint(mode, seed, this.u[i], 0, sp, spIdx, 3.5, state.speedMultiplier || 0.14, state);
+                this.posX[i] = tx + this.sheathOffsetX[i] * 0.05;
+                this.posY[i] = ty + this.sheathOffsetY[i] * 0.05;
+                this.posZ[i] = tz + this.sheathOffsetZ[i] * 0.05;
             }
         }
     }
@@ -1483,7 +1766,7 @@ export class Boid {
 
         // Smooth Ease-In and Ease-Out Quintic S-Curve morphing over 9.0 seconds
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
-        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 9.0;
+        const duration = (state && state.transitionDuration !== undefined) ? state.transitionDuration : 7.0;
         const elapsed = Math.max(0.0, time - startTime);
         const p = Math.min(1.0, elapsed / duration);
 

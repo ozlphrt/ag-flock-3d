@@ -228,6 +228,15 @@ body {
   transform: scale(0.92);
 }
 
+.dice-spin-btn:hover {
+  transform: scale(1.12) rotate(18deg) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.45) !important;
+}
+.dice-spin-btn:active {
+  transform: scale(0.90) rotate(-24deg) !important;
+}
+
 .matrix-footer-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
