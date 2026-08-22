@@ -4,6 +4,7 @@ import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
+import { GPGPUFlock } from './GPGPUFlock'
 import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig, CAMERA_PRESETS } from './CameraRig'
@@ -438,7 +439,11 @@ function App() {
 
                 <DynamicStudioLighting simState={simState} />
 
-                <Flock count={population} state={simState.current} setPopulation={setPopulation} />
+                {population >= 200000 ? (
+                    <GPGPUFlock key={`gpgpu-${population}`} count={population} state={simState.current} />
+                ) : (
+                    <Flock key={`cpu-${population}`} count={population} state={simState.current} setPopulation={setPopulation} />
+                )}
 
                 <EffectComposer>
                     <Bloom

@@ -1800,7 +1800,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                         BOID POPULATION
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
-                                        {[5000, 10000, 20000, 50000, 75000, 100000].map(count => (
+                                        {[25000, 50000, 100000, 250000, 500000].map(count => (
                                             <button
                                                 key={count}
                                                 onClick={() => {
@@ -1820,7 +1820,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                                     boxSizing: 'border-box'
                                                 }}
                                             >
-                                                {count >= 1000 ? `${count / 1000}k` : count}
+                                                {count >= 250000 ? `${count / 1000}k GPU` : `${count / 1000}k`}
                                             </button>
                                         ))}
                                     </div>
