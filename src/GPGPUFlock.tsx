@@ -135,7 +135,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const uniformsRef = useRef<{ [key: string]: THREE.IUniform }>({
         texturePosition: { value: null },
         textureVelocity: { value: null },
-        uBoidScale: { value: actualCapacity > 300000 ? 0.045 : 0.065 },
+        uBoidScale: { value: actualCapacity > 300000 ? 0.0095 : 0.0165 },
         uColor0: { value: currentColors.current[0] },
         uColor1: { value: currentColors.current[1] },
         uColor2: { value: currentColors.current[2] },
@@ -225,7 +225,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         }
 
         // Boid Scale based on population
-        const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.040 : 0.055);
+        const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.0095 : 0.0165);
         uniformsRef.current.uBoidScale.value = baseScale;
 
         // Species Color Morphing
