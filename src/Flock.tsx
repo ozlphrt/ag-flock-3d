@@ -575,6 +575,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                             flatShading={mat.flatShading}
                             emissiveIntensity={emissiveInt}
                             toneMapped={true}
+                            fog={true}
                             side={THREE.FrontSide}
                         />
                     </instancedMesh>

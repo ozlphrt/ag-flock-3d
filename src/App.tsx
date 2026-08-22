@@ -227,11 +227,10 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         lerpOklabColor(startRimColor.current, targetRimColor.current, sCurve, curRimColor.current);
 
         // Dynamic Atmospheric Exponential Fog synchronized with live slider
-        const fogDens = Math.max(0.0, profile.fogDensity ?? 0.004);
-        if (!stateContext.scene.fog || !(stateContext.scene.fog instanceof THREE.FogExp2)) {
-            stateContext.scene.fog = new THREE.FogExp2('#141d30', fogDens);
-        } else {
-            stateContext.scene.fog.density = fogDens;
+        if (stateContext.scene.fog && 'density' in stateContext.scene.fog) {
+            const rawDens = profile.fogDensity ?? 0.004;
+            (stateContext.scene.fog as THREE.FogExp2).density = rawDens;
+            (stateContext.scene.fog as THREE.FogExp2).color.set('#1a233a');
         }
 
         // --- Camera-Adaptive Studio Rig: 70° Cross-Side Rake Lighting & Crisp Silhouette Rim ---
@@ -440,6 +439,7 @@ function App() {
                 }}
             >
                 <color attach="background" args={['#1a233a']} />
+                <fogExp2 attach="fog" args={['#1a233a', 0.004]} />
                 <CameraRig simState={simState} />
 
                 <FPSUpdater simState={simState} />
