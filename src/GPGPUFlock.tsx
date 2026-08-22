@@ -102,28 +102,28 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uvs[i * 2 + 1] = y / sizeY;
             species[i] = i % 4;
 
-            // Asymmetric Long-Tail Power-Law Distribution:
-            // - 88% sleek micro-to-mid boids (0.25x - 1.2x)
-            // - 10% larger leader boids (1.3x - 2.8x)
-            // - 1.7% majestic alpha giants (3.0x - 5.0x)
-            // - 0.3% rare monolithic titans (5.5x - 7.5x)
+            // Ultra-Sparse Giant Hierarchy:
+            // - 97.0% sleek fine & mid boids (0.20x - 1.0x)
+            // - 2.5% slightly larger leaders (1.1x - 1.9x)
+            // - 0.4% alpha giants (2.0x - 3.5x)
+            // - 0.08% rare super-giant titans (3.8x - 5.2x)
             const r = Math.random();
             let scale: number;
-            if (r < 0.88) {
+            if (r < 0.97) {
                 const u1 = Math.max(1e-6, Math.random());
                 const u2 = Math.random();
                 const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-                scale = 0.55 * Math.exp(z * 0.35);
-                scale = Math.min(1.25, Math.max(0.22, scale));
-            } else if (r < 0.98) {
-                const subU = (r - 0.88) / 0.10;
-                scale = 1.3 + Math.pow(subU, 1.4) * 1.5;
-            } else if (r < 0.997) {
-                const subU = (r - 0.98) / 0.017;
-                scale = 3.0 + Math.pow(subU, 1.8) * 2.0;
+                scale = 0.50 * Math.exp(z * 0.32);
+                scale = Math.min(1.0, Math.max(0.20, scale));
+            } else if (r < 0.995) {
+                const subU = (r - 0.97) / 0.025;
+                scale = 1.1 + Math.pow(subU, 1.4) * 0.8;
+            } else if (r < 0.9992) {
+                const subU = (r - 0.995) / 0.0042;
+                scale = 2.0 + Math.pow(subU, 1.6) * 1.5;
             } else {
-                const subU = (r - 0.997) / 0.003;
-                scale = 5.5 + subU * 2.0;
+                const subU = (r - 0.9992) / 0.0008;
+                scale = 3.8 + subU * 1.4;
             }
             sizes[i] = scale;
         }

@@ -372,21 +372,21 @@ void main() {
 
     // Compute boid size scale from nSeed (Asymmetric Long-Tail Power-Law)
     float r_sz = fract(nSeed * 97.13);
-    float boidSize = 0.55;
-    if (r_sz < 0.88) {
+    float boidSize = 0.50;
+    if (r_sz < 0.97) {
         float u1_sz = max(1e-6, fract(nSeed * 17.319));
         float u2_sz = fract(nSeed * 43.821);
         float z0_sz = sqrt(-2.0 * log(u1_sz)) * cos(TWO_PI * u2_sz);
-        boidSize = clamp(0.55 * exp(z0_sz * 0.35), 0.22, 1.25);
-    } else if (r_sz < 0.98) {
-        float subU = (r_sz - 0.88) / 0.10;
-        boidSize = 1.3 + pow(subU, 1.4) * 1.5;
-    } else if (r_sz < 0.997) {
-        float subU = (r_sz - 0.98) / 0.017;
-        boidSize = 3.0 + pow(subU, 1.8) * 2.0;
+        boidSize = clamp(0.50 * exp(z0_sz * 0.32), 0.20, 1.0);
+    } else if (r_sz < 0.995) {
+        float subU = (r_sz - 0.97) / 0.025;
+        boidSize = 1.1 + pow(subU, 1.4) * 0.8;
+    } else if (r_sz < 0.9992) {
+        float subU = (r_sz - 0.995) / 0.0042;
+        boidSize = 2.0 + pow(subU, 1.6) * 1.5;
     } else {
-        float subU = (r_sz - 0.997) / 0.003;
-        boidSize = 5.5 + subU * 2.0;
+        float subU = (r_sz - 0.9992) / 0.0008;
+        boidSize = 3.8 + subU * 1.4;
     }
 
     // Dynamic Agility & Inertia Scaling:

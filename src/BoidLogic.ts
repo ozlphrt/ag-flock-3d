@@ -1651,21 +1651,21 @@ export class BoidSwarmData {
                 const baseSize = speciesBaseSizes[sp];
                 const r = Math.random();
                 let bellScale: number;
-                if (r < 0.88) {
+                if (r < 0.97) {
                     const u1 = Math.max(1e-6, Math.random());
                     const u2 = Math.random();
                     const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-                    bellScale = 0.55 * Math.exp(z * 0.35);
-                    bellScale = Math.min(1.25, Math.max(0.22, bellScale));
-                } else if (r < 0.98) {
-                    const subU = (r - 0.88) / 0.10;
-                    bellScale = 1.3 + Math.pow(subU, 1.4) * 1.5;
-                } else if (r < 0.997) {
-                    const subU = (r - 0.98) / 0.017;
-                    bellScale = 3.0 + Math.pow(subU, 1.8) * 2.0;
+                    bellScale = 0.50 * Math.exp(z * 0.32);
+                    bellScale = Math.min(1.0, Math.max(0.20, bellScale));
+                } else if (r < 0.995) {
+                    const subU = (r - 0.97) / 0.025;
+                    bellScale = 1.1 + Math.pow(subU, 1.4) * 0.8;
+                } else if (r < 0.9992) {
+                    const subU = (r - 0.995) / 0.0042;
+                    bellScale = 2.0 + Math.pow(subU, 1.6) * 1.5;
                 } else {
-                    const subU = (r - 0.997) / 0.003;
-                    bellScale = 5.5 + subU * 2.0;
+                    const subU = (r - 0.9992) / 0.0008;
+                    bellScale = 3.8 + subU * 1.4;
                 }
                 this.size[i] = baseSize * bellScale;
 
