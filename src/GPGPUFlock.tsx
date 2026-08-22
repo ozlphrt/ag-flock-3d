@@ -82,11 +82,12 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const sizeX = count > 262144 ? 1024 : 512;
     const sizeY = 512;
 
-    // Instanced Geometry with UV references
+    // Instanced Geometry with UV references and precomputed facet normals
     const geometry = useMemo(() => {
-        const baseGeom = new THREE.IcosahedronGeometry(1.0, 0); // Unit 20-facet icosahedron
+        const baseGeom = new THREE.IcosahedronGeometry(1.0, 0).toNonIndexed();
+        baseGeom.computeVertexNormals();
+
         const instGeom = new THREE.InstancedBufferGeometry();
-        instGeom.index = baseGeom.index;
         instGeom.attributes.position = baseGeom.attributes.position;
         instGeom.attributes.normal = baseGeom.attributes.normal;
 
@@ -162,7 +163,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         const mat = new THREE.MeshStandardMaterial({
             roughness: 0.28,
             metalness: 0.05,
-            flatShading: true
+            flatShading: false
         });
 
         mat.onBeforeCompile = (shader) => {
