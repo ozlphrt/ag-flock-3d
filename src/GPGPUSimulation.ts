@@ -312,17 +312,27 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float t1 = abs(cos(uP_m * theta / 4.0) / max(0.01, uP_a));
             float t2 = abs(sin(uP_m * theta / 4.0) / max(0.01, uP_b));
             float rSup = pow(pow(t1, uP_n2) + pow(t2, uP_n3), -1.0 / max(0.01, uP_n1));
-            float rScaled = clamp(rSup * 3.5, 1.2, 8.5) + (fract(nSeed * 53.1) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 17.9) - 0.5) * 0.4;
-            target = vec3(rScaled * cos(theta) * cos(phi), rScaled * sin(phi) * 1.5, rScaled * sin(theta) * cos(phi));
+            float rScaled = clamp(rSup * 2.8, 1.2, 5.5) + (fract(nSeed * 53.1) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 17.9) - 0.5) * 0.4;
+            target = vec3(rScaled * cos(theta) * cos(phi), rScaled * sin(phi) * 1.2, rScaled * sin(theta) * cos(phi));
         } else {
-            // Harmonic Fourier Series with 3D Sheath
+            // Harmonic Fourier Series with Dense 3D Braided Sheath
             float t = u * TWO_PI + time * 0.3 * speedMult;
             float x = uP_r1 * sin(uP_k1 * t + uP_phi1) + uP_r2 * sin(uP_k3 * t + uP_phi2) + uP_r3 * cos(uP_k5 * t);
             float y = uP_a1 * cos(uP_k2 * t + uP_phi1) + uP_a2 * sin(uP_k4 * t + uP_phi3) + uP_a3 * cos(uP_k6 * t);
             float z = uP_r1 * cos(uP_k1 * t + uP_phi2) + uP_r2 * cos(uP_k4 * t) + uP_r3 * sin(uP_k7 * t);
-            vec3 m = vec3(x, y, z) * 1.2;
-            vec3 tanV = vec3(uP_r1 * cos(uP_k1 * t), -uP_a1 * sin(uP_k2 * t), -uP_r1 * sin(uP_k1 * t));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay);
+            
+            // Normalize scale so curve is always dense and beautifully framed
+            float maxR = max(0.01, uP_r1 + uP_r2 + uP_r3);
+            float scaleFit = 4.2 / maxR;
+            vec3 m = vec3(x, y * 0.8, z) * scaleFit;
+
+            // Analytic Tangent Vector
+            float dx = uP_k1 * uP_r1 * cos(uP_k1 * t + uP_phi1) + uP_k3 * uP_r2 * cos(uP_k3 * t + uP_phi2) - uP_k5 * uP_r3 * sin(uP_k5 * t);
+            float dy = -uP_k2 * uP_a1 * sin(uP_k2 * t + uP_phi1) + uP_k4 * uP_a2 * cos(uP_k4 * t + uP_phi3) - uP_k6 * uP_a3 * sin(uP_k6 * t);
+            float dz = -uP_k1 * uP_r1 * sin(uP_k1 * t + uP_phi2) - uP_k4 * uP_r2 * sin(uP_k4 * t) + uP_k7 * uP_r3 * cos(uP_k7 * t);
+            vec3 tanV = vec3(dx, dy * 0.8, dz);
+
+            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol * 1.35, settleDecay);
         }
     }
     else {

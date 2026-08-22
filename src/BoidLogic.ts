@@ -1436,9 +1436,11 @@ export function computeFormationPoint(
             tz = r * fastSin(angle + fastCos(segT * 3.0) * 0.4);
         } else {
             // Fourier Harmonic family
-            tx = (g.r1 * fastCos(g.k1 * th + g.phi1) * fastSin(g.k2 * th + wTime) + g.a1 * fastCos(g.k3 * th)) * 0.4;
-            ty = (g.r2 * fastSin(g.k4 * th + g.phi2) * fastCos(wTime) + g.a2 * fastSin(g.k5 * th)) * 0.4;
-            tz = (g.r3 * fastSin(g.k6 * th + g.phi3) * fastCos(g.k7 * th + wTime) + g.a3 * fastCos(g.k8 * th)) * 0.4;
+            const maxR = Math.max(0.01, (g.r1 || 3.0) + (g.r2 || 1.8) + (g.r3 || 0.9));
+            const scaleFit = 4.2 / maxR;
+            tx = (g.r1 * fastCos(g.k1 * th + g.phi1) * fastSin(g.k2 * th + wTime) + g.a1 * fastCos(g.k3 * th)) * scaleFit;
+            ty = (g.r2 * fastSin(g.k4 * th + g.phi2) * fastCos(wTime) + g.a2 * fastSin(g.k5 * th)) * scaleFit * 0.8;
+            tz = (g.r3 * fastSin(g.k6 * th + g.phi3) * fastCos(g.k7 * th + wTime) + g.a3 * fastCos(g.k8 * th)) * scaleFit;
         }
     } else {
         // Default Harmonic Torus stream
