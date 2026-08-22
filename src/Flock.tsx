@@ -527,13 +527,24 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             currentColors.current[s].setRGB(r, g, b_rgb);
         }
 
+        const liveMat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };
+        let liveEmissiveInt = liveMat.emissiveIntensity ?? 0.0;
+        if (state.microSurpriseType === 'materialPulse' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+            liveEmissiveInt = 1.4;
+        }
+
         for (let sp = 0; sp < 4; sp++) {
             const mesh = meshRefs[sp].current;
             if (mesh) {
                 mesh.count = speciesCount;
                 mesh.instanceMatrix.needsUpdate = true;
                 if (mesh.material) {
-                    (mesh.material as THREE.MeshStandardMaterial).color.copy(currentColors.current[sp]);
+                    const stdMat = mesh.material as THREE.MeshStandardMaterial;
+                    stdMat.color.copy(currentColors.current[sp]);
+                    stdMat.roughness = liveMat.roughness;
+                    stdMat.metalness = liveMat.metalness;
+                    stdMat.emissiveIntensity = liveEmissiveInt;
+                    stdMat.emissive.copy(currentColors.current[sp]);
                 }
             }
         }

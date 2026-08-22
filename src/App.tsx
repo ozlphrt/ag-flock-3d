@@ -365,15 +365,38 @@ function FPSUpdater({ simState }: { simState: React.MutableRefObject<SimulationS
 }
 
 function DynamicBloom({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
+    const bloomRef = useRef<any>(null);
+
+    useFrame(() => {
+        const s = simState.current.bloomSettings;
+        if (s && bloomRef.current) {
+            const b = bloomRef.current;
+            if (b.intensity !== undefined) {
+                b.intensity = s.intensity ?? 1.2;
+            }
+            if (b.luminanceMaterial && b.luminanceMaterial.threshold !== undefined) {
+                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.22;
+            } else if (b.luminancePass?.luminanceMaterial?.threshold !== undefined) {
+                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.22;
+            }
+            if (b.mipmapBlurPass && b.mipmapBlurPass.radius !== undefined) {
+                b.mipmapBlurPass.radius = s.radius ?? 0.65;
+            } else if (b.radius !== undefined) {
+                b.radius = s.radius ?? 0.65;
+            }
+        }
+    });
+
     const s = simState.current.bloomSettings || { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
     return (
         <EffectComposer>
             <Bloom
+                ref={bloomRef}
                 luminanceThreshold={s.luminanceThreshold}
                 mipmapBlur
                 intensity={s.intensity}
                 radius={s.radius}
-                levels={4}
+                levels={s.levels || 4}
             />
         </EffectComposer>
     );

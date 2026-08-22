@@ -2524,15 +2524,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                             {openFolders.bloom && (
                                 <div>
-                                    {renderDatRow('Threshold', s.bloomSettings?.luminanceThreshold ?? 0.22, 0.00, 1.00, 0.01, v => {
+                                    {renderDatRow('Threshold', s.bloomSettings?.luminanceThreshold ?? 0.22, 0.00, 2.00, 0.01, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.luminanceThreshold = v;
                                     }, 'Luminance cutoff threshold above which surfaces trigger optical bloom glow')}
-                                    {renderDatRow('Intensity', s.bloomSettings?.intensity ?? 1.2, 0.00, 4.00, 0.05, v => {
+                                    {renderDatRow('Intensity', s.bloomSettings?.intensity ?? 1.2, 0.00, 5.00, 0.05, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.intensity = v;
                                     }, 'Total bloom glow radiance & lens flare amplification factor', 'x')}
-                                    {renderDatRow('Radius', s.bloomSettings?.radius ?? 0.65, 0.05, 1.50, 0.02, v => {
+                                    {renderDatRow('Radius', s.bloomSettings?.radius ?? 0.65, 0.00, 2.00, 0.02, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.radius = v;
                                     }, 'Spatial diffusion & blur spread radius of the bloom filter')}
