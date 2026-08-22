@@ -206,14 +206,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         if (p < 1.0) {
             camera.position.lerpVectors(startCamPos.current, _camIdealPos, sCurve);
             curLookTarget.current.lerpVectors(startLookTarget.current, _camIdealTarget, sCurve);
-            camera.up.set(0, 1, 0);
-            camera.lookAt(curLookTarget.current);
 
             perspCam.fov = startFov.current + (preset.fov - startFov.current) * sCurve;
             perspCam.updateProjectionMatrix();
 
             if (controlsRef.current) {
+                controlsRef.current.autoRotate = false;
                 controlsRef.current.target.copy(curLookTarget.current);
+                controlsRef.current.update();
             }
         } else {
             const targetFov = preset.fov;
@@ -225,12 +225,11 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             if (preset.type === 'flythrough' || preset.type === 'corkscrew') {
                 camera.position.copy(_camIdealPos);
                 curLookTarget.current.copy(_camIdealTarget);
-                camera.up.set(0, 1, 0);
-                camera.lookAt(curLookTarget.current);
 
                 if (controlsRef.current) {
                     controlsRef.current.autoRotate = false;
                     controlsRef.current.target.copy(curLookTarget.current);
+                    controlsRef.current.update();
                 }
             } else {
                 // Orbit mode
@@ -238,6 +237,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                     controlsRef.current.autoRotate = !isUserInteracting;
                     controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
                     curLookTarget.current.copy(controlsRef.current.target);
+                    controlsRef.current.update();
                 }
             }
         }
@@ -248,9 +248,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             <PerspectiveCamera ref={cameraRef} makeDefault fov={52} position={[0, 3.5, 14.0]} near={0.25} far={1000} />
             <OrbitControls
                 ref={controlsRef}
-                makeDefault
                 enableDamping
-                dampingFactor={0.05}
+                dampingFactor={0.08}
                 autoRotate={false}
                 minDistance={3.5}
                 maxDistance={250}
