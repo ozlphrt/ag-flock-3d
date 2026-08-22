@@ -2589,33 +2589,34 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 </div>
 
-                {/* Custom Floating Side Tooltip Card (Zero Mouse Overlap, High-Contrast Glassmorphic Card) */}
+                {/* Custom Floating Side Tooltip Card (Large, Ultra-Legible, High-Contrast Glassmorphic Card) */}
                 {hoveredTip && (
                     <div
                         style={{
                             position: 'fixed',
-                            top: `${Math.max(56, Math.min(window.innerHeight - 110, hoveredTip.top - 6))}px`,
-                            left: '336px',
-                            width: '250px',
-                            background: '#121620',
-                            border: '1px solid #2FA1D6',
-                            borderRadius: '4px',
-                            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.9), 0 0 14px rgba(47, 161, 214, 0.3)',
-                            padding: '9px 12px',
+                            top: `${Math.max(56, Math.min(window.innerHeight - 140, hoveredTip.top - 10))}px`,
+                            left: '340px',
+                            width: '330px',
+                            background: 'rgba(12, 16, 26, 0.98)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1.5px solid #2FA1D6',
+                            borderRadius: '8px',
+                            boxShadow: '0 16px 45px rgba(0, 0, 0, 0.95), 0 0 22px rgba(47, 161, 214, 0.35)',
+                            padding: '13px 16px',
                             zIndex: 100002,
                             pointerEvents: 'none',
-                            fontFamily: '"Lucida Grande", sans-serif',
+                            fontFamily: 'Inter, system-ui, sans-serif',
                             color: '#fff',
                             animation: 'fadeIn 0.12s ease-out'
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2FA1D6', display: 'inline-block' }} />
-                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#2FA1D6', letterSpacing: '0.04em' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2FA1D6', boxShadow: '0 0 8px #2FA1D6', display: 'inline-block' }} />
+                            <span style={{ fontSize: '14px', fontWeight: 900, color: '#2FA1D6', letterSpacing: '0.04em' }}>
                                 {hoveredTip.title}
                             </span>
                         </div>
-                        <div style={{ fontSize: '11px', lineHeight: '1.45', color: '#e0e0e0', fontWeight: 'normal' }}>
+                        <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#f0f4f8', fontWeight: 400 }}>
                             {hoveredTip.desc}
                         </div>
                     </div>
