@@ -385,22 +385,23 @@ void main() {
     float localMaxAccel = uMaxAccel * agilityMult;
     float localMaxSpeed = uMaxSpeed * agilityMult;
 
-    // Smooth Critical-Damped Spring Physics (Zero oscillation, Zero stair-stepping)
+    // Smooth Critical-Damped Velocity Filter
     vec3 err = targetPos - pos;
-    vec3 springForce = err * localLerp;
-    vec3 dragForce = -vel * (0.12 + 0.06 * agilityMult);
-    vec3 accel = springForce + dragForce;
+    vec3 targetVel = err * localLerp;
 
-    // Organic living fluid noise turbulence (smaller boids have higher agility/frequency)
+    // Organic living fluid noise turbulence (strictly time + seed driven, ZERO positional feedback jitter)
     float activeNoise = uNoiseDrift * (0.35 + 0.65 * settleDecay);
     if (activeNoise > 1e-5) {
         float freq = 0.8 + 0.6 * agilityMult;
-        accel += vec3(
-            sin(uTime * 1.4 * freq + nSeed * 18.28 + pos.y * 0.4) * activeNoise * agilityMult,
-            cos(uTime * 1.1 * freq + nSeed * 24.12 + pos.z * 0.4) * activeNoise * agilityMult,
-            sin(uTime * 1.6 * freq + nSeed * 14.41 + pos.x * 0.4) * activeNoise * agilityMult
+        targetVel += vec3(
+            sin(uTime * 1.4 * freq + nSeed * 18.28) * activeNoise * agilityMult,
+            cos(uTime * 1.1 * freq + nSeed * 24.12) * activeNoise * agilityMult,
+            sin(uTime * 1.6 * freq + nSeed * 14.41) * activeNoise * agilityMult
         );
     }
+
+    // Exponential smoothing towards target velocity (prevents overshoot/chatter)
+    vec3 accel = (targetVel - vel) * 0.28;
 
     // Soft Acceleration Clamping
     float accelMag = length(accel);
