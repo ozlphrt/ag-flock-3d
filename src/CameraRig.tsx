@@ -242,16 +242,6 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                     controlsRef.current.enabled = true;
                     controlsRef.current.autoRotate = !isUserInteracting;
                     controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
-
-                    if (!isUserInteracting) {
-                        const target = controlsRef.current.target;
-                        const curDist = camera.position.distanceTo(target);
-                        if (curDist > 0.1 && Math.abs(curDist - targetDistance) > 0.05) {
-                            const nextDist = THREE.MathUtils.lerp(curDist, targetDistance, 0.025);
-                            _camDir2.subVectors(camera.position, target).normalize();
-                            camera.position.copy(target).addScaledVector(_camDir2, nextDist);
-                        }
-                    }
                     curLookTarget.current.copy(controlsRef.current.target);
                 }
             }

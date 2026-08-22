@@ -356,9 +356,12 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 convergedCount++;
             }
 
-            let dx = errX * activeLerpRate;
-            let dy = errY * activeLerpRate;
-            let dz = errZ * activeLerpRate;
+            const sz = sizeArr[i];
+            const agility = Math.min(2.2, Math.max(0.48, 0.45 / Math.sqrt(Math.max(0.04, sz))));
+
+            let dx = errX * activeLerpRate * agility;
+            let dy = errY * activeLerpRate * agility;
+            let dz = errZ * activeLerpRate * agility;
 
             if (isLeader[i] === 1) {
                 dx *= 1.08; dy *= 1.08; dz *= 1.08;
@@ -370,18 +373,19 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
 
             if (hasDrift) {
                 const nSeed = noiseSeed[i];
-                targetVelX += fastSin(time * 1.5 + nSeed) * dAmp;
-                targetVelY += fastCos(time * 1.2 + nSeed * 1.3) * dAmp;
-                targetVelZ += fastSin(time * 1.8 + nSeed * 0.7) * dAmp;
+                targetVelX += fastSin(time * 1.5 + nSeed) * dAmp * agility;
+                targetVelY += fastCos(time * 1.2 + nSeed * 1.3) * dAmp * agility;
+                targetVelZ += fastSin(time * 1.8 + nSeed * 0.7) * dAmp * agility;
             }
 
             let ax = targetVelX - velX[i];
             let ay = targetVelY - velY[i];
             let az = targetVelZ - velZ[i];
 
+            const localMaxAccelSq = maxAccelSq * agility * agility;
             const accelMagSq = ax * ax + ay * ay + az * az;
-            if (accelMagSq > maxAccelSq && accelMagSq > 1e-6) {
-                const scale = maxAccel / Math.sqrt(accelMagSq);
+            if (accelMagSq > localMaxAccelSq && accelMagSq > 1e-6) {
+                const scale = (maxAccel * agility) / Math.sqrt(accelMagSq);
                 ax *= scale; ay *= scale; az *= scale;
             }
 
@@ -389,9 +393,10 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             velY[i] += ay;
             velZ[i] += az;
 
+            const localMaxDisp = activeMaxDisp * agility;
             const speedSq = velX[i] * velX[i] + velY[i] * velY[i] + velZ[i] * velZ[i];
-            if (speedSq > maxDispSq && speedSq > 1e-6) {
-                const invSpd = activeMaxDisp / Math.sqrt(speedSq);
+            if (speedSq > (localMaxDisp * localMaxDisp) && speedSq > 1e-6) {
+                const invSpd = localMaxDisp / Math.sqrt(speedSq);
                 velX[i] *= invSpd;
                 velY[i] *= invSpd;
                 velZ[i] *= invSpd;

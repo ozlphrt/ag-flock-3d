@@ -369,33 +369,50 @@ void main() {
         targetPos *= (14.0 / sqrt(targetDistSq));
     }
 
-    // Spring Relaxation
-    vec3 err = targetPos - pos;
-    vec3 targetVel = err * uLerpRate;
+    // Compute boid size scale from nSeed (Box-Muller distribution)
+    float u1_sz = max(1e-6, fract(nSeed * 17.319));
+    float u2_sz = fract(nSeed * 43.821);
+    float z0_sz = sqrt(-2.0 * log(u1_sz)) * cos(TWO_PI * u2_sz);
+    float boidSize = clamp(exp(z0_sz * 0.78), 0.18, 5.5);
 
-    // Organic living fluid noise turbulence (gently attenuates as flock settles)
+    // Dynamic Agility & Inertia Scaling:
+    // Smaller micro-boids have low inertia: up to 2.2x speed & fast agile turns
+    // Giant alpha boids have heavy inertia: 0.5x speed & majestic steady glides
+    float agilityMult = clamp(1.0 / sqrt(boidSize), 0.48, 2.2);
+
+    float localLerp = uLerpRate * agilityMult;
+    float localMaxAccel = uMaxAccel * agilityMult;
+    float localMaxSpeed = uMaxSpeed * agilityMult;
+
+    // Smooth Critical-Damped Spring Physics (Zero oscillation, Zero stair-stepping)
+    vec3 err = targetPos - pos;
+    vec3 springForce = err * localLerp;
+    vec3 dragForce = -vel * (0.12 + 0.06 * agilityMult);
+    vec3 accel = springForce + dragForce;
+
+    // Organic living fluid noise turbulence (smaller boids have higher agility/frequency)
     float activeNoise = uNoiseDrift * (0.35 + 0.65 * settleDecay);
     if (activeNoise > 1e-5) {
-        targetVel += vec3(
-            sin(uTime * 1.4 + nSeed * 18.28 + pos.y * 0.4) * activeNoise,
-            cos(uTime * 1.1 + nSeed * 24.12 + pos.z * 0.4) * activeNoise,
-            sin(uTime * 1.6 + nSeed * 14.41 + pos.x * 0.4) * activeNoise
+        float freq = 0.8 + 0.6 * agilityMult;
+        accel += vec3(
+            sin(uTime * 1.4 * freq + nSeed * 18.28 + pos.y * 0.4) * activeNoise * agilityMult,
+            cos(uTime * 1.1 * freq + nSeed * 24.12 + pos.z * 0.4) * activeNoise * agilityMult,
+            sin(uTime * 1.6 * freq + nSeed * 14.41 + pos.x * 0.4) * activeNoise * agilityMult
         );
     }
 
-    // Acceleration Clamping
-    vec3 accel = targetVel - vel;
+    // Soft Acceleration Clamping
     float accelMag = length(accel);
-    if (accelMag > uMaxAccel && accelMag > 1e-6) {
-        accel *= (uMaxAccel / accelMag);
+    if (accelMag > localMaxAccel && accelMag > 1e-6) {
+        accel *= (localMaxAccel / accelMag);
     }
 
     vel += accel;
 
     // Velocity Clamping
     float speed = length(vel);
-    if (speed > uMaxSpeed && speed > 1e-6) {
-        vel *= (uMaxSpeed / speed);
+    if (speed > localMaxSpeed && speed > 1e-6) {
+        vel *= (localMaxSpeed / speed);
     }
 
     gl_FragColor = vec4(vel, nSeed);
@@ -478,9 +495,9 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uFormationMode = { value: FormationMode.QuadHelixBraid };
     velocityUniforms.uPrevFormationMode = { value: FormationMode.QuadHelixBraid };
     velocityUniforms.uMorphProgress = { value: 1.0 };
-    velocityUniforms.uLerpRate = { value: 0.045 };
-    velocityUniforms.uMaxSpeed = { value: 0.12 };
-    velocityUniforms.uMaxAccel = { value: 0.0035 };
+    velocityUniforms.uLerpRate = { value: 0.075 };
+    velocityUniforms.uMaxSpeed = { value: 0.16 };
+    velocityUniforms.uMaxAccel = { value: 0.028 };
     velocityUniforms.uVolThickness = { value: 0.30 }; // Defined, clean ribbon thickness
     velocityUniforms.uNoiseDrift = { value: 0.006 }; // Subtle organic fluid turbulence
     velocityUniforms.uSeed = { value: 42.0 };
