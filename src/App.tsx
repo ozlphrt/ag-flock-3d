@@ -369,15 +369,15 @@ function DynamicStars({ simState }: { simState: React.MutableRefObject<Simulatio
 
     useFrame(() => {
         const fogDens = simState.current.lightingProfile?.fogDensity ?? 0.004;
-        // Fog attenuates background stars smoothly:
-        // As fog density increases, stars fade out into the deep cosmic nebula haze!
-        const starOpacity = Math.max(0.0, Math.min(1.0, 1.0 - fogDens * 14.0));
+        // Fog attenuates background stars smoothly without shader recompilation
+        const starFactor = Math.max(0.0, Math.min(1.0, 1.0 - fogDens * 14.0)) * 4.8;
         if (starGroupRef.current) {
             starGroupRef.current.traverse((child) => {
                 if ((child as THREE.Points).isPoints && (child as THREE.Points).material) {
-                    const mat = (child as THREE.Points).material as THREE.ShaderMaterial;
-                    mat.transparent = true;
-                    mat.opacity = starOpacity;
+                    const mat = (child as THREE.Points).material as any;
+                    if (mat.uniforms && mat.uniforms.factor) {
+                        mat.uniforms.factor.value = starFactor;
+                    }
                 }
             });
         }

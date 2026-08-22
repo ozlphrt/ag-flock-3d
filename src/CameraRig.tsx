@@ -102,6 +102,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const startLookTarget = useRef(new THREE.Vector3(0, 0, 0));
     const startFov = useRef(52);
     const curLookTarget = useRef(new THREE.Vector3(0, 0, 0));
+    const smoothTargetDist = useRef(14.0);
 
     const handleUserInteraction = () => {
         lastInteractionTime.current = performance.now();
@@ -131,6 +132,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         else if (preset.id === 'action') presetDistMult = 0.88;
 
         const targetDistance = Math.max(minSafeStandoff, baseFramingDist * presetDistMult);
+        smoothTargetDist.current = THREE.MathUtils.damp(smoothTargetDist.current, targetDistance, 2.5, safeDelta);
 
         // 2. Trigger Smooth Transition on Preset Switch
         if (lastPresetIdx.current !== presetIdx) {
@@ -196,7 +198,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         } else {
             // Orbit Presets
             _camDir.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
-            _camIdealPos.copy(_camIdealTarget).addScaledVector(_camDir, targetDistance);
+            _camIdealPos.copy(_camIdealTarget).addScaledVector(_camDir, smoothTargetDist.current);
             if (preset.id === 'giant') {
                 _camIdealPos.y = -(rBound * 0.75 + 1.2);
             }
@@ -207,8 +209,11 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             camera.position.lerpVectors(startCamPos.current, _camIdealPos, sCurve);
             curLookTarget.current.lerpVectors(startLookTarget.current, _camIdealTarget, sCurve);
 
-            perspCam.fov = startFov.current + (preset.fov - startFov.current) * sCurve;
-            perspCam.updateProjectionMatrix();
+            const nextFov = startFov.current + (preset.fov - startFov.current) * sCurve;
+            if (Math.abs(perspCam.fov - nextFov) > 0.05) {
+                perspCam.fov = nextFov;
+                perspCam.updateProjectionMatrix();
+            }
 
             if (controlsRef.current) {
                 controlsRef.current.autoRotate = false;
@@ -217,7 +222,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             }
         } else {
             const targetFov = preset.fov;
-            if (Math.abs(perspCam.fov - targetFov) > 0.01) {
+            if (Math.abs(perspCam.fov - targetFov) > 0.05) {
                 perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, targetFov, 0.05);
                 perspCam.updateProjectionMatrix();
             }
