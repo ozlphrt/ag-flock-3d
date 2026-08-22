@@ -2269,7 +2269,26 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#eee', letterSpacing: '0.04em' }}>
                             CONTROLS <span style={{ opacity: 0.5, fontSize: '10px', fontWeight: 'normal' }}>(Ctrl+Shift+Alt+D)</span>
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <button
+                                onClick={handleToggleGlobalLock}
+                                style={{
+                                    background: isAllDimensionsLocked ? '#ff3b30' : '#222',
+                                    border: isAllDimensionsLocked ? '1px solid #ff6666' : '1px solid #2FA1D6',
+                                    borderRadius: '2px',
+                                    color: isAllDimensionsLocked ? '#fff' : '#2FA1D6',
+                                    padding: '2px 7px',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '3px'
+                                }}
+                                title={isAllDimensionsLocked ? "Click to resume autonomous evolution cycle" : "Click to freeze entire simulation & pause evolution cycle"}
+                            >
+                                {isAllDimensionsLocked ? '🔒 LOCKED' : '🔓 LOCK ALL'}
+                            </button>
                             <button
                                 onClick={() => {
                                     const debugConfig = {
@@ -2326,6 +2345,29 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
                     {/* dat.GUI Scrollable Body */}
                     <div style={{ overflowY: 'auto', flex: 1, background: '#1a1a1a' }}>
+
+                        {/* Global Lock / Pause Controller Row */}
+                        <div
+                            onClick={handleToggleGlobalLock}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '28px',
+                                background: isAllDimensionsLocked ? '#381414' : '#1e2428',
+                                borderBottom: '1px solid #1c1c1c',
+                                borderLeft: `3px solid ${isAllDimensionsLocked ? '#ff3b30' : '#2FA1D6'}`,
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                fontWeight: 'bold',
+                                color: isAllDimensionsLocked ? '#ff6b6b' : '#2FA1D6',
+                                letterSpacing: '0.03em',
+                                userSelect: 'none'
+                            }}
+                            title="Freeze/unfreeze automatic evolution cycles so you can tweak parameters without interruption"
+                        >
+                            {isAllDimensionsLocked ? '🔒 CYCLE PAUSED (CLICK TO RESUME)' : '🔓 PAUSE EVOLUTION (LOCK ALL)'}
+                        </div>
 
                         {/* Folder 1: Swarm & Dynamics */}
                         <div>
