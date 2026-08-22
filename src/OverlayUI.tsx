@@ -33,6 +33,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [isDebugOpen, setIsDebugOpen] = useState(false);
+    const [hoveredTip, setHoveredTip] = useState<{ title: string; desc: string; top: number } | null>(null);
     const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
         swarm: true,
         lighting: false,
@@ -2123,10 +2124,16 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 accent: string = '#2FA1D6'
             ) => {
                 const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
-                const tipText = tooltip ? `${label} — ${tooltip}` : label;
                 return (
                     <div
                         key={label}
+                        onMouseEnter={(e) => {
+                            if (tooltip) {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setHoveredTip({ title: label, desc: tooltip, top: rect.top });
+                            }
+                        }}
+                        onMouseLeave={() => setHoveredTip(null)}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -2136,10 +2143,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             borderLeft: `3px solid ${accent}`,
                             padding: '0 4px 0 8px',
                             fontSize: '11px',
-                            boxSizing: 'border-box'
+                            boxSizing: 'border-box',
+                            cursor: 'default'
                         }}
                     >
-                        {/* Property Label with Tooltip */}
+                        {/* Property Label */}
                         <span
                             style={{
                                 width: '38%',
@@ -2147,10 +2155,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
-                                textShadow: '0 1px 0 #000',
-                                cursor: 'help'
+                                textShadow: '0 1px 0 #000'
                             }}
-                            title={tipText}
                         >
                             {label}
                         </span>
@@ -2166,7 +2172,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 position: 'relative',
                                 overflow: 'hidden'
                             }}
-                            title={tipText}
                         >
                             <div
                                 style={{
@@ -2185,7 +2190,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 max={max}
                                 step={step}
                                 value={value}
-                                title={tipText}
                                 onChange={e => {
                                     onChange(parseFloat(e.target.value));
                                     setTick(t => t + 1);
@@ -2209,7 +2213,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             min={min}
                             max={max}
                             step={step}
-                            title={tipText}
                             value={step < 0.01 ? value.toFixed(3) : (step < 1 ? value.toFixed(2) : value)}
                             onChange={e => {
                                 const parsed = parseFloat(e.target.value);
@@ -2238,6 +2241,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             };
 
             return (
+                <>
                 <div
                     style={{
                         position: 'fixed',
@@ -2584,6 +2588,39 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
                     </div>
                 </div>
+
+                {/* Custom Floating Side Tooltip Card (Zero Mouse Overlap, High-Contrast Glassmorphic Card) */}
+                {hoveredTip && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: `${Math.max(56, Math.min(window.innerHeight - 110, hoveredTip.top - 6))}px`,
+                            left: '336px',
+                            width: '250px',
+                            background: '#121620',
+                            border: '1px solid #2FA1D6',
+                            borderRadius: '4px',
+                            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.9), 0 0 14px rgba(47, 161, 214, 0.3)',
+                            padding: '9px 12px',
+                            zIndex: 100002,
+                            pointerEvents: 'none',
+                            fontFamily: '"Lucida Grande", sans-serif',
+                            color: '#fff',
+                            animation: 'fadeIn 0.12s ease-out'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2FA1D6', display: 'inline-block' }} />
+                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#2FA1D6', letterSpacing: '0.04em' }}>
+                                {hoveredTip.title}
+                            </span>
+                        </div>
+                        <div style={{ fontSize: '11px', lineHeight: '1.45', color: '#e0e0e0', fontWeight: 'normal' }}>
+                            {hoveredTip.desc}
+                        </div>
+                    </div>
+                )}
+            </>
             );
         })()}
 
