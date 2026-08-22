@@ -108,6 +108,7 @@ const _idealBounce = new THREE.Vector3();
 
 function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const ambientRef = useRef<THREE.AmbientLight>(null!);
+    const hemiRef = useRef<THREE.HemisphereLight>(null!);
     const keyRef = useRef<THREE.DirectionalLight>(null!);
     const fillRef = useRef<THREE.DirectionalLight>(null!);
     const rimRef = useRef<THREE.DirectionalLight>(null!);
@@ -122,32 +123,32 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
     const lastProfileId = useRef<number>(-1);
     const transitionStartTime = useRef<number>(0);
-    const transitionDuration = 6.0; // 6.0s luxurious, cinematic lighting transitions
+    const transitionDuration = 3.0; // 3.0s smooth lighting transitions
 
     // Physical state anchors
-    const startAmbient = useRef(0.95);
-    const targetAmbient = useRef(0.95);
-    const curAmbient = useRef(0.95);
+    const startAmbient = useRef(0.12);
+    const targetAmbient = useRef(0.12);
+    const curAmbient = useRef(0.12);
 
-    const startKeyInt = useRef(3.0);
-    const targetKeyInt = useRef(3.0);
-    const curKeyInt = useRef(3.0);
+    const startKeyInt = useRef(3.8);
+    const targetKeyInt = useRef(3.8);
+    const curKeyInt = useRef(3.8);
 
-    const startFillInt = useRef(1.2);
-    const targetFillInt = useRef(1.2);
-    const curFillInt = useRef(1.2);
+    const startFillInt = useRef(0.30);
+    const targetFillInt = useRef(0.30);
+    const curFillInt = useRef(0.30);
 
-    const startRimInt = useRef(2.2);
-    const targetRimInt = useRef(2.2);
-    const curRimInt = useRef(2.2);
+    const startRimInt = useRef(3.5);
+    const targetRimInt = useRef(3.5);
+    const curRimInt = useRef(3.5);
 
     const startKeyColor = useRef(new THREE.Color('#ffffff'));
     const targetKeyColor = useRef(new THREE.Color('#ffffff'));
     const curKeyColor = useRef(new THREE.Color('#ffffff'));
 
-    const startFillColor = useRef(new THREE.Color('#e8f0fe'));
-    const targetFillColor = useRef(new THREE.Color('#e8f0fe'));
-    const curFillColor = useRef(new THREE.Color('#e8f0fe'));
+    const startFillColor = useRef(new THREE.Color('#5a7090'));
+    const targetFillColor = useRef(new THREE.Color('#5a7090'));
+    const curFillColor = useRef(new THREE.Color('#5a7090'));
 
     const startRimColor = useRef(new THREE.Color('#e0e8ff'));
     const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
@@ -164,12 +165,19 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             flashBoost = 2.4;
         }
 
-        // Deep sculptural chiaroscuro: low ambient/fill to preserve 100% color saturation,
-        // calibrated key/rim directional lighting for crisp facet glints without wide washouts
-        const tAmb = (profile.ambientIntensity * 0.40 + 0.04) * mult;
-        const tKey = (profile.keyIntensity * 0.50) * mult * flashBoost;
-        const tFill = (profile.fillIntensity * 0.25) * mult;
-        const tRim = (profile.rimIntensity * 0.60) * mult * flashBoost;
+        // Calibrated dynamic ranges directly responsive to live sliders
+        const tAmb = (profile.ambientIntensity ?? 0.12) * mult;
+        const tKey = (profile.keyIntensity ?? 3.8) * mult * flashBoost;
+        const tFill = (profile.fillIntensity ?? 0.30) * mult * 1.5;
+        const tRim = (profile.rimIntensity ?? 3.5) * mult * flashBoost;
+
+        // Lift fill color luminance if it's too dark so it visibly illuminates shadows
+        const rawFill = new THREE.Color(profile.fillColor);
+        const hsl = { h: 0, s: 0, l: 0 };
+        rawFill.getHSL(hsl);
+        if (hsl.l < 0.28) {
+            rawFill.setHSL(hsl.h, Math.max(hsl.s, 0.40), 0.36);
+        }
 
         if (lastProfileId.current !== profile.id) {
             lastProfileId.current = profile.id;
@@ -191,7 +199,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             targetRimInt.current = tRim;
 
             targetKeyColor.current.set(profile.keyColor);
-            targetFillColor.current.set(profile.fillColor);
+            targetFillColor.current.copy(rawFill);
             targetRimColor.current.set(profile.rimColor);
         } else {
             // Continuously update targets for live slider/flash changes
@@ -199,6 +207,9 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             targetKeyInt.current = tKey;
             targetFillInt.current = tFill;
             targetRimInt.current = tRim;
+            targetKeyColor.current.set(profile.keyColor);
+            targetFillColor.current.copy(rawFill);
+            targetRimColor.current.set(profile.rimColor);
         }
 
         const elapsed = Math.max(0.0, time - transitionStartTime.current);
@@ -214,6 +225,14 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         lerpOklabColor(startKeyColor.current, targetKeyColor.current, sCurve, curKeyColor.current);
         lerpOklabColor(startFillColor.current, targetFillColor.current, sCurve, curFillColor.current);
         lerpOklabColor(startRimColor.current, targetRimColor.current, sCurve, curRimColor.current);
+
+        // Dynamic Atmospheric Exponential Fog synchronized with live slider
+        const fogDens = Math.max(0.0, profile.fogDensity ?? 0.004);
+        if (!stateContext.scene.fog || !(stateContext.scene.fog instanceof THREE.FogExp2)) {
+            stateContext.scene.fog = new THREE.FogExp2('#141d30', fogDens);
+        } else {
+            stateContext.scene.fog.density = fogDens;
+        }
 
         // --- Camera-Adaptive Studio Rig: 70° Cross-Side Rake Lighting & Crisp Silhouette Rim ---
         const camPos = camera.position;
@@ -268,8 +287,13 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
-            ambientRef.current.intensity = Math.max(0.06, curAmbient.current);
-            ambientRef.current.color.copy(curFillColor.current);
+            ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 1.6);
+            ambientRef.current.color.copy(curKeyColor.current).lerp(new THREE.Color('#ffffff'), 0.70);
+        }
+        if (hemiRef.current) {
+            hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 1.2);
+            hemiRef.current.color.copy(curKeyColor.current).lerp(new THREE.Color('#90b8e8'), 0.50);
+            hemiRef.current.groundColor.copy(curFillColor.current).lerp(new THREE.Color('#101828'), 0.50);
         }
         if (keyRef.current) {
             keyRef.current.position.copy(curKeyPos.current);
@@ -295,30 +319,31 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
     return (
         <>
-            <ambientLight ref={ambientRef} intensity={0.08} color="#0c1220" />
+            <ambientLight ref={ambientRef} intensity={0.12} color="#ffffff" />
+            <hemisphereLight ref={hemiRef} args={['#90b8e8', '#101828', 0.25]} />
             <directionalLight
                 ref={keyRef}
                 position={[45, 35, 20]}
-                intensity={1.8}
+                intensity={3.8}
                 color="#ffffff"
             />
             <directionalLight
                 ref={fillRef}
                 position={[-45, -15, -20]}
-                intensity={0.20}
-                color="#101828"
+                intensity={0.30}
+                color="#5a7090"
             />
             <directionalLight
                 ref={rimRef}
                 position={[-20, 45, -50]}
-                intensity={2.0}
+                intensity={3.5}
                 color="#ffffff"
             />
             <directionalLight
                 ref={bounceRef}
                 position={[20, -45, -10]}
-                intensity={0.12}
-                color="#0c1424"
+                intensity={0.15}
+                color="#5a7090"
             />
         </>
     );
@@ -415,14 +440,11 @@ function App() {
                 }}
             >
                 <color attach="background" args={['#1a233a']} />
-                <fog attach="fog" args={['#1a233a', 160, 480]} />
                 <CameraRig simState={simState} />
 
                 <FPSUpdater simState={simState} />
 
                 <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
-
-                <hemisphereLight args={['#446699', '#080e1c', 0.28]} />
 
                 <DynamicStudioLighting simState={simState} />
 

@@ -346,7 +346,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.8,
         keyColor: '#ffffff',
         fillIntensity: 0.30,
-        fillColor: '#1a2238',
+        fillColor: '#5a7090',
         rimIntensity: 3.4,
         rimColor: '#e0f0ff',
         fogDensity: 0.003
@@ -358,7 +358,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.9,
         keyColor: '#ffe090',
         fillIntensity: 0.35,
-        fillColor: '#1e1430',
+        fillColor: '#6a5585',
         rimIntensity: 3.2,
         rimColor: '#5090ff',
         fogDensity: 0.0035
@@ -370,7 +370,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.6,
         keyColor: '#d0e5ff',
         fillIntensity: 0.30,
-        fillColor: '#0a1525',
+        fillColor: '#456590',
         rimIntensity: 3.6,
         rimColor: '#ff9040',
         fogDensity: 0.004
@@ -382,7 +382,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.4,
         keyColor: '#00e5ff',
         fillIntensity: 0.25,
-        fillColor: '#020b18',
+        fillColor: '#205575',
         rimIntensity: 3.8,
         rimColor: '#00ffaa',
         fogDensity: 0.006
@@ -394,7 +394,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 4.2,
         keyColor: '#ff6820',
         fillIntensity: 0.28,
-        fillColor: '#180408',
+        fillColor: '#802535',
         rimIntensity: 3.5,
         rimColor: '#ffa040',
         fogDensity: 0.005
@@ -406,7 +406,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.8,
         keyColor: '#b060ff',
         fillIntensity: 0.30,
-        fillColor: '#100520',
+        fillColor: '#602580',
         rimIntensity: 3.6,
         rimColor: '#30ffb0',
         fogDensity: 0.004
@@ -418,7 +418,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.6,
         keyColor: '#e8e8f8',
         fillIntensity: 0.20,
-        fillColor: '#080812',
+        fillColor: '#505868',
         rimIntensity: 3.5,
         rimColor: '#a0c0e0',
         fogDensity: 0.005
@@ -430,7 +430,7 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
         keyIntensity: 3.2,
         keyColor: '#ffffff',
         fillIntensity: 0.18,
-        fillColor: '#04040a',
+        fillColor: '#384560',
         rimIntensity: 4.5,
         rimColor: '#ffa820',
         fogDensity: 0.007
