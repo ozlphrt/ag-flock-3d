@@ -100,15 +100,16 @@ vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, 
     rx += cos(pAngle) * pRadius;
     ry += sin(pAngle) * pRadius;
 
-    // 4. Time-Decaying Stray Aura: boids that start misaligned smoothly converge into alignment over time
+    // 4. Permanent Organic Stray Aura with Convergence:
+    // ~18% of boids always maintain a subtle, gentle halo floating slightly outside the core ribbon
     float isStray = step(0.82, fract(nSeed * 19.87));
-    float individualDecay = clamp(settleDecay + (fract(nSeed * 77.13) - 0.5) * 0.25, 0.0, 1.0);
-    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.35;
-    float strayDist = (fract(nSeed * 43.21) * 0.65 + 0.20) * vol * 2.2 * isStray * individualDecay;
+    float individualDecay = clamp(settleDecay + (fract(nSeed * 77.13) - 0.5) * 0.20, 0.25, 1.0);
+    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.35 + sin(time * 0.5 + nSeed * 8.2) * 0.4;
+    float strayDist = (fract(nSeed * 43.21) * 0.65 + 0.25) * vol * 2.0 * isStray * individualDecay;
     rx += cos(strayAngle) * strayDist;
     ry += sin(strayAngle) * strayDist;
 
-    // 5. Longitudinal jitter
+    // 5. Longitudinal jitter & permanent organic particle breathing
     float longJitter = (fract(nSeed * 71.23) - 0.5) * 0.15 + (isStray * individualDecay * (fract(nSeed * 31.11) - 0.5) * 0.35);
 
     return m + normal * rx + binormal * ry + tNorm * longJitter;
@@ -348,9 +349,9 @@ void main() {
     float u = fract(speciesAndU);
     float nSeed = velTex.w;
 
-    // Time decay calculation: misaligned boids gradually settle into perfect alignment over 10-15s
+    // Time decay calculation: misaligned boids settle into a baseline organic aura (retaining ~30% permanent noise)
     float elapsed = max(0.0, uTime - uStartTime);
-    float settleDecay = exp(-elapsed * 0.12);
+    float settleDecay = 0.30 + 0.70 * exp(-elapsed * 0.12);
 
     // Evaluate target position with organic time-decaying stray noise and balanced volumetric dispersion
     vec3 targetPos = evaluateTopology(uFormationMode, u, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
