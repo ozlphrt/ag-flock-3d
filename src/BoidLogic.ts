@@ -524,6 +524,8 @@ export interface SimulationState {
     bounds: number;
     speedMultiplier: number;
     sizeMultiplier: number;
+    noiseTurbulence?: number;
+    settleDecay?: number;
     defeatScenario: DefeatScenario;
     formationMode: FormationMode;
     formationSeed: number;
