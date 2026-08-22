@@ -2118,10 +2118,12 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 max: number,
                 step: number,
                 onChange: (val: number) => void,
+                tooltip: string = '',
                 unit: string = '',
                 accent: string = '#2FA1D6'
             ) => {
                 const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+                const tipText = tooltip ? `${label} — ${tooltip}` : label;
                 return (
                     <div
                         key={label}
@@ -2137,7 +2139,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             boxSizing: 'border-box'
                         }}
                     >
-                        {/* Property Label */}
+                        {/* Property Label with Tooltip */}
                         <span
                             style={{
                                 width: '38%',
@@ -2145,9 +2147,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
-                                textShadow: '0 1px 0 #000'
+                                textShadow: '0 1px 0 #000',
+                                cursor: 'help'
                             }}
-                            title={label}
+                            title={tipText}
                         >
                             {label}
                         </span>
@@ -2163,6 +2166,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 position: 'relative',
                                 overflow: 'hidden'
                             }}
+                            title={tipText}
                         >
                             <div
                                 style={{
@@ -2181,6 +2185,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 max={max}
                                 step={step}
                                 value={value}
+                                title={tipText}
                                 onChange={e => {
                                     onChange(parseFloat(e.target.value));
                                     setTick(t => t + 1);
@@ -2204,6 +2209,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             min={min}
                             max={max}
                             step={step}
+                            title={tipText}
                             value={step < 0.01 ? value.toFixed(3) : (step < 1 ? value.toFixed(2) : value)}
                             onChange={e => {
                                 const parsed = parseFloat(e.target.value);
@@ -2393,11 +2399,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                             {openFolders.swarm && (
                                 <div>
-                                    {renderDatRow('Speed', s.speedMultiplier ?? 0.14, 0.02, 0.40, 0.005, v => s.speedMultiplier = v)}
-                                    {renderDatRow('Scale', s.sizeMultiplier ?? 1.5, 0.2, 3.5, 0.05, v => s.sizeMultiplier = v)}
-                                    {renderDatRow('Bounds', s.bounds ?? 50, 15, 120, 1, v => s.bounds = v)}
-                                    {renderDatRow('Turbulence', s.noiseTurbulence ?? 0.005, 0.000, 0.030, 0.001, v => s.noiseTurbulence = v)}
-                                    {renderDatRow('Morph Time', s.transitionDuration ?? 6.0, 1.0, 15.0, 0.5, v => s.transitionDuration = v, 's')}
+                                    {renderDatRow('Speed', s.speedMultiplier ?? 0.14, 0.02, 0.40, 0.005, v => s.speedMultiplier = v, 'Global flight velocity and acceleration multiplier for all boid species')}
+                                    {renderDatRow('Scale', s.sizeMultiplier ?? 1.5, 0.2, 3.5, 0.05, v => s.sizeMultiplier = v, 'Visual 3D mesh geometry scale multiplier for individual boids')}
+                                    {renderDatRow('Bounds', s.bounds ?? 50, 15, 120, 1, v => s.bounds = v, 'Outer containment sphere radius (units) where boids bounce and redirect')}
+                                    {renderDatRow('Turbulence', s.noiseTurbulence ?? 0.005, 0.000, 0.030, 0.001, v => s.noiseTurbulence = v, 'Fluid curl noise turbulence strength injecting organic eddies into motion')}
+                                    {renderDatRow('Morph Time', s.transitionDuration ?? 6.0, 1.0, 15.0, 0.5, v => s.transitionDuration = v, 'Transition duration in seconds when morphing between 3D topologies', 's')}
                                 </div>
                             )}
                         </div>
@@ -2429,23 +2435,23 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     {renderDatRow('Key Light', s.lightingProfile?.keyIntensity ?? 3.8, 0.0, 8.0, 0.1, v => {
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.keyIntensity = v;
-                                    })}
+                                    }, 'Primary key light intensity orbiting with camera to sculpt form & depth')}
                                     {renderDatRow('Fill Light', s.lightingProfile?.fillIntensity ?? 0.30, 0.0, 2.0, 0.02, v => {
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.fillIntensity = v;
-                                    })}
+                                    }, 'Soft camera-tracking fill light intensity softening deep shadows')}
                                     {renderDatRow('Rim Light', s.lightingProfile?.rimIntensity ?? 3.5, 0.0, 8.0, 0.1, v => {
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.rimIntensity = v;
-                                    })}
+                                    }, 'Backlight intensity producing dramatic glowing contours along silhouettes')}
                                     {renderDatRow('Ambient Glow', s.lightingProfile?.ambientIntensity ?? 0.10, 0.00, 0.50, 0.01, v => {
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.ambientIntensity = v;
-                                    })}
+                                    }, 'Omnidirectional ambient floor illumination preventing pitch-black occlusion')}
                                     {renderDatRow('Fog Density', s.lightingProfile?.fogDensity ?? 0.004, 0.000, 0.020, 0.0005, v => {
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.fogDensity = v;
-                                    })}
+                                    }, 'Atmospheric exponential depth fog density providing scale & distance perspective')}
                                 </div>
                             )}
                         </div>
@@ -2477,15 +2483,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     {renderDatRow('Roughness', s.materialSettings?.roughness ?? 0.32, 0.00, 1.00, 0.01, v => {
                                         if (!s.materialSettings) s.materialSettings = { ...MATERIAL_PRESETS[0].settings };
                                         s.materialSettings.roughness = v;
-                                    })}
+                                    }, 'Microfacet surface roughness (0.00 = mirror gloss, 1.00 = diffuse matte)')}
                                     {renderDatRow('Metalness', s.materialSettings?.metalness ?? 0.05, 0.00, 1.00, 0.01, v => {
                                         if (!s.materialSettings) s.materialSettings = { ...MATERIAL_PRESETS[0].settings };
                                         s.materialSettings.metalness = v;
-                                    })}
+                                    }, 'Surface reflectivity model (0.00 = dielectric fresnel, 1.00 = conductive metal)')}
                                     {renderDatRow('Emissive', s.materialSettings?.emissiveIntensity ?? 0.0, 0.00, 2.00, 0.05, v => {
                                         if (!s.materialSettings) s.materialSettings = { ...MATERIAL_PRESETS[0].settings };
                                         s.materialSettings.emissiveIntensity = v;
-                                    })}
+                                    }, 'Self-radiant emissive surface brightness emitted directly by boid facets')}
                                 </div>
                             )}
                         </div>
@@ -2517,19 +2523,19 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     {renderDatRow('Threshold', s.bloomSettings?.luminanceThreshold ?? 0.22, 0.00, 1.00, 0.01, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.luminanceThreshold = v;
-                                    })}
+                                    }, 'Luminance cutoff threshold above which surfaces trigger optical bloom glow')}
                                     {renderDatRow('Intensity', s.bloomSettings?.intensity ?? 1.2, 0.00, 4.00, 0.05, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.intensity = v;
-                                    }, 'x')}
+                                    }, 'Total bloom glow radiance & lens flare amplification factor', 'x')}
                                     {renderDatRow('Radius', s.bloomSettings?.radius ?? 0.65, 0.05, 1.50, 0.02, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.radius = v;
-                                    })}
+                                    }, 'Spatial diffusion & blur spread radius of the bloom filter')}
                                     {renderDatRow('Passes', s.bloomSettings?.levels ?? 4, 1, 8, 1, v => {
                                         if (!s.bloomSettings) s.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
                                         s.bloomSettings.levels = v;
-                                    })}
+                                    }, 'Number of downsample/upsample mipmap blur passes (higher = softer dispersion)')}
                                 </div>
                             )}
                         </div>
@@ -2561,16 +2567,16 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     <div>
                                         {renderDatRow('Freq k1', s.proceduralGenome.k1 || 1, 1, 12, 1, v => {
                                             if (s.proceduralGenome) s.proceduralGenome.k1 = Math.round(v);
-                                        })}
+                                        }, 'Primary harmonic frequency governing major loop revolutions and spatial twists')}
                                         {renderDatRow('Freq k2', s.proceduralGenome.k2 || 1, 1, 12, 1, v => {
                                             if (s.proceduralGenome) s.proceduralGenome.k2 = Math.round(v);
-                                        })}
+                                        }, 'Secondary harmonic frequency governing secondary ripple waves and braiding')}
                                         {renderDatRow('Radius r1', s.proceduralGenome.r1 || 3.0, 0.5, 6.0, 0.1, v => {
                                             if (s.proceduralGenome) s.proceduralGenome.r1 = v;
-                                        })}
+                                        }, 'Major manifold envelope radius defining macro curve dimension')}
                                         {renderDatRow('Radius r2', s.proceduralGenome.r2 || 1.8, 0.5, 6.0, 0.1, v => {
                                             if (s.proceduralGenome) s.proceduralGenome.r2 = v;
-                                        })}
+                                        }, 'Minor sheath envelope radius defining secondary braided cord thickness')}
                                     </div>
                                 )}
                             </div>
