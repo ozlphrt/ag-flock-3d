@@ -2452,7 +2452,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.ambientIntensity = v;
                                     }, 'Omnidirectional ambient floor illumination preventing pitch-black occlusion')}
-                                    {renderDatRow('Fog Density', s.lightingProfile?.fogDensity ?? 0.004, 0.000, 0.060, 0.001, v => {
+                                    {renderDatRow('Fog Density', s.lightingProfile?.fogDensity ?? 0.004, 0.000, 0.150, 0.001, v => {
                                         if (!s.lightingProfile) s.lightingProfile = { ...LIGHTING_PROFILES[0] };
                                         s.lightingProfile.fogDensity = v;
                                     }, 'Atmospheric exponential depth fog density providing scale & distance perspective')}

@@ -514,6 +514,20 @@ export const MATERIAL_PRESETS = [
         icon: '🍯',
         desc: 'Smooth deep resin with clear specular definition and luminous warm highlights',
         settings: { roughness: 0.24, metalness: 0.06, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+    },
+    {
+        id: 8,
+        label: 'Sparkling Specular Facets',
+        icon: '💎',
+        desc: 'Crystalline multifaceted diamond geometry with high metallic speckles and light glints',
+        settings: { roughness: 0.26, metalness: 0.40, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
+    },
+    {
+        id: 9,
+        label: 'Glinting Obsidian Foil',
+        icon: '✨',
+        desc: 'Deep metallic foil with sparkling facet glimmers that catch dynamic rim & key beams',
+        settings: { roughness: 0.22, metalness: 0.48, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
     }
 ];
 
@@ -684,12 +698,27 @@ export function generateProceduralPaletteSurprise(): { colors: [string, string, 
     return { colors, name };
 }
 
-// 3. Infinite Procedural Physical PBR Material Generator
+// 3. Infinite Procedural Physical PBR Material Generator (Specialized in Sparkling Specular Facets)
 export function generateProceduralMaterialSurprise(): { settings: MaterialSettings; name: string } {
-    const isFaceting = Math.random() > 0.45;
-    const roughness = Number((Math.random() * 0.90 + 0.02).toFixed(2));
-    const metalness = Number((Math.random() * 0.95 + 0.02).toFixed(2));
-    const emissiveIntensity = Number((Math.random() * 0.85 + 0.05).toFixed(2));
+    // 75% bias towards sparkling faceted specular crystalline materials
+    const isSparklingMode = Math.random() < 0.75;
+    
+    let isFaceting = true;
+    let roughness = 0.26;
+    let metalness = 0.40;
+    let emissiveIntensity = 0.10;
+
+    if (isSparklingMode) {
+        isFaceting = true;
+        roughness = Number((0.18 + Math.random() * 0.14).toFixed(2)); // 0.18 - 0.32: sharp specular glints
+        metalness = Number((0.28 + Math.random() * 0.28).toFixed(2)); // 0.28 - 0.56: brilliant metallic speckles
+        emissiveIntensity = Number((0.05 + Math.random() * 0.15).toFixed(2)); // 0.05 - 0.20: subtle glowing core
+    } else {
+        isFaceting = Math.random() > 0.40;
+        roughness = Number((Math.random() * 0.85 + 0.05).toFixed(2));
+        metalness = Number((Math.random() * 0.80 + 0.05).toFixed(2));
+        emissiveIntensity = Number((Math.random() * 0.50).toFixed(2));
+    }
 
     const settings: MaterialSettings = {
         roughness,
@@ -699,8 +728,8 @@ export function generateProceduralMaterialSurprise(): { settings: MaterialSettin
         emissiveIntensity
     };
 
-    const adjectives = ['Liquid', 'Luminescent', 'Anisotropic', 'Iridescent', 'Velvet', 'Galvanized', 'Frosted', 'Hyper-Gloss'];
-    const nouns = ['Chrome', 'Titanium', 'Obsidian', 'Opal', 'Ceramic', 'Polymer', 'Resin', 'Crystal'];
+    const adjectives = ['Sparkling', 'Crystalline', 'Specular', 'Glinting', 'Prismatic', 'Obsidian', 'Diamond', 'Hyper-Gloss', 'Faceted'];
+    const nouns = ['Jewel', 'Titanium', 'Magma Foil', 'Opal', 'Crystal', 'Polymer', 'Resin', 'Sparks'];
     const name = `✨ ${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
 
     return { settings, name };
@@ -709,23 +738,23 @@ export function generateProceduralMaterialSurprise(): { settings: MaterialSettin
 // 4. Infinite Procedural Studio Lighting Generator
 export function generateProceduralLightingSurprise(): LightingProfile {
     const keyHue = Math.floor(Math.random() * 360);
-    const rimHue = (keyHue + 150 + Math.random() * 60) % 360;
+    const rimHue = (keyHue + 140 + Math.random() * 80) % 360;
     const fillHue = (keyHue + 180) % 360;
 
-    const names = ['Neon Cyber-Dawn', 'Solar Eclipse Studio', 'Bioluminescent Trench', 'Prismatic Twilight', 'Quantum Horizon'];
+    const names = ['Volcanic Horizon', 'Solar Eclipse Corona', 'Bioluminescent Trench', 'Prismatic Aurora', 'Nebula Obsidian'];
     const label = `✨ ` + names[Math.floor(Math.random() * names.length)] + ` #${Math.floor(Math.random() * 900 + 100)}`;
 
     return {
         id: -1,
         label,
-        ambientIntensity: Number((0.45 + Math.random() * 0.35).toFixed(2)),
-        keyIntensity: Number((2.2 + Math.random() * 1.8).toFixed(2)),
-        keyColor: hslToHex(keyHue, 80, 75),
-        fillIntensity: Number((0.5 + Math.random() * 0.5).toFixed(2)),
-        fillColor: hslToHex(fillHue, 60, 65),
-        rimIntensity: Number((1.8 + Math.random() * 1.8).toFixed(2)),
-        rimColor: hslToHex(rimHue, 90, 80),
-        fogDensity: Number((0.002 + Math.random() * 0.004).toFixed(4))
+        ambientIntensity: Number((0.24 + Math.random() * 0.26).toFixed(2)), // 0.24 - 0.50
+        keyIntensity: Number((3.2 + Math.random() * 1.6).toFixed(2)),       // 3.2 - 4.8
+        keyColor: hslToHex(keyHue, 85, 70),
+        fillIntensity: Number((0.45 + Math.random() * 0.45).toFixed(2)),     // 0.45 - 0.90
+        fillColor: hslToHex(fillHue, 65, 55),
+        rimIntensity: Number((2.2 + Math.random() * 1.8).toFixed(2)),       // 2.2 - 4.0
+        rimColor: hslToHex(rimHue, 95, 75),
+        fogDensity: Number((0.020 + Math.random() * 0.045).toFixed(3))      // 0.020 - 0.065: rich atmospheric depth
     };
 }
 

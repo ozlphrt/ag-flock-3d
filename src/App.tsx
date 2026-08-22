@@ -364,6 +364,32 @@ function FPSUpdater({ simState }: { simState: React.MutableRefObject<SimulationS
     return null;
 }
 
+function DynamicStars({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
+    const starGroupRef = useRef<THREE.Group>(null!);
+
+    useFrame(() => {
+        const fogDens = simState.current.lightingProfile?.fogDensity ?? 0.004;
+        // Fog attenuates background stars smoothly:
+        // As fog density increases, stars fade out into the deep cosmic nebula haze!
+        const starOpacity = Math.max(0.0, Math.min(1.0, 1.0 - fogDens * 14.0));
+        if (starGroupRef.current) {
+            starGroupRef.current.traverse((child) => {
+                if ((child as THREE.Points).isPoints && (child as THREE.Points).material) {
+                    const mat = (child as THREE.Points).material as THREE.ShaderMaterial;
+                    mat.transparent = true;
+                    mat.opacity = starOpacity;
+                }
+            });
+        }
+    });
+
+    return (
+        <group ref={starGroupRef}>
+            <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
+        </group>
+    );
+}
+
 function DynamicBloom({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const bloomRef = useRef<any>(null);
 
@@ -467,7 +493,7 @@ function App() {
 
                 <FPSUpdater simState={simState} />
 
-                <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
+                <DynamicStars simState={simState} />
 
                 <DynamicStudioLighting simState={simState} />
 

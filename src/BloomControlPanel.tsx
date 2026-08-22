@@ -183,6 +183,13 @@ export const BLOOM_PRESETS: BloomPreset[] = [
         icon: '🎯',
         desc: 'Raw WebGL hardware shading with zero bloom post-processing',
         settings: { luminanceThreshold: 1.50, radius: 0.00, intensity: 0.00, levels: 1 }
+    },
+    {
+        id: 24,
+        label: 'Radiant Specular Halo',
+        icon: '🌋',
+        desc: 'Rich atmospheric bloom bursting from glowing metallic magma speckles',
+        settings: { luminanceThreshold: 0.21, radius: 0.72, intensity: 2.35, levels: 3 }
     }
 ];
 
