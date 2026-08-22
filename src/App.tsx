@@ -341,7 +341,7 @@ function FPSUpdater({ simState }: { simState: React.MutableRefObject<SimulationS
 }
 
 function DynamicBloom({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
-    const s = simState.current.bloomSettings || { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 8 };
+    const s = simState.current.bloomSettings || { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
     return (
         <EffectComposer>
             <Bloom
@@ -349,7 +349,7 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
                 mipmapBlur
                 intensity={s.intensity}
                 radius={s.radius}
-                levels={s.levels}
+                levels={4}
             />
         </EffectComposer>
     );
