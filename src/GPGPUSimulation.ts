@@ -29,7 +29,7 @@ void main() {
 }
 `;
 
-// GLSL Fragment Shader for Velocity & Volumetric Topology Math
+// GLSL Fragment Shader for Velocity & Calibrated Semi-Tight Topology Math
 const velocityShader = `
 uniform float uTime;
 uniform float uDelta;
@@ -73,7 +73,7 @@ vec3 rotateZ(vec3 p, float a) {
     return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
 }
 
-// Coordinate Frame generator with 3D Hierarchical Multi-Strand Braiding & Fermat Sheath Dispersion
+// Coordinate Frame generator with balanced semi-tight multi-strand braiding
 vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, float nSeed, float speedMult, float radius, float angFreq, float vol) {
     vec3 tNorm = normalize(tangent);
     vec3 up = abs(tNorm.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -85,22 +85,22 @@ vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, 
     float rx = cos(cordAngle) * radius;
     float ry = sin(cordAngle) * radius;
 
-    // 2. Order-3 Micro multi-strands (6 interwoven sub-strands per species cord)
-    float subStrand = floor(fract(nSeed * 13.37) * 6.0);
-    float microAngle = subStrand * (TWO_PI / 6.0) + u * 32.0 * PI + time * 0.85 * speedMult;
-    float rMicro = 0.55 * vol;
+    // 2. Order-3 Micro multi-strands (4 clean sub-strands per species cord)
+    float subStrand = floor(fract(nSeed * 13.37) * 4.0);
+    float microAngle = subStrand * (TWO_PI / 4.0) + u * 24.0 * PI + time * 0.75 * speedMult;
+    float rMicro = 0.22 * vol;
     rx += cos(microAngle) * rMicro;
     ry += sin(microAngle) * rMicro;
 
-    // 3. Order-4 Volumetric Fermat Golden-Angle Radial Cloud (fills the interior and exterior of the ribbon with 3D depth)
+    // 3. Order-4 Volumetric Fermat Golden-Angle Radial dispersion (crisp, compact sheath)
     float goldenAngle = 2.399963229728653;
-    float pAngle = fract(nSeed * 37.19) * TWO_PI + goldenAngle * u * 12000.0;
-    float pRadius = (sqrt(fract(nSeed * 89.41)) * 0.8 + 0.2) * vol * 2.8;
+    float pAngle = fract(nSeed * 37.19) * TWO_PI + goldenAngle * u * 8000.0;
+    float pRadius = (sqrt(fract(nSeed * 89.41)) * 0.6 + 0.1) * vol * 0.75;
     rx += cos(pAngle) * pRadius;
     ry += sin(pAngle) * pRadius;
 
-    // 4. Longitudinal jitter along curve tangent to eliminate artificial vertical slice bands
-    float longJitter = (fract(nSeed * 71.23) - 0.5) * 0.55;
+    // 4. Subtle longitudinal anti-aliasing jitter
+    float longJitter = (fract(nSeed * 71.23) - 0.5) * 0.15;
 
     return m + normal * rx + binormal * ry + tNorm * longJitter;
 }
@@ -116,7 +116,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float R = 3.6;
         vec3 m = vec3(R * cos(theta), h, R * sin(theta));
         vec3 tanV = vec3(-R * sin(theta), 1.2, R * cos(theta));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 10.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 10.0, vol);
     }
     else if (mode == 1) {
         // Concentric Dual Helix Sheath
@@ -126,12 +126,12 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float theta = u * 9.0 * PI + time * 0.7 * speedMult;
             vec3 m = vec3(2.2 * cos(theta), h, 2.2 * sin(theta));
             vec3 tanV = vec3(-2.2 * sin(theta), 1.2, 2.2 * cos(theta));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.65, 8.0, vol * 0.8);
+            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.55, 8.0, vol * 0.8);
         } else {
             float theta = -u * 6.0 * PI - time * 0.5 * speedMult;
             vec3 m = vec3(4.4 * cos(theta), h, 4.4 * sin(theta));
             vec3 tanV = vec3(4.4 * sin(theta), 1.2, -4.4 * cos(theta));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.85, 8.0, vol * 0.9);
+            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.75, 8.0, vol * 0.9);
         }
     }
     else if (mode == 2) {
@@ -140,14 +140,14 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float R0 = 4.8;
         vec3 m = vec3(R0 * cos(t), 0.0, R0 * sin(t));
         vec3 tanV = vec3(-R0 * sin(t), 0.0, R0 * cos(t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.45, 8.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.35, 8.0, vol);
     }
     else if (mode == 3) {
         // Trefoil Braided Ribbon (2,3)
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3((sin(t) + 2.0 * sin(2.0 * t)) * 1.5, (cos(t) - 2.0 * cos(2.0 * t)) * 1.5, (-sin(3.0 * t)) * 2.0);
         vec3 tanV = vec3((cos(t) + 4.0 * cos(2.0 * t)) * 1.5, (-sin(t) + 4.0 * sin(2.0 * t)) * 1.5, (-3.0 * cos(3.0 * t)) * 2.0);
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.1, 6.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol);
     }
     else if (mode == 4) {
         // Mobius Helix Braid
@@ -156,14 +156,14 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float R0 = 4.5;
         vec3 m = vec3(R0 * cos(t), sin(halfT) * 1.8, R0 * sin(t));
         vec3 tanV = vec3(-R0 * sin(t), cos(halfT) * 0.9, R0 * cos(t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 7.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.1, 7.0, vol);
     }
     else if (mode == 5) {
         // Lissajous Intertwined Knot
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.2 * sin(2.0 * t), 3.5 * cos(3.0 * t), 2.8 * sin(4.0 * t));
         vec3 tanV = vec3(8.4 * cos(2.0 * t), -10.5 * sin(3.0 * t), 11.2 * cos(4.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.1, 6.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol);
     }
     else if (mode == 7) {
         // Borromean Rings
@@ -181,7 +181,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             m = vec3(2.5 * sin(t), 1.4 * sin(2.0 * t) + 0.9, 4.4 * cos(t));
             tanV = vec3(2.5 * cos(t), 2.8 * cos(2.0 * t), -4.4 * sin(t));
         }
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.65, 6.0, vol);
     }
     else if (mode == 8) {
         // Figure-Eight Knot Braid (4_1 Listing Knot)
@@ -189,7 +189,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float rBase = 2.8 + 1.3 * cos(2.0 * t);
         vec3 m = vec3(rBase * cos(3.0 * t), rBase * sin(3.0 * t), 2.4 * sin(4.0 * t));
         vec3 tanV = vec3(-3.0 * rBase * sin(3.0 * t), 3.0 * rBase * cos(3.0 * t), 9.6 * cos(4.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol);
     }
     else if (mode == 9) {
         // Cinqfoil Knot Braid (5,2)
@@ -197,7 +197,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = 3.6 + 1.5 * cos(5.0 * t);
         vec3 m = vec3(r * cos(2.0 * t), r * sin(2.0 * t), -2.5 * sin(5.0 * t));
         vec3 tanV = vec3(-2.0 * r * sin(2.0 * t), 2.0 * r * cos(2.0 * t), -12.5 * cos(5.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 5.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 5.0, vol);
     }
     else if (mode == 11) {
         // Fractal Supercoil
@@ -206,7 +206,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float rMacro = 3.8;
         vec3 m = vec3(rMacro * cos(tMacro), h, rMacro * sin(tMacro));
         vec3 tanV = vec3(-rMacro * sin(tMacro), 1.2, rMacro * cos(tMacro));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.45, 14.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.35, 14.0, vol);
     }
     else if (mode == 12) {
         // Superhelical Torus Knot (3,5)
@@ -214,7 +214,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = cos(5.0 * t) * 1.6 + 4.0;
         vec3 m = vec3(r * cos(3.0 * t), sin(5.0 * t) * 2.2, r * sin(3.0 * t));
         vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 5.0 * cos(5.0 * t) * 2.2, 3.0 * r * cos(3.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 14.0, vol);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 14.0, vol);
     }
     else if (mode == 29) {
         // Saturnian Rings with Central Planetary Sphere
@@ -224,14 +224,14 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float uSph = u / (1.0 - ringRadiusRatio);
             float phi = acos(1.0 - 2.0 * uSph);
             float theta = sqrt(uSph * 250000.0) * 2.39996 + time * 0.25 * speedMult;
-            float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.35 * vol;
+            float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.08 * vol;
             target = vec3(rPlanet * sin(phi) * cos(theta), rPlanet * cos(phi) * 0.92, rPlanet * sin(phi) * sin(theta));
         } else {
             // Hyper-Dense Planetary Dust Ring System
             float uRing = (u - (1.0 - ringRadiusRatio)) / ringRadiusRatio;
-            float ringRadius = 4.0 + uRing * 5.2 + (fract(nSeed * 29.13) - 0.5) * 0.6 * vol;
+            float ringRadius = 4.0 + uRing * 5.2 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
             float ringAngle = uRing * 180.0 * PI + time * (1.2 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI;
-            float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.65 * vol;
+            float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.18 * vol;
             vec3 ringPt = vec3(ringRadius * cos(ringAngle), ringThickness, ringRadius * sin(ringAngle));
             target = rotateZ(ringPt, 0.44); // 25° axial tilt
         }
@@ -240,16 +240,16 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         // Spherical Surface Vortex
         float phi = acos(1.0 - 2.0 * u);
         float latSpeed = (sin(phi * 4.0) * 0.7 + 0.9) * speedMult;
-        float theta = sqrt(u * 250000.0) * 2.39996 + time * latSpeed * 0.45 + nSeed * 0.15;
-        float rSurf = 5.2 + sin(phi * 8.0 + time * 1.5) * 0.25 + (fract(nSeed * 19.4) - 0.5) * 0.9 * vol;
+        float theta = sqrt(u * 250000.0) * 2.39996 + time * latSpeed * 0.45 + nSeed * 0.08;
+        float rSurf = 5.2 + sin(phi * 8.0 + time * 1.5) * 0.18 + (fract(nSeed * 19.4) - 0.5) * 0.22 * vol;
         target = vec3(rSurf * sin(phi) * cos(theta), rSurf * cos(phi), rSurf * sin(phi) * sin(theta));
     }
     else if (mode == 31) {
         // Villarceau Torus
         float t = u * TWO_PI + time * 0.35 * speedMult;
-        float R0 = 4.2, r0 = 2.2 + (fract(nSeed * 17.5) - 0.5) * 0.8 * vol;
+        float R0 = 4.2, r0 = 2.2 + (fract(nSeed * 17.5) - 0.5) * 0.22 * vol;
         float theta = t;
-        float phi = t + sp * (PI * 0.5) + (fract(nSeed * 23.1) - 0.5) * 0.5;
+        float phi = t + sp * (PI * 0.5) + (fract(nSeed * 23.1) - 0.5) * 0.18;
         target = vec3((R0 + r0 * cos(phi)) * cos(theta), r0 * sin(phi), (R0 + r0 * cos(phi)) * sin(theta));
     }
     else if (mode == 32) {
@@ -257,16 +257,16 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float arm = mod(sp + floor(u * 4.0), 4.0);
         float armOffset = arm * (TWO_PI / 4.0);
         float uArm = fract(u * 4.0);
-        float r = 0.8 + uArm * 7.5 + (fract(nSeed * 41.3) - 0.5) * 0.6 * vol;
-        float theta = armOffset + log(max(0.2, r)) * 2.2 + time * (1.8 / max(0.5, sqrt(r))) * speedMult + (fract(nSeed * 19.1) - 0.5) * 0.35;
-        float zDisc = (fract(nSeed * 47.1) - 0.5) * exp(-r * 0.25) * 1.6 * vol;
+        float r = 0.8 + uArm * 7.5 + (fract(nSeed * 41.3) - 0.5) * 0.22 * vol;
+        float theta = armOffset + log(max(0.2, r)) * 2.2 + time * (1.8 / max(0.5, sqrt(r))) * speedMult + (fract(nSeed * 19.1) - 0.5) * 0.15;
+        float zDisc = (fract(nSeed * 47.1) - 0.5) * exp(-r * 0.25) * 0.45 * vol;
         target = vec3(r * cos(theta), zDisc, r * sin(theta));
     }
     else if (mode == 33) {
         // Dyson Sphere Lattice
         float phi = acos(1.0 - 2.0 * u);
         float theta = sqrt(u * 250000.0) * 2.39996 + time * 0.2 * speedMult;
-        float rDyson = 5.5 + 0.3 * sin(phi * 12.0) * cos(theta * 12.0) + (fract(nSeed * 27.8) - 0.5) * 0.7 * vol;
+        float rDyson = 5.5 + 0.2 * sin(phi * 12.0) * cos(theta * 12.0) + (fract(nSeed * 27.8) - 0.5) * 0.18 * vol;
         target = vec3(rDyson * sin(phi) * cos(theta), rDyson * cos(phi), rDyson * sin(phi) * sin(theta));
     }
     else if (mode == 34) {
@@ -276,16 +276,16 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float uJet = u / 0.12;
             float jetSign = (sp < 2.0) ? 1.0 : -1.0;
             float hJet = (uJet * 6.5 + 1.2) * jetSign;
-            float rJet = 0.25 + uJet * 0.65 + (fract(nSeed * 15.3) - 0.5) * 0.3 * vol;
+            float rJet = 0.25 + uJet * 0.65 + (fract(nSeed * 15.3) - 0.5) * 0.12 * vol;
             float thetaJet = uJet * 20.0 * PI + time * 2.5 * speedMult + nSeed * TWO_PI;
             target = vec3(rJet * cos(thetaJet), hJet, rJet * sin(thetaJet));
         } else {
             // Swirling Accretion Disk
             float uDisk = (u - 0.12) / 0.88;
-            float rDisk = 1.8 + uDisk * 6.2 + (fract(nSeed * 33.7) - 0.5) * 0.5 * vol;
+            float rDisk = 1.8 + uDisk * 6.2 + (fract(nSeed * 33.7) - 0.5) * 0.18 * vol;
             float omega = 3.2 / pow(rDisk, 1.5);
             float thetaDisk = uDisk * 200.0 * PI + time * omega * speedMult + nSeed * TWO_PI;
-            float zDisk = (fract(nSeed * 19.3) - 0.5) * 0.25 * rDisk * vol;
+            float zDisk = (fract(nSeed * 19.3) - 0.5) * 0.10 * rDisk * vol;
             target = vec3(rDisk * cos(thetaDisk), zDisk, rDisk * sin(thetaDisk));
         }
     }
@@ -298,7 +298,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float t1 = abs(cos(uP_m * theta / 4.0) / max(0.01, uP_a));
             float t2 = abs(sin(uP_m * theta / 4.0) / max(0.01, uP_b));
             float rSup = pow(pow(t1, uP_n2) + pow(t2, uP_n3), -1.0 / max(0.01, uP_n1));
-            float rScaled = clamp(rSup * 3.5, 1.2, 8.5) + (fract(nSeed * 53.1) - 0.5) * 0.7 * vol;
+            float rScaled = clamp(rSup * 3.5, 1.2, 8.5) + (fract(nSeed * 53.1) - 0.5) * 0.25 * vol;
             target = vec3(rScaled * cos(theta) * cos(phi), rScaled * sin(phi) * 1.5, rScaled * sin(theta) * cos(phi));
         } else {
             // Harmonic Fourier Series with 3D Sheath
@@ -335,7 +335,7 @@ void main() {
     float u = fract(speciesAndU);
     float nSeed = velTex.w;
 
-    // Evaluate target position with full 3D volumetric dispersion
+    // Evaluate target position with calibrated semi-tight volumetric dispersion
     vec3 targetPos = evaluateTopology(uFormationMode, u, species, nSeed, uTime, uSpeedMult, uVolThickness);
 
     // If morphing between topologies, evaluate previous formation & apply Quintic S-Curve
@@ -462,8 +462,8 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uLerpRate = { value: 0.045 };
     velocityUniforms.uMaxSpeed = { value: 0.12 };
     velocityUniforms.uMaxAccel = { value: 0.0035 };
-    velocityUniforms.uVolThickness = { value: 0.85 }; // Plush 3D volumetric depth
-    velocityUniforms.uNoiseDrift = { value: 0.012 }; // Subtle organic fluid turbulence
+    velocityUniforms.uVolThickness = { value: 0.35 }; // Clean, defined ribbon thickness (sweet spot)
+    velocityUniforms.uNoiseDrift = { value: 0.004 }; // Subtle organic fluid turbulence
     velocityUniforms.uSeed = { value: 42.0 };
 
     // Procedural Uniforms

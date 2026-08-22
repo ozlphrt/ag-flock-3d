@@ -225,7 +225,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         }
 
         // Boid Scale based on population
-        const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.045 : 0.065);
+        const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.040 : 0.055);
         uniformsRef.current.uBoidScale.value = baseScale;
 
         // Species Color Morphing
