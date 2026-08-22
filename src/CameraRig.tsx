@@ -103,6 +103,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const startFov = useRef(52);
     const curLookTarget = useRef(new THREE.Vector3(0, 0, 0));
 
+    // Orbit Angle Accumulator for continuous seamless orbiting across presets
+    const autonomousOrbitAngle = useRef(0);
+
     const handleUserInteraction = () => {
         lastInteractionTime.current = performance.now();
         userHasOverridden.current = true;
@@ -146,16 +149,20 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             lastPresetIdx.current = presetIdx;
         }
 
-        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 4000 || isUserDragging.current;
+        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 3500 || isUserDragging.current;
 
-        // If user is actively dragging right now, OrbitControls controls camera
+        // If user is actively dragging right now, OrbitControls has 100% exclusive control
         if (isUserDragging.current || (userHasOverridden.current && isUserInteracting)) {
             if (controlsRef.current) {
                 controlsRef.current.enabled = true;
-                controlsRef.current.autoRotate = false;
                 curLookTarget.current.copy(controlsRef.current.target);
             }
             return;
+        }
+
+        // Disable OrbitControls during autonomous camera flights to prevent dual-driver micro-jitter
+        if (controlsRef.current) {
+            controlsRef.current.enabled = false;
         }
 
         // If user stopped dragging and idle time elapsed, restore autonomous preset trajectory
@@ -171,7 +178,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const p = Math.min(1.0, elapsed / transitionDuration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
-        // 3. Compute Ideal Preset Trajectory along Safe Outer Perimeter
+        // 3. Compute Ideal Preset Trajectory analytically
         _camIdealTarget.set(preset.target[0], preset.target[1], preset.target[2]);
         const rPerimeter = Math.max(minSafeStandoff, rBound + 1.8);
 
@@ -195,9 +202,22 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             );
             _camIdealTarget.set(0, Math.sin(t * 0.6) * 0.5, 0);
         } else {
-            // Orbit Presets
-            _camDir.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
-            _camIdealPos.copy(_camIdealTarget).addScaledVector(_camDir, targetDistance);
+            // Smooth Continuous Orbit Presets
+            autonomousOrbitAngle.current += safeDelta * (preset.autoRotateSpeed * 0.18);
+            const rotAng = autonomousOrbitAngle.current;
+
+            const initX = preset.defaultPos[0];
+            const initY = preset.defaultPos[1];
+            const initZ = preset.defaultPos[2];
+            const initRadius = Math.sqrt(initX * initX + initZ * initZ) || 1.0;
+            const baseAngle = Math.atan2(initZ, initX);
+
+            const curAng = baseAngle + rotAng;
+            const camX = Math.cos(curAng) * targetDistance;
+            const camZ = Math.sin(curAng) * targetDistance;
+            const camY = (initY / (initRadius || 1.0)) * (targetDistance * 0.4);
+
+            _camIdealPos.set(camX, camY, camZ).add(_camIdealTarget);
             if (preset.id === 'giant') {
                 _camIdealPos.y = -(rBound * 0.75 + 1.2);
             }
@@ -205,7 +225,6 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         // 4. Smoothly Blend Position, LookTarget, and FOV
         if (p < 1.0) {
-            // Actively Morphing
             camera.position.lerpVectors(startCamPos.current, _camIdealPos, sCurve);
             curLookTarget.current.lerpVectors(startLookTarget.current, _camIdealTarget, sCurve);
             camera.up.set(0, 1, 0);
@@ -213,38 +232,21 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
             perspCam.fov = startFov.current + (preset.fov - startFov.current) * sCurve;
             perspCam.updateProjectionMatrix();
-
-            if (controlsRef.current) {
-                controlsRef.current.enabled = true;
-                controlsRef.current.target.copy(curLookTarget.current);
-            }
         } else {
-            // Settled in Preset Mode — only update projection when FOV actually changes
             const targetFov = preset.fov;
             if (Math.abs(perspCam.fov - targetFov) > 0.01) {
                 perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, targetFov, 0.05);
                 perspCam.updateProjectionMatrix();
             }
 
-            if (preset.type === 'flythrough' || preset.type === 'corkscrew') {
-                camera.position.copy(_camIdealPos);
-                curLookTarget.current.copy(_camIdealTarget);
-                camera.up.set(0, 1, 0);
-                camera.lookAt(curLookTarget.current);
+            camera.position.copy(_camIdealPos);
+            curLookTarget.current.copy(_camIdealTarget);
+            camera.up.set(0, 1, 0);
+            camera.lookAt(curLookTarget.current);
+        }
 
-                if (controlsRef.current) {
-                    controlsRef.current.enabled = true;
-                    controlsRef.current.target.copy(curLookTarget.current);
-                }
-            } else {
-                // Orbit mode
-                if (controlsRef.current) {
-                    controlsRef.current.enabled = true;
-                    controlsRef.current.autoRotate = !isUserInteracting;
-                    controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
-                    curLookTarget.current.copy(controlsRef.current.target);
-                }
-            }
+        if (controlsRef.current) {
+            controlsRef.current.target.copy(curLookTarget.current);
         }
     });
 
@@ -256,8 +258,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 makeDefault
                 enableDamping
                 dampingFactor={0.05}
-                autoRotate
-                autoRotateSpeed={0.8}
+                autoRotate={false}
                 minDistance={3.5}
                 maxDistance={250}
                 minPolarAngle={0}
