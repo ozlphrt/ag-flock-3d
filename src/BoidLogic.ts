@@ -1652,8 +1652,8 @@ export class BoidSwarmData {
                 const u1 = Math.max(1e-6, Math.random());
                 const u2 = Math.random();
                 const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-                let bellScale = Math.exp(z0 * 0.48);
-                bellScale = Math.min(3.2, Math.max(0.35, bellScale));
+                let bellScale = Math.exp(z0 * 0.78);
+                bellScale = Math.min(5.5, Math.max(0.18, bellScale));
                 this.size[i] = baseSize * bellScale;
 
                 this.noiseSeed[i] = Math.random() * 1000.0;

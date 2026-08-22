@@ -101,17 +101,17 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uvs[i * 2 + 1] = y / sizeY;
             species[i] = i % 4;
 
-            // Box-Muller Gaussian Bell Curve Distribution:
-            // - Few giant alphas (~2.4x - 3.2x)
-            // - Some big ones (~1.5x - 2.2x)
-            // - Majority mid-size (~0.8x - 1.3x)
-            // - Some small ones (~0.5x - 0.7x)
-            // - Few tiny micro-specks (~0.35x - 0.45x)
+            // Broad Gaussian Bell Curve with high dynamic range variance:
+            // - Ultra-giant alphas (~4.0x - 5.5x)
+            // - Big ones (~2.0x - 3.8x)
+            // - Majority mid-size (~0.7x - 1.8x)
+            // - Small ones (~0.32x - 0.65x)
+            // - Micro diamond stardust (~0.18x - 0.30x)
             const u1 = Math.max(1e-6, Math.random());
             const u2 = Math.random();
             const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-            let scale = Math.exp(z0 * 0.48);
-            scale = Math.min(3.2, Math.max(0.35, scale));
+            let scale = Math.exp(z0 * 0.78);
+            scale = Math.min(5.5, Math.max(0.18, scale));
             sizes[i] = scale;
         }
 
