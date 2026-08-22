@@ -1649,11 +1649,24 @@ export class BoidSwarmData {
                 this.species[i] = sp;
 
                 const baseSize = speciesBaseSizes[sp];
-                const u1 = Math.max(1e-6, Math.random());
-                const u2 = Math.random();
-                const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-                let bellScale = Math.exp(z0 * 0.78);
-                bellScale = Math.min(5.5, Math.max(0.18, bellScale));
+                const r = Math.random();
+                let bellScale: number;
+                if (r < 0.88) {
+                    const u1 = Math.max(1e-6, Math.random());
+                    const u2 = Math.random();
+                    const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                    bellScale = 0.55 * Math.exp(z * 0.35);
+                    bellScale = Math.min(1.25, Math.max(0.22, bellScale));
+                } else if (r < 0.98) {
+                    const subU = (r - 0.88) / 0.10;
+                    bellScale = 1.3 + Math.pow(subU, 1.4) * 1.5;
+                } else if (r < 0.997) {
+                    const subU = (r - 0.98) / 0.017;
+                    bellScale = 3.0 + Math.pow(subU, 1.8) * 2.0;
+                } else {
+                    const subU = (r - 0.997) / 0.003;
+                    bellScale = 5.5 + subU * 2.0;
+                }
                 this.size[i] = baseSize * bellScale;
 
                 this.noiseSeed[i] = Math.random() * 1000.0;

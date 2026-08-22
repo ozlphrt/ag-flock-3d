@@ -102,17 +102,29 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uvs[i * 2 + 1] = y / sizeY;
             species[i] = i % 4;
 
-            // Broad Gaussian Bell Curve with high dynamic range variance:
-            // - Ultra-giant alphas (~4.0x - 5.5x)
-            // - Big ones (~2.0x - 3.8x)
-            // - Majority mid-size (~0.7x - 1.8x)
-            // - Small ones (~0.32x - 0.65x)
-            // - Micro diamond stardust (~0.18x - 0.30x)
-            const u1 = Math.max(1e-6, Math.random());
-            const u2 = Math.random();
-            const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-            let scale = Math.exp(z0 * 0.78);
-            scale = Math.min(5.5, Math.max(0.18, scale));
+            // Asymmetric Long-Tail Power-Law Distribution:
+            // - 88% sleek micro-to-mid boids (0.25x - 1.2x)
+            // - 10% larger leader boids (1.3x - 2.8x)
+            // - 1.7% majestic alpha giants (3.0x - 5.0x)
+            // - 0.3% rare monolithic titans (5.5x - 7.5x)
+            const r = Math.random();
+            let scale: number;
+            if (r < 0.88) {
+                const u1 = Math.max(1e-6, Math.random());
+                const u2 = Math.random();
+                const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                scale = 0.55 * Math.exp(z * 0.35);
+                scale = Math.min(1.25, Math.max(0.22, scale));
+            } else if (r < 0.98) {
+                const subU = (r - 0.88) / 0.10;
+                scale = 1.3 + Math.pow(subU, 1.4) * 1.5;
+            } else if (r < 0.997) {
+                const subU = (r - 0.98) / 0.017;
+                scale = 3.0 + Math.pow(subU, 1.8) * 2.0;
+            } else {
+                const subU = (r - 0.997) / 0.003;
+                scale = 5.5 + subU * 2.0;
+            }
             sizes[i] = scale;
         }
 
