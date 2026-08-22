@@ -33,6 +33,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [isDebugOpen, setIsDebugOpen] = useState(false);
+    const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
+        swarm: true,
+        lighting: false,
+        material: false,
+        bloom: false,
+        procedural: false
+    });
+    const toggleFolder = (key: string) => setOpenFolders(prev => ({ ...prev, [key]: !prev[key] }));
     const [activeCatalogTab, setActiveCatalogTab] = useState<'topology' | 'palette' | 'geometry' | 'material' | 'lighting' | 'camera' | 'bloom' | 'physics' | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
@@ -2099,51 +2107,47 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         )}
 
-        {/* Real-Time Live Parameter Debugger & Slider Studio (CTRL + SHIFT + ALT + D) */}
+        {/* Compact dat.GUI-style Parameter Inspector Docked to Left (CTRL + SHIFT + ALT + D) */}
         {isDebugOpen && (
             <div
                 style={{
                     position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 'min(94vw, 560px)',
-                    maxHeight: '88vh',
-                    background: 'rgba(10, 14, 24, 0.94)',
-                    backdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(0, 255, 204, 0.3)',
-                    borderRadius: '20px',
-                    boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 255, 204, 0.12)',
+                    top: '56px',
+                    left: '16px',
+                    width: '275px',
+                    maxHeight: 'calc(100vh - 110px)',
+                    background: 'rgba(14, 18, 28, 0.92)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '8px',
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 204, 0.08)',
                     zIndex: 100000,
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden',
-                    fontFamily: 'Inter, system-ui, sans-serif'
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    fontSize: '11px',
+                    color: '#ccc',
+                    userSelect: 'none'
                 }}
             >
-                {/* Debug Modal Header */}
+                {/* Inspector Header (26px) */}
                 <div
                     style={{
-                        padding: '16px 20px',
+                        padding: '5px 8px',
+                        background: '#1b2234',
                         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        background: 'rgba(0, 255, 204, 0.04)'
+                        height: '26px',
+                        boxSizing: 'border-box'
                     }}
                 >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '18px' }}>🛠️</span>
-                        <div>
-                            <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', letterSpacing: '0.04em' }}>
-                                LIVE ENGINE DEBUGGER
-                            </div>
-                            <div style={{ fontSize: '10px', color: '#00ffcc', fontWeight: 700 }}>
-                                Real-Time Parameter Sliders • <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: '4px' }}>Ctrl+Shift+Alt+D</kbd>
-                            </div>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#00ffcc', letterSpacing: '0.05em' }}>
+                        🎛️ CONTROLS <span style={{ opacity: 0.6, fontSize: '9px' }}>Ctrl+Shift+Alt+D</span>
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <button
                             onClick={() => {
                                 const s = simState.current;
@@ -2160,513 +2164,544 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     proceduralGenome: s.proceduralGenome
                                 };
                                 navigator.clipboard.writeText(JSON.stringify(debugConfig, null, 2));
-                                showToast('📋 Live Debug Parameters Copied to Clipboard');
+                                showToast('📋 JSON Config Copied');
                             }}
                             style={{
-                                background: 'rgba(0, 255, 204, 0.12)',
+                                background: 'rgba(0, 255, 204, 0.15)',
                                 border: '1px solid rgba(0, 255, 204, 0.3)',
-                                borderRadius: '8px',
+                                borderRadius: '4px',
                                 color: '#00ffcc',
-                                padding: '5px 9px',
-                                fontSize: '10px',
+                                padding: '1px 5px',
+                                fontSize: '9px',
                                 fontWeight: 800,
                                 cursor: 'pointer'
                             }}
-                            title="Copy full active parameter state to clipboard"
+                            title="Copy JSON configuration to clipboard"
                         >
-                            📋 Copy JSON
+                            JSON
                         </button>
                         <button
                             onClick={() => setIsDebugOpen(false)}
                             style={{
-                                background: 'rgba(255, 255, 255, 0.08)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: '50%',
-                                width: '26px',
-                                height: '26px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: 'none',
+                                borderRadius: '4px',
+                                width: '18px',
+                                height: '18px',
                                 color: '#fff',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '12px'
+                                fontSize: '10px',
+                                padding: 0
                             }}
-                            title="Close Debug Panel"
+                            title="Close Inspector"
                         >
                             ✕
                         </button>
                     </div>
                 </div>
 
-                {/* Debug Modal Scrollable Body */}
-                <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                    
-                    {/* 1. Swarm Dynamics & Fluid Physics */}
-                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '14px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#00ffcc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>🌀</span> <span>SWARM & FLOW DYNAMICS</span>
-                        </div>
+                {/* Inspector Scroll Area */}
+                <div style={{ overflowY: 'auto', flex: 1 }}>
 
-                        {/* Speed Multiplier */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Flight Speed Multiplier:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>{(simState.current.speedMultiplier ?? 0.14).toFixed(3)}x</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.02"
-                                max="0.40"
-                                step="0.005"
-                                value={simState.current.speedMultiplier ?? 0.14}
-                                onChange={e => {
-                                    simState.current.speedMultiplier = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
+                    {/* Folder 1: Swarm & Dynamics */}
+                    <div>
+                        <div
+                            onClick={() => toggleFolder('swarm')}
+                            style={{
+                                padding: '4px 8px',
+                                background: openFolders.swarm ? 'rgba(0, 255, 204, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                color: '#00ffcc'
+                            }}
+                        >
+                            <span>{openFolders.swarm ? '▼' : '▶'} 🌀 Swarm Dynamics</span>
                         </div>
-
-                        {/* Size Multiplier */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Boid Scale Multiplier:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>{(simState.current.sizeMultiplier ?? 1.5).toFixed(2)}x</span>
+                        {openFolders.swarm && (
+                            <div style={{ padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Speed</span>
+                                    <input
+                                        type="range"
+                                        min="0.02"
+                                        max="0.40"
+                                        step="0.005"
+                                        value={simState.current.speedMultiplier ?? 0.14}
+                                        onChange={e => {
+                                            simState.current.speedMultiplier = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00ffcc', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00ffcc' }}>
+                                        {(simState.current.speedMultiplier ?? 0.14).toFixed(3)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Scale</span>
+                                    <input
+                                        type="range"
+                                        min="0.2"
+                                        max="3.5"
+                                        step="0.05"
+                                        value={simState.current.sizeMultiplier ?? 1.5}
+                                        onChange={e => {
+                                            simState.current.sizeMultiplier = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00ffcc', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00ffcc' }}>
+                                        {(simState.current.sizeMultiplier ?? 1.5).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Bounds</span>
+                                    <input
+                                        type="range"
+                                        min="15"
+                                        max="120"
+                                        step="1"
+                                        value={simState.current.bounds ?? 50}
+                                        onChange={e => {
+                                            simState.current.bounds = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00ffcc', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00ffcc' }}>
+                                        {(simState.current.bounds ?? 50).toFixed(0)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Turbulence</span>
+                                    <input
+                                        type="range"
+                                        min="0.000"
+                                        max="0.030"
+                                        step="0.001"
+                                        value={simState.current.noiseTurbulence ?? 0.005}
+                                        onChange={e => {
+                                            simState.current.noiseTurbulence = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00ffcc', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00ffcc' }}>
+                                        {(simState.current.noiseTurbulence ?? 0.005).toFixed(3)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Morph (s)</span>
+                                    <input
+                                        type="range"
+                                        min="1.0"
+                                        max="15.0"
+                                        step="0.5"
+                                        value={simState.current.transitionDuration ?? 6.0}
+                                        onChange={e => {
+                                            simState.current.transitionDuration = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00ffcc', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00ffcc' }}>
+                                        {(simState.current.transitionDuration ?? 6.0).toFixed(1)}s
+                                    </span>
+                                </div>
                             </div>
-                            <input
-                                type="range"
-                                min="0.2"
-                                max="3.5"
-                                step="0.05"
-                                value={simState.current.sizeMultiplier ?? 1.5}
-                                onChange={e => {
-                                    simState.current.sizeMultiplier = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Radius Bounds */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>World Bounds Radius:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>{(simState.current.bounds ?? 50).toFixed(0)} units</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="15"
-                                max="120"
-                                step="1"
-                                value={simState.current.bounds ?? 50}
-                                onChange={e => {
-                                    simState.current.bounds = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Living Fluid Noise */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Living Fluid Turbulence:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>{(simState.current.noiseTurbulence ?? 0.005).toFixed(4)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.000"
-                                max="0.030"
-                                step="0.001"
-                                value={simState.current.noiseTurbulence ?? 0.005}
-                                onChange={e => {
-                                    simState.current.noiseTurbulence = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Transition Duration */}
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Morph Transition Duration:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00ffcc' }}>{(simState.current.transitionDuration ?? 6.0).toFixed(1)}s</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="1.0"
-                                max="15.0"
-                                step="0.5"
-                                value={simState.current.transitionDuration ?? 6.0}
-                                onChange={e => {
-                                    simState.current.transitionDuration = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00ffcc', cursor: 'pointer' }}
-                            />
-                        </div>
+                        )}
                     </div>
 
-                    {/* 2. Dynamic 4-Point Studio Lighting */}
-                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '14px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#ffcc00', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>💡</span> <span>4-POINT STUDIO LIGHTING</span>
+                    {/* Folder 2: Studio Lighting */}
+                    <div>
+                        <div
+                            onClick={() => toggleFolder('lighting')}
+                            style={{
+                                padding: '4px 8px',
+                                background: openFolders.lighting ? 'rgba(255, 204, 0, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                color: '#ffcc00'
+                            }}
+                        >
+                            <span>{openFolders.lighting ? '▼' : '▶'} 💡 Studio Lighting</span>
                         </div>
-
-                        {/* Key Light */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Key Light Intensity:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ffcc00' }}>{(simState.current.lightingProfile?.keyIntensity ?? 3.8).toFixed(2)}</span>
+                        {openFolders.lighting && (
+                            <div style={{ padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Key Light</span>
+                                    <input
+                                        type="range"
+                                        min="0.0"
+                                        max="8.0"
+                                        step="0.1"
+                                        value={simState.current.lightingProfile?.keyIntensity ?? 3.8}
+                                        onChange={e => {
+                                            if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
+                                            simState.current.lightingProfile.keyIntensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ffcc00', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ffcc00' }}>
+                                        {(simState.current.lightingProfile?.keyIntensity ?? 3.8).toFixed(1)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Fill Light</span>
+                                    <input
+                                        type="range"
+                                        min="0.0"
+                                        max="2.0"
+                                        step="0.02"
+                                        value={simState.current.lightingProfile?.fillIntensity ?? 0.30}
+                                        onChange={e => {
+                                            if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
+                                            simState.current.lightingProfile.fillIntensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ffcc00', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ffcc00' }}>
+                                        {(simState.current.lightingProfile?.fillIntensity ?? 0.30).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Rim Light</span>
+                                    <input
+                                        type="range"
+                                        min="0.0"
+                                        max="8.0"
+                                        step="0.1"
+                                        value={simState.current.lightingProfile?.rimIntensity ?? 3.5}
+                                        onChange={e => {
+                                            if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
+                                            simState.current.lightingProfile.rimIntensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ffcc00', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ffcc00' }}>
+                                        {(simState.current.lightingProfile?.rimIntensity ?? 3.5).toFixed(1)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Ambient</span>
+                                    <input
+                                        type="range"
+                                        min="0.00"
+                                        max="0.50"
+                                        step="0.01"
+                                        value={simState.current.lightingProfile?.ambientIntensity ?? 0.10}
+                                        onChange={e => {
+                                            if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
+                                            simState.current.lightingProfile.ambientIntensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ffcc00', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ffcc00' }}>
+                                        {(simState.current.lightingProfile?.ambientIntensity ?? 0.10).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Fog</span>
+                                    <input
+                                        type="range"
+                                        min="0.000"
+                                        max="0.020"
+                                        step="0.0005"
+                                        value={simState.current.lightingProfile?.fogDensity ?? 0.004}
+                                        onChange={e => {
+                                            if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
+                                            simState.current.lightingProfile.fogDensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ffcc00', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ffcc00' }}>
+                                        {(simState.current.lightingProfile?.fogDensity ?? 0.004).toFixed(3)}
+                                    </span>
+                                </div>
                             </div>
-                            <input
-                                type="range"
-                                min="0.0"
-                                max="8.0"
-                                step="0.1"
-                                value={simState.current.lightingProfile?.keyIntensity ?? 3.8}
-                                onChange={e => {
-                                    if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
-                                    simState.current.lightingProfile.keyIntensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ffcc00', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Fill Light */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Fill Light Intensity:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ffcc00' }}>{(simState.current.lightingProfile?.fillIntensity ?? 0.30).toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.0"
-                                max="2.0"
-                                step="0.02"
-                                value={simState.current.lightingProfile?.fillIntensity ?? 0.30}
-                                onChange={e => {
-                                    if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
-                                    simState.current.lightingProfile.fillIntensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ffcc00', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Rim Light */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Rim Backlight Intensity:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ffcc00' }}>{(simState.current.lightingProfile?.rimIntensity ?? 3.5).toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.0"
-                                max="8.0"
-                                step="0.1"
-                                value={simState.current.lightingProfile?.rimIntensity ?? 3.5}
-                                onChange={e => {
-                                    if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
-                                    simState.current.lightingProfile.rimIntensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ffcc00', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Ambient Floor */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Ambient Base Glow:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ffcc00' }}>{(simState.current.lightingProfile?.ambientIntensity ?? 0.10).toFixed(3)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.00"
-                                max="0.50"
-                                step="0.01"
-                                value={simState.current.lightingProfile?.ambientIntensity ?? 0.10}
-                                onChange={e => {
-                                    if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
-                                    simState.current.lightingProfile.ambientIntensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ffcc00', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Fog Density */}
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Atmospheric Fog Density:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ffcc00' }}>{(simState.current.lightingProfile?.fogDensity ?? 0.004).toFixed(4)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.000"
-                                max="0.020"
-                                step="0.0005"
-                                value={simState.current.lightingProfile?.fogDensity ?? 0.004}
-                                onChange={e => {
-                                    if (!simState.current.lightingProfile) simState.current.lightingProfile = { ...LIGHTING_PROFILES[0] };
-                                    simState.current.lightingProfile.fogDensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ffcc00', cursor: 'pointer' }}
-                            />
-                        </div>
+                        )}
                     </div>
 
-                    {/* 3. Material Surface Optics (PBR) */}
-                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '14px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#ff88ff', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>✨</span> <span>MATERIAL SURFACE OPTICS (PBR)</span>
+                    {/* Folder 3: Material Optics */}
+                    <div>
+                        <div
+                            onClick={() => toggleFolder('material')}
+                            style={{
+                                padding: '4px 8px',
+                                background: openFolders.material ? 'rgba(255, 136, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                color: '#ff88ff'
+                            }}
+                        >
+                            <span>{openFolders.material ? '▼' : '▶'} ✨ Material (PBR)</span>
                         </div>
-
-                        {/* Roughness */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Microfacet Roughness:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ff88ff' }}>{(simState.current.materialSettings?.roughness ?? 0.32).toFixed(2)}</span>
+                        {openFolders.material && (
+                            <div style={{ padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Roughness</span>
+                                    <input
+                                        type="range"
+                                        min="0.00"
+                                        max="1.00"
+                                        step="0.01"
+                                        value={simState.current.materialSettings?.roughness ?? 0.32}
+                                        onChange={e => {
+                                            if (!simState.current.materialSettings) simState.current.materialSettings = { ...MATERIAL_PRESETS[0].settings };
+                                            simState.current.materialSettings.roughness = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ff88ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ff88ff' }}>
+                                        {(simState.current.materialSettings?.roughness ?? 0.32).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Metalness</span>
+                                    <input
+                                        type="range"
+                                        min="0.00"
+                                        max="1.00"
+                                        step="0.01"
+                                        value={simState.current.materialSettings?.metalness ?? 0.05}
+                                        onChange={e => {
+                                            if (!simState.current.materialSettings) simState.current.materialSettings = { ...MATERIAL_PRESETS[0].settings };
+                                            simState.current.materialSettings.metalness = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ff88ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ff88ff' }}>
+                                        {(simState.current.materialSettings?.metalness ?? 0.05).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Emissive</span>
+                                    <input
+                                        type="range"
+                                        min="0.00"
+                                        max="2.00"
+                                        step="0.05"
+                                        value={simState.current.materialSettings?.emissiveIntensity ?? 0.0}
+                                        onChange={e => {
+                                            if (!simState.current.materialSettings) simState.current.materialSettings = { ...MATERIAL_PRESETS[0].settings };
+                                            simState.current.materialSettings.emissiveIntensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#ff88ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ff88ff' }}>
+                                        {(simState.current.materialSettings?.emissiveIntensity ?? 0.0).toFixed(2)}
+                                    </span>
+                                </div>
                             </div>
-                            <input
-                                type="range"
-                                min="0.00"
-                                max="1.00"
-                                step="0.01"
-                                value={simState.current.materialSettings?.roughness ?? 0.32}
-                                onChange={e => {
-                                    if (!simState.current.materialSettings) simState.current.materialSettings = { ...MATERIAL_PRESETS[0].settings };
-                                    simState.current.materialSettings.roughness = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ff88ff', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Metalness */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Dielectric / Metalness:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ff88ff' }}>{(simState.current.materialSettings?.metalness ?? 0.05).toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.00"
-                                max="1.00"
-                                step="0.01"
-                                value={simState.current.materialSettings?.metalness ?? 0.05}
-                                onChange={e => {
-                                    if (!simState.current.materialSettings) simState.current.materialSettings = { ...MATERIAL_PRESETS[0].settings };
-                                    simState.current.materialSettings.metalness = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ff88ff', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Emissive */}
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Emissive Core Glow:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#ff88ff' }}>{(simState.current.materialSettings?.emissiveIntensity ?? 0.0).toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.00"
-                                max="2.00"
-                                step="0.05"
-                                value={simState.current.materialSettings?.emissiveIntensity ?? 0.0}
-                                onChange={e => {
-                                    if (!simState.current.materialSettings) simState.current.materialSettings = { ...MATERIAL_PRESETS[0].settings };
-                                    simState.current.materialSettings.emissiveIntensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#ff88ff', cursor: 'pointer' }}
-                            />
-                        </div>
+                        )}
                     </div>
 
-                    {/* 4. Optical Bloom Post-Processing */}
-                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '14px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#00e5ff', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>🪩</span> <span>OPTICAL BLOOM POST-PROCESSING</span>
+                    {/* Folder 4: Bloom Post-Processing */}
+                    <div>
+                        <div
+                            onClick={() => toggleFolder('bloom')}
+                            style={{
+                                padding: '4px 8px',
+                                background: openFolders.bloom ? 'rgba(0, 229, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                color: '#00e5ff'
+                            }}
+                        >
+                            <span>{openFolders.bloom ? '▼' : '▶'} 🪩 Optical Bloom</span>
                         </div>
-
-                        {/* Luminance Threshold */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Luminance Threshold:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00e5ff' }}>{(simState.current.bloomSettings?.luminanceThreshold ?? 0.22).toFixed(2)}</span>
+                        {openFolders.bloom && (
+                            <div style={{ padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Threshold</span>
+                                    <input
+                                        type="range"
+                                        min="0.00"
+                                        max="1.00"
+                                        step="0.01"
+                                        value={simState.current.bloomSettings?.luminanceThreshold ?? 0.22}
+                                        onChange={e => {
+                                            if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
+                                            simState.current.bloomSettings.luminanceThreshold = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00e5ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00e5ff' }}>
+                                        {(simState.current.bloomSettings?.luminanceThreshold ?? 0.22).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Intensity</span>
+                                    <input
+                                        type="range"
+                                        min="0.00"
+                                        max="4.00"
+                                        step="0.05"
+                                        value={simState.current.bloomSettings?.intensity ?? 1.2}
+                                        onChange={e => {
+                                            if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
+                                            simState.current.bloomSettings.intensity = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00e5ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00e5ff' }}>
+                                        {(simState.current.bloomSettings?.intensity ?? 1.2).toFixed(1)}x
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Radius</span>
+                                    <input
+                                        type="range"
+                                        min="0.05"
+                                        max="1.50"
+                                        step="0.02"
+                                        value={simState.current.bloomSettings?.radius ?? 0.65}
+                                        onChange={e => {
+                                            if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
+                                            simState.current.bloomSettings.radius = parseFloat(e.target.value);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00e5ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00e5ff' }}>
+                                        {(simState.current.bloomSettings?.radius ?? 0.65).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                    <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Passes</span>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="8"
+                                        step="1"
+                                        value={simState.current.bloomSettings?.levels ?? 4}
+                                        onChange={e => {
+                                            if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
+                                            simState.current.bloomSettings.levels = parseInt(e.target.value, 10);
+                                            setTick(t => t + 1);
+                                        }}
+                                        style={{ flex: 1, height: '4px', accentColor: '#00e5ff', margin: '0 6px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#00e5ff' }}>
+                                        {simState.current.bloomSettings?.levels ?? 4}
+                                    </span>
+                                </div>
                             </div>
-                            <input
-                                type="range"
-                                min="0.00"
-                                max="1.00"
-                                step="0.01"
-                                value={simState.current.bloomSettings?.luminanceThreshold ?? 0.22}
-                                onChange={e => {
-                                    if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
-                                    simState.current.bloomSettings.luminanceThreshold = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00e5ff', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Intensity */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Glint Intensity:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00e5ff' }}>{(simState.current.bloomSettings?.intensity ?? 1.2).toFixed(2)}x</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.00"
-                                max="4.00"
-                                step="0.05"
-                                value={simState.current.bloomSettings?.intensity ?? 1.2}
-                                onChange={e => {
-                                    if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
-                                    simState.current.bloomSettings.intensity = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00e5ff', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Radius */}
-                        <div style={{ marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Glow Radius:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00e5ff' }}>{(simState.current.bloomSettings?.radius ?? 0.65).toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0.05"
-                                max="1.50"
-                                step="0.02"
-                                value={simState.current.bloomSettings?.radius ?? 0.65}
-                                onChange={e => {
-                                    if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
-                                    simState.current.bloomSettings.radius = parseFloat(e.target.value);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00e5ff', cursor: 'pointer' }}
-                            />
-                        </div>
-
-                        {/* Levels */}
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '3px' }}>
-                                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Mipmap Blur Passes:</span>
-                                <span style={{ fontFamily: 'monospace', color: '#00e5ff' }}>{simState.current.bloomSettings?.levels ?? 4} passes</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="1"
-                                max="8"
-                                step="1"
-                                value={simState.current.bloomSettings?.levels ?? 4}
-                                onChange={e => {
-                                    if (!simState.current.bloomSettings) simState.current.bloomSettings = { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
-                                    simState.current.bloomSettings.levels = parseInt(e.target.value, 10);
-                                    setTick(t => t + 1);
-                                }}
-                                style={{ width: '100%', accentColor: '#00e5ff', cursor: 'pointer' }}
-                            />
-                        </div>
+                        )}
                     </div>
 
-                    {/* 5. Infinite Procedural DNA Real-Time Sliders (Visible when procedural mode is active) */}
+                    {/* Folder 5: Procedural DNA (Only if proceduralGenome exists) */}
                     {simState.current.proceduralGenome && (
-                        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '14px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 800, color: '#ff5599', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span>🧬</span> <span>PROCEDURAL TOPOLOGY FORMULA DNA ({simState.current.proceduralGenome.family})</span>
+                        <div>
+                            <div
+                                onClick={() => toggleFolder('procedural')}
+                                style={{
+                                    padding: '4px 8px',
+                                    background: openFolders.procedural ? 'rgba(255, 85, 153, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    fontSize: '10px',
+                                    fontWeight: 800,
+                                    color: '#ff5599'
+                                }}
+                            >
+                                <span>{openFolders.procedural ? '▼' : '▶'} 🧬 Procedural DNA</span>
                             </div>
-
-                            {/* Harmonic Frequencies */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '2px' }}>
-                                        <span style={{ color: 'rgba(255,255,255,0.7)' }}>Freq k1:</span>
-                                        <span style={{ color: '#ff5599', fontFamily: 'monospace' }}>{simState.current.proceduralGenome.k1}</span>
+                            {openFolders.procedural && (
+                                <div style={{ padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                        <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Freq k1</span>
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="12"
+                                            step="1"
+                                            value={simState.current.proceduralGenome.k1 || 1}
+                                            onChange={e => {
+                                                if (simState.current.proceduralGenome) simState.current.proceduralGenome.k1 = parseInt(e.target.value, 10);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ flex: 1, height: '4px', accentColor: '#ff5599', margin: '0 6px', cursor: 'pointer' }}
+                                        />
+                                        <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ff5599' }}>
+                                            {simState.current.proceduralGenome.k1}
+                                        </span>
                                     </div>
-                                    <input
-                                        type="range"
-                                        min="1"
-                                        max="12"
-                                        step="1"
-                                        value={simState.current.proceduralGenome.k1 || 1}
-                                        onChange={e => {
-                                            if (simState.current.proceduralGenome) simState.current.proceduralGenome.k1 = parseInt(e.target.value, 10);
-                                            setTick(t => t + 1);
-                                        }}
-                                        style={{ width: '100%', accentColor: '#ff5599', cursor: 'pointer' }}
-                                    />
-                                </div>
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '2px' }}>
-                                        <span style={{ color: 'rgba(255,255,255,0.7)' }}>Freq k2:</span>
-                                        <span style={{ color: '#ff5599', fontFamily: 'monospace' }}>{simState.current.proceduralGenome.k2}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                        <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Freq k2</span>
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="12"
+                                            step="1"
+                                            value={simState.current.proceduralGenome.k2 || 1}
+                                            onChange={e => {
+                                                if (simState.current.proceduralGenome) simState.current.proceduralGenome.k2 = parseInt(e.target.value, 10);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ flex: 1, height: '4px', accentColor: '#ff5599', margin: '0 6px', cursor: 'pointer' }}
+                                        />
+                                        <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ff5599' }}>
+                                            {simState.current.proceduralGenome.k2}
+                                        </span>
                                     </div>
-                                    <input
-                                        type="range"
-                                        min="1"
-                                        max="12"
-                                        step="1"
-                                        value={simState.current.proceduralGenome.k2 || 1}
-                                        onChange={e => {
-                                            if (simState.current.proceduralGenome) simState.current.proceduralGenome.k2 = parseInt(e.target.value, 10);
-                                            setTick(t => t + 1);
-                                        }}
-                                        style={{ width: '100%', accentColor: '#ff5599', cursor: 'pointer' }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Radius r1, r2 */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '2px' }}>
-                                        <span style={{ color: 'rgba(255,255,255,0.7)' }}>Radius r1:</span>
-                                        <span style={{ color: '#ff5599', fontFamily: 'monospace' }}>{(simState.current.proceduralGenome.r1 || 3.0).toFixed(1)}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', height: '22px' }}>
+                                        <span style={{ width: '75px', fontSize: '10px', color: '#999' }}>Radius r1</span>
+                                        <input
+                                            type="range"
+                                            min="0.5"
+                                            max="6.0"
+                                            step="0.1"
+                                            value={simState.current.proceduralGenome.r1 || 3.0}
+                                            onChange={e => {
+                                                if (simState.current.proceduralGenome) simState.current.proceduralGenome.r1 = parseFloat(e.target.value);
+                                                setTick(t => t + 1);
+                                            }}
+                                            style={{ flex: 1, height: '4px', accentColor: '#ff5599', margin: '0 6px', cursor: 'pointer' }}
+                                        />
+                                        <span style={{ width: '38px', textAlign: 'right', fontSize: '10px', color: '#ff5599' }}>
+                                            {(simState.current.proceduralGenome.r1 || 3.0).toFixed(1)}
+                                        </span>
                                     </div>
-                                    <input
-                                        type="range"
-                                        min="0.5"
-                                        max="6.0"
-                                        step="0.1"
-                                        value={simState.current.proceduralGenome.r1 || 3.0}
-                                        onChange={e => {
-                                            if (simState.current.proceduralGenome) simState.current.proceduralGenome.r1 = parseFloat(e.target.value);
-                                            setTick(t => t + 1);
-                                        }}
-                                        style={{ width: '100%', accentColor: '#ff5599', cursor: 'pointer' }}
-                                    />
                                 </div>
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, marginBottom: '2px' }}>
-                                        <span style={{ color: 'rgba(255,255,255,0.7)' }}>Radius r2:</span>
-                                        <span style={{ color: '#ff5599', fontFamily: 'monospace' }}>{(simState.current.proceduralGenome.r2 || 1.8).toFixed(1)}</span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="0.5"
-                                        max="6.0"
-                                        step="0.1"
-                                        value={simState.current.proceduralGenome.r2 || 1.8}
-                                        onChange={e => {
-                                            if (simState.current.proceduralGenome) simState.current.proceduralGenome.r2 = parseFloat(e.target.value);
-                                            setTick(t => t + 1);
-                                        }}
-                                        style={{ width: '100%', accentColor: '#ff5599', cursor: 'pointer' }}
-                                    />
-                                </div>
-                            </div>
+                            )}
                         </div>
                     )}
 
