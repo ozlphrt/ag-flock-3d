@@ -324,7 +324,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
     );
 }
 
-function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
+function FPSUpdater({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const frames = useRef(0)
     const prevTime = useRef(performance.now())
 
@@ -332,34 +332,44 @@ function FPSUpdater({ onChange }: { onChange: (fps: number) => void }) {
         frames.current++
         const time = performance.now()
         if (time >= prevTime.current + 500) {
-            onChange(Math.round((frames.current * 1000) / (time - prevTime.current)))
+            simState.current.fps = Math.round((frames.current * 1000) / (time - prevTime.current));
             prevTime.current = time
             frames.current = 0
         }
     })
-    return null
+    return null;
+}
+
+function DynamicBloom({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
+    const s = simState.current.bloomSettings || { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 8 };
+    return (
+        <EffectComposer>
+            <Bloom
+                luminanceThreshold={s.luminanceThreshold}
+                mipmapBlur
+                intensity={s.intensity}
+                radius={s.radius}
+                levels={s.levels}
+            />
+        </EffectComposer>
+    );
 }
 
 function App() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const [population, setPopulation] = useState(isMobile ? 25000 : 50000);
-    const [fps, setFps] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     // 100% Entirely Random Startup Configuration across all 7 aesthetic dimensions
     const initialMode: FormationMode = Math.floor(Math.random() * TOTAL_FORMATION_COUNT) as FormationMode;
     const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
     const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
-    const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
-    // Geodesic Ico-Sphere (0) is the default flagship shape (unless user manually changes)
-    const initialShape = 0;
+    const initialShape = 0; // Geodesic Ico-Sphere is fixed default
     const initialCameraIdx = Math.floor(Math.random() * CAMERA_PRESETS.length);
     const initialBloomIdx = Math.floor(Math.random() * BLOOM_PRESETS.length);
-    const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
+    const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
 
-    const [bloomSettings, setBloomSettings] = useState<BloomSettings>({
-        ...initialBloom.settings
-    });
+    const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -381,8 +391,8 @@ function App() {
         bloomSettings: {
             ...initialBloom.settings
         },
-        autoMode: true, // Auto timer is ON by default
-        autoShape: false, // Geodesic Ico-Sphere is fixed default unless user manually changes
+        autoMode: true,
+        autoShape: false,
         autoMaterial: true,
         lightingProfileIndex: initialLightIdx,
         lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0],
@@ -391,32 +401,9 @@ function App() {
         }
     });
 
-    // Keep simState and React state synchronized
-    useEffect(() => {
-        simState.current.bloomSettings = bloomSettings;
-    }, [bloomSettings]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (simState.current.bloomSettings) {
-                const s = simState.current.bloomSettings;
-                setBloomSettings(prev => {
-                    if (prev.luminanceThreshold !== s.luminanceThreshold ||
-                        prev.radius !== s.radius ||
-                        prev.intensity !== s.intensity ||
-                        prev.levels !== s.levels) {
-                        return { ...s };
-                    }
-                    return prev;
-                });
-            }
-        }, 100);
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-            <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={fps} isLoading={isLoading} />
+            <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={simState.current.fps || 60} isLoading={isLoading} />
             <Canvas
                 dpr={1.0}
                 gl={{
@@ -431,7 +418,7 @@ function App() {
                 <fog attach="fog" args={['#1a233a', 160, 480]} />
                 <CameraRig simState={simState} />
 
-                <FPSUpdater onChange={setFps} />
+                <FPSUpdater simState={simState} />
 
                 <Stars radius={180} depth={70} count={5000} factor={4.8} saturation={0.6} fade speed={0.8} />
 
@@ -445,16 +432,7 @@ function App() {
                     <Flock key={`cpu-${population}`} count={population} state={simState.current} setPopulation={setPopulation} />
                 )}
 
-                <EffectComposer>
-                    <Bloom
-                        key={`${bloomSettings.levels}`}
-                        luminanceThreshold={bloomSettings.luminanceThreshold}
-                        mipmapBlur
-                        intensity={bloomSettings.intensity}
-                        radius={bloomSettings.radius}
-                        levels={bloomSettings.levels}
-                    />
-                </EffectComposer>
+                <DynamicBloom simState={simState} />
             </Canvas>
         </div>
     )

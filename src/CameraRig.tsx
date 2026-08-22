@@ -103,9 +103,6 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const startFov = useRef(52);
     const curLookTarget = useRef(new THREE.Vector3(0, 0, 0));
 
-    // Orbit Angle Accumulator for continuous seamless orbiting across presets
-    const autonomousOrbitAngle = useRef(0);
-
     const handleUserInteraction = () => {
         lastInteractionTime.current = performance.now();
         userHasOverridden.current = true;
@@ -151,18 +148,13 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
         const isUserInteracting = (performance.now() - lastInteractionTime.current) < 3500 || isUserDragging.current;
 
-        // If user is actively dragging right now, OrbitControls has 100% exclusive control
+        // If user is actively dragging right now, OrbitControls controls camera
         if (isUserDragging.current || (userHasOverridden.current && isUserInteracting)) {
             if (controlsRef.current) {
-                controlsRef.current.enabled = true;
+                controlsRef.current.autoRotate = false;
                 curLookTarget.current.copy(controlsRef.current.target);
             }
             return;
-        }
-
-        // Disable OrbitControls during autonomous camera flights to prevent dual-driver micro-jitter
-        if (controlsRef.current) {
-            controlsRef.current.enabled = false;
         }
 
         // If user stopped dragging and idle time elapsed, restore autonomous preset trajectory
@@ -178,7 +170,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const p = Math.min(1.0, elapsed / transitionDuration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
-        // 3. Compute Ideal Preset Trajectory analytically
+        // 3. Compute Ideal Preset Trajectory along Safe Outer Perimeter
         _camIdealTarget.set(preset.target[0], preset.target[1], preset.target[2]);
         const rPerimeter = Math.max(minSafeStandoff, rBound + 1.8);
 
@@ -202,22 +194,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             );
             _camIdealTarget.set(0, Math.sin(t * 0.6) * 0.5, 0);
         } else {
-            // Smooth Continuous Orbit Presets
-            autonomousOrbitAngle.current += safeDelta * (preset.autoRotateSpeed * 0.18);
-            const rotAng = autonomousOrbitAngle.current;
-
-            const initX = preset.defaultPos[0];
-            const initY = preset.defaultPos[1];
-            const initZ = preset.defaultPos[2];
-            const initRadius = Math.sqrt(initX * initX + initZ * initZ) || 1.0;
-            const baseAngle = Math.atan2(initZ, initX);
-
-            const curAng = baseAngle + rotAng;
-            const camX = Math.cos(curAng) * targetDistance;
-            const camZ = Math.sin(curAng) * targetDistance;
-            const camY = (initY / (initRadius || 1.0)) * (targetDistance * 0.4);
-
-            _camIdealPos.set(camX, camY, camZ).add(_camIdealTarget);
+            // Orbit Presets
+            _camDir.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
+            _camIdealPos.copy(_camIdealTarget).addScaledVector(_camDir, targetDistance);
             if (preset.id === 'giant') {
                 _camIdealPos.y = -(rBound * 0.75 + 1.2);
             }
@@ -232,6 +211,10 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
             perspCam.fov = startFov.current + (preset.fov - startFov.current) * sCurve;
             perspCam.updateProjectionMatrix();
+
+            if (controlsRef.current) {
+                controlsRef.current.target.copy(curLookTarget.current);
+            }
         } else {
             const targetFov = preset.fov;
             if (Math.abs(perspCam.fov - targetFov) > 0.01) {
@@ -239,14 +222,24 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 perspCam.updateProjectionMatrix();
             }
 
-            camera.position.copy(_camIdealPos);
-            curLookTarget.current.copy(_camIdealTarget);
-            camera.up.set(0, 1, 0);
-            camera.lookAt(curLookTarget.current);
-        }
+            if (preset.type === 'flythrough' || preset.type === 'corkscrew') {
+                camera.position.copy(_camIdealPos);
+                curLookTarget.current.copy(_camIdealTarget);
+                camera.up.set(0, 1, 0);
+                camera.lookAt(curLookTarget.current);
 
-        if (controlsRef.current) {
-            controlsRef.current.target.copy(curLookTarget.current);
+                if (controlsRef.current) {
+                    controlsRef.current.autoRotate = false;
+                    controlsRef.current.target.copy(curLookTarget.current);
+                }
+            } else {
+                // Orbit mode
+                if (controlsRef.current) {
+                    controlsRef.current.autoRotate = !isUserInteracting;
+                    controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
+                    curLookTarget.current.copy(controlsRef.current.target);
+                }
+            }
         }
     });
 
