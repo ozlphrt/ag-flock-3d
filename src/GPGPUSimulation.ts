@@ -305,35 +305,71 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
     }
     else if (mode == 35 || mode == 36) {
         // Infinite Procedural Harmonic & Superformula Genomes
+        float t = u * TWO_PI + time * 0.3 * speedMult;
+        vec3 m = vec3(0.0);
+        vec3 tanV = vec3(0.0, 1.0, 0.0);
+
         if (uP_family == 1) {
-            // 3D Superformula Manifold
-            float theta = u * TWO_PI + time * 0.25 * speedMult;
-            float phi = (sp / 4.0 - 0.5) * PI + sin(time * 0.3) * 0.2;
-            float t1 = abs(cos(uP_m * theta / 4.0) / max(0.01, uP_a));
-            float t2 = abs(sin(uP_m * theta / 4.0) / max(0.01, uP_b));
-            float rSup = pow(pow(t1, uP_n2) + pow(t2, uP_n3), -1.0 / max(0.01, uP_n1));
-            float rScaled = clamp(rSup * 2.8, 1.2, 5.5) + (fract(nSeed * 53.1) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 17.9) - 0.5) * 0.4;
-            target = vec3(rScaled * cos(theta) * cos(phi), rScaled * sin(phi) * 1.2, rScaled * sin(theta) * cos(phi));
+            // Family 1: 3D Torus Supercoil Knots (p, q with nested secondary and tertiary harmonics)
+            float p = max(1.0, float(uP_k1));
+            float q = max(1.0, float(uP_k2));
+            float rMaj = 3.6 + uP_r2 * 0.3;
+            float rMin = 1.4 + uP_r3 * 0.25;
+            float superFreq = max(2.0, float(uP_k3));
+            float rMod = rMin + 0.35 * sin(superFreq * t + uP_phi1);
+
+            float ct = cos(p * t);
+            float st = sin(p * t);
+            float cq = cos(q * t + uP_phi2);
+            float sq = sin(q * t + uP_phi2);
+
+            m = vec3(
+                (rMaj + rMod * cq) * ct,
+                rMod * sq * 1.5 + uP_a2 * sin(superFreq * t * 0.5),
+                (rMaj + rMod * cq) * st
+            );
+
+            float d_ct = -p * st;
+            float d_st = p * ct;
+            float d_cq = -q * sq;
+            float d_sq = q * cq;
+            tanV = vec3(
+                (rMod * d_cq) * ct + (rMaj + rMod * cq) * d_ct,
+                (rMod * d_sq) * 1.5 + uP_a2 * superFreq * 0.5 * cos(superFreq * t * 0.5),
+                (rMod * d_cq) * st + (rMaj + rMod * cq) * d_st
+            );
+        } else if (uP_family == 2) {
+            // Family 2: 3D Epitrochoid & Hypotrochoid Vortex Knots
+            float R = 3.4;
+            float r = max(0.6, uP_r2);
+            float d = max(0.6, uP_r1);
+            float k = (R - r) / r;
+            float hX = (R - r) * cos(t) + d * cos(k * t + uP_phi1);
+            float hY = uP_a1 * sin(float(uP_k2) * t + uP_phi2) + uP_a2 * cos(float(uP_k4) * t);
+            float hZ = (R - r) * sin(t) - d * sin(k * t + uP_phi1);
+            m = vec3(hX, hY * 0.8, hZ);
+            tanV = vec3(
+                -(R - r) * sin(t) - d * k * sin(k * t + uP_phi1),
+                (uP_a1 * float(uP_k2) * cos(float(uP_k2) * t + uP_phi2) - uP_a2 * float(uP_k4) * sin(float(uP_k4) * t)) * 0.8,
+                (R - r) * cos(t) - d * k * cos(k * t + uP_phi1)
+            );
         } else {
-            // Harmonic Fourier Series with Dense 3D Braided Sheath
-            float t = u * TWO_PI + time * 0.3 * speedMult;
-            float x = uP_r1 * sin(uP_k1 * t + uP_phi1) + uP_r2 * sin(uP_k3 * t + uP_phi2) + uP_r3 * cos(uP_k5 * t);
-            float y = uP_a1 * cos(uP_k2 * t + uP_phi1) + uP_a2 * sin(uP_k4 * t + uP_phi3) + uP_a3 * cos(uP_k6 * t);
-            float z = uP_r1 * cos(uP_k1 * t + uP_phi2) + uP_r2 * cos(uP_k4 * t) + uP_r3 * sin(uP_k7 * t);
-            
-            // Normalize scale so curve is always dense and beautifully framed
+            // Family 0: Multidimensional Fourier Space Knots
+            float x = uP_r1 * sin(float(uP_k1) * t + uP_phi1) + uP_r2 * sin(float(uP_k3) * t + uP_phi2) + uP_r3 * cos(float(uP_k5) * t);
+            float y = uP_a1 * cos(float(uP_k2) * t + uP_phi1) + uP_a2 * sin(float(uP_k4) * t + uP_phi3) + uP_a3 * cos(float(uP_k6) * t);
+            float z = uP_r1 * cos(float(uP_k1) * t + uP_phi2) + uP_r2 * cos(float(uP_k4) * t) + uP_r3 * sin(float(uP_k7) * t);
+
             float maxR = max(0.01, uP_r1 + uP_r2 + uP_r3);
             float scaleFit = 4.2 / maxR;
-            vec3 m = vec3(x, y * 0.8, z) * scaleFit;
+            m = vec3(x, y * 0.85, z) * scaleFit;
 
-            // Analytic Tangent Vector
-            float dx = uP_k1 * uP_r1 * cos(uP_k1 * t + uP_phi1) + uP_k3 * uP_r2 * cos(uP_k3 * t + uP_phi2) - uP_k5 * uP_r3 * sin(uP_k5 * t);
-            float dy = -uP_k2 * uP_a1 * sin(uP_k2 * t + uP_phi1) + uP_k4 * uP_a2 * cos(uP_k4 * t + uP_phi3) - uP_k6 * uP_a3 * sin(uP_k6 * t);
-            float dz = -uP_k1 * uP_r1 * sin(uP_k1 * t + uP_phi2) - uP_k4 * uP_r2 * sin(uP_k4 * t) + uP_k7 * uP_r3 * cos(uP_k7 * t);
-            vec3 tanV = vec3(dx, dy * 0.8, dz);
-
-            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol * 1.35, settleDecay);
+            float dx = float(uP_k1) * uP_r1 * cos(float(uP_k1) * t + uP_phi1) + float(uP_k3) * uP_r2 * cos(float(uP_k3) * t + uP_phi2) - float(uP_k5) * uP_r3 * sin(float(uP_k5) * t);
+            float dy = -float(uP_k2) * uP_a1 * sin(float(uP_k2) * t + uP_phi1) + float(uP_k4) * uP_a2 * cos(float(uP_k4) * t + uP_phi3) - float(uP_k6) * uP_a3 * sin(float(uP_k6) * t);
+            float dz = -float(uP_k1) * uP_r1 * sin(float(uP_k1) * t + uP_phi2) - float(uP_k4) * uP_r2 * sin(float(uP_k4) * t) + float(uP_k7) * uP_r3 * cos(float(uP_k7) * t);
+            tanV = vec3(dx, dy * 0.85, dz);
         }
+
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol * 1.35, settleDecay);
     }
     else {
         // Universal Harmonic Ribbon Fallback
@@ -590,7 +626,7 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
 
             if (state.proceduralGenome) {
                 const g = state.proceduralGenome;
-                velocityUniforms.uP_family.value = g.family === 'superformula' ? 1 : 0;
+                velocityUniforms.uP_family.value = g.family === 'superformula' ? 1 : (g.family === 'branching' ? 2 : 0);
                 velocityUniforms.uP_r1.value = g.r1; velocityUniforms.uP_r2.value = g.r2; velocityUniforms.uP_r3.value = g.r3;
                 velocityUniforms.uP_a1.value = g.a1; velocityUniforms.uP_a2.value = g.a2; velocityUniforms.uP_a3.value = g.a3;
                 velocityUniforms.uP_k1.value = g.k1; velocityUniforms.uP_k2.value = g.k2; velocityUniforms.uP_k3.value = g.k3;

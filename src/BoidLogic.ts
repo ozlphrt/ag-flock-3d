@@ -1414,26 +1414,29 @@ export function computeFormationPoint(
         const wTime = time * 0.2 * speedMult;
 
         if (g.family === 'superformula') {
-            const m = g.m || 6;
-            const n1 = g.n1 || 1.0, n2 = g.n2 || 1.0, n3 = g.n3 || 1.0;
-            const a = g.a || 1.0, b = g.b || 1.0;
-            const t1 = Math.pow(Math.abs(fastCos(m * th / 4) / a), n2);
-            const t2 = Math.pow(Math.abs(fastSin(m * th / 4) / b), n3);
-            const sfR = Math.pow(t1 + t2, -1 / n1) * 0.4;
-            const h = (species - 1.5) * 1.8 + fastSin(th * 3.0 + wTime) * 0.8;
+            const p = Math.max(1, g.k1 || 3);
+            const q = Math.max(1, g.k2 || 2);
+            const superFreq = Math.max(2, g.k3 || 4);
+            const rMaj = 3.6 + (g.r2 || 1.8) * 0.3;
+            const rMin = 1.4 + (g.r3 || 0.9) * 0.25;
+            const rMod = rMin + 0.35 * fastSin(superFreq * th + (g.phi1 || 0));
 
-            tx = sfR * fastCos(th + wTime) * 3.5;
-            ty = h;
-            tz = sfR * fastSin(th + wTime) * 3.5;
+            const ct = fastCos(p * th + wTime);
+            const st = fastSin(p * th + wTime);
+            const cq = fastCos(q * th + (g.phi2 || 0));
+            const sq = fastSin(q * th + (g.phi2 || 0));
+
+            tx = (rMaj + rMod * cq) * ct;
+            ty = rMod * sq * 1.5 + (g.a2 || 1.5) * fastSin(superFreq * th * 0.5);
+            tz = (rMaj + rMod * cq) * st;
         } else if (g.family === 'branching') {
-            const segment = Math.floor(u * (g.k1 || 4));
-            const segT = (u * (g.k1 || 4)) % 1.0;
-            const angle = (segment / (g.k1 || 4)) * Math.PI * 2.0 + wTime;
-            const r = segT * (g.r1 || 8.0) * 0.35;
-
-            tx = r * fastCos(angle + fastSin(segT * 3.0) * 0.4);
-            ty = (segT - 0.5) * 6.0 + fastSin(angle * 2.0) * 0.5;
-            tz = r * fastSin(angle + fastCos(segT * 3.0) * 0.4);
+            const R = 3.4;
+            const r = Math.max(0.6, g.r2 || 1.8);
+            const d = Math.max(0.6, g.r1 || 2.5);
+            const k = (R - r) / r;
+            tx = (R - r) * fastCos(th + wTime) + d * fastCos(k * th + (g.phi1 || 0));
+            ty = ((g.a1 || 2.0) * fastSin((g.k2 || 2) * th + (g.phi2 || 0)) + (g.a2 || 1.2) * fastCos((g.k4 || 3) * th)) * 0.8;
+            tz = (R - r) * fastSin(th + wTime) - d * fastSin(k * th + (g.phi1 || 0));
         } else {
             // Fourier Harmonic family
             const maxR = Math.max(0.01, (g.r1 || 3.0) + (g.r2 || 1.8) + (g.r3 || 0.9));
