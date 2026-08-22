@@ -175,7 +175,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         const mat = new THREE.MeshStandardMaterial({
             roughness: 0.28,
             metalness: 0.05,
-            flatShading: false
+            flatShading: false,
+            fog: true
         });
 
         mat.onBeforeCompile = (shader) => {
@@ -303,6 +304,14 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         uniformsRef.current.uColor1.value.copy(currentColors.current[1]);
         uniformsRef.current.uColor2.value.copy(currentColors.current[2]);
         uniformsRef.current.uColor3.value.copy(currentColors.current[3]);
+
+        // Live Material Optics for 500k swarm
+        if (customMaterial) {
+            const mat = state.materialSettings || { roughness: 0.28, metalness: 0.05, emissiveIntensity: 0.0 };
+            customMaterial.roughness = mat.roughness;
+            customMaterial.metalness = mat.metalness;
+            customMaterial.emissiveIntensity = mat.emissiveIntensity ?? 0.0;
+        }
 
         if (!state.isReady) {
             state.isReady = true;
