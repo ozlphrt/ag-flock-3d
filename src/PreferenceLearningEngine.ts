@@ -2,9 +2,13 @@ import {
     SimulationState,
     FormationMode,
     MaterialSettings,
-    LightingProfile
+    LightingProfile,
+    FORMATION_PRESETS,
+    COLOR_PALETTES,
+    MATERIAL_PRESETS,
+    LIGHTING_PROFILES
 } from './BoidLogic';
-import { BloomSettings } from './BloomControlPanel';
+import { BLOOM_PRESETS } from './BloomControlPanel';
 
 export type DimensionKey = 'topology' | 'palette' | 'material' | 'lighting' | 'helixDynamics' | 'bloom';
 
@@ -66,12 +70,34 @@ export interface TasteProfile {
         totalAgreements: number;
         anglesTested: string[];
         isConfirmed: boolean;
+        poolOffset: number;
     }>;
     insights: DimensionInsight[];
     summaryText: string;
 }
 
-// 100% Shared Controlled Baseline across all non-target dimensions (Snappy 0.5s morph)
+const PALETTE_NAMES = [
+    'Organic Forest & Moss',
+    'Deep Ocean Ecosystem',
+    'Nordic Fjord & Autumn Birch',
+    'Volcanic Basalt & Terracotta',
+    'Desert Canyon & Clay Sage',
+    'Alpine Meadow & Wild Violet',
+    'Bioluminescent Deep Reef',
+    'Sandstone & Coastal Mineral',
+    'Cosmic Amethyst & Rose Gold',
+    'Deep Cobalt & Coral Sunset',
+    'Terracotta & Emerald Lagoon',
+    'Twilight Lavender & Sage',
+    'Icelandic Glacial Fjord',
+    'Earthy Obsidian & Smoked Amber',
+    'Volcanic Copper & Patina',
+    'Ancient Teak & Sandstone',
+    'Olive Grove & Golden Barley',
+    'Magma Obsidian & Crimson Amber'
+];
+
+// 100% Shared Controlled Baseline across all non-target dimensions (Snappy 0.12s morph)
 export const BASELINE_LEARN_STATE: Partial<SimulationState> = {
     formationMode: FormationMode.TrefoilBraidedRibbon,
     materialSettings: { roughness: 0.22, metalness: 0.55, wireframe: false, flatShading: true, emissiveIntensity: 0.12 },
@@ -96,50 +122,45 @@ export const BASELINE_LEARN_STATE: Partial<SimulationState> = {
     transitionDuration: 0.12
 };
 
-// Catalogs of Guaranteed Distinct Presets for Each Dimension
+// Full Extensive Catalogs for All 36 Formations, 18 Palettes, 10 Materials, 8 Lighting, 6 Speed, 6 Bloom
 export const DIMENSION_CATALOGS: Record<DimensionKey, PresetOption[]> = {
-    topology: [
-        { title: 'Trefoil Knot', description: '3-fold symmetrical braided torus knot', styleFamily: 'trefoil', state: { formationMode: FormationMode.TrefoilBraidedRibbon } },
-        { title: 'Figure-8 Knot', description: '4-lobe alternating non-orientable braid', styleFamily: 'figure_eight', state: { formationMode: FormationMode.FigureEightKnotBraid } },
-        { title: 'Septafoil Stellar Knot', description: '7-point intertwined star torus ribbon', styleFamily: 'septafoil', state: { formationMode: FormationMode.SeptafoilKnotBraid } },
-        { title: 'Cinqfoil Star Knot', description: '5-lobed pentagrammatic intertwining ribbon', styleFamily: 'cinqfoil', state: { formationMode: FormationMode.CinqfoilKnotBraid } },
-        { title: 'Fractal Supercoil', description: '4-tier nested recursive coaxial helices', styleFamily: 'fractal_supercoil', state: { formationMode: FormationMode.FractalSupercoil } },
-        { title: 'Toroidal Quad-Helix', description: 'Continuous 4-strand closed torus braid', styleFamily: 'toroidal_helix', state: { formationMode: FormationMode.ToroidalHelixBraid } },
-        { title: 'Caduceus Vortex', description: 'Counter-rotating dual vortex serpents', styleFamily: 'caduceus', state: { formationMode: FormationMode.CaduceusVortex } }
-    ],
-    palette: [
-        { title: 'Obsidian Gold', description: 'Dark charcoal, fiery amber, copper & white', styleFamily: 'obsidian_gold', state: { speciesColors: ['#14171d', '#ff6b35', '#f7c59f', '#efefd0'] } },
-        { title: 'Neon Aurora', description: 'Abyss navy, neon emerald, cyan & violet', styleFamily: 'bioluminescent_neon', state: { speciesColors: ['#03071e', '#00f5d4', '#00bbf9', '#9b5de5'] } },
-        { title: 'Champagne & Silver', description: 'Obsidian black, champagne gold & platinum', styleFamily: 'gilded_gold', state: { speciesColors: ['#0a0d14', '#d4af37', '#e5e4e2', '#ffffff'] } },
-        { title: 'Volcanic Lava', description: 'Pitch obsidian, flame orange & radiant gold', styleFamily: 'volcanic_embers', state: { speciesColors: ['#121316', '#ff4500', '#ffa500', '#ffffff'] } },
-        { title: 'Stellar Sapphire', description: 'Midnight navy, royal sapphire & diamond white', styleFamily: 'celestial_blue', state: { speciesColors: ['#050814', '#1d3557', '#457b9d', '#f1faee'] } },
-        { title: 'Cyberpunk Emerald', description: 'Dark slate, neon green, cyan & magenta', styleFamily: 'cyberpunk_neon', state: { speciesColors: ['#0d131a', '#00ff88', '#00c3ff', '#ff0055'] } }
-    ],
-    material: [
-        { title: 'Specular Metallic', description: 'Glossy faceted chrome with sharp specular glints', styleFamily: 'specular_metallic', state: { materialSettings: { roughness: 0.20, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.12 } } },
-        { title: 'Matte Velvet', description: 'Soft diffuse satin finish with zero metallic shine', styleFamily: 'matte_satin', state: { materialSettings: { roughness: 0.70, metalness: 0.05, wireframe: false, flatShading: true, emissiveIntensity: 0.08 } } },
-        { title: 'Mirror Chrome', description: 'Ultra-gloss metallic mirror with intense highlights', styleFamily: 'high_chrome', state: { materialSettings: { roughness: 0.08, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.15 } } },
-        { title: 'Smooth Glass', description: 'Non-faceted continuous curvature liquid glass', styleFamily: 'liquid_glass', state: { materialSettings: { roughness: 0.05, metalness: 0.30, wireframe: false, flatShading: false, emissiveIntensity: 0.08 } } },
-        { title: 'Cyber Wireframe', description: 'Luminous geometric polygon cage structure', styleFamily: 'cyber_wireframe', state: { materialSettings: { roughness: 0.20, metalness: 0.50, wireframe: true, flatShading: true, emissiveIntensity: 0.30 } } }
-    ],
-    lighting: [
-        { title: 'Volcanic Amber', description: 'Intense warm amber key light with crimson fill', styleFamily: 'volcanic_key', state: { lightingProfile: { id: 4, label: 'Volcanic Magma', ambientIntensity: 0.28, keyIntensity: 4.2, keyColor: '#ff6820', fillIntensity: 0.75, fillColor: '#802535', rimIntensity: 2.8, rimColor: '#ffa040', fogDensity: 0.045 } } },
-        { title: 'Abyss Cyan', description: 'Deep ocean indigo with electric cyan key & rim', styleFamily: 'bioluminescent_cool', state: { lightingProfile: { id: 2, label: 'Bioluminescent Abyss', ambientIntensity: 0.22, keyIntensity: 3.6, keyColor: '#00e5ff', fillIntensity: 0.60, fillColor: '#7b2cbf', rimIntensity: 3.2, rimColor: '#00ffff', fogDensity: 0.035 } } },
-        { title: 'Solar Daylight', description: 'Bright warm daylight with soft ambient fill', styleFamily: 'solar_high_key', state: { lightingProfile: { id: 5, label: 'Prismatic Solar', ambientIntensity: 0.40, keyIntensity: 4.5, keyColor: '#fff0a0', fillIntensity: 0.85, fillColor: '#ff8040', rimIntensity: 3.0, rimColor: '#ffffff', fogDensity: 0.020 } } },
-        { title: 'Nebula Chiaroscuro', description: 'Dramatic low-key dark shadows with violet rim', styleFamily: 'dark_nebula', state: { lightingProfile: { id: 1, label: 'Deep Nebula', ambientIntensity: 0.15, keyIntensity: 4.8, keyColor: '#00ffcc', fillIntensity: 0.40, fillColor: '#3a0ca3', rimIntensity: 3.8, rimColor: '#7209b7', fogDensity: 0.055 } } }
-    ],
+    topology: FORMATION_PRESETS.map(p => ({
+        title: p.label,
+        description: p.desc,
+        styleFamily: `topology_${p.id}`,
+        state: { formationMode: p.id }
+    })),
+    palette: COLOR_PALETTES.map((pal, idx) => ({
+        title: PALETTE_NAMES[idx] || `Palette ${idx + 1}`,
+        description: `4-Species chromatic harmony (${pal.slice(1).join(', ')})`,
+        styleFamily: `palette_${idx}`,
+        state: { speciesColors: [...pal] }
+    })),
+    material: MATERIAL_PRESETS.map(m => ({
+        title: m.label,
+        description: m.desc,
+        styleFamily: `material_${m.id}`,
+        state: { materialSettings: { ...m.settings } }
+    })),
+    lighting: LIGHTING_PROFILES.map(l => ({
+        title: l.label,
+        description: `Key ${l.keyIntensity}x, Rim ${l.rimIntensity}x (${l.keyColor})`,
+        styleFamily: `lighting_${l.id}`,
+        state: { lightingProfile: { ...l } }
+    })),
     helixDynamics: [
         { title: 'Fast Spiral Stream', description: 'Rapid dynamic flow (Speed 0.28) with micro-helices', styleFamily: 'fast_dna_stream', state: { speedMultiplier: 0.28 } },
         { title: 'Gentle Chiral Drift', description: 'Tranquil slow glide (Speed 0.10) with subtle waves', styleFamily: 'gentle_laminar', state: { speedMultiplier: 0.10 } },
         { title: 'Medium Balanced Flow', description: 'Harmonic balanced velocity (Speed 0.18)', styleFamily: 'medium_flow', state: { speedMultiplier: 0.18 } },
-        { title: 'Hyper-Velocity Rush', description: 'Maximum speed vortex torrent (Speed 0.38)', styleFamily: 'hyper_velocity', state: { speedMultiplier: 0.38 } }
+        { title: 'Hyper-Velocity Rush', description: 'Maximum speed vortex torrent (Speed 0.38)', styleFamily: 'hyper_velocity', state: { speedMultiplier: 0.38 } },
+        { title: 'Laminar Slow Float', description: 'Silky smooth meditative drift (Speed 0.06)', styleFamily: 'slow_float', state: { speedMultiplier: 0.06 } }
     ],
-    bloom: [
-        { title: 'Radiant Halo', description: 'Dreamy optical diffusion with intense facet bloom', styleFamily: 'radiant_halo', state: { bloomSettings: { luminanceThreshold: 0.25, intensity: 2.4, radius: 0.70, levels: 3 } } },
-        { title: 'Crisp Glints', description: 'Pinpoint specular highlights with zero haze', styleFamily: 'crisp_glints', state: { bloomSettings: { luminanceThreshold: 0.85, intensity: 1.2, radius: 0.35, levels: 2 } } },
-        { title: 'Balanced Cinematic Bloom', description: 'Soft atmospheric glow on specular edges', styleFamily: 'cinematic_bloom', state: { bloomSettings: { luminanceThreshold: 0.35, intensity: 1.8, radius: 0.55, levels: 2 } } },
-        { title: 'Intense Solar Flare', description: 'Ultra-bright prismatic starburst glow', styleFamily: 'solar_flare', state: { bloomSettings: { luminanceThreshold: 0.15, intensity: 3.2, radius: 0.85, levels: 3 } } }
-    ]
+    bloom: BLOOM_PRESETS.map((b, idx) => ({
+        title: b.label,
+        description: `Intensity ${b.settings.intensity}x, Radius ${b.settings.radius}`,
+        styleFamily: `bloom_${idx}`,
+        state: { bloomSettings: { ...b.settings } }
+    }))
 };
 
 const DIMENSION_BLOCK_ORDER: DimensionKey[] = ['topology', 'palette', 'material', 'lighting', 'helixDynamics', 'bloom'];
@@ -154,15 +175,15 @@ export class PreferenceLearningEngine {
             totalRounds: 0,
             overallConsistency: 100,
             dimensions: {
-                topology: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Trefoil Knot', bestStyleFamily: 'trefoil', bestData: { formationMode: FormationMode.TrefoilBraidedRibbon }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                palette: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Obsidian Gold', bestStyleFamily: 'obsidian_gold', bestData: { speciesColors: ['#14171d', '#ff6b35', '#f7c59f', '#efefd0'] }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                material: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Specular Metallic', bestStyleFamily: 'specular_metallic', bestData: { materialSettings: { roughness: 0.22, metalness: 0.55, wireframe: false, flatShading: true, emissiveIntensity: 0.12 } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                lighting: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Volcanic Amber', bestStyleFamily: 'volcanic_key', bestData: { lightingProfile: { ...BASELINE_LEARN_STATE.lightingProfile } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                helixDynamics: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Fast Spiral Stream', bestStyleFamily: 'fast_dna_stream', bestData: { speedMultiplier: 0.28, noiseTurbulence: 0.025 }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                bloom: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Radiant Halo', bestStyleFamily: 'radiant_halo', bestData: { bloomSettings: { luminanceThreshold: 0.35, intensity: 1.8, radius: 0.55, levels: 2 } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false }
+                topology: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Trefoil Braided Ribbon', bestStyleFamily: 'topology_3', bestData: { formationMode: FormationMode.TrefoilBraidedRibbon }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false, poolOffset: 0 },
+                palette: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Magma Obsidian & Crimson Amber', bestStyleFamily: 'palette_17', bestData: { speciesColors: [...COLOR_PALETTES[17]] }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false, poolOffset: 0 },
+                material: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Sparkling Specular Facets', bestStyleFamily: 'material_8', bestData: { materialSettings: { ...MATERIAL_PRESETS[8]?.settings || BASELINE_LEARN_STATE.materialSettings } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false, poolOffset: 0 },
+                lighting: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Volcanic Magma', bestStyleFamily: 'lighting_4', bestData: { lightingProfile: { ...BASELINE_LEARN_STATE.lightingProfile } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false, poolOffset: 0 },
+                helixDynamics: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Fast Spiral Stream', bestStyleFamily: 'fast_dna_stream', bestData: { speedMultiplier: 0.28, noiseTurbulence: 0.025 }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false, poolOffset: 0 },
+                bloom: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Diamond Facet Sparkle', bestStyleFamily: 'bloom_0', bestData: { bloomSettings: { luminanceThreshold: 0.35, intensity: 1.8, radius: 0.55, levels: 2 } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false, poolOffset: 0 }
             },
             insights: [],
-            summaryText: 'Collecting initial aesthetic observations...'
+            summaryText: 'Collecting initial aesthetic observations across 36 topological manifolds...'
         };
         this.updateInsights();
     }
@@ -177,8 +198,9 @@ export class PreferenceLearningEngine {
         }
 
         const record = this.profile.dimensions[targetDim];
-        const trialCount = record.trials;
+        const trialCount = record.trials % TRIALS_PER_DIMENSION_BLOCK;
         const catalog = DIMENSION_CATALOGS[targetDim];
+        const offset = record.poolOffset;
 
         const dimensionLabels: Record<DimensionKey, string> = {
             topology: '3D TOPOLOGY',
@@ -198,22 +220,28 @@ export class PreferenceLearningEngine {
         const leaderTitle = record.bestOptionLabel || catalog[0].title;
         const leaderItem = catalog.find(item => item.title === leaderTitle) || catalog[0];
 
-        // 1. TRIAL 1: Direct Contrast
+        // 1. TRIAL 1: Direct Contrast between two distinct un-seen presets
         if (trialCount === 0) {
-            candidateAItem = catalog[0];
-            candidateBItem = catalog[1];
+            const idxA = offset % catalog.length;
+            const idxB = (offset + Math.max(1, Math.floor(catalog.length / 2))) % catalog.length;
+            candidateAItem = catalog[idxA];
+            candidateBItem = catalog[idxB];
+            if (candidateAItem.title === candidateBItem.title) {
+                candidateBItem = catalog[(idxB + 1) % catalog.length];
+            }
             stageLabel = 'TRIAL 1/4: DIRECT CONTRAST';
             angleName = `${candidateAItem.title} vs ${candidateBItem.title}`;
             question = `Baseline choice between two distinct ${dimensionLabels[targetDim].toLowerCase()} styles`;
         }
-        // 2. TRIAL 2: Consistency Validation (Reversed positions & New Challenger)
+        // 2. TRIAL 2: Consistency Validation (Reversed positions with 3rd distinct challenger)
         else if (trialCount === 1) {
             const challengers = catalog.filter(item => item.title !== leaderItem.title);
-            candidateAItem = challengers[0] || catalog[1];
+            const idxC = (offset + 1) % challengers.length;
+            candidateAItem = challengers[idxC] || challengers[0];
             candidateBItem = leaderItem;
             stageLabel = 'TRIAL 2/4: CONSISTENCY VALIDATION';
             angleName = `${candidateAItem.title} vs ${candidateBItem.title}`;
-            question = `Consistency check: Validating your preference against a new challenger`;
+            question = `Consistency check: Validating your preference against a fresh challenger`;
         }
         // 3. TRIAL 3: Micro-Parameter Fine-Tuning around the Leader
         else if (trialCount === 2) {
@@ -309,14 +337,18 @@ export class PreferenceLearningEngine {
                 };
             }
         }
-        // 4. TRIAL 4: Championship Confirmation
+        // 4. TRIAL 4: Championship Confirmation against elite un-seen candidate
         else {
             const challengers = catalog.filter(item => item.title !== leaderItem.title);
+            const idxD = (offset + 2) % challengers.length;
             candidateAItem = leaderItem;
-            candidateBItem = challengers[challengers.length - 1] || catalog[catalog.length - 1];
+            candidateBItem = challengers[idxD] || challengers[challengers.length - 1];
             stageLabel = 'TRIAL 4/4: CHAMPIONSHIP CONFIRMATION';
             angleName = `${candidateAItem.title} vs ${candidateBItem.title}`;
             question = `Championship test: Validating your fine-tuned choice against top-tier contender`;
+            
+            // Advance offset for the next tournament block so new topologies appear next time
+            record.poolOffset = (record.poolOffset + 3) % catalog.length;
         }
 
         return {
