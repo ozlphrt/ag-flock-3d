@@ -287,18 +287,48 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             <div style={{
                 background: 'rgba(15, 22, 38, 0.90)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                padding: '8px 20px',
+                padding: '10px 20px',
                 textAlign: 'center',
                 fontSize: '13px',
                 fontWeight: 600,
                 color: '#e2e8f0',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '6px'
             }}>
-                <span style={{ color: '#ff6820' }}>⚖️</span>
-                <span>{currentPair.question}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <span style={{
+                        background: currentPair.isReinforcementRound ? 'rgba(0, 245, 212, 0.15)' : 'rgba(47, 161, 214, 0.15)',
+                        color: currentPair.isReinforcementRound ? '#00f5d4' : '#2FA1D6',
+                        border: currentPair.isReinforcementRound ? '1px solid rgba(0, 245, 212, 0.4)' : '1px solid rgba(47, 161, 214, 0.4)',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        letterSpacing: '0.04em'
+                    }}>
+                        {currentPair.stageLabel}
+                    </span>
+                    <span style={{
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: '#94a3b8',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 700
+                    }}>
+                        📐 {currentPair.angleName}
+                    </span>
+                    <span style={{ color: '#fff', fontWeight: 700 }}>{currentPair.question}</span>
+                </div>
+                {currentPair.consistencyHint && (
+                    <div style={{ fontSize: '11px', color: '#00e5ff', fontWeight: 500 }}>
+                        {currentPair.consistencyHint}
+                    </div>
+                )}
             </div>
 
             {/* Dual Split-Screen Viewport Arena */}
@@ -464,9 +494,20 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         overflowY: 'auto'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '22px' }}>🧬</span>
                                 <span style={{ fontSize: '17px', fontWeight: 900, color: '#fff' }}>Your Learned Aesthetic DNA</span>
+                                <span style={{
+                                    background: 'rgba(0, 245, 212, 0.15)',
+                                    color: '#00f5d4',
+                                    border: '1px solid rgba(0, 245, 212, 0.4)',
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '11px',
+                                    fontWeight: 800
+                                }}>
+                                    🎯 {tasteProfile.overallConsistency}% Consistency
+                                </span>
                             </div>
                             <button
                                 onClick={() => setIsProfileModalOpen(false)}
@@ -492,15 +533,38 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         {/* Parameter Affinity Radar Bars */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {tasteProfile.insights.map(ins => (
-                                <div key={ins.dimension} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 800, marginBottom: '6px' }}>
-                                        <span style={{ color: '#fff' }}>{ins.label}: <span style={{ color: '#2FA1D6' }}>{ins.preferredStyle}</span></span>
-                                        <span style={{ color: '#00e5ff' }}>{ins.affinityScore}% affinity</span>
+                                <div key={ins.dimension} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', fontWeight: 800, marginBottom: '6px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ color: '#fff' }}>{ins.label}:</span>
+                                            <span style={{ color: '#2FA1D6' }}>{ins.preferredStyle}</span>
+                                            <span style={{
+                                                fontSize: '10px',
+                                                padding: '2px 6px',
+                                                borderRadius: '4px',
+                                                fontWeight: 800,
+                                                background: ins.status === 'confirmed' ? 'rgba(0, 245, 212, 0.15)' : ins.status === 'reinforcing' ? 'rgba(47, 161, 214, 0.15)' : 'rgba(255, 255, 255, 0.08)',
+                                                color: ins.status === 'confirmed' ? '#00f5d4' : ins.status === 'reinforcing' ? '#2FA1D6' : '#8899ac',
+                                                border: `1px solid ${ins.status === 'confirmed' ? 'rgba(0, 245, 212, 0.4)' : ins.status === 'reinforcing' ? 'rgba(47, 161, 214, 0.4)' : 'rgba(255, 255, 255, 0.15)'}`
+                                            }}>
+                                                {ins.status === 'confirmed' ? 'Confirmed ✓ (3/3)' : ins.status === 'reinforcing' ? `Reinforcing (${ins.trials}/3)` : 'Exploring (0/3)'}
+                                            </span>
+                                        </div>
+                                        <span style={{ color: '#00e5ff', fontSize: '11px' }}>{ins.affinityScore}% affinity • {ins.consistencyScore}% consistent</span>
                                     </div>
                                     <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', marginBottom: '6px' }}>
-                                        <div style={{ height: '100%', width: `${ins.affinityScore}%`, background: 'linear-gradient(90deg, #2FA1D6, #00e5ff)', borderRadius: '3px' }} />
+                                        <div style={{ height: '100%', width: `${ins.affinityScore}%`, background: ins.status === 'confirmed' ? 'linear-gradient(90deg, #00f5d4, #00bbf9)' : 'linear-gradient(90deg, #2FA1D6, #00e5ff)', borderRadius: '3px' }} />
                                     </div>
-                                    <div style={{ fontSize: '11px', color: '#8899ac' }}>{ins.description}</div>
+                                    <div style={{ fontSize: '11px', color: '#8899ac', marginBottom: ins.anglesTested.length > 0 ? '6px' : '0' }}>{ins.description}</div>
+                                    {ins.anglesTested.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                            {ins.anglesTested.map((ang, idx) => (
+                                                <span key={idx} style={{ fontSize: '9px', background: 'rgba(255,255,255,0.06)', color: '#94a3b8', padding: '1px 5px', borderRadius: '3px' }}>
+                                                    ✓ {ang}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
