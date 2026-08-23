@@ -74,48 +74,55 @@ vec3 rotateZ(vec3 p, float a) {
     return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
 }
 
-// Coordinate Frame generator with dynamic time-decaying stray alignment and child corkscrew helices
+// True Cascaded Hierarchical Reference Frame for Multi-Tier Child Helices, Spirals & DNA Braids on GPU
 vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, float nSeed, float speedMult, float radius, float angFreq, float vol, float settleDecay) {
     vec3 tNorm = normalize(tangent);
-    vec3 up = abs(tNorm.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 up = abs(tNorm.y) < 0.92 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
     vec3 normal = normalize(cross(tNorm, up));
     vec3 binormal = cross(tNorm, normal);
 
     // Dynamic wave pulsation along the tube cross-section
-    float wavePulse = 1.0 + 0.14 * sin(u * 12.0 * PI - time * 2.2 * speedMult);
+    float wavePulse = 1.0 + 0.12 * sin(u * 12.0 * PI - time * 2.2 * speedMult);
 
-    // 1. Order-2 Meso cord (4 species cords spiraling & flowing around macro spine)
+    // 1. Order-2 Meso cord (4 species cords spiraling around macro spine with 90° phase offsets)
     float cordAngle = sp * (TWO_PI / 4.0) + (u * angFreq * PI) + time * 1.2 * speedMult;
-    float rx = cos(cordAngle) * (radius * wavePulse);
-    float ry = sin(cordAngle) * (radius * wavePulse);
+    float cosMeso = cos(cordAngle);
+    float sinMeso = sin(cordAngle);
 
-    // 2. Order-3 Micro multi-strands (child micro-helices corkscrewing around the cord)
-    float subStrand = floor(fract(nSeed * 13.37) * 4.0);
-    float microAngle = subStrand * (TWO_PI / 4.0) + u * 24.0 * PI + time * 2.4 * speedMult;
-    float rMicro = 0.16 * vol * wavePulse;
-    rx += cos(microAngle) * rMicro;
-    ry += sin(microAngle) * rMicro;
+    // Dynamic local radial basis vectors (N2, B2) rotating with the Meso cord
+    vec3 n2 = normal * cosMeso + binormal * sinMeso;
+    vec3 b2 = -normal * sinMeso + binormal * cosMeso;
 
-    // 3. Order-4 Volumetric Fermat Golden-Angle Radial dispersion
-    float goldenAngle = 2.399963229728653;
-    float pAngle = fract(nSeed * 37.19) * TWO_PI + goldenAngle * u * 8000.0;
-    float pRadius = (sqrt(fract(nSeed * 89.41)) * 0.5 + 0.1) * vol * 0.60 * wavePulse;
-    rx += cos(pAngle) * pRadius;
-    ry += sin(pAngle) * pRadius;
+    // Centerline of the species cord
+    vec3 p2 = m + n2 * (radius * wavePulse);
 
-    // 4. Permanent Organic Stray Aura with Convergence:
-    // ~18% of boids always maintain a subtle, gentle halo floating slightly outside the core ribbon
-    float isStray = step(0.82, fract(nSeed * 19.87));
-    float individualDecay = clamp(settleDecay + (fract(nSeed * 77.13) - 0.5) * 0.20, 0.25, 1.0);
-    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.35 + sin(time * 0.5 + nSeed * 8.2) * 0.4;
-    float strayDist = (fract(nSeed * 43.21) * 0.65 + 0.25) * vol * 2.0 * isStray * individualDecay;
-    rx += cos(strayAngle) * strayDist;
-    ry += sin(strayAngle) * strayDist;
+    // 2. Order-3 Micro Child Helices (Cascading high-frequency spirals orbiting around the Meso strand)
+    // 8 distinct crisp child helical strands inside each species cord
+    float trackId = floor(fract(nSeed * 17.31) * 8.0);
+    float microAngle = trackId * (TWO_PI / 8.0) + (u * 28.0 * PI) + time * 2.4 * speedMult;
+    float cosMicro = cos(microAngle);
+    float sinMicro = sin(microAngle);
 
-    // 5. Longitudinal jitter & permanent organic particle breathing
-    float longJitter = (fract(nSeed * 71.23) - 0.5) * 0.15 + (isStray * individualDecay * (fract(nSeed * 31.11) - 0.5) * 0.35);
+    // Local rotating frame (N3, B3) for the child helix
+    vec3 n3 = n2 * cosMicro + b2 * sinMicro;
+    vec3 b3 = -n2 * sinMicro + b2 * cosMicro;
 
-    return m + normal * rx + binormal * ry + tNorm * longJitter;
+    float rMicro = (0.32 * vol * (0.45 + 0.55 * sqrt((trackId + 0.5) / 8.0))) * wavePulse;
+    vec3 p3 = p2 + n3 * rMicro;
+
+    // 3. Order-4 Nano Filaments (Tight DNA sub-twists inside each child helix)
+    float nanoId = floor(fract(nSeed * 43.19) * 3.0);
+    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 64.0 * PI) + time * 3.2 * speedMult;
+    float rNano = 0.09 * vol * wavePulse;
+    vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
+
+    // 4. Subtle Stray Aura (~8% subtle floaters around the edges)
+    float isStray = step(0.92, fract(nSeed * 89.23));
+    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.4;
+    float strayDist = 0.6 * vol * isStray * settleDecay;
+    p4 += (n2 * cos(strayAngle) + b2 * sin(strayAngle)) * strayDist;
+
+    return p4;
 }
 
 // Compute Target Formation Point
