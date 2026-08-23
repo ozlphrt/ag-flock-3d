@@ -463,85 +463,85 @@ export const MATERIAL_PRESETS = [
         id: 0,
         label: 'Vibrant Satin Porcelain',
         icon: '🍶',
-        desc: 'Deep vibrant color saturation with crisp specular highlights and smooth satin sheen',
-        settings: { roughness: 0.18, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        desc: 'Deep vibrant color saturation with smooth satin surface sheen and soft specular highlights',
+        settings: { roughness: 0.30, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 1,
         label: 'Candy Gloss Enamel',
         icon: '🍬',
-        desc: 'High-gloss automotive clearcoat with vibrant specular gleam and crisp reflections',
-        settings: { roughness: 0.10, metalness: 0.35, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        desc: 'High-gloss automotive clearcoat with rich saturated pigments and smooth highlights',
+        settings: { roughness: 0.28, metalness: 0.35, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 2,
         label: 'Polished Titanium Luster',
         icon: '⚔️',
-        desc: 'Aerospace grade brushed metallic sheen with high environmental light response',
-        settings: { roughness: 0.14, metalness: 0.85, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        desc: 'Aerospace grade brushed metallic sheen with broad light response and rich shadows',
+        settings: { roughness: 0.32, metalness: 0.75, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 3,
         label: 'Faceted Jewel Gem',
         icon: '💎',
-        desc: 'Geometric crystalline facets with sparkling specular gleams that catch directional beams',
-        settings: { roughness: 0.14, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        desc: 'Geometric crystalline facets with broad highlights that let gemstone colors pop',
+        settings: { roughness: 0.28, metalness: 0.50, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 4,
         label: 'Iridescent Pearl Luster',
         icon: '🦪',
         desc: 'Deep chromatic pearl sheen with luminous rim glints and multi-angle specular shifts',
-        settings: { roughness: 0.16, metalness: 0.45, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.30, metalness: 0.40, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 5,
         label: 'Frosted Glass Crystal',
         icon: '🧊',
         desc: 'Modern faceted optical crystal with intense saturated chromatic reflection',
-        settings: { roughness: 0.20, metalness: 0.35, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.34, metalness: 0.30, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 6,
         label: 'Polished Amber Glass',
         icon: '🍯',
-        desc: 'Liquid resin gloss with rich specular glints and clear optical depth',
-        settings: { roughness: 0.12, metalness: 0.28, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        desc: 'Liquid resin gloss with rich specular definition and clear optical depth',
+        settings: { roughness: 0.29, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 7,
         label: 'Sparkling Specular Facets',
         icon: '💎',
-        desc: 'Crystalline multifaceted diamond geometry with high metallic speckles and light glints',
-        settings: { roughness: 0.12, metalness: 0.75, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        desc: 'Crystalline multifaceted diamond geometry with metallic speckles and light glints',
+        settings: { roughness: 0.30, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 8,
         label: 'Glinting Obsidian Foil',
         icon: '✨',
         desc: 'Deep metallic foil with sparkling facet glimmers that catch dynamic rim & key beams',
-        settings: { roughness: 0.08, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.28, metalness: 0.70, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 9,
         label: 'Liquid Mirror Chrome',
         icon: '🪞',
         desc: 'Ultra-polished liquid mirror metal reflecting environmental key and rim lights',
-        settings: { roughness: 0.04, metalness: 0.98, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.26, metalness: 0.85, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 10,
         label: 'Brushed Cobalt Steel',
         icon: '🛡️',
         desc: 'Deep anisotropic brushed steel with crisp sunlit reflections and dark shadows',
-        settings: { roughness: 0.12, metalness: 0.90, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.32, metalness: 0.80, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 11,
         label: 'Prismatic Diamond Glint',
         icon: '❇️',
         desc: 'Sharp crystalline facets with glowing specular spikes and deep facet contrast',
-        settings: { roughness: 0.10, metalness: 0.80, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        settings: { roughness: 0.28, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     }
 ];
 
@@ -581,8 +581,8 @@ export function generateSpeciesMaterials(basePresetIdx: number = 0): [MaterialSe
     const pool = [...MATERIAL_PRESETS];
     const metallicPresets = pool.filter(p => p.settings.metalness >= 0.7);
     const facetedPresets = pool.filter(p => p.settings.flatShading);
-    const glossPresets = pool.filter(p => p.settings.roughness <= 0.12 && !p.settings.flatShading);
-    const satinPresets = pool.filter(p => p.settings.metalness < 0.6);
+    const glossPresets = pool.filter(p => p.settings.roughness <= 0.30 && !p.settings.flatShading);
+    const satinPresets = pool.filter(p => p.settings.metalness < 0.5);
 
     const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[9]).settings;
     const mat1 = (facetedPresets[Math.floor(Math.random() * facetedPresets.length)] || pool[7]).settings;
@@ -1419,37 +1419,35 @@ export function computeFormationPoint(
         ty = cy + ly;
         tz = cz + lz;
     } else if (formation === FormationMode.SaturnianRings) {
-        // --- 29. Saturnian Planetary Rings: Oblate Core Sphere + Keplerian Dust Rings & Cassini Division ---
+        // --- 29. Saturnian Planetary Rings: Species 0 = Planet Core; Species 1, 2, 3 = Dust Cloud & Rings ---
         const tiltAlpha = 0.466; // 26.7 deg axial tilt
-        const cosTilt = fastCos(tiltAlpha);
-        const sinTilt = fastSin(tiltAlpha);
         let px = 0, py = 0, pz = 0;
 
-        if (species < 2) {
-            // Planet Core Sphere (Species 0 & 1): Golden-spiral oblate sphere with banded differential rotation
+        if (species === 0) {
+            // Planet Core Sphere (100% Species 0): Golden-spiral oblate sphere with differential rotation
             const yCore = (u * 2.0 - 1.0) * 2.2;
             const rLat = Math.sqrt(Math.max(0, 1.0 - (yCore / 2.2) * (yCore / 2.2))) * 2.4;
-            const bandSpeed = (0.35 - Math.abs(yCore) * 0.08) * (species === 0 ? 1.0 : 0.85);
-            const theta = (u * 32.0 * Math.PI) + (time * bandSpeed * speedMult) + (species * Math.PI);
+            const bandSpeed = (0.35 - Math.abs(yCore) * 0.08);
+            const theta = (u * 32.0 * Math.PI) + (time * bandSpeed * speedMult);
             px = rLat * fastCos(theta);
             py = yCore * 0.88; // Oblate spheroid flattening
             pz = rLat * fastSin(theta);
         } else {
-            // Keplerian Dust Cloud Rings (Species 2 & 3): Flat disc with Cassini Division
-            const isInnerRing = (species === 2);
-            // Inner Ring: R in [3.6, 5.0], Outer Ring: R in [5.6, 8.4] (Cassini gap between 5.0 and 5.6)
-            const rRing = isInnerRing ? (3.6 + u * 1.4) : (5.6 + u * 2.8);
+            // Keplerian Dust Cloud Rings (Species 1, 2, 3): Multi-layer disc with Cassini Division
+            const ringTier = species - 1; // 0, 1, 2
+            const rBase = 3.8 + ringTier * 1.6;
+            const rRing = rBase + u * 1.4;
             const keplerSpeed = Math.sqrt(3.2 / (rRing * rRing * rRing));
-            const ringTheta = (u * 36.0 * Math.PI) + (time * keplerSpeed * speedMult) + (indexInSpecies * 0.04);
+            const ringTheta = (u * 36.0 * Math.PI) + (time * keplerSpeed * speedMult) + (indexInSpecies * 0.04) + (ringTier * 1.047);
             px = rRing * fastCos(ringTheta);
-            py = fastSin(ringTheta * 2.0 + rRing) * 0.05; // Ultra-flat ring plane with subtle gravitational ripple
+            py = fastSin(ringTheta * 2.0 + rRing) * 0.06; // Ultra-flat ring plane with subtle gravitational ripple
             pz = rRing * fastSin(ringTheta);
         }
 
         // Apply 26.7 deg Planetary Tilt
         tx = px;
-        ty = py * cosTilt - pz * sinTilt;
-        tz = py * sinTilt + pz * cosTilt;
+        ty = py * fastCos(tiltAlpha) - pz * fastSin(tiltAlpha);
+        tz = py * fastSin(tiltAlpha) + pz * fastCos(tiltAlpha);
     } else if (formation === FormationMode.SphericalSurfaceVortex) {
         // --- 30. Spherical Surface Vortices: Atmospheric & Rossby Wave Currents on 3D Sphere Surface ---
         const phi = (u - 0.5) * Math.PI * 0.94; // Latitude (-85 deg to +85 deg)

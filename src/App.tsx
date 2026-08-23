@@ -363,22 +363,22 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
         if (s && bloomRef.current) {
             const b = bloomRef.current;
             if (b.intensity !== undefined) {
-                b.intensity = s.intensity ?? 1.8;
+                b.intensity = s.intensity ?? 0.75;
             }
             if (b.luminanceMaterial && b.luminanceMaterial.threshold !== undefined) {
-                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.90;
+                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.14;
             } else if (b.luminancePass?.luminanceMaterial?.threshold !== undefined) {
-                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.90;
+                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.14;
             }
             if (b.mipmapBlurPass && b.mipmapBlurPass.radius !== undefined) {
-                b.mipmapBlurPass.radius = s.radius ?? 0.10;
+                b.mipmapBlurPass.radius = s.radius ?? 0.45;
             } else if (b.radius !== undefined) {
-                b.radius = s.radius ?? 0.10;
+                b.radius = s.radius ?? 0.45;
             }
         }
     });
 
-    const s = simState.current.bloomSettings || { luminanceThreshold: 0.90, intensity: 1.8, radius: 0.10, levels: 2 };
+    const s = simState.current.bloomSettings || { luminanceThreshold: 0.14, intensity: 0.75, radius: 0.45, levels: 3 };
     return (
         <EffectComposer>
             <Bloom
@@ -387,7 +387,7 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
                 mipmapBlur
                 intensity={s.intensity}
                 radius={s.radius}
-                levels={s.levels || 2}
+                levels={s.levels || 3}
             />
         </EffectComposer>
     );
@@ -398,14 +398,14 @@ function App() {
     const [population, setPopulation] = useState(isMobile ? 25000 : 500000);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 100% Entirely Random Startup Configuration across all 7 aesthetic dimensions
-    const initialMode: FormationMode = Math.floor(Math.random() * TOTAL_FORMATION_COUNT) as FormationMode;
+    // Default Startup Configuration: Saturnian Planetary Rings with calibrated PBR & Bloom
+    const initialMode: FormationMode = FormationMode.SaturnianRings;
     const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
-    const initialMatIdx = Math.floor(Math.random() * MATERIAL_PRESETS.length);
+    const initialMatIdx = 0; // Vibrant Satin Porcelain (roughness 0.30)
     const initialShape = 0; // Geodesic Ico-Sphere is fixed default
-    const initialCameraIdx = Math.floor(Math.random() * CAMERA_PRESETS.length);
-    const initialBloomIdx = Math.floor(Math.random() * BLOOM_PRESETS.length);
-    const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
+    const initialCameraIdx = 0; // Celestial Orbit
+    const initialBloomIdx = 0; // Diamond Facet Sparkle (threshold 0.14, intensity 0.75)
+    const initialLightIdx = 0; // Studio High-Contrast
 
     const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
     const initialSpeciesDistribution = generateSpeciesDistribution();
@@ -421,7 +421,7 @@ function App() {
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
         formationSeed: Math.random() * 100000,
-        proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
+        proceduralGenome: (initialMode as any) === FormationMode.Procedural ? generateProceduralGenome() : undefined,
         paletteIndex: initialPaletteIdx,
         speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],
         speciesDistribution: initialSpeciesDistribution,

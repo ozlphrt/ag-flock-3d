@@ -438,20 +438,20 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         target = vec3(cx, cy, cz) + l;
     }
     else if (mode == 29) {
-        // Saturnian Rings with Central Planetary Sphere
-        float ringRadiusRatio = 0.78;
-        if (u < (1.0 - ringRadiusRatio)) {
-            // Central Gas Giant Core Sphere
-            float uSph = u / (1.0 - ringRadiusRatio);
+        // Saturnian Rings: Species 0 is the Central Planet Core Sphere; Species 1, 2, 3 are the Dust Rings & Cloud
+        if (sp < 0.5) {
+            // Central Gas Giant Core Sphere (Species 0)
+            float uSph = fract(u * 1000.0);
             float phi = acos(1.0 - 2.0 * uSph);
             float theta = sqrt(uSph * 250000.0) * 2.39996 + time * 0.25 * speedMult;
             float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.08 * vol + isStray * individualDecay * (fract(nSeed * 19.3) - 0.5) * 0.3;
             target = vec3(rPlanet * sin(phi) * cos(theta), rPlanet * cos(phi) * 0.92, rPlanet * sin(phi) * sin(theta));
         } else {
-            // Hyper-Dense Planetary Dust Ring System
-            float uRing = (u - (1.0 - ringRadiusRatio)) / ringRadiusRatio;
-            float ringRadius = 4.0 + uRing * 5.2 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
-            float ringAngle = uRing * 180.0 * PI + time * (1.2 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI;
+            // Hyper-Dense Planetary Dust Ring System (Species 1, 2, 3)
+            float ringSpecies = sp - 1.0; // 0, 1, 2 for species 1, 2, 3
+            float uRing = fract(u * 500.0);
+            float ringRadius = 4.0 + (ringSpecies * 1.6) + uRing * 1.5 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
+            float ringAngle = (uRing * 180.0 * PI) + time * (1.2 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI + (ringSpecies * 1.047);
             float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.16 * vol + isStray * individualDecay * (fract(nSeed * 53.1) - 0.5) * 0.35;
             vec3 ringPt = vec3(ringRadius * cos(ringAngle), ringThickness, ringRadius * sin(ringAngle));
             target = rotateZ(ringPt, 0.44); // 25° axial tilt

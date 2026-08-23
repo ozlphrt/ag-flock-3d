@@ -26,7 +26,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         fov: 52,
         defaultPos: [0, 3.5, 14.0],
         target: [0, 0, 0],
-        autoRotateSpeed: 0.75,
+        autoRotateSpeed: 0.20,
         type: 'orbit'
     },
     {
@@ -37,7 +37,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         fov: 65,
         defaultPos: [0, -8.0, 7.5],
         target: [0, 0.8, 0],
-        autoRotateSpeed: 0.6,
+        autoRotateSpeed: 0.15,
         type: 'orbit'
     },
     {
@@ -48,7 +48,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         fov: 58,
         defaultPos: [0, 2.5, 11.0],
         target: [0, 0, 0],
-        autoRotateSpeed: 1.4,
+        autoRotateSpeed: 0.28,
         type: 'orbit'
     },
     {
@@ -59,7 +59,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         fov: 56,
         defaultPos: [0, 2.0, 13.5],
         target: [0, 0, 0],
-        autoRotateSpeed: 0.35,
+        autoRotateSpeed: 0.12,
         type: 'flythrough'
     },
     {
@@ -70,7 +70,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         fov: 55,
         defaultPos: [0, 0.5, 12.5],
         target: [0, 0, 0],
-        autoRotateSpeed: 1.0,
+        autoRotateSpeed: 0.22,
         type: 'corkscrew'
     }
 ];
@@ -89,9 +89,10 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
     const currentRadius = useRef(14.43);
     const currentPolar = useRef(1.33);
-    const currentTargetY = useRef(0);
+    const currentAzimuth = useRef(0.0);
+    const currentTarget = useRef(new THREE.Vector3(0, 0, 0));
     const currentFov = useRef(52);
-    const currentSpeed = useRef(0.75);
+    const currentSpeed = useRef(0.20);
 
     useEffect(() => {
         const controls = controlsRef.current;
@@ -106,13 +107,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             isUserInteracting.current = false;
             lastInteractionTime.current = performance.now();
 
-            // Sync internal tracking coords with user's new camera position
+            // Seamlessly capture user's new position into kinematic state
             const offset = camera.position.clone().sub(controls.target);
             const r = offset.length();
             if (r > 0.001) {
                 currentRadius.current = r;
-                currentPolar.current = Math.acos(Math.max(-1, Math.min(1, offset.y / r)));
-                currentTargetY.current = controls.target.y;
+                currentPolar.current = Math.acos(Math.max(-0.999, Math.min(0.999, offset.y / r)));
+                currentAzimuth.current = Math.atan2(offset.x, offset.z);
+                currentTarget.current.copy(controls.target);
             }
         };
 
@@ -137,47 +139,61 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const dy = preset.defaultPos[1] - preset.target[1];
         const dz = preset.defaultPos[2] - preset.target[2];
         const targetRadius = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        const targetPolar = Math.acos(Math.max(-1, Math.min(1, dy / Math.max(0.001, targetRadius))));
-        const targetTargetY = preset.target[1];
+        const targetPolar = Math.acos(Math.max(-0.999, Math.min(0.999, dy / Math.max(0.001, targetRadius))));
+        const targetTarget = new THREE.Vector3(preset.target[0], preset.target[1], preset.target[2]);
         const targetFov = preset.fov;
         const targetSpeed = preset.autoRotateSpeed;
 
         const now = performance.now();
         const timeSinceUser = (now - lastInteractionTime.current) / 1000;
+        const dt = Math.min(0.1, Math.max(0.001, delta || 0.016));
 
         if (controlsRef.current) {
-            // Smoothly glide autoRotateSpeed
-            const speedRate = Math.min(1.0, (delta || 0.016) * 1.5);
-            currentSpeed.current += (targetSpeed - currentSpeed.current) * speedRate;
-            controlsRef.current.autoRotateSpeed = currentSpeed.current;
+            const controls = controlsRef.current;
+            const perspCam = camera as THREE.PerspectiveCamera;
 
-            // Only programmatic glide camera when user is NOT dragging
-            if (!isUserInteracting.current && timeSinceUser > 1.2) {
-                const glideRate = Math.min(1.0, (delta || 0.016) * 1.2);
+            if (isUserInteracting.current) {
+                // User is controlling camera - keep internal state synchronized
+                const offset = perspCam.position.clone().sub(controls.target);
+                const r = offset.length();
+                if (r > 0.001) {
+                    currentRadius.current = r;
+                    currentPolar.current = Math.acos(Math.max(-0.999, Math.min(0.999, offset.y / r)));
+                    currentAzimuth.current = Math.atan2(offset.x, offset.z);
+                    currentTarget.current.copy(controls.target);
+                }
+            } else if (timeSinceUser > 1.0) {
+                // Gentle continuous director glide (zero jumps, zero fighting)
+                const glideRate = Math.min(1.0, dt * 0.45);
+                const speedRate = Math.min(1.0, dt * 0.60);
 
-                currentRadius.current += (targetRadius - currentRadius.current) * glideRate;
-                currentPolar.current += (targetPolar - currentPolar.current) * glideRate;
-                currentTargetY.current += (targetTargetY - currentTargetY.current) * glideRate;
+                currentSpeed.current = THREE.MathUtils.lerp(currentSpeed.current, targetSpeed, speedRate);
+                currentRadius.current = THREE.MathUtils.lerp(currentRadius.current, targetRadius, glideRate);
+                currentPolar.current = THREE.MathUtils.lerp(currentPolar.current, targetPolar, glideRate);
+                currentTarget.current.lerp(targetTarget, glideRate);
 
-                const perspCam = camera as THREE.PerspectiveCamera;
+                // Elegant, slow cinematic orbital drift
+                currentAzimuth.current += currentSpeed.current * dt * 0.12;
+
+                // Smooth FOV
                 if (perspCam) {
-                    currentFov.current += (targetFov - currentFov.current) * glideRate;
-                    if (Math.abs(perspCam.fov - currentFov.current) > 0.05) {
+                    currentFov.current = THREE.MathUtils.lerp(currentFov.current, targetFov, glideRate);
+                    if (Math.abs(perspCam.fov - currentFov.current) > 0.02) {
                         perspCam.fov = currentFov.current;
                         perspCam.updateProjectionMatrix();
                     }
-
-                    // Preserve current azimuthal rotation angle while smoothly morphing elevation & radius
-                    controlsRef.current.target.y = currentTargetY.current;
-                    const offset = perspCam.position.clone().sub(controlsRef.current.target);
-                    const curAzimuth = Math.atan2(offset.x, offset.z);
-                    const r = currentRadius.current;
-                    const phi = Math.max(0.08, Math.min(Math.PI - 0.08, currentPolar.current));
-
-                    perspCam.position.x = controlsRef.current.target.x + r * Math.sin(phi) * Math.sin(curAzimuth);
-                    perspCam.position.y = controlsRef.current.target.y + r * Math.cos(phi);
-                    perspCam.position.z = controlsRef.current.target.z + r * Math.sin(phi) * Math.cos(curAzimuth);
                 }
+
+                // Compute exact continuous spherical camera position
+                const r = currentRadius.current;
+                const phi = Math.max(0.08, Math.min(Math.PI - 0.08, currentPolar.current));
+                const theta = currentAzimuth.current;
+
+                controls.target.copy(currentTarget.current);
+                perspCam.position.x = controls.target.x + r * Math.sin(phi) * Math.sin(theta);
+                perspCam.position.y = controls.target.y + r * Math.cos(phi);
+                perspCam.position.z = controls.target.z + r * Math.sin(phi) * Math.cos(theta);
+                perspCam.lookAt(controls.target);
             }
         }
     });
@@ -189,8 +205,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 ref={controlsRef}
                 enableDamping={true}
                 dampingFactor={0.08}
-                autoRotate={true}
-                autoRotateSpeed={0.75}
+                autoRotate={false}
                 minDistance={3.5}
                 maxDistance={250}
                 minPolarAngle={0.05}
