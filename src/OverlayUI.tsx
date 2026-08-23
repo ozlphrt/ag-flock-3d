@@ -5,6 +5,8 @@ import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dis
 import { CAMERA_PRESETS } from './CameraRig';
 import { BLOOM_PRESETS, BloomPreset } from './BloomControlPanel';
 import { LearnArena } from './LearnArena';
+import { AestheticAgentEngine } from './AestheticAgentEngine';
+import { AgentForYouOverlay } from './AgentForYouOverlay';
 
 interface OverlayUIProps {
     simState: React.MutableRefObject<SimulationState>;
@@ -17,6 +19,7 @@ interface OverlayUIProps {
 export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setPopulation, fps, isLoading }) => {
     const [, setTick] = useState(0);
     const rlPrefs = getRLPreferences();
+    const agentEngine = useRef(new AestheticAgentEngine());
     useEffect(() => {
         // 10Hz UI refresh — reads simState.current for live values without
         // forcing React to reconcile the full component tree every animation frame.
@@ -35,6 +38,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [isDebugOpen, setIsDebugOpen] = useState(false);
     const [isLearnOpen, setIsLearnOpen] = useState(false);
+    const [isAgentForYouOpen, setIsAgentForYouOpen] = useState(false);
     const [hoveredTip, setHoveredTip] = useState<{ title: string; desc: string; top: number } | null>(null);
     const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
         swarm: true,
@@ -1895,6 +1899,33 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
         {/* Floating Bottom Right Controls */}
         <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
+            {/* Aesthetic AI Recommendation Agent "For You" Feed */}
+            <button
+                className="defeat-selector-btn"
+                onClick={() => setIsAgentForYouOpen(!isAgentForYouOpen)}
+                title="✨ Launch Autonomous Aesthetic Agent (Personalized Recommendation Feed)"
+                style={{
+                    width: '52px',
+                    height: '52px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: isAgentForYouOpen ? 'rgba(0, 229, 255, 0.25)' : 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: isAgentForYouOpen ? '1.5px solid #00e5ff' : '1.5px solid rgba(0, 229, 255, 0.45)',
+                    color: '#00e5ff',
+                    fontSize: '22px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5), 0 0 14px rgba(0,229,255,0.3)',
+                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    cursor: 'pointer'
+                }}
+            >
+                ✨
+            </button>
+
             {/* Preference Learning & Evolution Engine Button */}
             <button
                 className="defeat-selector-btn"
@@ -2659,6 +2690,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <LearnArena
                 mainState={simState}
                 onClose={() => setIsLearnOpen(false)}
+            />
+        )}
+
+        {/* Aesthetic Agent "For You" Recommendation Stream Overlay */}
+        {isAgentForYouOpen && (
+            <AgentForYouOverlay
+                simState={simState}
+                agentEngine={agentEngine.current}
+                onClose={() => setIsAgentForYouOpen(false)}
             />
         )}
 
