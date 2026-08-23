@@ -122,18 +122,30 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
 
     // Calculate split-screen population (500k -> 250k per side, 250k -> 125k per side, 50k -> 25k per side)
     const totalMainPop = mainState.current.population || 50000;
-    const candidateBoidsCount = Math.floor(totalMainPop / 2);
+    const candidateBoidsCount = Math.min(35000, Math.max(20000, Math.floor(totalMainPop / 2)));
 
     // Create Candidate Simulation States with 100% Controlled Baseline
     const stateA = useRef<SimulationState>({
         ...mainState.current,
         ...BASELINE_LEARN_STATE,
+        autoMode: false,
+        isFormationLocked: true,
+        isPaletteLocked: true,
+        isMaterialLocked: true,
+        isLightingLocked: true,
+        isBloomLocked: true,
         ...currentPair.candidateA.state
     } as SimulationState);
 
     const stateB = useRef<SimulationState>({
         ...mainState.current,
         ...BASELINE_LEARN_STATE,
+        autoMode: false,
+        isFormationLocked: true,
+        isPaletteLocked: true,
+        isMaterialLocked: true,
+        isLightingLocked: true,
+        isBloomLocked: true,
         ...currentPair.candidateB.state
     } as SimulationState);
 
@@ -144,15 +156,24 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             Object.assign(target, BASELINE_LEARN_STATE);
             engine.applyToState(target);
 
+            target.autoMode = false;
+            target.isFormationLocked = true;
+            target.isPaletteLocked = true;
+            target.isMaterialLocked = true;
+            target.isLightingLocked = true;
+            target.isBloomLocked = true;
+
             // Ultra-snappy 0.12s fast formation & palette morph transition
             target.transitionDuration = 0.12;
             target.paletteTransitionDuration = 0.12;
 
-            // Apply candidate target parameter
-            if (candState.formationMode !== undefined && candState.formationMode !== target.formationMode) {
-                target.prevFormationMode = target.formationMode;
-                target.formationMode = candState.formationMode;
-                target.transitionStartTime = target.currentTime || 0;
+            // Apply candidate target parameter (explicitly override candidate formation)
+            if (candState.formationMode !== undefined) {
+                if (candState.formationMode !== target.formationMode) {
+                    target.prevFormationMode = target.formationMode;
+                    target.formationMode = candState.formationMode;
+                    target.transitionStartTime = target.currentTime || 0;
+                }
             }
             if (candState.materialSettings) target.materialSettings = { ...candState.materialSettings };
             if (candState.lightingProfile) target.lightingProfile = { ...candState.lightingProfile };
@@ -362,11 +383,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         <color attach="background" args={['#05070c']} />
                         <SyncCameraRig cameraSyncPos={cameraSyncPos} cameraSyncTarget={cameraSyncTarget} isMaster={true} />
                         <CandidateLighting state={stateA.current} />
-                        {candidateBoidsCount >= 200000 ? (
-                            <GPGPUFlock count={candidateBoidsCount} state={stateA.current} />
-                        ) : (
-                            <Flock count={candidateBoidsCount} state={stateA.current} setPopulation={() => {}} />
-                        )}
+                        <Flock count={candidateBoidsCount} state={stateA.current} setPopulation={() => {}} />
                     </Canvas>
 
                     {/* Option A MUCH LARGER & SUCCINCT CARD */}
@@ -444,11 +461,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         <color attach="background" args={['#05070c']} />
                         <SyncCameraRig cameraSyncPos={cameraSyncPos} cameraSyncTarget={cameraSyncTarget} isMaster={false} />
                         <CandidateLighting state={stateB.current} />
-                        {candidateBoidsCount >= 200000 ? (
-                            <GPGPUFlock count={candidateBoidsCount} state={stateB.current} />
-                        ) : (
-                            <Flock count={candidateBoidsCount} state={stateB.current} setPopulation={() => {}} />
-                        )}
+                        <Flock count={candidateBoidsCount} state={stateB.current} setPopulation={() => {}} />
                     </Canvas>
 
                     {/* Option B MUCH LARGER & SUCCINCT CARD */}
