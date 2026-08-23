@@ -189,6 +189,21 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         vec3 tanV = vec3(8.4 * cos(2.0 * t), -10.5 * sin(3.0 * t), 11.2 * cos(4.0 * t));
         target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay);
     }
+    else if (mode == 6) {
+        // Caduceus Vortex: Dual Intertwined Serpents Coiling around Central Spine
+        if (u < 0.18) {
+            target = vec3(0.0, (u / 0.18 - 0.5) * 12.0, 0.0);
+        } else {
+            float segU = (u - 0.18) / 0.82;
+            float h = (segU - 0.5) * 11.5;
+            float strand = (mod(sp, 2.0) < 1.0 ? 0.0 : 1.0);
+            float theta = segU * 8.0 * PI + time * 0.7 * speedMult + (strand * PI);
+            float loopScale = sin(segU * PI * 3.0) * 1.6 + 2.8;
+            vec3 m = vec3(loopScale * cos(theta), h, loopScale * sin(theta));
+            vec3 tanV = vec3(-loopScale * sin(theta), 1.2, loopScale * cos(theta));
+            target = applyMultiLayerSheath(m, tanV, segU, time, floor(sp * 0.5), nSeed, speedMult, 0.55, 6.0, vol, settleDecay);
+        }
+    }
     else if (mode == 7) {
         // Borromean Rings
         float ringIdx = mod(sp + floor(u * 3.0), 3.0);
@@ -223,6 +238,14 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         vec3 tanV = vec3(-2.0 * r * sin(2.0 * t), 2.0 * r * cos(2.0 * t), -12.5 * cos(5.0 * t));
         target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 5.0, vol, settleDecay);
     }
+    else if (mode == 10) {
+        // Septafoil Stellar Braid (7,3)
+        float t = u * TWO_PI + time * 0.28 * speedMult;
+        float r = 3.8 + 1.6 * cos(7.0 * t);
+        vec3 m = vec3(r * cos(3.0 * t), r * sin(3.0 * t), -2.6 * sin(7.0 * t));
+        vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 3.0 * r * cos(3.0 * t), -18.2 * cos(7.0 * t));
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 7.0, vol, settleDecay);
+    }
     else if (mode == 11) {
         // Fractal Supercoil
         float h = (u - 0.5) * 12.0;
@@ -239,6 +262,169 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         vec3 m = vec3(r * cos(3.0 * t), sin(5.0 * t) * 2.2, r * sin(3.0 * t));
         vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 5.0 * cos(5.0 * t) * 2.2, 3.0 * r * cos(3.0 * t));
         target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 14.0, vol, settleDecay);
+    }
+    else if (mode == 13) {
+        // DNA Chromatin Solenoid
+        float nBeads = 12.0;
+        float beadIdx = floor(u * nBeads);
+        float beadU = fract(u * nBeads);
+        float beadAngle = (beadIdx / nBeads) * 6.0 * PI + time * 0.4 * speedMult;
+        float bx = 3.6 * cos(beadAngle);
+        float by = (beadIdx / nBeads - 0.5) * 11.0;
+        float bz = 3.6 * sin(beadAngle);
+        float wrapAngle = beadU * 3.3 * PI + mod(sp, 2.0) * PI + time * 1.2;
+        float rBead = 0.85 + (sp >= 2.0 ? 0.35 : 0.0);
+        target = vec3(bx + cos(wrapAngle) * rBead, by + (beadU - 0.5) * 0.9 + sin(wrapAngle) * 0.35, bz + sin(wrapAngle) * rBead);
+    }
+    else if (mode == 14) {
+        // Triquetra Celtic Braid (Trinity Knot)
+        float t = u * TWO_PI + time * 0.38 * speedMult;
+        float r = 3.3 * (1.0 + 0.48 * cos(3.0 * t));
+        vec3 m = vec3(r * cos(t), r * sin(t), 2.3 * sin(3.0 * t));
+        vec3 tanV = vec3(-r * sin(t), r * cos(t), 6.9 * cos(3.0 * t));
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+    }
+    else if (mode == 15) {
+        // Whitehead Link Braid
+        float isRing = step(sp, 1.5);
+        float t = u * TWO_PI + time * 0.42 * speedMult;
+        if (isRing > 0.5) {
+            vec3 m = vec3(4.0 * cos(t), 4.0 * sin(t), 0.7 * sin(2.0 * t));
+            vec3 tanV = vec3(-4.0 * sin(t), 4.0 * cos(t), 1.4 * cos(2.0 * t));
+            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.6, 6.0, vol, settleDecay);
+        } else {
+            vec3 m = vec3(2.4 * sin(2.0 * t), 0.9 * sin(4.0 * t), 3.6 * cos(t));
+            vec3 tanV = vec3(4.8 * cos(2.0 * t), 3.6 * cos(4.0 * t), -3.6 * sin(t));
+            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.6, 6.0, vol, settleDecay);
+        }
+    }
+    else if (mode == 16) {
+        // Quatrefoil Knot Braid (4-Leaf Clover Knot)
+        float t = u * TWO_PI + time * 0.34 * speedMult;
+        float r = 3.6 + 1.5 * cos(4.0 * t);
+        vec3 m = vec3(r * cos(3.0 * t), r * sin(3.0 * t), 2.3 * sin(4.0 * t));
+        vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 3.0 * r * cos(3.0 * t), 9.2 * cos(4.0 * t));
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+    }
+    else if (mode == 17) {
+        // Granny Knot Braid (Composite Trefoils)
+        float isUpper = step(u, 0.5);
+        float segU = (isUpper > 0.5) ? u * 2.0 : (u - 0.5) * 2.0;
+        float t = segU * TWO_PI + time * 0.4 * speedMult;
+        float yOff = (isUpper > 0.5) ? 2.2 : -2.2;
+        vec3 m = vec3((sin(t) + 1.6 * sin(2.0 * t)) * 1.25, (cos(t) - 1.6 * cos(2.0 * t)) * 1.25 + yOff, (-sin(3.0 * t)) * 1.8);
+        vec3 tanV = vec3((cos(t) + 3.2 * cos(2.0 * t)) * 1.25, (-sin(t) + 3.2 * sin(2.0 * t)) * 1.25, (-3.0 * cos(3.0 * t)) * 1.8);
+        target = applyMultiLayerSheath(m, tanV, segU, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+    }
+    else if (mode == 18) {
+        // Double Helix Braid with Cross Rungs
+        float h = (u - 0.5) * 11.5;
+        float theta = u * 8.0 * PI + time * 0.6 * speedMult;
+        float strand = mod(sp, 2.0);
+        float strandAngle = theta + (strand * PI);
+        float r = 3.6 + sin(h * 0.4 + time * 0.5) * 0.4;
+        vec3 m = vec3(r * cos(strandAngle), h, r * sin(strandAngle));
+        vec3 tanV = vec3(-r * sin(strandAngle), 1.2, r * cos(strandAngle));
+        target = applyMultiLayerSheath(m, tanV, u, time, floor(sp * 0.5), nSeed, speedMult, 0.55, 6.0, vol, settleDecay);
+    }
+    else if (mode == 19) {
+        // Triple Helix Braid
+        float strand = mod(floor(u * 300.0) + sp, 3.0);
+        float strandOffset = strand * (TWO_PI / 3.0);
+        float theta = u * 8.0 * PI + time * 0.7 * speedMult + strandOffset;
+        float h = (u - 0.5) * 11.0;
+        float r = 3.4 + sin(h * 0.3 + time * 0.5) * 0.4;
+        vec3 m = vec3(r * cos(theta), h, r * sin(theta));
+        vec3 tanV = vec3(-r * sin(theta), 1.2, r * cos(theta));
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.65, 6.0, vol, settleDecay);
+    }
+    else if (mode == 20) {
+        // DNA Ladder Braid
+        float h = (u - 0.5) * 11.5;
+        float theta = u * 6.0 * PI + time * 0.5 * speedMult;
+        float strand = mod(sp, 2.0);
+        float strandAngle = theta + (strand * PI);
+        vec3 m = vec3(3.6 * cos(strandAngle), h, 3.6 * sin(strandAngle));
+        vec3 tanV = vec3(-3.6 * sin(strandAngle), 1.2, 3.6 * cos(strandAngle));
+        target = applyMultiLayerSheath(m, tanV, u, time, floor(sp * 0.5), nSeed, speedMult, 0.55, 6.0, vol, settleDecay);
+    }
+    else if (mode == 21) {
+        // Gyroid Braid Labyrinth
+        float t = u * TWO_PI + time * 0.3 * speedMult;
+        vec3 m = vec3(
+            (sin(t) * cos(t * 1.5) + cos(t * 0.5)) * 2.8,
+            (sin(t * 1.5) * cos(t * 0.5) + cos(t)) * 2.8,
+            (sin(t * 0.5) * cos(t) + cos(t * 1.5)) * 2.8
+        );
+        vec3 tanV = vec3(cos(t) * 2.8, cos(t * 1.5) * 2.8, cos(t * 0.5) * 2.8);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay);
+    }
+    else if (mode == 22) {
+        // Lorenz Chaotic Braid (Butterfly Attractor)
+        float t = u * TWO_PI + time * 0.4 * speedMult;
+        float s = sin(t);
+        vec3 m = vec3(s * 4.4, cos(t) * 3.8, (s > 0.0 ? 1.0 : -1.0) * (4.2 - abs(s) * 2.6));
+        vec3 tanV = vec3(cos(t) * 4.4, -sin(t) * 3.8, cos(t) * 2.6);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+    }
+    else if (mode == 23) {
+        // Klein Bottle Braid
+        float ku = u * TWO_PI + time * 0.25 * speedMult;
+        float kv = fract(nSeed * 17.13) * TWO_PI;
+        float rk = 4.0 * (1.0 - cos(ku) * 0.5);
+        float kx = (rk + cos(ku * 0.5) * sin(kv) - sin(ku * 0.5) * sin(2.0 * kv)) * cos(ku);
+        float ky = (rk + cos(ku * 0.5) * sin(kv) - sin(ku * 0.5) * sin(2.0 * kv)) * sin(ku);
+        float kz = (sin(ku * 0.5) * sin(kv) + cos(ku * 0.5) * sin(2.0 * kv)) * 2.2;
+        vec3 m = vec3(kx * 0.75, ky * 0.75, kz * 0.75);
+        vec3 tanV = vec3(-ky * 0.75, kx * 0.75, kz * 0.5);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+    }
+    else if (mode == 24) {
+        // Clifford Torus Braid (4D Hyper-Torus stereographic projection)
+        float thC = u * TWO_PI + time * 0.35 * speedMult;
+        vec3 m = vec3(4.2 * cos(thC), 4.2 * sin(thC), 0.0);
+        vec3 tanV = vec3(-4.2 * sin(thC), 4.2 * cos(thC), 0.0);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol, settleDecay);
+    }
+    else if (mode == 25) {
+        // Ouroboros Dragon Braid
+        float ringAngle = u * TWO_PI + time * 0.4 * speedMult;
+        float spineWave = sin(u * 10.0 - time * 2.0) * 0.45;
+        float baseR = 4.2;
+        vec3 m = vec3((baseR + spineWave) * cos(ringAngle), sin(u * 7.0 + time) * 0.7, (baseR + spineWave) * sin(ringAngle));
+        vec3 tanV = vec3(-baseR * sin(ringAngle), 0.5, baseR * cos(ringAngle));
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 8.0, vol, settleDecay);
+    }
+    else if (mode == 26) {
+        // Dancing Ribbon Braid
+        float ribT = (u - 0.5) * 11.0;
+        float ribWave = ribT * 0.7 - time * 0.8 * speedMult;
+        vec3 m = vec3(sin(ribWave) * 3.2, ribT * 0.85 + cos(ribWave) * 1.2, cos(ribWave) * 3.0);
+        vec3 tanV = vec3(cos(ribWave) * 3.2, 0.85, -sin(ribWave) * 3.0);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 7.0, vol, settleDecay);
+    }
+    else if (mode == 27) {
+        // Solar Flare Prominence
+        float s = (u - 0.5) * PI;
+        float cx = 5.2 * sin(s);
+        float cy = 4.6 * cos(s) - 1.2;
+        float cz = sin(s * 2.0) * 1.6;
+        float thetaMag = s * 7.0 + time * 0.75 * speedMult + sp * (PI * 0.5);
+        float rRope = 0.85 + 0.35 * cos(s * 2.0);
+        target = vec3(cx + rRope * cos(thetaMag) * cos(s), cy - rRope * cos(thetaMag) * sin(s), cz + rRope * sin(thetaMag) * 1.3);
+    }
+    else if (mode == 28) {
+        // Olympic Chain Link
+        float ringK = mod(sp + floor(u * 4.0), 4.0);
+        float ringTheta = ringK * (PI * 0.5) + time * 0.25 * speedMult;
+        float cx = 3.4 * cos(ringTheta);
+        float cz = 3.4 * sin(ringTheta);
+        float cy = (mod(ringK, 2.0) < 0.5 ? 0.6 : -0.6) * sin(time * 0.4 + ringK);
+        float tau = fract(u * 4.0) * TWO_PI + time * 0.6;
+        float cosTau = cos(tau), sinTau = sin(tau);
+        float cosTh = cos(ringTheta), sinTh = sin(ringTheta);
+        vec3 l = vec3(2.0 * cosTau * (-sinTh) + 0.5 * sinTau * cosTh, 2.0 * sinTau, 2.0 * cosTau * cosTh + 0.5 * sinTau * sinTh);
+        target = vec3(cx, cy, cz) + l;
     }
     else if (mode == 29) {
         // Saturnian Rings with Central Planetary Sphere
