@@ -4,6 +4,7 @@ import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, For
 import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences, getCentralRLStore, exportCentralRLJSON, importCentralRLJSON, resetCentralRLStore, likeCompositionCombination, dislikeCompositionCombination } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
 import { BLOOM_PRESETS, BloomPreset } from './BloomControlPanel';
+import { LearnArena } from './LearnArena';
 
 interface OverlayUIProps {
     simState: React.MutableRefObject<SimulationState>;
@@ -33,6 +34,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [isDebugOpen, setIsDebugOpen] = useState(false);
+    const [isLearnOpen, setIsLearnOpen] = useState(false);
     const [hoveredTip, setHoveredTip] = useState<{ title: string; desc: string; top: number } | null>(null);
     const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
         swarm: true,
@@ -1893,6 +1895,33 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
         {/* Floating Bottom Right Controls */}
         <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
+            {/* Preference Learning & Evolution Engine Button */}
+            <button
+                className="defeat-selector-btn"
+                onClick={() => setIsLearnOpen(true)}
+                title="🧠 Launch Aesthetic Evolution & Preference Learning Engine"
+                style={{
+                    width: '52px',
+                    height: '52px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: '1.5px solid rgba(47, 161, 214, 0.45)',
+                    color: '#2FA1D6',
+                    fontSize: '22px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5), 0 0 12px rgba(47,161,214,0.2)',
+                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    cursor: 'pointer'
+                }}
+            >
+                🧠
+            </button>
+
             {/* Infinite Procedural Dice Button */}
             <button
                 className="defeat-selector-btn dice-spin-btn"
@@ -2624,6 +2653,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </>
             );
         })()}
+
+        {/* Preference Learning Arena Dual Viewport Overlay */}
+        {isLearnOpen && (
+            <LearnArena
+                mainState={simState}
+                onClose={() => setIsLearnOpen(false)}
+            />
+        )}
 
         </>
     );
