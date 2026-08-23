@@ -469,15 +469,19 @@ function App() {
         autoMaterial: true,
         lightingProfileIndex: initialLightIdx,
         lightingProfile: LIGHTING_PROFILES[initialLightIdx] || LIGHTING_PROFILES[0],
+        population: population,
         onInitialLoadComplete: () => {
             setIsLoading(false);
         }
     });
 
+    simState.current.population = population;
+
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
             <OverlayUI simState={simState} population={population} setPopulation={setPopulation} fps={simState.current.fps || 60} isLoading={isLoading} />
             <Canvas
+                frameloop={simState.current.isArenaOpen ? 'never' : 'always'}
                 dpr={1.0}
                 gl={{
                     antialias: false,

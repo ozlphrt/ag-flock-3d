@@ -593,6 +593,8 @@ export interface SimulationState {
     bloomSettings?: { luminanceThreshold: number; radius: number; intensity: number; levels: number; };
     bloomPreset?: number;
     isBloomLocked?: boolean;
+    isArenaOpen?: boolean;
+    population?: number;
 }
 
 // Helper to convert HSL to Hex

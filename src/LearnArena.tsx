@@ -14,6 +14,7 @@ import {
     BASELINE_LEARN_STATE
 } from './PreferenceLearningEngine';
 import { Flock } from './Flock';
+import { GPGPUFlock } from './GPGPUFlock';
 
 interface LearnArenaProps {
     mainState: React.MutableRefObject<SimulationState>;
@@ -62,27 +63,39 @@ function SyncCameraRig({
     );
 }
 
-// Dynamic Lighting for Learn Candidate Viewport
+// Dynamic Lighting for Learn Candidate Viewport with instant per-frame parameter sync
 function CandidateLighting({ state }: { state: SimulationState }) {
-    const profile = state.lightingProfile;
+    const keyRef = useRef<THREE.DirectionalLight>(null);
+    const fillRef = useRef<THREE.DirectionalLight>(null);
+    const rimRef = useRef<THREE.DirectionalLight>(null);
+    const ambRef = useRef<THREE.AmbientLight>(null);
+
+    useFrame(() => {
+        const profile = state.lightingProfile;
+        if (!profile) return;
+        if (keyRef.current) {
+            keyRef.current.intensity = profile.keyIntensity ?? 3.8;
+            keyRef.current.color.set(profile.keyColor ?? '#ffffff');
+        }
+        if (fillRef.current) {
+            fillRef.current.intensity = profile.fillIntensity ?? 0.65;
+            fillRef.current.color.set(profile.fillColor ?? '#d8e8f8');
+        }
+        if (rimRef.current) {
+            rimRef.current.intensity = profile.rimIntensity ?? 2.8;
+            rimRef.current.color.set(profile.rimColor ?? '#ffa040');
+        }
+        if (ambRef.current) {
+            ambRef.current.intensity = profile.ambientIntensity ?? 0.35;
+        }
+    });
+
     return (
         <>
-            <directionalLight
-                position={[35, 45, 30]}
-                intensity={profile?.keyIntensity ?? 3.8}
-                color={profile?.keyColor ?? '#ffffff'}
-            />
-            <directionalLight
-                position={[-40, 25, -25]}
-                intensity={profile?.fillIntensity ?? 0.65}
-                color={profile?.fillColor ?? '#d8e8f8'}
-            />
-            <directionalLight
-                position={[0, 50, -45]}
-                intensity={profile?.rimIntensity ?? 2.8}
-                color={profile?.rimColor ?? '#ffa040'}
-            />
-            <ambientLight intensity={profile?.ambientIntensity ?? 0.35} color="#f4f8ff" />
+            <directionalLight ref={keyRef} position={[35, 45, 30]} />
+            <directionalLight ref={fillRef} position={[-40, 25, -25]} />
+            <directionalLight ref={rimRef} position={[0, 50, -45]} />
+            <ambientLight ref={ambRef} color="#f4f8ff" />
             <hemisphereLight args={['#ffffff', '#1a2234', 0.35]} />
         </>
     );
@@ -95,9 +108,21 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [lastChoice, setLastChoice] = useState<'A' | 'B' | null>(null);
 
+    // Pause main background canvas loop while in Learn Arena to free 100% GPU bandwidth & eliminate flicker
+    useEffect(() => {
+        mainState.current.isArenaOpen = true;
+        return () => {
+            mainState.current.isArenaOpen = false;
+        };
+    }, [mainState]);
+
     // Shared Camera Transform Sync
     const cameraSyncPos = useRef(new THREE.Vector3(0, 3.5, 14.0));
     const cameraSyncTarget = useRef(new THREE.Vector3(0, 0, 0));
+
+    // Calculate split-screen population (500k -> 250k per side, 250k -> 125k per side, 50k -> 25k per side)
+    const totalMainPop = mainState.current.population || 50000;
+    const candidateBoidsCount = Math.floor(totalMainPop / 2);
 
     // Create Candidate Simulation States with 100% Controlled Baseline
     const stateA = useRef<SimulationState>({
@@ -112,12 +137,16 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
         ...currentPair.candidateB.state
     } as SimulationState);
 
-    // Smooth In-Place State Mutation on Pair Change to Prevent 1-Frame Flickering
+    // Smooth Fast In-Place State Mutation on Pair Change
     useEffect(() => {
         const updateCandidate = (target: SimulationState, candState: Partial<SimulationState>) => {
             // Apply baseline + cumulative learned preferences so far
             Object.assign(target, BASELINE_LEARN_STATE);
             engine.applyToState(target);
+
+            // Ultra-snappy 0.12s fast formation & palette morph transition
+            target.transitionDuration = 0.12;
+            target.paletteTransitionDuration = 0.12;
 
             // Apply candidate target parameter
             if (candState.formationMode !== undefined && candState.formationMode !== target.formationMode) {
@@ -131,6 +160,8 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             if (candState.speedMultiplier !== undefined) target.speedMultiplier = candState.speedMultiplier;
             if (candState.noiseTurbulence !== undefined) target.noiseTurbulence = candState.noiseTurbulence;
             if (candState.bloomSettings) target.bloomSettings = { ...candState.bloomSettings };
+            if (candState.bounds !== undefined) target.bounds = candState.bounds;
+            if (candState.sizeMultiplier !== undefined) target.sizeMultiplier = candState.sizeMultiplier;
         };
 
         updateCandidate(stateA.current, currentPair.candidateA.state);
@@ -146,7 +177,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             setLastChoice(null);
             const next = engine.generateNextPair(mainState.current);
             setCurrentPair(next);
-        }, 180);
+        }, 90);
     };
 
     const handleApplyToSwarm = () => {
@@ -172,8 +203,6 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentPair]);
 
-    const candidateBoidsCount = 20000;
-
     return (
         <div style={{
             position: 'fixed',
@@ -189,82 +218,92 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             color: '#fff',
             userSelect: 'none'
         }}>
-            {/* Pristine Minimalist Top Bar */}
+            {/* Pristine High-Legibility Top Bar */}
             <div style={{
-                height: '62px',
-                background: 'rgba(8, 10, 16, 0.94)',
+                height: '72px',
+                background: 'rgba(8, 10, 16, 0.96)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.10)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0 24px',
+                padding: '0 28px',
                 zIndex: 10
             }}>
                 {/* Left: Engine & Round Info */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '180px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#8899ac', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '200px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#8899ac', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         Aesthetic Ranking
                     </span>
                     <span style={{
-                        fontSize: '11px',
-                        background: 'rgba(255, 255, 255, 0.08)',
+                        fontSize: '12px',
+                        background: 'rgba(255, 255, 255, 0.10)',
                         color: '#fff',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
+                        padding: '3px 10px',
+                        borderRadius: '6px',
                         fontWeight: 700
                     }}>
                         Round {currentPair.round}
                     </span>
                 </div>
 
-                {/* Center: CRISP, SHORT, UNMISTAKABLE PARAMETER FOCUS */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            color: '#94a3b8',
-                            letterSpacing: '0.08em',
-                            textTransform: 'uppercase'
-                        }}>
-                            VOTING ON:
-                        </span>
+                {/* Center: MUCH LARGER, UNMISTAKABLE VOTING LABEL & STAGE BADGE */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '3px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{
                             background: '#ffffff',
-                            color: '#090d16',
-                            padding: '3px 12px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
+                            color: '#05070c',
+                            padding: '4px 18px',
+                            borderRadius: '8px',
+                            fontSize: '16px',
                             fontWeight: 900,
-                            letterSpacing: '0.04em'
+                            letterSpacing: '0.06em',
+                            boxShadow: '0 0 25px rgba(255,255,255,0.35)'
                         }}>
-                            {currentPair.dimension === 'lighting' ? '💡 LIGHTING' :
+                            {currentPair.dimension === 'lighting' ? '💡 STUDIO LIGHTING' :
                              currentPair.dimension === 'material' ? '✨ SURFACE MATERIAL' :
                              currentPair.dimension === 'topology' ? '🧬 3D TOPOLOGY' :
                              currentPair.dimension === 'helixDynamics' ? '⚡ FLOW SPEED' :
                              currentPair.dimension === 'palette' ? '🎨 COLOR PALETTE' : '🌟 BLOOM GLOW'}
                         </span>
+                        <span style={{
+                            background: currentPair.stageLabel.includes('FINE-TUNING') ? 'rgba(255, 170, 0, 0.20)' :
+                                        currentPair.stageLabel.includes('VALIDATION') ? 'rgba(0, 229, 255, 0.20)' :
+                                        currentPair.stageLabel.includes('CHAMPIONSHIP') ? 'rgba(255, 75, 150, 0.20)' : 'rgba(255, 255, 255, 0.12)',
+                            color: currentPair.stageLabel.includes('FINE-TUNING') ? '#ffbb33' :
+                                   currentPair.stageLabel.includes('VALIDATION') ? '#00e5ff' :
+                                   currentPair.stageLabel.includes('CHAMPIONSHIP') ? '#ff66aa' : '#e2e8f0',
+                            border: `1px solid ${
+                                currentPair.stageLabel.includes('FINE-TUNING') ? 'rgba(255, 170, 0, 0.40)' :
+                                currentPair.stageLabel.includes('VALIDATION') ? 'rgba(0, 229, 255, 0.40)' :
+                                currentPair.stageLabel.includes('CHAMPIONSHIP') ? 'rgba(255, 75, 150, 0.40)' : 'rgba(255, 255, 255, 0.20)'
+                            }`,
+                            padding: '3px 12px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            letterSpacing: '0.06em'
+                        }}>
+                            {currentPair.stageLabel}
+                        </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#e2e8f0', marginTop: '3px', fontWeight: 600 }}>
-                        <span style={{ color: '#fff' }}>[A] {currentPair.candidateA.title}</span>
-                        <span style={{ color: '#64748b', margin: '0 8px' }}>vs</span>
-                        <span style={{ color: '#fff' }}>[B] {currentPair.candidateB.title}</span>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>
+                        {currentPair.question}
                     </div>
                 </div>
 
                 {/* Right: Actions */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '180px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '200px', justifyContent: 'flex-end' }}>
                     <button
                         onClick={() => setIsProfileModalOpen(true)}
                         style={{
-                            background: 'rgba(255, 255, 255, 0.06)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.18)',
                             color: '#e2e8f0',
-                            borderRadius: '6px',
-                            padding: '6px 12px',
-                            fontSize: '11px',
+                            borderRadius: '8px',
+                            padding: '7px 14px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             cursor: 'pointer'
                         }}
@@ -278,12 +317,12 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                             background: '#ffffff',
                             border: 'none',
                             color: '#000000',
-                            borderRadius: '6px',
-                            padding: '6px 14px',
-                            fontSize: '11px',
-                            fontWeight: 800,
+                            borderRadius: '8px',
+                            padding: '7px 16px',
+                            fontSize: '12px',
+                            fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 2px 10px rgba(255,255,255,0.2)'
+                            boxShadow: '0 2px 12px rgba(255,255,255,0.25)'
                         }}
                     >
                         ✨ Apply
@@ -293,11 +332,11 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         onClick={onClose}
                         style={{
                             background: 'transparent',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
                             color: '#8899ac',
-                            borderRadius: '6px',
-                            padding: '6px 10px',
-                            fontSize: '11px',
+                            borderRadius: '8px',
+                            padding: '7px 12px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             cursor: 'pointer'
                         }}
@@ -323,34 +362,46 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         <color attach="background" args={['#05070c']} />
                         <SyncCameraRig cameraSyncPos={cameraSyncPos} cameraSyncTarget={cameraSyncTarget} isMaster={true} />
                         <CandidateLighting state={stateA.current} />
-                        <Flock count={candidateBoidsCount} state={stateA.current} setPopulation={() => {}} />
+                        {candidateBoidsCount >= 200000 ? (
+                            <GPGPUFlock count={candidateBoidsCount} state={stateA.current} />
+                        ) : (
+                            <Flock count={candidateBoidsCount} state={stateA.current} setPopulation={() => {}} />
+                        )}
                     </Canvas>
 
-                    {/* Option A Clean Card */}
+                    {/* Option A MUCH LARGER & SUCCINCT CARD */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '28px',
-                        left: '32px',
-                        right: '32px',
-                        background: lastChoice === 'A' ? 'rgba(0, 229, 255, 0.15)' : 'rgba(10, 14, 22, 0.85)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: lastChoice === 'A' ? '1.5px solid #00e5ff' : '1px solid rgba(255, 255, 255, 0.15)',
-                        borderRadius: '12px',
-                        padding: '14px 18px',
-                        boxShadow: lastChoice === 'A' ? '0 0 30px rgba(0,229,255,0.3)' : '0 16px 40px rgba(0,0,0,0.7)',
+                        bottom: '36px',
+                        left: '36px',
+                        right: '36px',
+                        background: lastChoice === 'A' ? 'rgba(0, 229, 255, 0.20)' : 'rgba(8, 12, 20, 0.90)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: lastChoice === 'A' ? '2px solid #00e5ff' : '1.5px solid rgba(255, 255, 255, 0.20)',
+                        borderRadius: '16px',
+                        padding: '18px 24px',
+                        boxShadow: lastChoice === 'A' ? '0 0 35px rgba(0,229,255,0.4)' : '0 20px 50px rgba(0,0,0,0.85)',
                         transition: 'all 0.15s ease',
                         pointerEvents: 'none'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
                                 [A] {currentPair.candidateA.title}
                             </span>
-                            <span style={{ fontSize: '10px', color: '#8899ac', fontWeight: 700, letterSpacing: '0.04em' }}>
-                                CLICK OR PRESS [A / ←]
+                            <span style={{
+                                background: 'rgba(255, 255, 255, 0.12)',
+                                color: '#ffffff',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                letterSpacing: '0.05em'
+                            }}>
+                                PRESS [A] OR [←]
                             </span>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                        <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.45', fontWeight: 500 }}>
                             {currentPair.candidateA.description}
                         </div>
                     </div>
@@ -362,20 +413,20 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: '34px',
-                    height: '34px',
+                    width: '38px',
+                    height: '38px',
                     borderRadius: '50%',
                     background: '#090d16',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.30)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '10px',
+                    fontSize: '11px',
                     fontWeight: 900,
                     color: '#94a3b8',
                     letterSpacing: '0.06em',
                     zIndex: 10,
-                    boxShadow: '0 0 20px rgba(0,0,0,0.8)'
+                    boxShadow: '0 0 24px rgba(0,0,0,0.9)'
                 }}>
                     VS
                 </div>
@@ -393,34 +444,46 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         <color attach="background" args={['#05070c']} />
                         <SyncCameraRig cameraSyncPos={cameraSyncPos} cameraSyncTarget={cameraSyncTarget} isMaster={false} />
                         <CandidateLighting state={stateB.current} />
-                        <Flock count={candidateBoidsCount} state={stateB.current} setPopulation={() => {}} />
+                        {candidateBoidsCount >= 200000 ? (
+                            <GPGPUFlock count={candidateBoidsCount} state={stateB.current} />
+                        ) : (
+                            <Flock count={candidateBoidsCount} state={stateB.current} setPopulation={() => {}} />
+                        )}
                     </Canvas>
 
-                    {/* Option B Clean Card */}
+                    {/* Option B MUCH LARGER & SUCCINCT CARD */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '28px',
-                        left: '32px',
-                        right: '32px',
-                        background: lastChoice === 'B' ? 'rgba(0, 229, 255, 0.15)' : 'rgba(10, 14, 22, 0.85)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: lastChoice === 'B' ? '1.5px solid #00e5ff' : '1px solid rgba(255, 255, 255, 0.15)',
-                        borderRadius: '12px',
-                        padding: '14px 18px',
-                        boxShadow: lastChoice === 'B' ? '0 0 30px rgba(0,229,255,0.3)' : '0 16px 40px rgba(0,0,0,0.7)',
+                        bottom: '36px',
+                        left: '36px',
+                        right: '36px',
+                        background: lastChoice === 'B' ? 'rgba(0, 229, 255, 0.20)' : 'rgba(8, 12, 20, 0.90)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: lastChoice === 'B' ? '2px solid #00e5ff' : '1.5px solid rgba(255, 255, 255, 0.20)',
+                        borderRadius: '16px',
+                        padding: '18px 24px',
+                        boxShadow: lastChoice === 'B' ? '0 0 35px rgba(0,229,255,0.4)' : '0 20px 50px rgba(0,0,0,0.85)',
                         transition: 'all 0.15s ease',
                         pointerEvents: 'none'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
                                 [B] {currentPair.candidateB.title}
                             </span>
-                            <span style={{ fontSize: '10px', color: '#8899ac', fontWeight: 700, letterSpacing: '0.04em' }}>
-                                CLICK OR PRESS [B / →]
+                            <span style={{
+                                background: 'rgba(255, 255, 255, 0.12)',
+                                color: '#ffffff',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                letterSpacing: '0.05em'
+                            }}>
+                                PRESS [B] OR [→]
                             </span>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                        <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.45', fontWeight: 500 }}>
                             {currentPair.candidateB.description}
                         </div>
                     </div>
