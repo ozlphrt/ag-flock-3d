@@ -92,7 +92,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const lastInteractionTime = useRef(0);
     const isUserDragging = useRef(false);
     const userHasOverridden = useRef(false);
-    const { camera } = useThree();
+    const { camera, gl } = useThree();
 
     // Seamless Transition Anchors (Quintic C2-Continuous Morphing)
     const transitionStartTime = useRef(0);
@@ -112,6 +112,35 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             controlsRef.current.enabled = true;
         }
     };
+
+    useEffect(() => {
+        const dom = gl.domElement;
+        const onPointerDown = () => {
+            isUserDragging.current = true;
+            handleUserInteraction();
+        };
+        const onPointerUp = () => {
+            isUserDragging.current = false;
+            lastInteractionTime.current = performance.now();
+        };
+        const onWheel = () => {
+            handleUserInteraction();
+        };
+
+        dom.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointerup', onPointerUp);
+        dom.addEventListener('wheel', onWheel, { passive: true });
+        dom.addEventListener('touchstart', onPointerDown, { passive: true });
+        window.addEventListener('touchend', onPointerUp, { passive: true });
+
+        return () => {
+            dom.removeEventListener('pointerdown', onPointerDown);
+            window.removeEventListener('pointerup', onPointerUp);
+            dom.removeEventListener('wheel', onWheel);
+            dom.removeEventListener('touchstart', onPointerDown);
+            window.removeEventListener('touchend', onPointerUp);
+        };
+    }, [gl]);
 
     useFrame((stateContext, delta) => {
         const time = stateContext.clock.getElapsedTime();
@@ -155,9 +184,17 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         // 2. User Interactive Mode (OrbitControls active)
         if (isUserInteracting || isUserDragging.current) {
             if (controlsRef.current) {
+                if (!controlsRef.current.enabled) {
+                    controlsRef.current.enabled = true;
+                }
                 curLookTarget.current.copy(controlsRef.current.target);
             }
             return;
+        }
+
+        // Disable OrbitControls in Autonomous Mode so it never conflicts with CameraRig frame updates
+        if (controlsRef.current && controlsRef.current.enabled) {
+            controlsRef.current.enabled = false;
         }
 
         // 3. Re-enter Autonomous Mode seamlessly from user's current camera position
@@ -239,8 +276,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             <PerspectiveCamera ref={cameraRef} makeDefault fov={52} position={[0, 3.5, 14.0]} near={0.25} far={1000} />
             <OrbitControls
                 ref={controlsRef}
-                enableDamping
-                dampingFactor={0.08}
+                enableDamping={false}
                 autoRotate={false}
                 minDistance={3.5}
                 maxDistance={250}

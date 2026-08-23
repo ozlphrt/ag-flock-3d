@@ -430,7 +430,7 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
 
 function App() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const [population, setPopulation] = useState(isMobile ? 25000 : 50000);
+    const [population, setPopulation] = useState(isMobile ? 25000 : 500000);
     const [isLoading, setIsLoading] = useState(true);
 
     // 100% Entirely Random Startup Configuration across all 7 aesthetic dimensions

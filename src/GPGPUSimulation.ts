@@ -602,10 +602,8 @@ void main() {
     float u = fract(speciesAndU);
     float nSeed = velTex.w;
 
-    // Dynamic longitudinal stream flow along the 3D pipe curve (smooth, graceful speed matching 50k)
-    float boidFlowOffset = 0.90 + mod(floor(nSeed * 1000.0), 11.0) * 0.02;
-    float flowSpeed = 0.016 * boidFlowOffset;
-    float dynamicU = fract(u + uTime * flowSpeed * uSpeedMult);
+    // Fixed continuous parametric coordinate along the 3D topology (eliminates phantom tail-to-head return streams)
+    float dynamicU = u;
 
     // Time decay calculation: misaligned boids settle into a baseline organic aura (retaining ~30% permanent noise)
     float elapsed = max(0.0, uTime - uStartTime);
@@ -648,7 +646,7 @@ void main() {
     }
 
     // Dynamic Agility & Inertia Scaling:
-    float agilityMult = clamp(1.0 / sqrt(boidSize), 0.45, 2.2);
+    float agilityMult = clamp(1.0 / sqrt(boidSize), 0.55, 1.75);
 
     float localLerp = uLerpRate * agilityMult;
     float localMaxAccel = uMaxAccel * agilityMult;
@@ -661,14 +659,16 @@ void main() {
     // Organic living fluid noise turbulence (strictly time + seed driven, ZERO positional feedback jitter)
     float activeNoise = uNoiseDrift * (0.35 + 0.65 * settleDecay);
     if (activeNoise > 1e-5) {
-        float freq = 0.8 + 0.6 * agilityMult;
+        float freq = 0.6 + 0.4 * agilityMult;
         targetVel += vec3(
-            sin(uTime * 1.4 * freq + nSeed * 18.28) * activeNoise * agilityMult,
-            cos(uTime * 1.1 * freq + nSeed * 24.12) * activeNoise * agilityMult,
-            sin(uTime * 1.6 * freq + nSeed * 14.41) * activeNoise * agilityMult
+            sin(uTime * 1.1 * freq + nSeed * 18.28) * activeNoise * agilityMult,
+            cos(uTime * 0.9 * freq + nSeed * 24.12) * activeNoise * agilityMult,
+            sin(uTime * 1.3 * freq + nSeed * 14.41) * activeNoise * agilityMult
         );
-    }    // Exponential smoothing towards target velocity (snappy fast response)
-    vec3 accel = (targetVel - vel) * 0.72;
+    }
+
+    // Exponential smoothing towards target velocity (silky organic damping)
+    vec3 accel = (targetVel - vel) * 0.45;
 
     // Soft Acceleration Clamping
     float accelMag = length(accel);
@@ -830,12 +830,13 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             const elapsed = Math.max(0.0, time - startTime);
             const p = Math.min(1.0, elapsed / duration);
 
-            // Fast Snappy Morphing Dynamics (0.85 speed cap during morphs for instant formation)
+            // Silky Smooth Morphing & Cruising Dynamics (calibrated to match CPU 50k flock)
             const isMorphing = p < 1.0;
             const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
-            const activeLerpRate = isMorphing ? (0.24 * (1.0 - sCurve) + 0.16 * sCurve) : 0.16;
-            const activeMaxSpeed = (isMorphing ? 0.85 : 0.48) * (speedMult > 0 ? speedMult / 0.14 : 1.0);
-            const activeMaxAccel = (isMorphing ? 0.22 : 0.10) * (speedMult > 0 ? speedMult / 0.14 : 1.0);
+            const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
+            const activeLerpRate = isMorphing ? (0.12 * (1.0 - sCurve) + 0.06 * sCurve) : 0.06;
+            const activeMaxSpeed = (isMorphing ? 0.075 : 0.038) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.014 : 0.006) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 

@@ -82,9 +82,9 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const sizeX = count > 262144 ? 1024 : 512;
     const sizeY = 512;
 
-    // Instanced Geometry with UV references and precomputed facet normals
+    // Instanced Geometry with UV references and precomputed facet normals (Flagship 20-Facet Geodesic Ico-Sphere)
     const geometry = useMemo(() => {
-        const baseGeom = new THREE.OctahedronGeometry(1.0, 0).toNonIndexed();
+        const baseGeom = new THREE.IcosahedronGeometry(1.0, 0).toNonIndexed();
         baseGeom.computeVertexNormals();
 
         const instGeom = new THREE.InstancedBufferGeometry();

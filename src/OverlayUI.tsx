@@ -995,6 +995,84 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </div>
                         </div>
 
+                        {/* Quick Action Studio Banner in Settings */}
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            padding: '10px 14px',
+                            margin: '8px 12px 12px 12px',
+                            background: 'rgba(16, 24, 40, 0.65)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.10)',
+                            justifyContent: 'space-between'
+                        }}>
+                            <button
+                                onClick={() => { setIsSettingsOpen(false); setIsAgentForYouOpen(true); }}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px 6px',
+                                    borderRadius: '8px',
+                                    background: 'rgba(0, 229, 255, 0.12)',
+                                    border: '1px solid rgba(0, 229, 255, 0.35)',
+                                    color: '#00e5ff',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px'
+                                }}
+                                title="Curated Aesthetic (Agent For You)"
+                            >
+                                ✨ Curate
+                            </button>
+
+                            <button
+                                onClick={() => { setIsSettingsOpen(false); setIsLearnOpen(true); }}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px 6px',
+                                    borderRadius: '8px',
+                                    background: 'rgba(47, 161, 214, 0.15)',
+                                    border: '1px solid rgba(47, 161, 214, 0.40)',
+                                    color: '#7dd3fc',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px'
+                                }}
+                                title="Aesthetic Ranking Arena (Learn Taste Profile)"
+                            >
+                                🧠 Learn
+                            </button>
+
+                            <button
+                                onClick={handleDiceProcedural}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px 6px',
+                                    borderRadius: '8px',
+                                    background: 'rgba(255, 215, 0, 0.12)',
+                                    border: '1px solid rgba(255, 215, 0, 0.35)',
+                                    color: '#ffd700',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px'
+                                }}
+                                title="Infinite Procedural Synthesis (Random Roll)"
+                            >
+                                🎲 Roll
+                            </button>
+                        </div>
+
                         {/* 1. Topology Row */}
                         <div className="ephemeral-row">
                             <div
