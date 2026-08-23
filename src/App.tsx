@@ -237,85 +237,46 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             (stateContext.scene.fog as THREE.FogExp2).color.set('#1a233a');
         }
 
-        // --- Camera-Adaptive Studio Rig: 70° Cross-Side Rake Lighting & Crisp Silhouette Rim ---
-        const camPos = camera.position;
-        _viewVec.copy(camPos).normalize();
-        if (_viewVec.lengthSq() < 0.001) _viewVec.set(0, 0, 1);
+        // --- Fixed 3D Celestial Studio Rig: High-Contrast Directional Sun & Sculptural Shadows ---
+        _idealKey.set(38.0, 48.0, 24.0);
+        _idealFill.set(-28.0, 22.0, -16.0);
+        _idealRim.set(-36.0, -18.0, -34.0);
+        _idealBounce.set(12.0, -45.0, -10.0);
 
-        _worldUp.set(0, 1, 0);
-        _rightVec.crossVectors(_viewVec, _worldUp).normalize();
-        if (_rightVec.lengthSq() < 0.001) _rightVec.set(1, 0, 0);
-
-        _upVec.crossVectors(_rightVec, _viewVec).normalize();
-
-        const lightDist = 65.0;
-
-        // 1. Key Light: 45° Cross-Front Angle with wide spherical wrap
-        _idealKey.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.52)
-            .addScaledVector(_rightVec, 0.60)
-            .addScaledVector(_upVec, 0.48)
-            .normalize()
-            .multiplyScalar(lightDist);
-
-        // 2. Fill Light: Broad counter-angle fill to softly define the shadow side
-        _idealFill.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.48)
-            .addScaledVector(_rightVec, -0.62)
-            .addScaledVector(_upVec, -0.20)
-            .normalize()
-            .multiplyScalar(lightDist * 0.95);
-
-        // 3. Rim / Kicker Light: Wide sweeping halo backlight
-        _idealRim.set(0, 0, 0)
-            .addScaledVector(_viewVec, -0.65)
-            .addScaledVector(_rightVec, -0.45)
-            .addScaledVector(_upVec, 0.55)
-            .normalize()
-            .multiplyScalar(lightDist * 1.1);
-
-        // 4. Bounce / Ground Uplight: Wide underside definition
-        _idealBounce.set(0, 0, 0)
-            .addScaledVector(_viewVec, 0.15)
-            .addScaledVector(_rightVec, 0.25)
-            .addScaledVector(_upVec, -0.85)
-            .normalize()
-            .multiplyScalar(lightDist * 0.85);
-
-        // Smoothly glide light positions - low rate keeps lights stable so they don't jitter camera
-        const smoothRate = Math.min(1.0, (delta || 0.016) * 2.5);
+        // Smoothly glide light positions
+        const smoothRate = Math.min(1.0, (delta || 0.016) * 3.0);
         curKeyPos.current.lerp(_idealKey, smoothRate);
         curFillPos.current.lerp(_idealFill, smoothRate);
         curRimPos.current.lerp(_idealRim, smoothRate);
         curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
-            ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 1.6);
+            ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 0.45);
             ambientRef.current.color.copy(curKeyColor.current).lerp(_whiteColor, 0.70);
         }
         if (hemiRef.current) {
-            hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 1.2);
+            hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 0.35);
             hemiRef.current.color.copy(curKeyColor.current).lerp(_blueColor, 0.50);
             hemiRef.current.groundColor.copy(curFillColor.current).lerp(_darkColor, 0.50);
         }
         if (keyRef.current) {
             keyRef.current.position.copy(curKeyPos.current);
-            keyRef.current.intensity = curKeyInt.current;
+            keyRef.current.intensity = curKeyInt.current * 1.35;
             keyRef.current.color.copy(curKeyColor.current);
         }
         if (fillRef.current) {
             fillRef.current.position.copy(curFillPos.current);
-            fillRef.current.intensity = curFillInt.current;
+            fillRef.current.intensity = curFillInt.current * 0.75;
             fillRef.current.color.copy(curFillColor.current);
         }
         if (rimRef.current) {
             rimRef.current.position.copy(curRimPos.current);
-            rimRef.current.intensity = curRimInt.current;
+            rimRef.current.intensity = curRimInt.current * 1.45;
             rimRef.current.color.copy(curRimColor.current);
         }
         if (bounceRef.current) {
             bounceRef.current.position.copy(curBouncePos.current);
-            bounceRef.current.intensity = curFillInt.current * 0.50;
+            bounceRef.current.intensity = curFillInt.current * 0.30;
             bounceRef.current.color.copy(curFillColor.current);
         }
     });

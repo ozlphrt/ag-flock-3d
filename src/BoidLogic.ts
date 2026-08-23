@@ -583,25 +583,26 @@ export function generateSpeciesDistribution(): [number, number, number, number] 
     return [raw[0] / sum, raw[1] / sum, raw[2] / sum, raw[3] / sum];
 }
 
-// Helper to generate distinct per-species materials and optical bloom levels
+// Helper to generate distinct per-species materials with rich shadow & specular contrast
 export function generateSpeciesMaterials(basePresetIdx: number = 0): [MaterialSettings, MaterialSettings, MaterialSettings, MaterialSettings] {
     const pool = [...MATERIAL_PRESETS];
-    const bloomingPresets = pool.filter(p => (p.settings.emissiveIntensity ?? 0) >= 1.5);
-    const metallicPresets = pool.filter(p => p.settings.metalness >= 0.4 && (p.settings.emissiveIntensity ?? 0) < 1.0);
-    const organicPresets = pool.filter(p => p.settings.metalness < 0.2 && (p.settings.emissiveIntensity ?? 0) < 0.1);
-    const facetedPresets = pool.filter(p => p.settings.flatShading);
+    const bloomingPresets = pool.filter(p => (p.settings.emissiveIntensity ?? 0) >= 2.0);
+    const metallicPresets = pool.filter(p => p.settings.metalness >= 0.5 && (p.settings.emissiveIntensity ?? 0) <= 0.1);
+    const facetedPresets = pool.filter(p => p.settings.flatShading && (p.settings.emissiveIntensity ?? 0) <= 0.15);
+    const satinPresets = pool.filter(p => p.settings.metalness < 0.5 && (p.settings.emissiveIntensity ?? 0) <= 0.08);
 
-    const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[11]).settings;
-    const mat1 = (bloomingPresets[Math.floor(Math.random() * bloomingPresets.length)] || pool[10]).settings;
-    const mat2 = (organicPresets[Math.floor(Math.random() * organicPresets.length)] || pool[0]).settings;
-    const mat3 = (facetedPresets[Math.floor(Math.random() * facetedPresets.length)] || pool[8]).settings;
+    // Primary 3 species are strictly non-emissive for deep lit-vs-shadow volume
+    const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[10]).settings;
+    const mat1 = (facetedPresets[Math.floor(Math.random() * facetedPresets.length)] || pool[7]).settings;
+    const mat2 = (satinPresets[Math.floor(Math.random() * satinPresets.length)] || pool[0]).settings;
+    // Rare 4th accent species has intense glowing optical bloom
+    const mat3 = (bloomingPresets[Math.floor(Math.random() * bloomingPresets.length)] || pool[9]).settings;
 
-    const mats = [mat0, mat1, mat2, mat3].sort(() => Math.random() - 0.5);
     return [
-        { ...mats[0] },
-        { ...mats[1] },
-        { ...mats[2] },
-        { ...mats[3] }
+        { ...mat0, emissiveIntensity: 0.0 },
+        { ...mat1, emissiveIntensity: 0.0 },
+        { ...mat2, emissiveIntensity: 0.0 },
+        { ...mat3, emissiveIntensity: mat3.emissiveIntensity ?? 2.6 }
     ];
 }
 
