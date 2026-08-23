@@ -877,6 +877,112 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
+        {/* Top-Left Specimen Population Telemetry Badge */}
+        {(() => {
+            const dist = simState.current?.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+            const sizes = simState.current?.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+            const colors = simState.current?.speciesColors || SPECIES_COLORS;
+            const totalPop = population || 500000;
+
+            return (
+                <div
+                    className="top-left-specimen-telemetry"
+                    style={{
+                        position: 'fixed',
+                        top: '18px',
+                        left: '18px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        padding: '10px 14px',
+                        background: 'rgba(10, 14, 24, 0.85)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1.5px solid rgba(255, 255, 255, 0.14)',
+                        borderRadius: '14px',
+                        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.08)',
+                        zIndex: 1000,
+                        userSelect: 'none',
+                        pointerEvents: 'auto',
+                        minWidth: '185px'
+                    }}
+                >
+                    {/* Header: Total Population */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00ffcc', boxShadow: '0 0 8px #00ffcc', display: 'inline-block' }} />
+                            <span style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
+                                Population
+                            </span>
+                        </div>
+                        <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 900, color: '#f8fafc', letterSpacing: '0.02em' }}>
+                            {totalPop.toLocaleString()}
+                        </span>
+                    </div>
+
+                    {/* Specimen Breakdown Rows */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {[0, 1, 2, 3].map(sp => {
+                            const ratio = dist[sp] ?? 0.25;
+                            const count = Math.round(totalPop * ratio);
+                            const pct = Math.round(ratio * 100);
+                            const color = colors[sp] || '#fff';
+                            const sz = (sizes[sp] ?? 1.0).toFixed(2);
+
+                            return (
+                                <div
+                                    key={`specimen-telemetry-${sp}`}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '10px',
+                                        padding: '2px 0'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <div
+                                            style={{
+                                                width: '8px',
+                                                height: '8px',
+                                                borderRadius: '50%',
+                                                background: color,
+                                                boxShadow: `0 0 8px ${color}`,
+                                                flexShrink: 0
+                                            }}
+                                        />
+                                        <span style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600 }}>
+                                            Specimen {sp + 1}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontFamily: 'monospace', fontSize: '11px', fontWeight: 700, color: '#f1f5f9' }}>
+                                            {count.toLocaleString()}
+                                        </span>
+                                        <span
+                                            style={{
+                                                fontSize: '9px',
+                                                fontWeight: 800,
+                                                color: color,
+                                                background: `${color}1a`,
+                                                padding: '1px 4px',
+                                                borderRadius: '4px',
+                                                border: `1px solid ${color}33`,
+                                                minWidth: '26px',
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            {pct}%
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        })()}
+
         {/* Top-Right Overall Combination Like / Dislike Bar */}
         {(() => {
             const rawProgress = simState.current?.morphProgress !== undefined ? simState.current.morphProgress : 1.0;
@@ -998,79 +1104,80 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
                         {/* Quick Action Studio Banner in Settings */}
                         <div style={{
-                            display: 'flex',
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr 1fr',
                             gap: '8px',
-                            padding: '10px 14px',
+                            padding: '10px 12px',
                             margin: '8px 12px 12px 12px',
-                            background: 'rgba(16, 24, 40, 0.65)',
+                            background: 'rgba(12, 16, 26, 0.85)',
                             borderRadius: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.10)',
-                            justifyContent: 'space-between'
+                            border: '1px solid rgba(255, 255, 255, 0.12)'
                         }}>
                             <button
                                 onClick={() => { setIsSettingsOpen(false); setIsAgentForYouOpen(true); }}
                                 style={{
-                                    flex: 1,
-                                    padding: '8px 6px',
-                                    borderRadius: '8px',
-                                    background: 'rgba(0, 229, 255, 0.12)',
-                                    border: '1px solid rgba(0, 229, 255, 0.35)',
+                                    padding: '8px 4px',
+                                    borderRadius: '10px',
+                                    background: 'rgba(0, 229, 255, 0.10)',
+                                    border: '1.5px solid rgba(0, 229, 255, 0.35)',
                                     color: '#00e5ff',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
                                     cursor: 'pointer',
                                     display: 'flex',
+                                    flexDirection: 'column',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '4px'
+                                    gap: '3px',
+                                    transition: 'all 0.2s ease'
                                 }}
-                                title="Curated Aesthetic (Agent For You)"
+                                title="Autonomous recommendation engine understanding your taste"
                             >
-                                ✨ Curate
+                                <span style={{ fontSize: '18px' }}>✨</span>
+                                <span style={{ fontSize: '10px', fontWeight: 800, color: '#e0f7fa' }}>For You</span>
+                                <span style={{ fontSize: '8px', color: '#00e5ff', opacity: 0.85 }}>AI Agent</span>
                             </button>
 
                             <button
                                 onClick={() => { setIsSettingsOpen(false); setIsLearnOpen(true); }}
                                 style={{
-                                    flex: 1,
-                                    padding: '8px 6px',
-                                    borderRadius: '8px',
-                                    background: 'rgba(47, 161, 214, 0.15)',
-                                    border: '1px solid rgba(47, 161, 214, 0.40)',
+                                    padding: '8px 4px',
+                                    borderRadius: '10px',
+                                    background: 'rgba(47, 161, 214, 0.10)',
+                                    border: '1.5px solid rgba(47, 161, 214, 0.40)',
                                     color: '#7dd3fc',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
                                     cursor: 'pointer',
                                     display: 'flex',
+                                    flexDirection: 'column',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '4px'
+                                    gap: '3px',
+                                    transition: 'all 0.2s ease'
                                 }}
-                                title="Aesthetic Ranking Arena (Learn Taste Profile)"
+                                title="Side-by-side A/B taste comparison arena"
                             >
-                                🧠 Learn
+                                <span style={{ fontSize: '18px' }}>🧠</span>
+                                <span style={{ fontSize: '10px', fontWeight: 800, color: '#e0f2fe' }}>Taste Arena</span>
+                                <span style={{ fontSize: '8px', color: '#38bdf8', opacity: 0.85 }}>Learn RL</span>
                             </button>
 
                             <button
                                 onClick={handleDiceProcedural}
+                                className="dice-spin-btn"
                                 style={{
-                                    flex: 1,
-                                    padding: '8px 6px',
-                                    borderRadius: '8px',
-                                    background: 'rgba(255, 215, 0, 0.12)',
-                                    border: '1px solid rgba(255, 215, 0, 0.35)',
+                                    padding: '8px 4px',
+                                    borderRadius: '10px',
+                                    background: 'rgba(255, 215, 0, 0.10)',
+                                    border: '1.5px solid rgba(255, 215, 0, 0.35)',
                                     color: '#ffd700',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
                                     cursor: 'pointer',
                                     display: 'flex',
+                                    flexDirection: 'column',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '4px'
+                                    gap: '3px',
+                                    transition: 'all 0.2s ease'
                                 }}
-                                title="Infinite Procedural Synthesis (Random Roll)"
+                                title="Synthesizes brand-new procedural 3D topologies, palettes, and lighting"
                             >
-                                🎲 Roll
+                                <span style={{ fontSize: '18px' }}>🎲</span>
+                                <span style={{ fontSize: '10px', fontWeight: 800, color: '#fef08a' }}>Surprise Roll</span>
+                                <span style={{ fontSize: '8px', color: '#facc15', opacity: 0.85 }}>Infinite 3D</span>
                             </button>
                         </div>
 
@@ -2010,105 +2117,6 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </div>
             )}
 
-            {/* Aesthetic AI Recommendation Agent "For You" Feed */}
-            <button
-                className="defeat-selector-btn"
-                onClick={() => setIsAgentForYouOpen(!isAgentForYouOpen)}
-                onMouseEnter={() => setHoveredDockBtn({
-                    id: 'agent',
-                    title: '✨ Aesthetic AI Agent ("For You")',
-                    desc: 'Autonomous recommendation engine that understands your taste and curates bespoke procedural swarm aesthetics.',
-                    color: '#00e5ff'
-                })}
-                onMouseLeave={() => setHoveredDockBtn(null)}
-                style={{
-                    width: '52px',
-                    height: '52px',
-                    padding: 0,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: isAgentForYouOpen ? 'rgba(0, 229, 255, 0.25)' : 'rgba(12, 16, 26, 0.85)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
-                    border: isAgentForYouOpen ? '1.5px solid #00e5ff' : '1.5px solid rgba(0, 229, 255, 0.45)',
-                    color: '#00e5ff',
-                    fontSize: '22px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5), 0 0 14px rgba(0,229,255,0.3)',
-                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                    cursor: 'pointer'
-                }}
-            >
-                ✨
-            </button>
-
-            {/* Preference Learning & Evolution Engine Button */}
-            <button
-                className="defeat-selector-btn"
-                onClick={() => setIsLearnOpen(true)}
-                onMouseEnter={() => setHoveredDockBtn({
-                    id: 'learn',
-                    title: '🧠 Aesthetic Ranking Arena',
-                    desc: 'Side-by-side A/B comparison arena with multi-angle Bayesian taste learning across 6 visual dimensions.',
-                    color: '#2FA1D6'
-                })}
-                onMouseLeave={() => setHoveredDockBtn(null)}
-                style={{
-                    width: '52px',
-                    height: '52px',
-                    padding: 0,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(12, 16, 26, 0.85)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
-                    border: '1.5px solid rgba(47, 161, 214, 0.45)',
-                    color: '#2FA1D6',
-                    fontSize: '22px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5), 0 0 12px rgba(47,161,214,0.2)',
-                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                    cursor: 'pointer'
-                }}
-            >
-                🧠
-            </button>
-
-            {/* Infinite Procedural Dice Button */}
-            <button
-                className="defeat-selector-btn dice-spin-btn"
-                onClick={handleDiceProcedural}
-                onMouseEnter={() => setHoveredDockBtn({
-                    id: 'dice',
-                    title: '🎲 Infinite Procedural Synthesis',
-                    desc: 'Synthesizes brand-new procedural 3D topologies, palettes, and lighting in real-time with fluid morph transitions.',
-                    color: '#ffd700'
-                })}
-                onMouseLeave={() => setHoveredDockBtn(null)}
-                style={{
-                    width: '52px',
-                    height: '52px',
-                    padding: 0,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(12, 16, 26, 0.85)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
-                    border: '1.5px solid rgba(255, 215, 0, 0.35)',
-                    color: '#ffd700',
-                    fontSize: '22px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                    cursor: 'pointer'
-                }}
-            >
-                🎲
-            </button>
-
             {/* Main Settings Toggle Button with Settings Cog */}
             <button
                 className="defeat-selector-btn"
@@ -2550,6 +2558,78 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
                     {/* dat.GUI Scrollable Body */}
                     <div style={{ overflowY: 'auto', flex: 1, background: '#1a1a1a' }}>
+
+                        {/* Quick Action Toolbar (For You, Taste Arena, Surprise Roll) */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr 1fr',
+                            gap: '4px',
+                            padding: '6px',
+                            background: '#0d1117',
+                            borderBottom: '1px solid #222'
+                        }}>
+                            <button
+                                onClick={() => setIsAgentForYouOpen(true)}
+                                style={{
+                                    padding: '5px 2px',
+                                    borderRadius: '4px',
+                                    background: 'rgba(0, 229, 255, 0.12)',
+                                    border: '1px solid rgba(0, 229, 255, 0.35)',
+                                    color: '#00e5ff',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '3px'
+                                }}
+                                title="Autonomous recommendation engine understanding your taste"
+                            >
+                                ✨ For You
+                            </button>
+                            <button
+                                onClick={() => setIsLearnOpen(true)}
+                                style={{
+                                    padding: '5px 2px',
+                                    borderRadius: '4px',
+                                    background: 'rgba(47, 161, 214, 0.12)',
+                                    border: '1px solid rgba(47, 161, 214, 0.35)',
+                                    color: '#7dd3fc',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '3px'
+                                }}
+                                title="Side-by-side A/B taste comparison arena"
+                            >
+                                🧠 Learn
+                            </button>
+                            <button
+                                onClick={handleDiceProcedural}
+                                className="dice-spin-btn"
+                                style={{
+                                    padding: '5px 2px',
+                                    borderRadius: '4px',
+                                    background: 'rgba(255, 215, 0, 0.12)',
+                                    border: '1px solid rgba(255, 215, 0, 0.35)',
+                                    color: '#ffd700',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '3px'
+                                }}
+                                title="Synthesizes brand-new procedural 3D topologies, palettes, and lighting"
+                            >
+                                🎲 Roll
+                            </button>
+                        </div>
 
                         {/* Global Lock / Pause Controller Row */}
                         <div
