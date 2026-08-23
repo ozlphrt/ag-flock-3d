@@ -105,6 +105,11 @@ const _idealKey = new THREE.Vector3();
 const _idealFill = new THREE.Vector3();
 const _idealRim = new THREE.Vector3();
 const _idealBounce = new THREE.Vector3();
+const _rawFillScratch = new THREE.Color();
+const _hslScratch = { h: 0, s: 0, l: 0 };
+const _whiteColor = new THREE.Color('#ffffff');
+const _blueColor = new THREE.Color('#90b8e8');
+const _darkColor = new THREE.Color('#101828');
 
 function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const ambientRef = useRef<THREE.AmbientLight>(null!);
@@ -172,11 +177,10 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         const tRim = (profile.rimIntensity ?? 3.5) * mult * flashBoost;
 
         // Lift fill color luminance if it's too dark so it visibly illuminates shadows
-        const rawFill = new THREE.Color(profile.fillColor);
-        const hsl = { h: 0, s: 0, l: 0 };
-        rawFill.getHSL(hsl);
-        if (hsl.l < 0.28) {
-            rawFill.setHSL(hsl.h, Math.max(hsl.s, 0.40), 0.36);
+        _rawFillScratch.set(profile.fillColor);
+        _rawFillScratch.getHSL(_hslScratch);
+        if (_hslScratch.l < 0.28) {
+            _rawFillScratch.setHSL(_hslScratch.h, Math.max(_hslScratch.s, 0.40), 0.36);
         }
 
         if (lastProfileId.current !== profile.id) {
@@ -199,7 +203,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             targetRimInt.current = tRim;
 
             targetKeyColor.current.set(profile.keyColor);
-            targetFillColor.current.copy(rawFill);
+            targetFillColor.current.copy(_rawFillScratch);
             targetRimColor.current.set(profile.rimColor);
         } else {
             // Continuously update targets for live slider/flash changes
@@ -208,7 +212,7 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             targetFillInt.current = tFill;
             targetRimInt.current = tRim;
             targetKeyColor.current.set(profile.keyColor);
-            targetFillColor.current.copy(rawFill);
+            targetFillColor.current.copy(_rawFillScratch);
             targetRimColor.current.set(profile.rimColor);
         }
 
@@ -278,8 +282,8 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             .normalize()
             .multiplyScalar(lightDist * 0.85);
 
-        // Smoothly glide light positions with organic temporal damping
-        const smoothRate = Math.min(1.0, (delta || 0.016) * 7.5);
+        // Smoothly glide light positions - low rate keeps lights stable so they don't jitter camera
+        const smoothRate = Math.min(1.0, (delta || 0.016) * 2.5);
         curKeyPos.current.lerp(_idealKey, smoothRate);
         curFillPos.current.lerp(_idealFill, smoothRate);
         curRimPos.current.lerp(_idealRim, smoothRate);
@@ -287,12 +291,12 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
         if (ambientRef.current) {
             ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 1.6);
-            ambientRef.current.color.copy(curKeyColor.current).lerp(new THREE.Color('#ffffff'), 0.70);
+            ambientRef.current.color.copy(curKeyColor.current).lerp(_whiteColor, 0.70);
         }
         if (hemiRef.current) {
             hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 1.2);
-            hemiRef.current.color.copy(curKeyColor.current).lerp(new THREE.Color('#90b8e8'), 0.50);
-            hemiRef.current.groundColor.copy(curFillColor.current).lerp(new THREE.Color('#101828'), 0.50);
+            hemiRef.current.color.copy(curKeyColor.current).lerp(_blueColor, 0.50);
+            hemiRef.current.groundColor.copy(curFillColor.current).lerp(_darkColor, 0.50);
         }
         if (keyRef.current) {
             keyRef.current.position.copy(curKeyPos.current);

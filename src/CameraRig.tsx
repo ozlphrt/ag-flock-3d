@@ -99,9 +99,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const preset = CAMERA_PRESETS[presetIdx];
 
         if (controlsRef.current) {
-            controlsRef.current.autoRotate = true;
+            // Only update speed - never overwrite target every frame (that fights OrbitControls)
             controlsRef.current.autoRotateSpeed = (preset.autoRotateSpeed || 0.7) * 1.2;
-            controlsRef.current.target.set(preset.target[0], preset.target[1], preset.target[2]);
         }
 
         if (lastPresetIdx.current !== presetIdx) {
