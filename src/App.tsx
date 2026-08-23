@@ -363,22 +363,22 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
         if (s && bloomRef.current) {
             const b = bloomRef.current;
             if (b.intensity !== undefined) {
-                b.intensity = s.intensity ?? 1.2;
+                b.intensity = s.intensity ?? 1.8;
             }
             if (b.luminanceMaterial && b.luminanceMaterial.threshold !== undefined) {
-                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.22;
+                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.90;
             } else if (b.luminancePass?.luminanceMaterial?.threshold !== undefined) {
-                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.22;
+                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.90;
             }
             if (b.mipmapBlurPass && b.mipmapBlurPass.radius !== undefined) {
-                b.mipmapBlurPass.radius = s.radius ?? 0.65;
+                b.mipmapBlurPass.radius = s.radius ?? 0.10;
             } else if (b.radius !== undefined) {
-                b.radius = s.radius ?? 0.65;
+                b.radius = s.radius ?? 0.10;
             }
         }
     });
 
-    const s = simState.current.bloomSettings || { luminanceThreshold: 0.22, intensity: 1.2, radius: 0.65, levels: 4 };
+    const s = simState.current.bloomSettings || { luminanceThreshold: 0.90, intensity: 1.8, radius: 0.10, levels: 2 };
     return (
         <EffectComposer>
             <Bloom
@@ -387,7 +387,7 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
                 mipmapBlur
                 intensity={s.intensity}
                 radius={s.radius}
-                levels={s.levels || 4}
+                levels={s.levels || 2}
             />
         </EffectComposer>
     );

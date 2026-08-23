@@ -464,91 +464,84 @@ export const MATERIAL_PRESETS = [
         label: 'Vibrant Satin Porcelain',
         icon: '🍶',
         desc: 'Deep vibrant color saturation with crisp specular highlights and smooth satin sheen',
-        settings: { roughness: 0.18, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
+        settings: { roughness: 0.18, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 1,
         label: 'Candy Gloss Enamel',
         icon: '🍬',
         desc: 'High-gloss automotive clearcoat with vibrant specular gleam and crisp reflections',
-        settings: { roughness: 0.10, metalness: 0.35, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
+        settings: { roughness: 0.10, metalness: 0.35, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 2,
         label: 'Polished Titanium Luster',
         icon: '⚔️',
         desc: 'Aerospace grade brushed metallic sheen with high environmental light response',
-        settings: { roughness: 0.14, metalness: 0.85, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
+        settings: { roughness: 0.14, metalness: 0.85, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 3,
         label: 'Faceted Jewel Gem',
         icon: '💎',
         desc: 'Geometric crystalline facets with sparkling specular gleams that catch directional beams',
-        settings: { roughness: 0.14, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
+        settings: { roughness: 0.14, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 4,
         label: 'Iridescent Pearl Luster',
         icon: '🦪',
         desc: 'Deep chromatic pearl sheen with luminous rim glints and multi-angle specular shifts',
-        settings: { roughness: 0.16, metalness: 0.45, wireframe: false, flatShading: false, emissiveIntensity: 0.10 }
+        settings: { roughness: 0.16, metalness: 0.45, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 5,
         label: 'Frosted Glass Crystal',
         icon: '🧊',
         desc: 'Modern faceted optical crystal with intense saturated chromatic reflection',
-        settings: { roughness: 0.20, metalness: 0.35, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
+        settings: { roughness: 0.20, metalness: 0.35, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 6,
         label: 'Polished Amber Glass',
         icon: '🍯',
         desc: 'Liquid resin gloss with rich specular glints and clear optical depth',
-        settings: { roughness: 0.12, metalness: 0.28, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
+        settings: { roughness: 0.12, metalness: 0.28, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 7,
         label: 'Sparkling Specular Facets',
         icon: '💎',
         desc: 'Crystalline multifaceted diamond geometry with high metallic speckles and light glints',
-        settings: { roughness: 0.12, metalness: 0.75, wireframe: false, flatShading: true, emissiveIntensity: 0.25 }
+        settings: { roughness: 0.12, metalness: 0.75, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 8,
         label: 'Glinting Obsidian Foil',
         icon: '✨',
         desc: 'Deep metallic foil with sparkling facet glimmers that catch dynamic rim & key beams',
-        settings: { roughness: 0.08, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.22 }
+        settings: { roughness: 0.08, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     },
     {
         id: 9,
-        label: 'Bioluminescent Optical Plasma',
-        icon: '🔥',
-        desc: 'High-energy radiant core bursting with intense optical bloom and chromatic corona',
-        settings: { roughness: 0.08, metalness: 0.20, wireframe: false, flatShading: false, emissiveIntensity: 2.60 }
+        label: 'Liquid Mirror Chrome',
+        icon: '🪞',
+        desc: 'Ultra-polished liquid mirror metal reflecting environmental key and rim lights',
+        settings: { roughness: 0.04, metalness: 0.98, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 10,
-        label: 'Gleaming Mirror Chrome',
-        icon: '🪞',
-        desc: 'Ultra-polished liquid mirror metal reflecting environmental key and rim lights',
-        settings: { roughness: 0.04, metalness: 0.98, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
+        label: 'Brushed Cobalt Steel',
+        icon: '🛡️',
+        desc: 'Deep anisotropic brushed steel with crisp sunlit reflections and dark shadows',
+        settings: { roughness: 0.12, metalness: 0.90, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
     },
     {
         id: 11,
-        label: 'Radiant Supernova Glow',
-        icon: '🌟',
-        desc: 'Blinding luminous star matter emitting massive optical bloom aura',
-        settings: { roughness: 0.12, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 3.40 }
-    },
-    {
-        id: 12,
         label: 'Prismatic Diamond Glint',
         icon: '❇️',
-        desc: 'Sharp crystalline facets with glowing laser glimmers and specular spikes',
-        settings: { roughness: 0.12, metalness: 0.75, wireframe: false, flatShading: true, emissiveIntensity: 0.95 }
+        desc: 'Sharp crystalline facets with glowing specular spikes and deep facet contrast',
+        settings: { roughness: 0.10, metalness: 0.80, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
     }
 ];
 
@@ -586,23 +579,21 @@ export function generateSpeciesDistribution(): [number, number, number, number] 
 // Helper to generate distinct per-species materials with rich shadow & specular contrast
 export function generateSpeciesMaterials(basePresetIdx: number = 0): [MaterialSettings, MaterialSettings, MaterialSettings, MaterialSettings] {
     const pool = [...MATERIAL_PRESETS];
-    const bloomingPresets = pool.filter(p => (p.settings.emissiveIntensity ?? 0) >= 2.0);
-    const metallicPresets = pool.filter(p => p.settings.metalness >= 0.5 && (p.settings.emissiveIntensity ?? 0) <= 0.1);
-    const facetedPresets = pool.filter(p => p.settings.flatShading && (p.settings.emissiveIntensity ?? 0) <= 0.15);
-    const satinPresets = pool.filter(p => p.settings.metalness < 0.5 && (p.settings.emissiveIntensity ?? 0) <= 0.08);
+    const metallicPresets = pool.filter(p => p.settings.metalness >= 0.7);
+    const facetedPresets = pool.filter(p => p.settings.flatShading);
+    const glossPresets = pool.filter(p => p.settings.roughness <= 0.12 && !p.settings.flatShading);
+    const satinPresets = pool.filter(p => p.settings.metalness < 0.6);
 
-    // Primary 3 species are strictly non-emissive for deep lit-vs-shadow volume
-    const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[10]).settings;
+    const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[9]).settings;
     const mat1 = (facetedPresets[Math.floor(Math.random() * facetedPresets.length)] || pool[7]).settings;
-    const mat2 = (satinPresets[Math.floor(Math.random() * satinPresets.length)] || pool[0]).settings;
-    // Rare 4th accent species has intense glowing optical bloom
-    const mat3 = (bloomingPresets[Math.floor(Math.random() * bloomingPresets.length)] || pool[9]).settings;
+    const mat2 = (glossPresets[Math.floor(Math.random() * glossPresets.length)] || pool[1]).settings;
+    const mat3 = (satinPresets[Math.floor(Math.random() * satinPresets.length)] || pool[0]).settings;
 
     return [
         { ...mat0, emissiveIntensity: 0.0 },
         { ...mat1, emissiveIntensity: 0.0 },
         { ...mat2, emissiveIntensity: 0.0 },
-        { ...mat3, emissiveIntensity: mat3.emissiveIntensity ?? 2.6 }
+        { ...mat3, emissiveIntensity: 0.0 }
     ];
 }
 
