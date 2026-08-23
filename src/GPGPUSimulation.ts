@@ -74,29 +74,32 @@ vec3 rotateZ(vec3 p, float a) {
     return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
 }
 
-// Coordinate Frame generator with dynamic time-decaying stray alignment
+// Coordinate Frame generator with dynamic time-decaying stray alignment and child corkscrew helices
 vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, float nSeed, float speedMult, float radius, float angFreq, float vol, float settleDecay) {
     vec3 tNorm = normalize(tangent);
     vec3 up = abs(tNorm.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
     vec3 normal = normalize(cross(tNorm, up));
     vec3 binormal = cross(tNorm, normal);
 
-    // 1. Order-2 Meso cord (4 species cords spiraling around macro spine)
-    float cordAngle = sp * (TWO_PI / 4.0) + (u * angFreq * PI) + time * 0.6 * speedMult;
-    float rx = cos(cordAngle) * radius;
-    float ry = sin(cordAngle) * radius;
+    // Dynamic wave pulsation along the tube cross-section
+    float wavePulse = 1.0 + 0.14 * sin(u * 12.0 * PI - time * 2.2 * speedMult);
 
-    // 2. Order-3 Micro multi-strands (4 clean sub-strands per species cord)
+    // 1. Order-2 Meso cord (4 species cords spiraling & flowing around macro spine)
+    float cordAngle = sp * (TWO_PI / 4.0) + (u * angFreq * PI) + time * 1.2 * speedMult;
+    float rx = cos(cordAngle) * (radius * wavePulse);
+    float ry = sin(cordAngle) * (radius * wavePulse);
+
+    // 2. Order-3 Micro multi-strands (child micro-helices corkscrewing around the cord)
     float subStrand = floor(fract(nSeed * 13.37) * 4.0);
-    float microAngle = subStrand * (TWO_PI / 4.0) + u * 24.0 * PI + time * 0.75 * speedMult;
-    float rMicro = 0.16 * vol;
+    float microAngle = subStrand * (TWO_PI / 4.0) + u * 24.0 * PI + time * 2.4 * speedMult;
+    float rMicro = 0.16 * vol * wavePulse;
     rx += cos(microAngle) * rMicro;
     ry += sin(microAngle) * rMicro;
 
     // 3. Order-4 Volumetric Fermat Golden-Angle Radial dispersion
     float goldenAngle = 2.399963229728653;
     float pAngle = fract(nSeed * 37.19) * TWO_PI + goldenAngle * u * 8000.0;
-    float pRadius = (sqrt(fract(nSeed * 89.41)) * 0.5 + 0.1) * vol * 0.60;
+    float pRadius = (sqrt(fract(nSeed * 89.41)) * 0.5 + 0.1) * vol * 0.60 * wavePulse;
     rx += cos(pAngle) * pRadius;
     ry += sin(pAngle) * pRadius;
 
@@ -395,16 +398,21 @@ void main() {
     float u = fract(speciesAndU);
     float nSeed = velTex.w;
 
+    // Dynamic longitudinal stream flow along the 3D pipe curve for all 250k/500k GPU boids
+    float boidFlowOffset = 0.85 + mod(floor(nSeed * 1000.0), 17.0) * 0.02;
+    float flowSpeed = 0.055 * boidFlowOffset;
+    float dynamicU = fract(u + uTime * flowSpeed * uSpeedMult);
+
     // Time decay calculation: misaligned boids settle into a baseline organic aura (retaining ~30% permanent noise)
     float elapsed = max(0.0, uTime - uStartTime);
     float settleDecay = 0.30 + 0.70 * exp(-elapsed * 0.12);
 
     // Evaluate target position with organic time-decaying stray noise and balanced volumetric dispersion
-    vec3 targetPos = evaluateTopology(uFormationMode, u, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
+    vec3 targetPos = evaluateTopology(uFormationMode, dynamicU, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
 
     // If morphing between topologies, evaluate previous formation & apply Quintic S-Curve
     if (uMorphProgress < 1.0) {
-        vec3 prevTarget = evaluateTopology(uPrevFormationMode, u, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
+        vec3 prevTarget = evaluateTopology(uPrevFormationMode, dynamicU, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
         float p = uMorphProgress;
         float sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
         targetPos = mix(prevTarget, targetPos, sCurve);
