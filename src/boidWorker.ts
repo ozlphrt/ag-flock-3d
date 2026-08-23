@@ -132,10 +132,10 @@ self.onmessage = (e: MessageEvent) => {
                 ? state.attributes[sp].separationWeight
                 : 3.5;
 
+            const idxSp = indexInSpecies[i];
             const boidFlowOffset = 0.85 + (idxSp % 17) * 0.02;
             const flowSpeed = 0.055 * boidFlowOffset;
             const dynamicU = ((uArr[i] + time * flowSpeed * speedMult) % 1.0 + 1.0) % 1.0;
-            const idxSp = indexInSpecies[i];
 
             let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, dynamicU, time, sp, idxSp, sepWeight, speedMult, state);
 
