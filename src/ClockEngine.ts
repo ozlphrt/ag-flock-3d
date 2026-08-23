@@ -102,8 +102,25 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         }
     };
 
-    // Randomized Topology Playlist (Shuffled on launch, reshuffled on exhaustion)
+    // Popularity-Weighted Topology Playlist (Favors highest rated & user-voted topologies)
     let randomizedTopologyPlaylist: number[] = [];
+
+    // Core popular baseline formations that always have high visual appeal
+    const POPULAR_CORE_FORMATIONS = [
+        FormationMode.TrefoilBraidedRibbon,
+        FormationMode.CaduceusVortex,
+        FormationMode.QuadHelixBraid,
+        FormationMode.SuperhelicalTorusKnot,
+        FormationMode.FigureEightKnotBraid,
+        FormationMode.BorromeanRings,
+        FormationMode.MobiusHelixBraid,
+        FormationMode.TriquetraCelticBraid,
+        FormationMode.VillarceauTorus,
+        FormationMode.GalacticSpiral,
+        FormationMode.SaturnianRings,
+        FormationMode.FractalSupercoil,
+        FormationMode.LorenzChaoticBraid
+    ];
 
     const getNextRandomizedTopology = (prefs: any, currentMode: number): number => {
         if (randomizedTopologyPlaylist.length === 0) {
@@ -111,23 +128,32 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             const likes = prefs.formationLikes || {};
             const dislikes = prefs.formationDislikes || {};
 
+            // 1. Give each popular core formation strong baseline tickets
+            for (const coreMode of POPULAR_CORE_FORMATIONS) {
+                if ((dislikes[coreMode] || 0) <= (likes[coreMode] || 0)) {
+                    pool.push(coreMode, coreMode, coreMode); // 3x baseline tickets for top tier popular shapes
+                }
+            }
+
+            // 2. Add user-liked and voted formations with heavy weight (+3 tickets per like)
             for (let i = 0; i < TOTAL_FORMATION_COUNT; i++) {
                 const likeCount = likes[i] || 0;
                 const dislikeCount = dislikes[i] || 0;
                 if (dislikeCount > likeCount) continue; // Skip disliked formations
 
+                // Base ticket for all valid formations
                 pool.push(i);
-                // Extra entry for liked formations
-                if (likeCount > 0) {
+
+                // Heavy weighting for user likes & votes
+                for (let k = 0; k < likeCount * 3; k++) {
                     pool.push(i);
                 }
             }
 
-            // Always add a couple of Procedural chances
-            pool.push(FormationMode.Procedural);
-            pool.push(FormationMode.Procedural);
+            // Procedural surprise chances
+            pool.push(FormationMode.Procedural, FormationMode.Procedural);
 
-            // Fisher-Yates shuffle for completely random order
+            // Fisher-Yates shuffle
             for (let i = pool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [pool[i], pool[j]] = [pool[j], pool[i]];
