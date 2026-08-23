@@ -193,142 +193,120 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             left: 0,
             width: '100vw',
             height: '100vh',
-            background: '#070b14',
+            background: '#05070c',
             zIndex: 999999,
             display: 'flex',
             flexDirection: 'column',
-            fontFamily: 'Inter, system-ui, sans-serif',
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             color: '#fff',
             userSelect: 'none'
         }}>
-            {/* Top Navigation Bar */}
+            {/* Pristine Minimalist Top Bar */}
             <div style={{
-                height: '52px',
-                background: 'rgba(10, 14, 26, 0.95)',
-                backdropFilter: 'blur(20px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+                height: '62px',
+                background: 'rgba(8, 10, 16, 0.94)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.10)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0 20px',
+                padding: '0 24px',
                 zIndex: 10
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <span style={{ fontSize: '20px' }}>🧠</span>
-                    <div>
-                        <div style={{ fontWeight: 900, fontSize: '15px', letterSpacing: '0.04em', color: '#fff' }}>
-                            Aesthetic Evolution Engine
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#8899ac' }}>
-                            Round {currentPair.round} • Testing: <span style={{ color: '#2FA1D6', fontWeight: 700 }}>{currentPair.dimensionLabel}</span>
-                        </div>
+                {/* Left: Engine & Round Info */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '180px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#8899ac', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        Aesthetic Ranking
+                    </span>
+                    <span style={{
+                        fontSize: '11px',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        color: '#fff',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontWeight: 700
+                    }}>
+                        Round {currentPair.round}
+                    </span>
+                </div>
+
+                {/* Center: BIG, PROMINENT, UNMISTAKABLE DIMENSION FOCUS */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.10)',
+                        border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                        padding: '4px 18px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 900,
+                        color: '#ffffff',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}>
+                        <span>🎯 RANKING:</span>
+                        <span style={{ color: '#00e5ff' }}>{currentPair.dimensionLabel}</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px', fontWeight: 500 }}>
+                        {currentPair.question}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* Right: Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '180px', justifyContent: 'flex-end' }}>
                     <button
                         onClick={() => setIsProfileModalOpen(true)}
                         style={{
-                            background: 'rgba(47, 161, 214, 0.18)',
-                            border: '1.5px solid #2FA1D6',
-                            color: '#2FA1D6',
-                            borderRadius: '8px',
-                            padding: '6px 14px',
-                            fontSize: '12px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
+                            background: 'rgba(255, 255, 255, 0.06)',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            color: '#e2e8f0',
+                            borderRadius: '6px',
+                            padding: '6px 12px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer'
                         }}
                     >
-                        📊 View Taste Profile ({tasteProfile.totalRounds} votes)
+                        📊 DNA Profile ({tasteProfile.totalRounds})
                     </button>
 
                     <button
                         onClick={handleApplyToSwarm}
                         style={{
-                            background: 'linear-gradient(135deg, #ff6820, #ff9f1c)',
+                            background: '#ffffff',
                             border: 'none',
-                            color: '#fff',
-                            borderRadius: '8px',
-                            padding: '6px 16px',
-                            fontSize: '12px',
-                            fontWeight: 900,
+                            color: '#000000',
+                            borderRadius: '6px',
+                            padding: '6px 14px',
+                            fontSize: '11px',
+                            fontWeight: 800,
                             cursor: 'pointer',
-                            boxShadow: '0 4px 15px rgba(255,104,32,0.4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
+                            boxShadow: '0 2px 10px rgba(255,255,255,0.2)'
                         }}
                     >
-                        ✨ Apply to Swarm
+                        ✨ Apply
                     </button>
 
                     <button
                         onClick={onClose}
                         style={{
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            color: '#fff',
-                            borderRadius: '8px',
-                            padding: '6px 12px',
-                            fontSize: '12px',
+                            background: 'transparent',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            color: '#8899ac',
+                            borderRadius: '6px',
+                            padding: '6px 10px',
+                            fontSize: '11px',
                             fontWeight: 700,
                             cursor: 'pointer'
                         }}
                     >
-                        ✕ Exit
+                        ✕
                     </button>
                 </div>
-            </div>
-
-            {/* Sub-Header Question Banner */}
-            <div style={{
-                background: 'rgba(15, 22, 38, 0.90)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                padding: '10px 20px',
-                textAlign: 'center',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#e2e8f0',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                    <span style={{
-                        background: currentPair.isReinforcementRound ? 'rgba(0, 245, 212, 0.15)' : 'rgba(47, 161, 214, 0.15)',
-                        color: currentPair.isReinforcementRound ? '#00f5d4' : '#2FA1D6',
-                        border: currentPair.isReinforcementRound ? '1px solid rgba(0, 245, 212, 0.4)' : '1px solid rgba(47, 161, 214, 0.4)',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        letterSpacing: '0.04em'
-                    }}>
-                        {currentPair.stageLabel}
-                    </span>
-                    <span style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        color: '#94a3b8',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: 700
-                    }}>
-                        📐 {currentPair.angleName}
-                    </span>
-                    <span style={{ color: '#fff', fontWeight: 700 }}>{currentPair.question}</span>
-                </div>
-                {currentPair.consistencyHint && (
-                    <div style={{ fontSize: '11px', color: '#00e5ff', fontWeight: 500 }}>
-                        {currentPair.consistencyHint}
-                    </div>
-                )}
             </div>
 
             {/* Dual Split-Screen Viewport Arena */}
@@ -339,71 +317,66 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                     style={{
                         flex: 1,
                         position: 'relative',
-                        borderRight: '2px solid rgba(255, 255, 255, 0.15)',
+                        borderRight: '1px solid rgba(255, 255, 255, 0.10)',
                         cursor: 'pointer',
-                        background: lastChoice === 'A' ? 'rgba(47, 161, 214, 0.15)' : 'transparent',
+                        background: lastChoice === 'A' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                         transition: 'background 0.2s ease'
                     }}
                 >
                     <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
-                        <color attach="background" args={['#070b14']} />
+                        <color attach="background" args={['#05070c']} />
                         <SyncCameraRig cameraSyncPos={cameraSyncPos} cameraSyncTarget={cameraSyncTarget} isMaster={true} />
                         <CandidateLighting state={stateA.current} />
                         <Flock count={candidateBoidsCount} state={stateA.current} setPopulation={() => {}} />
                     </Canvas>
 
-                    {/* Option A Badge & Description Card */}
+                    {/* Option A Clean Card */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '24px',
-                        left: '24px',
-                        right: '24px',
-                        background: 'rgba(10, 15, 28, 0.92)',
+                        bottom: '28px',
+                        left: '32px',
+                        right: '32px',
+                        background: 'rgba(10, 14, 22, 0.85)',
                         backdropFilter: 'blur(20px)',
-                        border: '1.5px solid rgba(47, 161, 214, 0.4)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
                         borderRadius: '12px',
                         padding: '14px 18px',
-                        boxShadow: '0 12px 35px rgba(0,0,0,0.8)',
+                        boxShadow: '0 16px 40px rgba(0,0,0,0.7)',
                         pointerEvents: 'none'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <span style={{
-                                background: '#2FA1D6',
-                                color: '#fff',
-                                fontWeight: 900,
-                                fontSize: '12px',
-                                padding: '3px 8px',
-                                borderRadius: '6px'
-                            }}>
-                                OPTION A (← or Key A)
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
+                                [A] {currentPair.candidateA.title}
                             </span>
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#2FA1D6' }}>
-                                {currentPair.candidateA.title}
+                            <span style={{ fontSize: '10px', color: '#8899ac', fontWeight: 700, letterSpacing: '0.04em' }}>
+                                CLICK OR PRESS [A / ←]
                             </span>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4' }}>
+                        <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
                             {currentPair.candidateA.description}
                         </div>
                     </div>
                 </div>
 
-                {/* Center Divider Line */}
+                {/* Clean Center Divider "VS" */}
                 <div style={{
                     position: 'absolute',
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: '38px',
-                    height: '38px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '50%',
-                    background: '#0f172a',
-                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    background: '#090d16',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     fontWeight: 900,
-                    color: '#ff6820',
+                    color: '#94a3b8',
+                    letterSpacing: '0.06em',
                     zIndex: 10,
                     boxShadow: '0 0 20px rgba(0,0,0,0.8)'
                 }}>
@@ -417,47 +390,41 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         flex: 1,
                         position: 'relative',
                         cursor: 'pointer',
-                        background: lastChoice === 'B' ? 'rgba(255, 104, 32, 0.15)' : 'transparent',
+                        background: lastChoice === 'B' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                         transition: 'background 0.2s ease'
                     }}
                 >
                     <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
-                        <color attach="background" args={['#070b14']} />
+                        <color attach="background" args={['#05070c']} />
                         <SyncCameraRig cameraSyncPos={cameraSyncPos} cameraSyncTarget={cameraSyncTarget} isMaster={false} />
                         <CandidateLighting state={stateB.current} />
                         <Flock count={candidateBoidsCount} state={stateB.current} setPopulation={() => {}} />
                     </Canvas>
 
-                    {/* Option B Badge & Description Card */}
+                    {/* Option B Clean Card */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '24px',
-                        left: '24px',
-                        right: '24px',
-                        background: 'rgba(10, 15, 28, 0.92)',
+                        bottom: '28px',
+                        left: '32px',
+                        right: '32px',
+                        background: 'rgba(10, 14, 22, 0.85)',
                         backdropFilter: 'blur(20px)',
-                        border: '1.5px solid rgba(255, 104, 32, 0.4)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
                         borderRadius: '12px',
                         padding: '14px 18px',
-                        boxShadow: '0 12px 35px rgba(0,0,0,0.8)',
+                        boxShadow: '0 16px 40px rgba(0,0,0,0.7)',
                         pointerEvents: 'none'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <span style={{
-                                background: '#ff6820',
-                                color: '#fff',
-                                fontWeight: 900,
-                                fontSize: '12px',
-                                padding: '3px 8px',
-                                borderRadius: '6px'
-                            }}>
-                                OPTION B (→ or Key B)
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
+                                [B] {currentPair.candidateB.title}
                             </span>
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#ff6820' }}>
-                                {currentPair.candidateB.title}
+                            <span style={{ fontSize: '10px', color: '#8899ac', fontWeight: 700, letterSpacing: '0.04em' }}>
+                                CLICK OR PRESS [B / →]
                             </span>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4' }}>
+                        <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
                             {currentPair.candidateB.description}
                         </div>
                     </div>
