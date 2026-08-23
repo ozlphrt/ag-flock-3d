@@ -801,8 +801,11 @@ function applyIntertwinedMultiLayer(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
-    // 2. Order-2 (Meso Helix): Species cord spiraling around macro spine
-    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.85 * speedMult);
+    // Dynamic wave pulsation along the tube cross-section
+    const wavePulse = 1.0 + 0.14 * fastSin(u * 12.0 * Math.PI - time * 2.2 * speedMult);
+
+    // 2. Order-2 (Meso Helix): Species cord spiraling & flowing around macro spine
+    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 1.2 * speedMult);
     const cosMeso = fastCos(mesoAngle);
     const sinMeso = fastSin(mesoAngle);
 
@@ -817,17 +820,17 @@ function applyIntertwinedMultiLayer(
 
     const isRung = (indexInSpecies % 12 === 0);
     const rungExt = isRung ? ((indexInSpecies % 36) / 36.0 - 0.5) * 1.4 : 0.0;
-    const mesoR = rMeso + rungExt;
+    const mesoR = (rMeso + rungExt) * wavePulse;
 
     // Meso Centerline Position
     const p2x = mx + n2x * mesoR;
     const p2y = my + n2y * mesoR;
     const p2z = mz + n2z * mesoR;
 
-    // 3. Order-3 (Micro Helix): Particles form tight golden-spiral micro-tubes orbiting the Meso strand
+    // 3. Order-3 (Micro Helix): Particles form tight golden-spiral micro-tubes orbiting the Meso strand with continuous corkscrew swirl
     const track = indexInSpecies % 16;
-    const trackR = Math.sqrt((track + 0.5) / 16.0) * rMicro;
-    const trackTheta = (track * 2.3999632) + (u * omegaMicro * Math.PI) + (time * 1.6 * speedMult);
+    const trackR = Math.sqrt((track + 0.5) / 16.0) * rMicro * wavePulse;
+    const trackTheta = (track * 2.3999632) + (u * omegaMicro * Math.PI) + (time * 2.4 * speedMult);
     const cosMicro = fastCos(trackTheta);
     const sinMicro = fastSin(trackTheta);
 
@@ -873,8 +876,11 @@ function applyRecursiveTripleHelix(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
+    // Dynamic wave pulse
+    const wavePulse = 1.0 + 0.14 * fastSin(u * 12.0 * Math.PI - time * 2.2 * speedMult);
+
     // 2. Order-2 (Meso Helix): 4 Species Cords spiraling around macro spine with 90° phase offsets
-    const thetaMeso = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.75 * speedMult);
+    const thetaMeso = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 1.1 * speedMult);
     const cosMeso = fastCos(thetaMeso);
     const sinMeso = fastSin(thetaMeso);
 
@@ -886,13 +892,13 @@ function applyRecursiveTripleHelix(
     const b2y = -ny * sinMeso + by * cosMeso;
     const b2z = -nz * sinMeso + bz * cosMeso;
 
-    const p2x = mx + n2x * rMeso;
-    const p2y = my + n2y * rMeso;
-    const p2z = mz + n2z * rMeso;
+    const p2x = mx + n2x * (rMeso * wavePulse);
+    const p2y = my + n2y * (rMeso * wavePulse);
+    const p2z = mz + n2z * (rMeso * wavePulse);
 
     // 3. Order-3 (Micro Helix): Inside each species cord, 3 sub-strands twist in high-frequency tertiary coils
     const subStrandId = indexInSpecies % 3;
-    const thetaMicro = u * omegaMicro * Math.PI + (subStrandId * (Math.PI * 2.0 / 3.0)) + (time * 0.6 * speedMult);
+    const thetaMicro = u * omegaMicro * Math.PI + (subStrandId * (Math.PI * 2.0 / 3.0)) + (time * 1.8 * speedMult);
     const cosMicro = fastCos(thetaMicro);
     const sinMicro = fastSin(thetaMicro);
 
@@ -904,14 +910,14 @@ function applyRecursiveTripleHelix(
     const b3y = -n2y * sinMicro + b2y * cosMicro;
     const b3z = -n2z * sinMicro + b2z * cosMicro;
 
-    const p3x = p2x + n3x * rMicro;
-    const p3y = p2y + n3y * rMicro;
-    const p3z = p2z + n3z * rMicro;
+    const p3x = p2x + n3x * (rMicro * wavePulse);
+    const p3y = p2y + n3y * (rMicro * wavePulse);
+    const p3z = p2z + n3z * (rMicro * wavePulse);
 
     // 4. Order-4 (Nano Streamlines): Golden-angle concentric boid swarm particles inside each tertiary strand
     const track = Math.floor(indexInSpecies / 3) % 8;
-    const trackR = Math.sqrt((track + 0.5) / 8.0) * rNano;
-    const trackTheta = (track * 2.3999632) + (u * omegaNano * Math.PI) + (time * 0.8 * speedMult);
+    const trackR = Math.sqrt((track + 0.5) / 8.0) * rNano * wavePulse;
+    const trackTheta = (track * 2.3999632) + (u * omegaNano * Math.PI) + (time * 2.8 * speedMult);
     const cosNano = fastCos(trackTheta);
     const sinNano = fastSin(trackTheta);
 
@@ -1812,8 +1818,10 @@ export class Boid {
         const total = this.totalInSpecies > 0 ? this.totalInSpecies : 100;
         const rawU = this.indexInSpecies / total;
 
-        // Density gradient remapping: concentrate particles near center or smooth distribution
-        const u = fastSin(rawU * Math.PI * 0.5);
+        // Dynamic longitudinal stream flow along 3D curves
+        const boidFlowOffset = 0.85 + (this.indexInSpecies % 17) * 0.02;
+        const flowSpeed = 0.055 * boidFlowOffset;
+        const dynamicU = ((rawU + time * flowSpeed * speedMult) % 1.0 + 1.0) % 1.0;
 
         // Smooth Ease-In and Ease-Out Quintic S-Curve morphing over 9.0 seconds
         const startTime = (state && state.transitionStartTime !== undefined) ? state.transitionStartTime : 0.0;
@@ -1825,7 +1833,7 @@ export class Boid {
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
         // Compute current target point
-        let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, this.species, this.indexInSpecies, sepWeight, speedMult, state);
+        let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, dynamicU, time, this.species, this.indexInSpecies, sepWeight, speedMult, state);
 
         // If this boid is a stray, orbit freely in a halo
         if (this.isStray && p > 0.8) {
@@ -1843,7 +1851,7 @@ export class Boid {
             const [txPrev, tyPrev, tzPrev] = computeFormationPoint(
                 state.prevFormationMode,
                 prevSeed,
-                u,
+                dynamicU,
                 time,
                 this.species,
                 this.indexInSpecies,

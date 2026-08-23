@@ -311,18 +311,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
                 ? state.attributes[sp].separationWeight
                 : 3.5;
 
-            const u = uArr[i];
+            // Dynamic longitudinal stream velocity along the 3D pipe curve
+            const boidFlowOffset = 0.85 + (spIdx % 17) * 0.02;
+            const flowSpeed = 0.055 * boidFlowOffset;
+            const dynamicU = ((uArr[i] + time * flowSpeed * speedMult) % 1.0 + 1.0) % 1.0;
 
-            computeFormationPoint(formation, seed, u, time, sp, spIdx, sepWeight, speedMult, state, curPt);
+            computeFormationPoint(formation, seed, dynamicU, time, sp, spIdx, sepWeight, speedMult, state, curPt);
             let tx = curPt[0], ty = curPt[1], tz = curPt[2];
-
-            // Zero-Math Volumetric Cross-Section Sheaf Lookup
-            const shX = sheathOffsetX[i] * volThickness;
-            const shY = sheathOffsetY[i] * volThickness;
-            const shZ = sheathOffsetZ[i] * volThickness;
-            tx += shX;
-            ty += shY;
-            tz += shZ;
 
             // Controlled loose aura particles
             if (hasStray && i % strayMod === 0) {
@@ -334,11 +329,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             }
 
             if (isMorphing && prevMode !== undefined) {
-                computeFormationPoint(prevMode, prevSeed, u, time, sp, spIdx, sepWeight, speedMult, state, prevPt);
-                prevPt[0] += shX;
-                prevPt[1] += shY;
-                prevPt[2] += shZ;
-
+                computeFormationPoint(prevMode, prevSeed, dynamicU, time, sp, spIdx, sepWeight, speedMult, state, prevPt);
                 tx = prevPt[0] + (tx - prevPt[0]) * sCurve;
                 ty = prevPt[1] + (ty - prevPt[1]) * sCurve;
                 tz = prevPt[2] + (tz - prevPt[2]) * sCurve;

@@ -132,10 +132,12 @@ self.onmessage = (e: MessageEvent) => {
                 ? state.attributes[sp].separationWeight
                 : 3.5;
 
-            const u = uArr[i];
+            const boidFlowOffset = 0.85 + (idxSp % 17) * 0.02;
+            const flowSpeed = 0.055 * boidFlowOffset;
+            const dynamicU = ((uArr[i] + time * flowSpeed * speedMult) % 1.0 + 1.0) % 1.0;
             const idxSp = indexInSpecies[i];
 
-            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, u, time, sp, idxSp, sepWeight, speedMult, state);
+            let [txCurr, tyCurr, tzCurr] = computeFormationPoint(formation, seed, dynamicU, time, sp, idxSp, sepWeight, speedMult, state);
 
             if (isStray[i] === 1 && p > 0.8) {
                 const strayAngle = time * strayOrbitSpeed[i] + noiseSeed[i];
@@ -147,7 +149,7 @@ self.onmessage = (e: MessageEvent) => {
             let tx = txCurr, ty = tyCurr, tz = tzCurr;
 
             if (isMorphing && prevMode !== undefined) {
-                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(prevMode, prevSeed, u, time, sp, idxSp, sepWeight, speedMult, state);
+                const [txPrev, tyPrev, tzPrev] = computeFormationPoint(prevMode, prevSeed, dynamicU, time, sp, idxSp, sepWeight, speedMult, state);
                 tx = txPrev + (txCurr - txPrev) * sCurve;
                 ty = tyPrev + (tyCurr - tyPrev) * sCurve;
                 tz = tzPrev + (tzCurr - tzPrev) * sCurve;
