@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
-import { SimulationState, FormationMode, ProceduralGenome } from './BoidLogic';
+import { SimulationState, FormationMode, ProceduralGenome, computeFormationPoint } from './BoidLogic';
 
 // GLSL Fragment Shader for Position FBO Ping-Pong Integration
 const positionShader = `
@@ -74,18 +74,30 @@ vec3 rotateZ(vec3 p, float a) {
     return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
 }
 
-// True Cascaded Hierarchical Reference Frame for Multi-Tier Child Helices, Spirals & DNA Braids on GPU
-vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, float nSeed, float speedMult, float radius, float angFreq, float vol, float settleDecay) {
-    vec3 tNorm = normalize(tangent);
+// 3-Tier Nested Spiral Tube Sheathing
+vec3 applyMultiLayerSheath(
+    vec3 m,
+    vec3 tanV,
+    float u,
+    float time,
+    float sp,
+    float nSeed,
+    float speedMult,
+    float radius,
+    float angFreq,
+    float vol,
+    float settleDecay
+) {
+    vec3 tNorm = normalize(tanV + vec3(1e-5));
     vec3 up = abs(tNorm.y) < 0.92 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
     vec3 normal = normalize(cross(tNorm, up));
     vec3 binormal = cross(tNorm, normal);
 
     // Dynamic wave pulsation along the tube cross-section
-    float wavePulse = 1.0 + 0.12 * sin(u * 12.0 * PI - time * 2.2 * speedMult);
+    float wavePulse = 1.0 + 0.12 * sin(u * 12.0 * PI - time * 1.5 * speedMult);
 
     // 1. Order-2 Meso cord (4 species cords spiraling around macro spine with 90° phase offsets)
-    float cordAngle = sp * (TWO_PI / 4.0) + (u * angFreq * PI) + time * 1.2 * speedMult;
+    float cordAngle = sp * (TWO_PI / 4.0) + (u * angFreq * PI) + time * 0.6 * speedMult;
     float cosMeso = cos(cordAngle);
     float sinMeso = sin(cordAngle);
 
@@ -97,9 +109,8 @@ vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, 
     vec3 p2 = m + n2 * (radius * wavePulse);
 
     // 2. Order-3 Micro Child Helices (Cascading high-frequency spirals orbiting around the Meso strand)
-    // 8 distinct crisp child helical strands inside each species cord
     float trackId = floor(fract(nSeed * 17.31) * 8.0);
-    float microAngle = trackId * (TWO_PI / 8.0) + (u * 28.0 * PI) + time * 2.4 * speedMult;
+    float microAngle = trackId * (TWO_PI / 8.0) + (u * 14.0 * PI) + time * 0.9 * speedMult;
     float cosMicro = cos(microAngle);
     float sinMicro = sin(microAngle);
 
@@ -112,13 +123,13 @@ vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, 
 
     // 3. Order-4 Nano Filaments (Tight DNA sub-twists inside each child helix)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
-    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 64.0 * PI) + time * 3.2 * speedMult;
+    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 28.0 * PI) + time * 1.2 * speedMult;
     float rNano = 0.28 * vol * wavePulse;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
 
     // 4. Subtle Stray Aura (~8% subtle floaters around the edges)
     float isStray = step(0.92, fract(nSeed * 89.23));
-    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.4;
+    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.3;
     float strayDist = 0.6 * vol * isStray * settleDecay;
     p4 += (n2 * cos(strayAngle) + b2 * sin(strayAngle)) * strayDist;
 
@@ -591,9 +602,9 @@ void main() {
     float u = fract(speciesAndU);
     float nSeed = velTex.w;
 
-    // Dynamic longitudinal stream flow along the 3D pipe curve for all 250k/500k GPU boids
-    float boidFlowOffset = 0.85 + mod(floor(nSeed * 1000.0), 17.0) * 0.02;
-    float flowSpeed = 0.055 * boidFlowOffset;
+    // Dynamic longitudinal stream flow along the 3D pipe curve (smooth, graceful speed matching 50k)
+    float boidFlowOffset = 0.90 + mod(floor(nSeed * 1000.0), 11.0) * 0.02;
+    float flowSpeed = 0.016 * boidFlowOffset;
     float dynamicU = fract(u + uTime * flowSpeed * uSpeedMult);
 
     // Time decay calculation: misaligned boids settle into a baseline organic aura (retaining ~30% permanent noise)
@@ -692,7 +703,7 @@ export interface GPGPUController {
     getCurrentVelocityTexture: () => THREE.Texture;
 }
 
-export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population: number): GPGPUController {
+export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population: number, state?: SimulationState): GPGPUController {
     // 250k: 512x512 = 262,144; 500k: 1024x512 = 524,288
     let sizeX = 512;
     let sizeY = 512;
@@ -713,24 +724,34 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     const posArray = dtPosition.image.data as Float32Array;
     const velArray = dtVelocity.image.data as Float32Array;
 
-    // Initialize initial spatial distribution with uniform 3D sphere & golden-ratio low discrepancy u
+    const initialMode = state?.formationMode ?? FormationMode.QuadHelixBraid;
+    const initialSeed = state?.formationSeed ?? 42.0;
+    const tempPt: [number, number, number] = [0, 0, 0];
+
+    // Initialize initial spatial distribution precisely on the target topology from frame 0
     for (let i = 0; i < count; i++) {
         const i4 = i * 4;
         const u = ((i * 137.50776405) % count) / count;
         const sp = i % 4;
 
-        const theta = Math.random() * Math.PI * 2.0;
-        const phi = Math.acos(Math.random() * 2.0 - 1.0);
-        const r = 2.5 + Math.random() * 3.5;
-
-        posArray[i4 + 0] = r * Math.sin(phi) * Math.cos(theta);
-        posArray[i4 + 1] = r * Math.cos(phi) * 0.75;
-        posArray[i4 + 2] = r * Math.sin(phi) * Math.sin(theta);
+        if (state) {
+            computeFormationPoint(initialMode, initialSeed, u, 0, sp, i, 3.5, 0.14, state, tempPt);
+            posArray[i4 + 0] = tempPt[0];
+            posArray[i4 + 1] = tempPt[1];
+            posArray[i4 + 2] = tempPt[2];
+        } else {
+            const theta = Math.random() * Math.PI * 2.0;
+            const phi = Math.acos(Math.random() * 2.0 - 1.0);
+            const r = 2.5 + Math.random() * 3.5;
+            posArray[i4 + 0] = r * Math.sin(phi) * Math.cos(theta);
+            posArray[i4 + 1] = r * Math.cos(phi) * 0.75;
+            posArray[i4 + 2] = r * Math.sin(phi) * Math.sin(theta);
+        }
         posArray[i4 + 3] = sp + u; // Encodes species in integer and u in decimal
 
-        velArray[i4 + 0] = (Math.random() - 0.5) * 0.05;
-        velArray[i4 + 1] = (Math.random() - 0.5) * 0.05;
-        velArray[i4 + 2] = (Math.random() - 0.5) * 0.05;
+        velArray[i4 + 0] = (Math.random() - 0.5) * 0.01;
+        velArray[i4 + 1] = (Math.random() - 0.5) * 0.01;
+        velArray[i4 + 2] = (Math.random() - 0.5) * 0.01;
         velArray[i4 + 3] = Math.random(); // Unique Noise Seed
     }
 
@@ -750,15 +771,15 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uStartTime = { value: 0.0 };
     velocityUniforms.uDelta = { value: 0.016 };
     velocityUniforms.uSpeedMult = { value: 0.14 };
-    velocityUniforms.uFormationMode = { value: FormationMode.QuadHelixBraid };
-    velocityUniforms.uPrevFormationMode = { value: FormationMode.QuadHelixBraid };
+    velocityUniforms.uFormationMode = { value: initialMode };
+    velocityUniforms.uPrevFormationMode = { value: initialMode };
     velocityUniforms.uMorphProgress = { value: 1.0 };
     velocityUniforms.uLerpRate = { value: 0.16 };
     velocityUniforms.uMaxSpeed = { value: 0.55 };
     velocityUniforms.uMaxAccel = { value: 0.12 };
     velocityUniforms.uVolThickness = { value: 0.95 }; // Defined, rich volumetric pipe thickness
     velocityUniforms.uNoiseDrift = { value: 0.006 }; // Subtle organic fluid turbulence
-    velocityUniforms.uSeed = { value: 42.0 };
+    velocityUniforms.uSeed = { value: initialSeed };
 
     // Procedural Uniforms
     velocityUniforms.uP_family = { value: 0 };

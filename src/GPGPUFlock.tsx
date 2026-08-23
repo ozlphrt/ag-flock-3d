@@ -71,12 +71,12 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const gpgpuRef = useRef<GPGPUController | null>(null);
 
     useEffect(() => {
-        const gpgpu = createGPGPUSimulation(gl, count);
+        const gpgpu = createGPGPUSimulation(gl, count, state);
         gpgpuRef.current = gpgpu;
         return () => {
             // Cleanup
         };
-    }, [gl, count]);
+    }, [gl, count, state]);
 
     const actualCapacity = count > 262144 ? 524288 : 262144;
     const sizeX = count > 262144 ? 1024 : 512;
