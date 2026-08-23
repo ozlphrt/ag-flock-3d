@@ -231,28 +231,38 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                     </span>
                 </div>
 
-                {/* Center: BIG, PROMINENT, UNMISTAKABLE DIMENSION FOCUS */}
+                {/* Center: CRISP, SHORT, UNMISTAKABLE PARAMETER FOCUS */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                    <div style={{
-                        background: 'rgba(255, 255, 255, 0.10)',
-                        border: '1.5px solid rgba(255, 255, 255, 0.25)',
-                        padding: '4px 18px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: 900,
-                        color: '#ffffff',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                    }}>
-                        <span>🎯 RANKING:</span>
-                        <span style={{ color: '#00e5ff' }}>{currentPair.dimensionLabel}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            color: '#94a3b8',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase'
+                        }}>
+                            VOTING ON:
+                        </span>
+                        <span style={{
+                            background: '#ffffff',
+                            color: '#090d16',
+                            padding: '3px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 900,
+                            letterSpacing: '0.04em'
+                        }}>
+                            {currentPair.dimension === 'lighting' ? '💡 LIGHTING' :
+                             currentPair.dimension === 'material' ? '✨ SURFACE MATERIAL' :
+                             currentPair.dimension === 'topology' ? '🧬 3D TOPOLOGY' :
+                             currentPair.dimension === 'helixDynamics' ? '⚡ FLOW SPEED' :
+                             currentPair.dimension === 'palette' ? '🎨 COLOR PALETTE' : '🌟 BLOOM GLOW'}
+                        </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px', fontWeight: 500 }}>
-                        {currentPair.question}
+                    <div style={{ fontSize: '11px', color: '#e2e8f0', marginTop: '3px', fontWeight: 600 }}>
+                        <span style={{ color: '#fff' }}>[A] {currentPair.candidateA.title}</span>
+                        <span style={{ color: '#64748b', margin: '0 8px' }}>vs</span>
+                        <span style={{ color: '#fff' }}>[B] {currentPair.candidateB.title}</span>
                     </div>
                 </div>
 
