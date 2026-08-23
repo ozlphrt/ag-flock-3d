@@ -106,13 +106,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uvs[i * 2 + 0] = x / sizeX;
             uvs[i * 2 + 1] = y / sizeY;
 
-            const q = i / actualCapacity;
-            let sp = 0;
-            if (q < t0) sp = 0;
-            else if (q < t1) sp = 1;
-            else if (q < t2) sp = 2;
-            else sp = 3;
-            species[i] = sp;
+            species[i] = (i + 0.5) / actualCapacity; // Continuous normalized particle ratio
 
             // Ultra-Sparse Giant Hierarchy:
             // - 97.0% sleek fine & mid boids (0.20x - 1.0x)
@@ -141,10 +135,10 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         }
 
         instGeom.setAttribute('aReferenceUV', new THREE.InstancedBufferAttribute(uvs, 2));
-        instGeom.setAttribute('aSpecies', new THREE.InstancedBufferAttribute(species, 1));
+        instGeom.setAttribute('aParticleRatio', new THREE.InstancedBufferAttribute(species, 1));
         instGeom.setAttribute('aSizeScale', new THREE.InstancedBufferAttribute(sizes, 1));
         return instGeom;
-    }, [actualCapacity, sizeX, sizeY, state.speciesDistribution]);
+    }, [actualCapacity, sizeX, sizeY]);
 
     // Species color state & morphing
     const initialPalette = state.speciesColors || COLOR_PALETTES[17];
@@ -175,6 +169,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const currentRoughness = useRef<[number, number, number, number]>([0.28, 0.15, 0.35, 0.22]);
     const currentMetalness = useRef<[number, number, number, number]>([0.85, 0.05, 0.05, 0.50]);
     const currentEmissive = useRef<[number, number, number, number]>([0.05, 2.40, 0.0, 0.60]);
+    const currentThresholds = useRef<THREE.Vector3>(new THREE.Vector3(0.55, 0.75, 0.90));
 
     // Custom Shader Uniforms
     const uniformsRef = useRef<{ [key: string]: THREE.IUniform }>({
@@ -188,7 +183,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         uMatRoughness: { value: new THREE.Vector4(0.28, 0.15, 0.35, 0.22) },
         uMatMetalness: { value: new THREE.Vector4(0.85, 0.05, 0.05, 0.50) },
         uMatEmissive: { value: new THREE.Vector4(0.05, 2.40, 0.0, 0.60) },
-        uSpeciesSizes: { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) }
+        uSpeciesSizes: { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) },
+        uDistThresholds: { value: currentThresholds.current }
     });
 
     // Custom Material onBeforeCompile
@@ -212,11 +208,12 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             shader.uniforms.uMatMetalness = uniformsRef.current.uMatMetalness;
             shader.uniforms.uMatEmissive = uniformsRef.current.uMatEmissive;
             shader.uniforms.uSpeciesSizes = uniformsRef.current.uSpeciesSizes;
+            shader.uniforms.uDistThresholds = uniformsRef.current.uDistThresholds;
 
             // Vertex Shader: inject reference UV & instance attributes
             shader.vertexShader = `
                 attribute vec2 aReferenceUV;
-                attribute float aSpecies;
+                attribute float aParticleRatio;
                 attribute float aSizeScale;
                 uniform sampler2D texturePosition;
                 uniform sampler2D textureVelocity;
@@ -229,6 +226,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 uniform vec4 uMatMetalness;
                 uniform vec4 uMatEmissive;
                 uniform vec4 uSpeciesSizes;
+                uniform vec3 uDistThresholds;
                 varying vec3 vInstanceColor;
                 varying float vSpeciesRoughness;
                 varying float vSpeciesMetalness;
@@ -242,22 +240,23 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 vec4 velTex = texture2D(textureVelocity, aReferenceUV);
                 vec3 instancePos = posTex.xyz;
 
+                float q = aParticleRatio;
                 float spScale = 1.0;
 
-                // Color & Material & Size assignment per species
-                if (aSpecies < 0.5) {
+                // Color & Material & Size continuous smooth evaluation per species
+                if (q < uDistThresholds.x) {
                     vInstanceColor = uColor0;
                     vSpeciesRoughness = uMatRoughness.x;
                     vSpeciesMetalness = uMatMetalness.x;
                     vSpeciesEmissive = uMatEmissive.x;
                     spScale = uSpeciesSizes.x;
-                } else if (aSpecies < 1.5) {
+                } else if (q < uDistThresholds.y) {
                     vInstanceColor = uColor1;
                     vSpeciesRoughness = uMatRoughness.y;
                     vSpeciesMetalness = uMatMetalness.y;
                     vSpeciesEmissive = uMatEmissive.y;
                     spScale = uSpeciesSizes.y;
-                } else if (aSpecies < 2.5) {
+                } else if (q < uDistThresholds.z) {
                     vInstanceColor = uColor2;
                     vSpeciesRoughness = uMatRoughness.z;
                     vSpeciesMetalness = uMatMetalness.z;
@@ -431,6 +430,19 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             spSizes[2],
             spSizes[3]
         );
+
+        // Smooth continuous population distribution threshold morphing
+        const dist = state.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+        const targetT0 = dist[0];
+        const targetT1 = dist[0] + dist[1];
+        const targetT2 = dist[0] + dist[1] + dist[2];
+        const distRate = Math.min(1.0, (delta || 0.016) * 1.8);
+
+        currentThresholds.current.x += (targetT0 - currentThresholds.current.x) * distRate;
+        currentThresholds.current.y += (targetT1 - currentThresholds.current.y) * distRate;
+        currentThresholds.current.z += (targetT2 - currentThresholds.current.z) * distRate;
+
+        uniformsRef.current.uDistThresholds.value.copy(currentThresholds.current);
 
         if (!state.isReady) {
             state.isReady = true;

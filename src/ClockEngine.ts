@@ -11,7 +11,9 @@ import {
     generateProceduralMaterialSurprise,
     generateProceduralLightingSurprise,
     generateProceduralShapeSurprise,
-    generateSpeciesMaterials
+    generateSpeciesMaterials,
+    generateSpeciesDistribution,
+    generateSpeciesSizes
 } from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
@@ -35,6 +37,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     let lastLightingTime = -55.0;
     let lightingInterval = 82.0;
+
+    let lastSpeciesDistTime = -30.0;
+    let speciesDistInterval = 44.0;
 
     let lastCameraPresetTime = -15.0;
     let cameraPresetInterval = 26.0;
@@ -336,6 +341,14 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
             state.lightingProfileIndex = nextLightIdx;
             state.lightingProfile = LIGHTING_PROFILES[nextLightIdx] || LIGHTING_PROFILES[0];
+        }
+
+        // 5. INDEPENDENT SPECIES POPULATION DISTRIBUTION CLOCK (Every 38-52s)
+        if (!state.isSpeciesLocked && (time - lastSpeciesDistTime) >= speciesDistInterval) {
+            lastSpeciesDistTime = time;
+            speciesDistInterval = rndJitter(44.0, 0.2);
+            state.speciesDistribution = generateSpeciesDistribution();
+            state.speciesSizes = generateSpeciesSizes();
         }
 
         // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 22-30s in Auto Mode)

@@ -877,107 +877,136 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         </div>
 
-        {/* Top-Left Specimen Population Telemetry Badge */}
+        {/* Top-Left Specimen Population Pie Chart Badge (%s only) */}
         {(() => {
-            const dist = simState.current?.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
-            const sizes = simState.current?.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+            const rawDist = simState.current?.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
             const colors = simState.current?.speciesColors || SPECIES_COLORS;
-            const totalPop = population || 500000;
+
+            const d0 = Math.max(0.01, rawDist[0] || 0.25);
+            const d1 = Math.max(0.01, rawDist[1] || 0.25);
+            const d2 = Math.max(0.01, rawDist[2] || 0.25);
+            const d3 = Math.max(0.01, rawDist[3] || 0.25);
+            const total = d0 + d1 + d2 + d3;
+
+            const p0 = d0 / total;
+            const p1 = d1 / total;
+            const p2 = d2 / total;
+            const p3 = d3 / total;
+
+            const deg0 = p0 * 360;
+            const deg1 = deg0 + p1 * 360;
+            const deg2 = deg1 + p2 * 360;
+
+            const pct0 = Math.round(p0 * 100);
+            const pct1 = Math.round(p1 * 100);
+            const pct2 = Math.round(p2 * 100);
+            const pct3 = Math.max(0, 100 - (pct0 + pct1 + pct2));
+
+            const conicGradient = `conic-gradient(
+                ${colors[0]} 0deg ${deg0}deg,
+                ${colors[1]} ${deg0}deg ${deg1}deg,
+                ${colors[2]} ${deg1}deg ${deg2}deg,
+                ${colors[3]} ${deg2}deg 360deg
+            )`;
 
             return (
                 <div
-                    className="top-left-specimen-telemetry"
+                    className="top-left-specimen-pie"
                     style={{
                         position: 'fixed',
                         top: '18px',
                         left: '18px',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                        padding: '10px 14px',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px 12px',
                         background: 'rgba(10, 14, 24, 0.85)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
                         border: '1.5px solid rgba(255, 255, 255, 0.14)',
-                        borderRadius: '14px',
-                        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.08)',
+                        borderRadius: '16px',
+                        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.55), 0 0 16px rgba(0, 255, 204, 0.06)',
                         zIndex: 1000,
                         userSelect: 'none',
-                        pointerEvents: 'auto',
-                        minWidth: '185px'
+                        pointerEvents: 'auto'
                     }}
                 >
-                    {/* Header: Total Population */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '5px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00ffcc', boxShadow: '0 0 8px #00ffcc', display: 'inline-block' }} />
-                            <span style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
-                                Population
-                            </span>
-                        </div>
-                        <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 900, color: '#f8fafc', letterSpacing: '0.02em' }}>
-                            {totalPop.toLocaleString()}
-                        </span>
+                    {/* Glowing Circular Pie / Donut Chart */}
+                    <div
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            background: conicGradient,
+                            position: 'relative',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 0 14px rgba(0, 0, 0, 0.7), inset 0 0 6px rgba(0,0,0,0.5)',
+                            flexShrink: 0,
+                            transition: 'background 0.4s ease'
+                        }}
+                    >
+                        {/* Donut Inner Core */}
+                        <div
+                            style={{
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                background: 'rgba(10, 14, 24, 0.95)',
+                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                boxShadow: 'inset 0 0 4px rgba(0,0,0,0.8)'
+                            }}
+                        />
                     </div>
 
-                    {/* Specimen Breakdown Rows */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {[0, 1, 2, 3].map(sp => {
-                            const ratio = dist[sp] ?? 0.25;
-                            const count = Math.round(totalPop * ratio);
-                            const pct = Math.round(ratio * 100);
-                            const color = colors[sp] || '#fff';
-                            const sz = (sizes[sp] ?? 1.0).toFixed(2);
-
-                            return (
-                                <div
-                                    key={`specimen-telemetry-${sp}`}
+                    {/* Specimen Percentages (%s only) */}
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, auto)',
+                            gap: '4px 10px',
+                            alignItems: 'center'
+                        }}
+                    >
+                        {[
+                            { pct: pct0, color: colors[0] || '#fff' },
+                            { pct: pct1, color: colors[1] || '#fff' },
+                            { pct: pct2, color: colors[2] || '#fff' },
+                            { pct: pct3, color: colors[3] || '#fff' }
+                        ].map((sp, idx) => (
+                            <div
+                                key={`sp-pct-${idx}`}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
+                                }}
+                            >
+                                <span
                                     style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        gap: '10px',
-                                        padding: '2px 0'
+                                        width: '7px',
+                                        height: '7px',
+                                        borderRadius: '50%',
+                                        background: sp.color,
+                                        boxShadow: `0 0 6px ${sp.color}`,
+                                        flexShrink: 0
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontFamily: 'monospace',
+                                        fontSize: '12px',
+                                        fontWeight: 800,
+                                        color: '#f8fafc',
+                                        letterSpacing: '-0.2px',
+                                        minWidth: '28px'
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div
-                                            style={{
-                                                width: '8px',
-                                                height: '8px',
-                                                borderRadius: '50%',
-                                                background: color,
-                                                boxShadow: `0 0 8px ${color}`,
-                                                flexShrink: 0
-                                            }}
-                                        />
-                                        <span style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600 }}>
-                                            Specimen {sp + 1}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontFamily: 'monospace', fontSize: '11px', fontWeight: 700, color: '#f1f5f9' }}>
-                                            {count.toLocaleString()}
-                                        </span>
-                                        <span
-                                            style={{
-                                                fontSize: '9px',
-                                                fontWeight: 800,
-                                                color: color,
-                                                background: `${color}1a`,
-                                                padding: '1px 4px',
-                                                borderRadius: '4px',
-                                                border: `1px solid ${color}33`,
-                                                minWidth: '26px',
-                                                textAlign: 'center'
-                                            }}
-                                        >
-                                            {pct}%
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                    {sp.pct}%
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );

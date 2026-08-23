@@ -670,6 +670,7 @@ export interface SimulationState {
     isMaterialLocked?: boolean;
     isLightingLocked?: boolean;
     isShapeLocked?: boolean;
+    isSpeciesLocked?: boolean;
     paletteTransitionDuration?: number;
     cameraPresetIndex?: number;
     morphProgress?: number;
