@@ -89,7 +89,6 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const controlsRef = useRef<any>(null);
     const cameraRef = useRef<THREE.PerspectiveCamera>(null!);
     const lastPresetIdx = useRef<number>(-1);
-    const flightTime = useRef(0);
     const lastInteractionTime = useRef(0);
     const isUserDragging = useRef(false);
     const userHasOverridden = useRef(false);
@@ -97,17 +96,21 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
     // Seamless Transition Anchors (Quintic C2-Continuous Morphing)
     const transitionStartTime = useRef(0);
-    const transitionDuration = 4.5; // 4.5s silky-smooth cinematic camera glide
+    const transitionDuration = 3.5;
     const startCamPos = useRef(new THREE.Vector3(0, 3.5, 14.0));
     const startLookTarget = useRef(new THREE.Vector3(0, 0, 0));
     const startFov = useRef(52);
     const curLookTarget = useRef(new THREE.Vector3(0, 0, 0));
     const smoothTargetDist = useRef(14.0);
+    const orbitBaseAngle = useRef(0);
 
     const handleUserInteraction = () => {
         lastInteractionTime.current = performance.now();
         userHasOverridden.current = true;
         transitionStartTime.current = -100;
+        if (controlsRef.current) {
+            controlsRef.current.enabled = true;
+        }
     };
 
     useFrame((stateContext, delta) => {
@@ -119,13 +122,11 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const preset = CAMERA_PRESETS[presetIdx];
         const safeDelta = Math.min(delta, 0.05);
 
-        // 1. Dynamic Viewport-Adaptive Framing Distance (fills ~75-80% of screen)
         const perspCam = camera as THREE.PerspectiveCamera;
         const vFovRad = (preset.fov) * (Math.PI / 180);
         const rBound = (state && state.formationRadius) ? Math.max(4.5, state.formationRadius) : 7.0;
         const baseFramingDist = (rBound / Math.sin(Math.max(0.12, vFovRad * 0.5))) * 0.44;
 
-        // Guaranteed Minimum Safe Standoff Distance (keeps camera close while clear of boid vertices)
         const minSafeStandoff = rBound + 1.6;
         let presetDistMult = 1.0;
         if (preset.id === 'giant') presetDistMult = 0.85;
@@ -134,7 +135,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const targetDistance = Math.max(minSafeStandoff, baseFramingDist * presetDistMult);
         smoothTargetDist.current = THREE.MathUtils.damp(smoothTargetDist.current, targetDistance, 2.5, safeDelta);
 
-        // 2. Trigger Smooth Transition on Preset Switch
+        // 1. Detect Preset Switch
         if (lastPresetIdx.current !== presetIdx) {
             userHasOverridden.current = false;
             if (lastPresetIdx.current === -1) {
@@ -146,33 +147,40 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 startFov.current = perspCam.fov;
             }
             lastPresetIdx.current = presetIdx;
+            orbitBaseAngle.current = Math.atan2(camera.position.x, camera.position.z);
         }
 
-        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 3500 || isUserDragging.current;
+        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 3000 || isUserDragging.current;
 
-        // If user is actively dragging right now, OrbitControls controls camera
+        // 2. User Interactive Mode (OrbitControls active)
         if (isUserDragging.current || (userHasOverridden.current && isUserInteracting)) {
             if (controlsRef.current) {
-                controlsRef.current.autoRotate = false;
+                controlsRef.current.enabled = true;
                 curLookTarget.current.copy(controlsRef.current.target);
             }
             return;
         }
 
-        // If user stopped dragging and idle time elapsed, restore autonomous preset trajectory
+        // 3. Re-enter Autonomous Mode when user interaction expires
         if (userHasOverridden.current && !isUserInteracting && state.autoMode !== false) {
             userHasOverridden.current = false;
             transitionStartTime.current = time;
             startCamPos.current.copy(camera.position);
             startLookTarget.current.copy(curLookTarget.current);
             startFov.current = perspCam.fov;
+            orbitBaseAngle.current = Math.atan2(camera.position.x, camera.position.z) - (time * preset.autoRotateSpeed * 0.35);
+        }
+
+        // Disable OrbitControls during autonomous camera rendering
+        if (controlsRef.current && controlsRef.current.enabled) {
+            controlsRef.current.enabled = false;
         }
 
         const elapsed = Math.max(0.0, time - transitionStartTime.current);
         const p = Math.min(1.0, elapsed / transitionDuration);
         const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
 
-        // 3. Compute Ideal Preset Trajectory along Safe Outer Perimeter
+        // 4. Compute Analytic Trajectory
         _camIdealTarget.set(preset.target[0], preset.target[1], preset.target[2]);
         const rPerimeter = Math.max(minSafeStandoff, rBound + 1.8);
 
@@ -194,15 +202,18 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             );
             _camIdealTarget.set(0, Math.sin(t * 0.6) * 0.5, 0);
         } else {
-            // Orbit Presets
-            _camDir.set(preset.defaultPos[0], preset.defaultPos[1], preset.defaultPos[2]).normalize();
-            _camIdealPos.copy(_camIdealTarget).addScaledVector(_camDir, smoothTargetDist.current);
-            if (preset.id === 'giant') {
-                _camIdealPos.y = -(rBound * 0.75 + 1.2);
-            }
+            // Pure Analytic Orbit
+            const orbitAngle = orbitBaseAngle.current + time * (preset.autoRotateSpeed * 0.35);
+            const rOrbit = smoothTargetDist.current;
+            const yOrbit = preset.id === 'giant' ? -(rBound * 0.75 + 1.2) : preset.defaultPos[1];
+            _camIdealPos.set(
+                Math.sin(orbitAngle) * rOrbit,
+                yOrbit,
+                Math.cos(orbitAngle) * rOrbit
+            );
         }
 
-        // 4. Smoothly Blend Position, LookTarget, and FOV
+        // 5. Apply Camera Transforms
         if (p < 1.0) {
             camera.position.lerpVectors(startCamPos.current, _camIdealPos, sCurve);
             curLookTarget.current.lerpVectors(startLookTarget.current, _camIdealTarget, sCurve);
@@ -212,35 +223,17 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 perspCam.fov = nextFov;
                 perspCam.updateProjectionMatrix();
             }
-
-            if (controlsRef.current) {
-                controlsRef.current.autoRotate = false;
-                controlsRef.current.target.copy(curLookTarget.current);
-            }
         } else {
-            const targetFov = preset.fov;
-            if (Math.abs(perspCam.fov - targetFov) > 0.05) {
-                perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, targetFov, 0.05);
+            camera.position.copy(_camIdealPos);
+            curLookTarget.current.copy(_camIdealTarget);
+
+            if (Math.abs(perspCam.fov - preset.fov) > 0.05) {
+                perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, preset.fov, 0.05);
                 perspCam.updateProjectionMatrix();
             }
-
-            if (preset.type === 'flythrough' || preset.type === 'corkscrew') {
-                camera.position.copy(_camIdealPos);
-                curLookTarget.current.copy(_camIdealTarget);
-
-                if (controlsRef.current) {
-                    controlsRef.current.autoRotate = false;
-                    controlsRef.current.target.copy(curLookTarget.current);
-                }
-            } else {
-                // Orbit mode: let OrbitControls handle autoRotate smoothly
-                if (controlsRef.current) {
-                    controlsRef.current.autoRotate = !isUserInteracting;
-                    controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
-                    curLookTarget.current.copy(controlsRef.current.target);
-                }
-            }
         }
+
+        camera.lookAt(curLookTarget.current);
     });
 
     return (
