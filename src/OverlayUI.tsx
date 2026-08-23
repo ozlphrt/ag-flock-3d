@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, FORMATION_PRESETS, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic';
+import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, FORMATION_PRESETS, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials } from './BoidLogic';
 import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences, getCentralRLStore, exportCentralRLJSON, importCentralRLJSON, resetCentralRLStore, likeCompositionCombination, dislikeCompositionCombination } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
 import { BLOOM_PRESETS, BloomPreset } from './BloomControlPanel';
@@ -42,6 +42,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [hoveredDockBtn, setHoveredDockBtn] = useState<{ id: string; title: string; desc: string; color: string } | null>(null);
     const [hoveredTip, setHoveredTip] = useState<{ title: string; desc: string; top: number } | null>(null);
     const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
+        species: false,
         swarm: true,
         lighting: false,
         material: false,
@@ -2573,7 +2574,135 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             {isAllDimensionsLocked ? '🔒 CYCLE PAUSED (CLICK TO RESUME)' : '🔓 PAUSE EVOLUTION (LOCK ALL)'}
                         </div>
 
-                        {/* Folder 1: Swarm & Dynamics */}
+                        {/* Folder 0: Species Hierarchy, Population & Sizes */}
+                        <div>
+                            <div
+                                onClick={() => toggleFolder('species')}
+                                style={{
+                                    height: '26px',
+                                    background: '#000',
+                                    borderBottom: '1px solid #222',
+                                    borderTop: '1px solid #111',
+                                    padding: '0 8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    cursor: 'pointer',
+                                    color: '#eee',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    borderLeft: '3px solid #2FA1D6'
+                                }}
+                            >
+                                <span>{openFolders.species ? '▼' : '▶'} Species Population (10%-90%) & Base Sizes</span>
+                            </div>
+                            {openFolders.species && (
+                                <div>
+                                    {(() => {
+                                        const dist = s.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+                                        const sizes = s.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+                                        const colors = s.speciesColors || SPECIES_COLORS;
+                                        return (
+                                            <>
+                                                {[0, 1, 2, 3].map(sp => {
+                                                    const pct = Math.round((dist[sp] || 0.25) * 100);
+                                                    const sz = sizes[sp] ?? 1.0;
+                                                    return (
+                                                        <div key={`sp-row-${sp}`} style={{ padding: '6px 8px', borderBottom: '1px solid #1a1a24', background: '#0a0d18' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: colors[sp] || '#fff', boxShadow: `0 0 6px ${colors[sp] || '#fff'}` }} />
+                                                                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#93c5fd' }}>Species {sp + 1}</span>
+                                                                </div>
+                                                                <span style={{ fontSize: '11px', color: '#eee', fontWeight: 'bold' }}>{pct}% pop | {sz.toFixed(2)}x size</span>
+                                                            </div>
+                                                            {/* Population Slider */}
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                                                <span style={{ fontSize: '10px', color: '#888' }}>Population Ratio</span>
+                                                                <input
+                                                                    type="range"
+                                                                    min="0.05"
+                                                                    max="0.90"
+                                                                    step="0.01"
+                                                                    value={dist[sp] || 0.25}
+                                                                    onChange={(e) => {
+                                                                        const val = parseFloat(e.target.value);
+                                                                        const newDist: [number, number, number, number] = [...dist];
+                                                                        newDist[sp] = val;
+                                                                        const sum = newDist.reduce((a, b) => a + b, 0);
+                                                                        s.speciesDistribution = [newDist[0] / sum, newDist[1] / sum, newDist[2] / sum, newDist[3] / sum];
+                                                                    }}
+                                                                    style={{ width: '130px', accentColor: colors[sp] || '#2FA1D6' }}
+                                                                />
+                                                            </div>
+                                                            {/* Average Size Scale Slider */}
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                                <span style={{ fontSize: '10px', color: '#888' }}>Average Boid Size</span>
+                                                                <input
+                                                                    type="range"
+                                                                    min="0.15"
+                                                                    max="3.00"
+                                                                    step="0.05"
+                                                                    value={sizes[sp] ?? 1.0}
+                                                                    onChange={(e) => {
+                                                                        const val = parseFloat(e.target.value);
+                                                                        const newSizes: [number, number, number, number] = [...sizes];
+                                                                        newSizes[sp] = val;
+                                                                        s.speciesSizes = newSizes;
+                                                                    }}
+                                                                    style={{ width: '130px', accentColor: colors[sp] || '#2FA1D6' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                                <div style={{ display: 'flex', gap: '4px', padding: '6px 8px' }}>
+                                                    <button
+                                                        onClick={() => {
+                                                            s.speciesDistribution = generateSpeciesDistribution();
+                                                        }}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '5px 4px',
+                                                            background: '#152035',
+                                                            border: '1px solid #2a3b60',
+                                                            borderRadius: '4px',
+                                                            color: '#60a5fa',
+                                                            fontSize: '10px',
+                                                            fontWeight: 'bold',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        🎲 Randomize Ratios (10%-90%)
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            const tiers = [1.35, 0.90, 0.58, 0.36].sort(() => Math.random() - 0.5);
+                                                            s.speciesSizes = [tiers[0], tiers[1], tiers[2], tiers[3]];
+                                                        }}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '5px 4px',
+                                                            background: '#152035',
+                                                            border: '1px solid #2a3b60',
+                                                            borderRadius: '4px',
+                                                            color: '#60a5fa',
+                                                            fontSize: '10px',
+                                                            fontWeight: 'bold',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        📏 Randomize Sizes
+                                                    </button>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Folder 1: Swarm Dynamics */}
                         <div>
                             <div
                                 onClick={() => toggleFolder('swarm')}
@@ -2654,7 +2783,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             )}
                         </div>
 
-                        {/* Folder 3: Material Optics */}
+                        {/* Folder 3: Material Optics & Per-Species Bloom */}
                         <div>
                             <div
                                 onClick={() => toggleFolder('material')}
@@ -2674,22 +2803,66 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                     borderLeft: '3px solid #2FA1D6'
                                 }}
                             >
-                                <span>{openFolders.material ? '▼' : '▶'} Material Optics (PBR)</span>
+                                <span>{openFolders.material ? '▼' : '▶'} Species Materials & Optical Bloom</span>
                             </div>
                             {openFolders.material && (
                                 <div>
-                                    {renderDatRow('Roughness', s.materialSettings?.roughness ?? 0.32, 0.00, 1.00, 0.01, v => {
-                                        if (!s.materialSettings) s.materialSettings = { ...MATERIAL_PRESETS[0].settings };
-                                        s.materialSettings.roughness = v;
-                                    }, 'Microfacet surface roughness (0.00 = mirror gloss, 1.00 = diffuse matte)')}
-                                    {renderDatRow('Metalness', s.materialSettings?.metalness ?? 0.05, 0.00, 1.00, 0.01, v => {
-                                        if (!s.materialSettings) s.materialSettings = { ...MATERIAL_PRESETS[0].settings };
-                                        s.materialSettings.metalness = v;
-                                    }, 'Surface reflectivity model (0.00 = dielectric fresnel, 1.00 = conductive metal)')}
-                                    {renderDatRow('Emissive', s.materialSettings?.emissiveIntensity ?? 0.0, 0.00, 2.00, 0.05, v => {
-                                        if (!s.materialSettings) s.materialSettings = { ...MATERIAL_PRESETS[0].settings };
-                                        s.materialSettings.emissiveIntensity = v;
-                                    }, 'Self-radiant emissive surface brightness emitted directly by boid facets')}
+                                    {(() => {
+                                        const spMats = s.speciesMaterials || [
+                                            s.materialSettings || MATERIAL_PRESETS[0].settings,
+                                            s.materialSettings || MATERIAL_PRESETS[0].settings,
+                                            s.materialSettings || MATERIAL_PRESETS[0].settings,
+                                            s.materialSettings || MATERIAL_PRESETS[0].settings
+                                        ];
+                                        const colors = s.speciesColors || SPECIES_COLORS;
+                                        return (
+                                            <>
+                                                {[0, 1, 2, 3].map(sp => {
+                                                    const mat = spMats[sp] || s.materialSettings || MATERIAL_PRESETS[0].settings;
+                                                    return (
+                                                        <div key={`sp-mat-${sp}`} style={{ padding: '4px 6px', borderBottom: '1px solid #1a1a24', background: '#0a0d18' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors[sp] || '#fff' }} />
+                                                                <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#93c5fd' }}>Species {sp + 1} Optics</span>
+                                                            </div>
+                                                            {renderDatRow(`Roughness (S${sp+1})`, mat.roughness ?? 0.28, 0.00, 1.00, 0.01, v => {
+                                                                if (!s.speciesMaterials) s.speciesMaterials = generateSpeciesMaterials();
+                                                                s.speciesMaterials[sp].roughness = v;
+                                                            })}
+                                                            {renderDatRow(`Metalness (S${sp+1})`, mat.metalness ?? 0.05, 0.00, 1.00, 0.01, v => {
+                                                                if (!s.speciesMaterials) s.speciesMaterials = generateSpeciesMaterials();
+                                                                s.speciesMaterials[sp].metalness = v;
+                                                            })}
+                                                            {renderDatRow(`Bloom Emissive (S${sp+1})`, mat.emissiveIntensity ?? 0.0, 0.00, 3.50, 0.05, v => {
+                                                                if (!s.speciesMaterials) s.speciesMaterials = generateSpeciesMaterials();
+                                                                s.speciesMaterials[sp].emissiveIntensity = v;
+                                                            })}
+                                                        </div>
+                                                    );
+                                                })}
+                                                <div style={{ padding: '6px 8px' }}>
+                                                    <button
+                                                        onClick={() => {
+                                                            s.speciesMaterials = generateSpeciesMaterials();
+                                                        }}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '4px 8px',
+                                                            background: '#1e1b4b',
+                                                            border: '1px solid #4338ca',
+                                                            borderRadius: '4px',
+                                                            color: '#a5b4fc',
+                                                            fontSize: '10px',
+                                                            fontWeight: 'bold',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        ✨ Randomize Diverse Species Materials
+                                                    </button>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             )}
                         </div>

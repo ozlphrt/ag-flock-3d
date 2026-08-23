@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
 import { GPGPUFlock } from './GPGPUFlock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig, CAMERA_PRESETS } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
@@ -447,6 +447,9 @@ function App() {
     const initialLightIdx = Math.floor(Math.random() * LIGHTING_PROFILES.length);
 
     const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
+    const initialSpeciesDistribution = generateSpeciesDistribution();
+    const initialSpeciesMaterials = generateSpeciesMaterials(initialMatIdx);
+    const initialSpeciesSizes = generateSpeciesSizes();
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -460,6 +463,9 @@ function App() {
         proceduralGenome: initialMode === FormationMode.Procedural ? generateProceduralGenome() : undefined,
         paletteIndex: initialPaletteIdx,
         speciesColors: [...COLOR_PALETTES[initialPaletteIdx]],
+        speciesDistribution: initialSpeciesDistribution,
+        speciesMaterials: initialSpeciesMaterials,
+        speciesSizes: initialSpeciesSizes,
         materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
         materialPreset: initialMatIdx,
         boidShape: initialShape,

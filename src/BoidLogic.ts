@@ -528,8 +528,101 @@ export const MATERIAL_PRESETS = [
         icon: '✨',
         desc: 'Deep metallic foil with sparkling facet glimmers that catch dynamic rim & key beams',
         settings: { roughness: 0.22, metalness: 0.48, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
+    },
+    {
+        id: 10,
+        label: 'Bioluminescent Optical Plasma',
+        icon: '🔥',
+        desc: 'High-energy radiant core bursting with intense optical bloom and chromatic corona',
+        settings: { roughness: 0.15, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 2.40 }
+    },
+    {
+        id: 11,
+        label: 'Gleaming Mirror Chrome',
+        icon: '🪞',
+        desc: 'Ultra-polished liquid mirror metal reflecting environmental key and rim lights',
+        settings: { roughness: 0.06, metalness: 0.95, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
+    },
+    {
+        id: 12,
+        label: 'Radiant Supernova Glow',
+        icon: '🌟',
+        desc: 'Blinding luminous star matter emitting massive optical bloom aura',
+        settings: { roughness: 0.18, metalness: 0.10, wireframe: false, flatShading: false, emissiveIntensity: 3.20 }
+    },
+    {
+        id: 13,
+        label: 'Prismatic Diamond Glint',
+        icon: '❇️',
+        desc: 'Sharp crystalline facets with glowing laser glimmers and specular spikes',
+        settings: { roughness: 0.18, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.85 }
     }
 ];
+
+// Helper to generate dynamic asymmetric species population distributions (10% to 90%)
+export function generateSpeciesDistribution(): [number, number, number, number] {
+    const r = Math.random();
+    let raw = [0.25, 0.25, 0.25, 0.25];
+    if (r < 0.45) {
+        // Dominant species (55-85%) with 3 minority species (5-20% each)
+        const domIdx = Math.floor(Math.random() * 4);
+        const domPct = 0.55 + Math.random() * 0.30;
+        const rem = 1.0 - domPct;
+        const weights = [Math.random() + 0.1, Math.random() + 0.1, Math.random() + 0.1];
+        const sumW = weights[0] + weights[1] + weights[2];
+        let wIdx = 0;
+        for (let i = 0; i < 4; i++) {
+            if (i === domIdx) raw[i] = domPct;
+            else raw[i] = (weights[wIdx++] / sumW) * rem;
+        }
+    } else if (r < 0.80) {
+        // Asymmetric tiered distribution: e.g. 50%, 25%, 15%, 10%
+        const base = [0.48, 0.26, 0.16, 0.10].sort(() => Math.random() - 0.5);
+        raw = base.map(v => Math.max(0.04, v + (Math.random() - 0.5) * 0.06));
+    } else {
+        // Extreme host swarm (85-90%) with rare sentinel floaters (3-5% each)
+        const domIdx = Math.floor(Math.random() * 4);
+        for (let i = 0; i < 4; i++) {
+            raw[i] = i === domIdx ? 0.88 : 0.04;
+        }
+    }
+    const sum = raw.reduce((a, b) => a + b, 0);
+    return [raw[0] / sum, raw[1] / sum, raw[2] / sum, raw[3] / sum];
+}
+
+// Helper to generate distinct per-species materials and optical bloom levels
+export function generateSpeciesMaterials(basePresetIdx: number = 0): [MaterialSettings, MaterialSettings, MaterialSettings, MaterialSettings] {
+    const pool = [...MATERIAL_PRESETS];
+    const bloomingPresets = pool.filter(p => (p.settings.emissiveIntensity ?? 0) >= 1.5);
+    const metallicPresets = pool.filter(p => p.settings.metalness >= 0.4 && (p.settings.emissiveIntensity ?? 0) < 1.0);
+    const organicPresets = pool.filter(p => p.settings.metalness < 0.2 && (p.settings.emissiveIntensity ?? 0) < 0.1);
+    const facetedPresets = pool.filter(p => p.settings.flatShading);
+
+    const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[11]).settings;
+    const mat1 = (bloomingPresets[Math.floor(Math.random() * bloomingPresets.length)] || pool[10]).settings;
+    const mat2 = (organicPresets[Math.floor(Math.random() * organicPresets.length)] || pool[0]).settings;
+    const mat3 = (facetedPresets[Math.floor(Math.random() * facetedPresets.length)] || pool[8]).settings;
+
+    const mats = [mat0, mat1, mat2, mat3].sort(() => Math.random() - 0.5);
+    return [
+        { ...mats[0] },
+        { ...mats[1] },
+        { ...mats[2] },
+        { ...mats[3] }
+    ];
+}
+
+// Helper to generate distinct per-species average scale multipliers
+export function generateSpeciesSizes(): [number, number, number, number] {
+    // Distinct hierarchy across species: e.g. Alpha Titans (1.4x), Standard (0.9x), Sleek (0.55x), Micro (0.35x)
+    const tiers = [1.35, 0.90, 0.58, 0.36].sort(() => Math.random() - 0.5);
+    return [
+        Number(tiers[0].toFixed(2)),
+        Number(tiers[1].toFixed(2)),
+        Number(tiers[2].toFixed(2)),
+        Number(tiers[3].toFixed(2))
+    ];
+}
 
 // Global Matrices provided by App
 export interface SimulationState {
@@ -544,6 +637,9 @@ export interface SimulationState {
     formationMode: FormationMode;
     formationSeed: number;
     speciesColors: string[];
+    speciesMaterials?: [MaterialSettings, MaterialSettings, MaterialSettings, MaterialSettings];
+    speciesDistribution?: [number, number, number, number];
+    speciesSizes?: [number, number, number, number];
     paletteIndex?: number;
     materialSettings: MaterialSettings;
     transitionStartTime?: number;
@@ -1684,15 +1780,30 @@ export class BoidSwarmData {
         const prevCount = this.count;
         this.count = targetCount;
 
-        const speciesBaseSizes = [0.25, 0.18, 0.12, 0.08];
+        const speciesSizes = state?.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+        const speciesBaseSizes = [
+            0.25 * speciesSizes[0],
+            0.18 * speciesSizes[1],
+            0.12 * speciesSizes[2],
+            0.08 * speciesSizes[3]
+        ];
         const speciesCounts = [0, 0, 0, 0];
+        const dist = state?.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+        const t0 = dist[0];
+        const t1 = dist[0] + dist[1];
+        const t2 = dist[0] + dist[1] + dist[2];
 
-        // If growing population, initialize new particles
-        if (targetCount > prevCount) {
-            for (let i = prevCount; i < targetCount; i++) {
-                const sp = (i % 4) as SpeciesType;
-                this.species[i] = sp;
+        // Re-assign species based on target distribution
+        for (let i = 0; i < targetCount; i++) {
+            const q = i / targetCount;
+            let sp: SpeciesType = 0;
+            if (q < t0) sp = 0;
+            else if (q < t1) sp = 1;
+            else if (q < t2) sp = 2;
+            else sp = 3;
+            this.species[i] = sp;
 
+            if (i >= prevCount) {
                 const baseSize = speciesBaseSizes[sp];
                 const r = Math.random();
                 let bellScale: number;

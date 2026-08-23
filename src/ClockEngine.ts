@@ -10,7 +10,8 @@ import {
     generateProceduralPaletteSurprise,
     generateProceduralMaterialSurprise,
     generateProceduralLightingSurprise,
-    generateProceduralShapeSurprise
+    generateProceduralShapeSurprise,
+    generateSpeciesMaterials
 } from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
@@ -313,6 +314,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
             state.materialPreset = nextMatIdx;
             state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
+            state.speciesMaterials = generateSpeciesMaterials(nextMatIdx);
         }
 
         // 4. INDEPENDENT LIGHTING CLOCK (Every 70-110s)
@@ -477,6 +479,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 const surprise = generateProceduralMaterialSurprise();
                 state.materialPreset = -1;
                 state.materialSettings = surprise.settings;
+                state.speciesMaterials = generateSpeciesMaterials();
                 state.customMaterialName = surprise.name;
                 return `Material: ${surprise.name}`;
             } else {
@@ -495,6 +498,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
                 state.materialPreset = nextMatIdx;
                 state.materialSettings = { ...(MATERIAL_PRESETS[nextMatIdx]?.settings || MATERIAL_PRESETS[0].settings) };
+                state.speciesMaterials = generateSpeciesMaterials(nextMatIdx);
                 return `Material: ${MATERIAL_PRESETS[nextMatIdx]?.label || 'Titanium Mirror'}`;
             }
         } else if (dim === 'lighting') {

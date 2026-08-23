@@ -205,7 +205,13 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         }
 
         const boidCount = Math.floor(renderedCount.current);
-        const speciesCount = Math.floor(boidCount / 4);
+        const dist = state.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+        const speciesCounts = [
+            Math.floor(boidCount * dist[0]),
+            Math.floor(boidCount * dist[1]),
+            Math.floor(boidCount * dist[2]),
+            Math.max(0, boidCount - Math.floor(boidCount * dist[0]) - Math.floor(boidCount * dist[1]) - Math.floor(boidCount * dist[2]))
+        ];
         if (!meshRef0.current || !meshRef1.current || !meshRef2.current || !meshRef3.current) return;
         const time = stateContext.clock.getElapsedTime();
         state.currentTime = time;
@@ -250,15 +256,7 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const prevMode = isMorphing ? state.prevFormationMode : undefined;
         const prevSeed = isMorphing ? (state.prevFormationSeed !== undefined ? state.prevFormationSeed : seed) : seed;
 
-        // Centroid & Bounding Radius sampling registers
-        let sumDistSq = 0;
-        const sampleStep = Math.max(1, Math.floor(boidCount / 128));
-        let sampleCount = 0;
-
-        // Convergence measured cleanly when settled
-        let convergedCount = 0;
-        const measureConvergence = !isMorphing && p > 0.92;
-
+        // Boid Array references (Zero GC per-frame)
         const posX = swarm.posX;
         const posY = swarm.posY;
         const posZ = swarm.posZ;
@@ -271,9 +269,15 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const noiseSeed = swarm.noiseSeed;
         const isLeader = swarm.isLeader;
         const sizeArr = swarm.size;
-        const sheathOffsetX = swarm.sheathOffsetX;
-        const sheathOffsetY = swarm.sheathOffsetY;
-        const sheathOffsetZ = swarm.sheathOffsetZ;
+
+        // Centroid & Bounding Radius sampling registers
+        let sumDistSq = 0;
+        const sampleStep = Math.max(1, Math.floor(boidCount / 128));
+        let sampleCount = 0;
+
+        // Convergence measured cleanly when settled
+        let convergedCount = 0;
+        const measureConvergence = !isMorphing && p > 0.92;
 
         const matArrays = [
             meshRef0.current.instanceMatrix.array as Float32Array,
@@ -287,11 +291,12 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
         const hasDrift = (dAmp > 1e-5);
         const hasStray = profile.strayRatio > 0 && p > 0.8;
         const strayMod = hasStray ? Math.floor(1.0 / profile.strayRatio) : 0;
+        const activeSpeciesShapes = getSpeciesShapes();
 
         for (let i = 0; i < boidCount; i++) {
             const sp = species[i];
             const spIdx = indexInSpecies[i];
-            if (spIdx >= speciesCount) continue;
+            if (spIdx >= speciesCounts[sp]) continue;
 
             const matArray = matArrays[sp];
             const offset = spIdx * 16;
@@ -518,23 +523,29 @@ export function Flock({ count, state, setPopulation }: FlockProps) {
             currentColors.current[s].setRGB(r, g, b_rgb);
         }
 
-        const liveMat = state.materialSettings || { roughness: 0.25, metalness: 0.5, wireframe: false, flatShading: false, emissiveIntensity: 0.0 };
-        let liveEmissiveInt = liveMat.emissiveIntensity ?? 0.0;
-        if (state.microSurpriseType === 'materialPulse' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
-            liveEmissiveInt = 1.4;
-        }
+        const spMats = state.speciesMaterials || [
+            state.materialSettings,
+            state.materialSettings,
+            state.materialSettings,
+            state.materialSettings
+        ];
 
         for (let sp = 0; sp < 4; sp++) {
             const mesh = meshRefs[sp].current;
             if (mesh) {
-                mesh.count = speciesCount;
+                mesh.count = speciesCounts[sp];
                 mesh.instanceMatrix.needsUpdate = true;
                 if (mesh.material) {
                     const stdMat = mesh.material as THREE.MeshStandardMaterial;
+                    const spMat = spMats[sp] || state.materialSettings || MATERIAL_PRESETS[0].settings;
                     stdMat.color.copy(currentColors.current[sp]);
-                    stdMat.roughness = liveMat.roughness;
-                    stdMat.metalness = liveMat.metalness;
-                    stdMat.emissiveIntensity = liveEmissiveInt;
+                    stdMat.roughness = spMat.roughness;
+                    stdMat.metalness = spMat.metalness;
+                    let spEmiss = spMat.emissiveIntensity ?? 0.0;
+                    if (state.microSurpriseType === 'materialPulse' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+                        spEmiss = Math.max(spEmiss, 2.0);
+                    }
+                    stdMat.emissiveIntensity = spEmiss;
                     stdMat.emissive.copy(currentColors.current[sp]);
                 }
             }

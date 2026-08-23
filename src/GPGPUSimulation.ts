@@ -727,12 +727,21 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     const initialMode = state?.formationMode ?? FormationMode.QuadHelixBraid;
     const initialSeed = state?.formationSeed ?? 42.0;
     const tempPt: [number, number, number] = [0, 0, 0];
+    const dist = state?.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+    const t0 = dist[0];
+    const t1 = dist[0] + dist[1];
+    const t2 = dist[0] + dist[1] + dist[2];
 
     // Initialize initial spatial distribution precisely on the target topology from frame 0
     for (let i = 0; i < count; i++) {
         const i4 = i * 4;
         const u = ((i * 137.50776405) % count) / count;
-        const sp = i % 4;
+        const q = i / count;
+        let sp = 0;
+        if (q < t0) sp = 0;
+        else if (q < t1) sp = 1;
+        else if (q < t2) sp = 2;
+        else sp = 3;
 
         if (state) {
             computeFormationPoint(initialMode, initialSeed, u, 0, sp, i, 3.5, 0.14, state, tempPt);

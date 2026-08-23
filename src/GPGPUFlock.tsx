@@ -95,12 +95,24 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         const species = new Float32Array(actualCapacity);
         const sizes = new Float32Array(actualCapacity);
 
+        const dist = state.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+        const t0 = dist[0];
+        const t1 = dist[0] + dist[1];
+        const t2 = dist[0] + dist[1] + dist[2];
+
         for (let i = 0; i < actualCapacity; i++) {
             const x = (i % sizeX) + 0.5;
             const y = Math.floor(i / sizeX) + 0.5;
             uvs[i * 2 + 0] = x / sizeX;
             uvs[i * 2 + 1] = y / sizeY;
-            species[i] = i % 4;
+
+            const q = i / actualCapacity;
+            let sp = 0;
+            if (q < t0) sp = 0;
+            else if (q < t1) sp = 1;
+            else if (q < t2) sp = 2;
+            else sp = 3;
+            species[i] = sp;
 
             // Ultra-Sparse Giant Hierarchy:
             // - 97.0% sleek fine & mid boids (0.20x - 1.0x)
@@ -132,7 +144,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         instGeom.setAttribute('aSpecies', new THREE.InstancedBufferAttribute(species, 1));
         instGeom.setAttribute('aSizeScale', new THREE.InstancedBufferAttribute(sizes, 1));
         return instGeom;
-    }, [actualCapacity, sizeX, sizeY]);
+    }, [actualCapacity, sizeX, sizeY, state.speciesDistribution]);
 
     // Species color state & morphing
     const initialPalette = state.speciesColors || COLOR_PALETTES[17];
@@ -159,6 +171,11 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2]);
     const lastPaletteKey = useRef<string>('');
 
+    // Per-species Material & Optical Bloom state
+    const currentRoughness = useRef<[number, number, number, number]>([0.28, 0.15, 0.35, 0.22]);
+    const currentMetalness = useRef<[number, number, number, number]>([0.85, 0.05, 0.05, 0.50]);
+    const currentEmissive = useRef<[number, number, number, number]>([0.05, 2.40, 0.0, 0.60]);
+
     // Custom Shader Uniforms
     const uniformsRef = useRef<{ [key: string]: THREE.IUniform }>({
         texturePosition: { value: null },
@@ -167,7 +184,11 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         uColor0: { value: currentColors.current[0] },
         uColor1: { value: currentColors.current[1] },
         uColor2: { value: currentColors.current[2] },
-        uColor3: { value: currentColors.current[3] }
+        uColor3: { value: currentColors.current[3] },
+        uMatRoughness: { value: new THREE.Vector4(0.28, 0.15, 0.35, 0.22) },
+        uMatMetalness: { value: new THREE.Vector4(0.85, 0.05, 0.05, 0.50) },
+        uMatEmissive: { value: new THREE.Vector4(0.05, 2.40, 0.0, 0.60) },
+        uSpeciesSizes: { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) }
     });
 
     // Custom Material onBeforeCompile
@@ -187,6 +208,10 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             shader.uniforms.uColor1 = uniformsRef.current.uColor1;
             shader.uniforms.uColor2 = uniformsRef.current.uColor2;
             shader.uniforms.uColor3 = uniformsRef.current.uColor3;
+            shader.uniforms.uMatRoughness = uniformsRef.current.uMatRoughness;
+            shader.uniforms.uMatMetalness = uniformsRef.current.uMatMetalness;
+            shader.uniforms.uMatEmissive = uniformsRef.current.uMatEmissive;
+            shader.uniforms.uSpeciesSizes = uniformsRef.current.uSpeciesSizes;
 
             // Vertex Shader: inject reference UV & instance attributes
             shader.vertexShader = `
@@ -200,7 +225,14 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 uniform vec3 uColor1;
                 uniform vec3 uColor2;
                 uniform vec3 uColor3;
+                uniform vec4 uMatRoughness;
+                uniform vec4 uMatMetalness;
+                uniform vec4 uMatEmissive;
+                uniform vec4 uSpeciesSizes;
                 varying vec3 vInstanceColor;
+                varying float vSpeciesRoughness;
+                varying float vSpeciesMetalness;
+                varying float vSpeciesEmissive;
             ` + shader.vertexShader;
 
             shader.vertexShader = shader.vertexShader.replace(
@@ -210,25 +242,46 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 vec4 velTex = texture2D(textureVelocity, aReferenceUV);
                 vec3 instancePos = posTex.xyz;
 
-                // Color assignment
+                float spScale = 1.0;
+
+                // Color & Material & Size assignment per species
                 if (aSpecies < 0.5) {
                     vInstanceColor = uColor0;
+                    vSpeciesRoughness = uMatRoughness.x;
+                    vSpeciesMetalness = uMatMetalness.x;
+                    vSpeciesEmissive = uMatEmissive.x;
+                    spScale = uSpeciesSizes.x;
                 } else if (aSpecies < 1.5) {
                     vInstanceColor = uColor1;
+                    vSpeciesRoughness = uMatRoughness.y;
+                    vSpeciesMetalness = uMatMetalness.y;
+                    vSpeciesEmissive = uMatEmissive.y;
+                    spScale = uSpeciesSizes.y;
                 } else if (aSpecies < 2.5) {
                     vInstanceColor = uColor2;
+                    vSpeciesRoughness = uMatRoughness.z;
+                    vSpeciesMetalness = uMatMetalness.z;
+                    vSpeciesEmissive = uMatEmissive.z;
+                    spScale = uSpeciesSizes.z;
                 } else {
                     vInstanceColor = uColor3;
+                    vSpeciesRoughness = uMatRoughness.w;
+                    vSpeciesMetalness = uMatMetalness.w;
+                    vSpeciesEmissive = uMatEmissive.w;
+                    spScale = uSpeciesSizes.w;
                 }
 
-                // Transform vertex with Gaussian bell curve scale and instance position
-                vec3 transformed = position * (uBoidScale * aSizeScale) + instancePos;
+                // Transform vertex with Gaussian bell curve scale, species average scale, and instance position
+                vec3 transformed = position * (uBoidScale * aSizeScale * spScale) + instancePos;
                 `
             );
 
-            // Fragment Shader: mix instance color into diffuse
+            // Fragment Shader: inject species colors and PBR properties
             shader.fragmentShader = `
                 varying vec3 vInstanceColor;
+                varying float vSpeciesRoughness;
+                varying float vSpeciesMetalness;
+                varying float vSpeciesEmissive;
             ` + shader.fragmentShader;
 
             shader.fragmentShader = shader.fragmentShader.replace(
@@ -236,6 +289,30 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 `
                 #include <color_fragment>
                 diffuseColor.rgb = vInstanceColor;
+                `
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <roughnessmap_fragment>',
+                `
+                #include <roughnessmap_fragment>
+                roughnessFactor = vSpeciesRoughness;
+                `
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <metalnessmap_fragment>',
+                `
+                #include <metalnessmap_fragment>
+                metalnessFactor = vSpeciesMetalness;
+                `
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                totalEmissiveRadiance = vInstanceColor * vSpeciesEmissive;
                 `
             );
         };
@@ -305,13 +382,55 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         uniformsRef.current.uColor2.value.copy(currentColors.current[2]);
         uniformsRef.current.uColor3.value.copy(currentColors.current[3]);
 
-        // Live Material Optics for 500k swarm
-        if (customMaterial) {
-            const mat = state.materialSettings || { roughness: 0.28, metalness: 0.05, emissiveIntensity: 0.0 };
-            customMaterial.roughness = mat.roughness;
-            customMaterial.metalness = mat.metalness;
-            customMaterial.emissiveIntensity = mat.emissiveIntensity ?? 0.0;
+        // Per-Species Material & Optical Bloom Live Dynamics
+        const spMats = state.speciesMaterials || [
+            state.materialSettings,
+            state.materialSettings,
+            state.materialSettings,
+            state.materialSettings
+        ];
+
+        const rate = Math.min(1.0, (delta || 0.016) * 3.5);
+        for (let s = 0; s < 4; s++) {
+            const targetMat = spMats[s] || state.materialSettings || { roughness: 0.28, metalness: 0.05, emissiveIntensity: 0.0 };
+            const tRough = targetMat.roughness ?? 0.28;
+            const tMetal = targetMat.metalness ?? 0.05;
+            let tEmiss = targetMat.emissiveIntensity ?? 0.0;
+            if (state.microSurpriseType === 'materialPulse' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
+                tEmiss = Math.max(tEmiss, 2.0);
+            }
+
+            currentRoughness.current[s] += (tRough - currentRoughness.current[s]) * rate;
+            currentMetalness.current[s] += (tMetal - currentMetalness.current[s]) * rate;
+            currentEmissive.current[s] += (tEmiss - currentEmissive.current[s]) * rate;
         }
+
+        uniformsRef.current.uMatRoughness.value.set(
+            currentRoughness.current[0],
+            currentRoughness.current[1],
+            currentRoughness.current[2],
+            currentRoughness.current[3]
+        );
+        uniformsRef.current.uMatMetalness.value.set(
+            currentMetalness.current[0],
+            currentMetalness.current[1],
+            currentMetalness.current[2],
+            currentMetalness.current[3]
+        );
+        uniformsRef.current.uMatEmissive.value.set(
+            currentEmissive.current[0],
+            currentEmissive.current[1],
+            currentEmissive.current[2],
+            currentEmissive.current[3]
+        );
+
+        const spSizes = state.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+        uniformsRef.current.uSpeciesSizes.value.set(
+            spSizes[0],
+            spSizes[1],
+            spSizes[2],
+            spSizes[3]
+        );
 
         if (!state.isReady) {
             state.isReady = true;
