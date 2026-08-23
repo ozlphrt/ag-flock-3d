@@ -342,120 +342,120 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
     {
         id: 0,
         label: 'Studio High-Contrast',
-        ambientIntensity: 0.12,
-        keyIntensity: 3.8,
+        ambientIntensity: 0.04,
+        keyIntensity: 4.8,
         keyColor: '#ffffff',
-        fillIntensity: 0.30,
-        fillColor: '#5a7090',
-        rimIntensity: 3.4,
-        rimColor: '#e0f0ff',
+        fillIntensity: 0.28,
+        fillColor: '#406085',
+        rimIntensity: 4.2,
+        rimColor: '#d8f0ff',
         fogDensity: 0.003
     },
     {
         id: 1,
-        label: 'Golden Hour',
-        ambientIntensity: 0.14,
-        keyIntensity: 3.9,
-        keyColor: '#ffe090',
-        fillIntensity: 0.35,
-        fillColor: '#6a5585',
-        rimIntensity: 3.2,
-        rimColor: '#5090ff',
+        label: 'Golden Hour Sunset',
+        ambientIntensity: 0.05,
+        keyIntensity: 5.2,
+        keyColor: '#ffc870',
+        fillIntensity: 0.32,
+        fillColor: '#583070',
+        rimIntensity: 4.5,
+        rimColor: '#4080ff',
         fogDensity: 0.0035
     },
     {
         id: 2,
-        label: 'Arctic Cold',
-        ambientIntensity: 0.12,
-        keyIntensity: 3.6,
-        keyColor: '#d0e5ff',
-        fillIntensity: 0.30,
-        fillColor: '#456590',
-        rimIntensity: 3.6,
-        rimColor: '#ff9040',
+        label: 'Arctic Aurora Frost',
+        ambientIntensity: 0.04,
+        keyIntensity: 4.6,
+        keyColor: '#c8e8ff',
+        fillIntensity: 0.25,
+        fillColor: '#305080',
+        rimIntensity: 4.8,
+        rimColor: '#ff8830',
         fogDensity: 0.004
     },
     {
         id: 3,
-        label: 'Deep Sea Abyss',
-        ambientIntensity: 0.10,
-        keyIntensity: 3.4,
-        keyColor: '#00e5ff',
-        fillIntensity: 0.25,
-        fillColor: '#205575',
-        rimIntensity: 3.8,
-        rimColor: '#00ffaa',
-        fogDensity: 0.006
+        label: 'Deep Sea Luminescence',
+        ambientIntensity: 0.035,
+        keyIntensity: 4.4,
+        keyColor: '#00f0ff',
+        fillIntensity: 0.22,
+        fillColor: '#103855',
+        rimIntensity: 5.0,
+        rimColor: '#00ffa0',
+        fogDensity: 0.0055
     },
     {
         id: 4,
-        label: 'Volcanic Magma',
-        ambientIntensity: 0.12,
-        keyIntensity: 4.2,
-        keyColor: '#ff6820',
-        fillIntensity: 0.28,
-        fillColor: '#802535',
-        rimIntensity: 3.5,
-        rimColor: '#ffa040',
-        fogDensity: 0.005
+        label: 'Volcanic Magma Corona',
+        ambientIntensity: 0.04,
+        keyIntensity: 5.4,
+        keyColor: '#ff5510',
+        fillIntensity: 0.26,
+        fillColor: '#601830',
+        rimIntensity: 4.6,
+        rimColor: '#ffaa30',
+        fogDensity: 0.0045
     },
     {
         id: 5,
-        label: 'Nebula Violet',
-        ambientIntensity: 0.12,
-        keyIntensity: 3.8,
-        keyColor: '#b060ff',
-        fillIntensity: 0.30,
-        fillColor: '#602580',
-        rimIntensity: 3.6,
-        rimColor: '#30ffb0',
+        label: 'Nebula Cyber Violet',
+        ambientIntensity: 0.04,
+        keyIntensity: 4.8,
+        keyColor: '#b850ff',
+        fillIntensity: 0.28,
+        fillColor: '#451860',
+        rimIntensity: 4.8,
+        rimColor: '#20ffd0',
         fogDensity: 0.004
     },
     {
         id: 6,
-        label: 'Cinematic Noir',
-        ambientIntensity: 0.08,
-        keyIntensity: 3.6,
-        keyColor: '#e8e8f8',
-        fillIntensity: 0.20,
-        fillColor: '#505868',
-        rimIntensity: 3.5,
-        rimColor: '#a0c0e0',
+        label: 'Cinematic Obsidian Noir',
+        ambientIntensity: 0.03,
+        keyIntensity: 4.6,
+        keyColor: '#e0e8f8',
+        fillIntensity: 0.18,
+        fillColor: '#354050',
+        rimIntensity: 4.8,
+        rimColor: '#90c0ff',
         fogDensity: 0.005
     },
     {
         id: 7,
-        label: 'Solar Eclipse',
-        ambientIntensity: 0.07,
-        keyIntensity: 3.2,
+        label: 'Solar Eclipse Backlit',
+        ambientIntensity: 0.025,
+        keyIntensity: 4.2,
         keyColor: '#ffffff',
-        fillIntensity: 0.18,
-        fillColor: '#384560',
-        rimIntensity: 4.5,
-        rimColor: '#ffa820',
-        fogDensity: 0.007
+        fillIntensity: 0.15,
+        fillColor: '#283550',
+        rimIntensity: 5.8,
+        rimColor: '#ff9810',
+        fogDensity: 0.006
     }
 ];
 
 export const COLOR_PALETTES = [
-    ['#183024', '#3d6346', '#b8893d', '#f2cb7c'], // 1. Organic Forest & Moss
-    ['#0c2133', '#2b6e94', '#d9643d', '#bce8e6'], // 2. Deep Ocean Ecosystem
-    ['#162e24', '#265354', '#cb7a32', '#f5e4d0'], // 3. Nordic Fjord & Autumn Birch
-    ['#1b1e2a', '#a3422a', '#e8894d', '#e0e5ef'], // 4. Volcanic Basalt & Warm Terracotta
-    ['#4a2414', '#7a8c76', '#d69e60', '#faecc2'], // 5. Desert Canyon & Clay Sage
-    ['#2c2438', '#345e3c', '#6884bf', '#cae0ad'], // 6. Alpine Meadow & Wild Violet
-    ['#0c2647', '#225940', '#cf9963', '#a3b4cf'], // 7. Bioluminescent Deep Reef
-    ['#293233', '#856149', '#de986e', '#f0ede6'], // 8. Sandstone & Coastal Mineral
-    ['#29082a', '#612252', '#d67a96', '#f5be82'], // 9. Cosmic Amethyst & Rose Gold
-    ['#071930', '#184775', '#7ca1c4', '#f06d48'], // 10. Deep Cobalt & Coral Sunset
-    ['#18333b', '#258f82', '#e86a48', '#f5b573'], // 11. Terracotta & Emerald Lagoon
-    ['#261f25', '#355f61', '#9868c7', '#8ed48c'], // 12. Twilight Lavender & Sage
-    ['#1e2f42', '#584463', '#8ecff0', '#f06e73'], // 13. Icelandic Glacial Fjord
-    ['#211929', '#4d323e', '#8a5f49', '#d1aa8c'], // 14. Earthy Obsidian & Smoked Amber
-    ['#0c232b', '#0a6b6d', '#cf7b19', '#d6342b'], // 15. Volcanic Copper & Patina
-    ['#2d1706', '#5e3818', '#996333', '#dbae85'], // 16. Ancient Teak & Sandstone
-    ['#18210e', '#49542a', '#c7924e', '#fff6cc'], // 17. Olive Grove & Golden Barley
-    ['#140402', '#7a1908', '#d64512', '#ffa33a']  // 18. Magma Obsidian & Crimson Amber
+    ['#081810', '#10b981', '#f59e0b', '#ec4899'], // 1. Emerald & Electric Pink & Solar Amber
+    ['#0c2133', '#00e5ff', '#ff5722', '#e0f2fe'], // 2. Deep Ocean Abyss & Neon Coral
+    ['#162e24', '#06b6d4', '#f97316', '#fef08a'], // 3. Nordic Glacial & Sunset Flare
+    ['#0f172a', '#6366f1', '#f43f5e', '#38bdf8'], // 4. Cyberpunk Cobalt & Rose Magenta
+    ['#2a1005', '#14b8a6', '#f59e0b', '#fb7185'], // 5. Desert Oasis & Aquamarine
+    ['#1e1035', '#8b5cf6', '#10b981', '#facc15'], // 6. Cosmic Ultraviolet & Neon Lime
+    ['#031d38', '#00f2fe', '#ffd200', '#ff007f'], // 7. Bioluminescent Laser Reef
+    ['#1c1917', '#0ea5e9', '#f97316', '#a855f7'], // 8. Prismatic Mineral & Electric Violet
+    ['#29082a', '#a855f7', '#ec4899', '#38bdf8'], // 9. Neon Synthwave & Cyber Cyan
+    ['#05192d', '#00e5ff', '#ff3366', '#ffdd55'], // 10. Deep Midnight & Fluorescent Coral
+    ['#0b2924', '#10b981', '#ff6b35', '#f7c59f'], // 11. Emerald Lagoon & Warm Terracotta
+    ['#1a102f', '#7c3aed', '#06b6d4', '#f43f5e'], // 12. Twilight Laser Matrix
+    ['#0f2b48', '#38bdf8', '#fb7185', '#fef08a'], // 13. Glacial Topaz & Radiant Gold
+    ['#1c1024', '#9333ea', '#f59e0b', '#22d3ee'], // 14. Royal Amethyst & Cyan Corona
+    ['#06232b', '#14b8a6', '#ef4444', '#fbbf24'], // 15. Volcanic Patina & Crimson Spark
+    ['#201205', '#d97706', '#0284c7', '#f43f5e'], // 16. Amber Fire & Electric Sapphire
+    ['#0d2310', '#22c55e', '#e11d48', '#38bdf8'], // 17. Hyperflora & Neon Fuchsia
+    ['#150505', '#ef4444', '#00e5ff', '#fbbf24']  // 18. Solar Flare & Electric Aqua & Gold
 ];
 
 export const MATERIAL_PRESETS = [
@@ -463,99 +463,92 @@ export const MATERIAL_PRESETS = [
         id: 0,
         label: 'Vibrant Satin Porcelain',
         icon: '🍶',
-        desc: 'Deep vibrant color saturation with a smooth delicate satin surface sheen',
-        settings: { roughness: 0.32, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        desc: 'Deep vibrant color saturation with crisp specular highlights and smooth satin sheen',
+        settings: { roughness: 0.18, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
     },
     {
         id: 1,
         label: 'Candy Gloss Enamel',
         icon: '🍬',
-        desc: 'Glossy automotive coat with vivid saturated base colors and broad highlights',
-        settings: { roughness: 0.22, metalness: 0.08, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        desc: 'High-gloss automotive clearcoat with vibrant specular gleam and crisp reflections',
+        settings: { roughness: 0.10, metalness: 0.35, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
     },
     {
         id: 2,
-        label: 'Matte Velvet Clay',
-        icon: '🎨',
-        desc: 'Non-metallic pure matte finish that showcases 100% true, rich palette colors',
-        settings: { roughness: 0.65, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        label: 'Polished Titanium Luster',
+        icon: '⚔️',
+        desc: 'Aerospace grade brushed metallic sheen with high environmental light response',
+        settings: { roughness: 0.14, metalness: 0.85, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
     },
     {
         id: 3,
         label: 'Faceted Jewel Gem',
         icon: '💎',
-        desc: 'Geometric crystalline facets with broad highlights that let gemstone colors pop',
-        settings: { roughness: 0.26, metalness: 0.12, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        desc: 'Geometric crystalline facets with sparkling specular gleams that catch directional beams',
+        settings: { roughness: 0.14, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.15 }
     },
     {
         id: 4,
-        label: 'Silicone Soft-Touch',
-        icon: '🧽',
-        desc: 'Smooth tactile matte finish with zero glare, displaying pure unmuted pigments',
-        settings: { roughness: 0.75, metalness: 0.0, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        label: 'Iridescent Pearl Luster',
+        icon: '🦪',
+        desc: 'Deep chromatic pearl sheen with luminous rim glints and multi-angle specular shifts',
+        settings: { roughness: 0.16, metalness: 0.45, wireframe: false, flatShading: false, emissiveIntensity: 0.10 }
     },
     {
         id: 5,
-        label: 'Pearlescent Luster',
-        icon: '🦪',
-        desc: 'Soft iridescent pearl luster with rich chromatic depth and luminous rim glints',
-        settings: { roughness: 0.28, metalness: 0.15, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
+        label: 'Frosted Glass Crystal',
+        icon: '🧊',
+        desc: 'Modern faceted optical crystal with intense saturated chromatic reflection',
+        settings: { roughness: 0.20, metalness: 0.35, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
     },
     {
         id: 6,
-        label: 'Frosted Glass Crystal',
-        icon: '🧊',
-        desc: 'Modern frosted geometric glass with brilliant saturated diffuse color tone',
-        settings: { roughness: 0.38, metalness: 0.10, wireframe: false, flatShading: true, emissiveIntensity: 0.0 }
+        label: 'Polished Amber Glass',
+        icon: '🍯',
+        desc: 'Liquid resin gloss with rich specular glints and clear optical depth',
+        settings: { roughness: 0.12, metalness: 0.28, wireframe: false, flatShading: false, emissiveIntensity: 0.08 }
     },
     {
         id: 7,
-        label: 'Polished Amber Resin',
-        icon: '🍯',
-        desc: 'Smooth deep resin with clear specular definition and luminous warm highlights',
-        settings: { roughness: 0.24, metalness: 0.06, wireframe: false, flatShading: false, emissiveIntensity: 0.0 }
-    },
-    {
-        id: 8,
         label: 'Sparkling Specular Facets',
         icon: '💎',
         desc: 'Crystalline multifaceted diamond geometry with high metallic speckles and light glints',
-        settings: { roughness: 0.26, metalness: 0.40, wireframe: false, flatShading: true, emissiveIntensity: 0.10 }
+        settings: { roughness: 0.12, metalness: 0.75, wireframe: false, flatShading: true, emissiveIntensity: 0.25 }
     },
     {
-        id: 9,
+        id: 8,
         label: 'Glinting Obsidian Foil',
         icon: '✨',
         desc: 'Deep metallic foil with sparkling facet glimmers that catch dynamic rim & key beams',
-        settings: { roughness: 0.22, metalness: 0.48, wireframe: false, flatShading: true, emissiveIntensity: 0.12 }
+        settings: { roughness: 0.08, metalness: 0.88, wireframe: false, flatShading: true, emissiveIntensity: 0.22 }
     },
     {
-        id: 10,
+        id: 9,
         label: 'Bioluminescent Optical Plasma',
         icon: '🔥',
         desc: 'High-energy radiant core bursting with intense optical bloom and chromatic corona',
-        settings: { roughness: 0.15, metalness: 0.05, wireframe: false, flatShading: false, emissiveIntensity: 2.40 }
+        settings: { roughness: 0.08, metalness: 0.20, wireframe: false, flatShading: false, emissiveIntensity: 2.60 }
     },
     {
-        id: 11,
+        id: 10,
         label: 'Gleaming Mirror Chrome',
         icon: '🪞',
         desc: 'Ultra-polished liquid mirror metal reflecting environmental key and rim lights',
-        settings: { roughness: 0.06, metalness: 0.95, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
+        settings: { roughness: 0.04, metalness: 0.98, wireframe: false, flatShading: false, emissiveIntensity: 0.05 }
     },
     {
-        id: 12,
+        id: 11,
         label: 'Radiant Supernova Glow',
         icon: '🌟',
         desc: 'Blinding luminous star matter emitting massive optical bloom aura',
-        settings: { roughness: 0.18, metalness: 0.10, wireframe: false, flatShading: false, emissiveIntensity: 3.20 }
+        settings: { roughness: 0.12, metalness: 0.25, wireframe: false, flatShading: false, emissiveIntensity: 3.40 }
     },
     {
-        id: 13,
+        id: 12,
         label: 'Prismatic Diamond Glint',
         icon: '❇️',
         desc: 'Sharp crystalline facets with glowing laser glimmers and specular spikes',
-        settings: { roughness: 0.18, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.85 }
+        settings: { roughness: 0.12, metalness: 0.75, wireframe: false, flatShading: true, emissiveIntensity: 0.95 }
     }
 ];
 

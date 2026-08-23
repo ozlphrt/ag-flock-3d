@@ -231,7 +231,27 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 varying float vSpeciesRoughness;
                 varying float vSpeciesMetalness;
                 varying float vSpeciesEmissive;
+                varying vec3 vWorldNormal;
             ` + shader.vertexShader;
+
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <defaultnormal_vertex>',
+                `
+                vec4 vTexForNorm = texture2D(textureVelocity, aReferenceUV);
+                vec3 vVelForNorm = vTexForNorm.xyz;
+                float vSpeedForNorm = length(vVelForNorm);
+                vec3 vFwdForNorm = (vSpeedForNorm > 0.0001) ? normalize(vVelForNorm) : vec3(0.0, 0.0, 1.0);
+                vec3 vUpTemp = abs(vFwdForNorm.y) < 0.95 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+                vec3 vRight = normalize(cross(vUpTemp, vFwdForNorm));
+                vec3 vRealUp = cross(vFwdForNorm, vRight);
+                mat3 boidRotMat = mat3(vRight, vRealUp, vFwdForNorm);
+
+                vec3 transformedNormal = normalize(boidRotMat * objectNormal);
+                #ifdef USE_TANGENT
+                    vec3 transformedTangent = normalize(boidRotMat * objectTangent);
+                #endif
+                `
+            );
 
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <begin_vertex>',
@@ -239,6 +259,14 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 vec4 posTex = texture2D(texturePosition, aReferenceUV);
                 vec4 velTex = texture2D(textureVelocity, aReferenceUV);
                 vec3 instancePos = posTex.xyz;
+
+                vec3 boidVel = velTex.xyz;
+                float boidSpeed = length(boidVel);
+                vec3 fwd = (boidSpeed > 0.0001) ? normalize(boidVel) : vec3(0.0, 0.0, 1.0);
+                vec3 upTemp = abs(fwd.y) < 0.95 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+                vec3 rgt = normalize(cross(upTemp, fwd));
+                vec3 rup = cross(fwd, rgt);
+                mat3 boidRot = mat3(rgt, rup, fwd);
 
                 float q = aParticleRatio;
                 float spScale = 1.0;
@@ -270,8 +298,9 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                     spScale = uSpeciesSizes.w;
                 }
 
-                // Transform vertex with Gaussian bell curve scale, species average scale, and instance position
-                vec3 transformed = position * (uBoidScale * aSizeScale * spScale) + instancePos;
+                // Dynamic 3D oriented vertex transformation with species & bell-curve scaling
+                vec3 rotatedVertex = boidRot * position;
+                vec3 transformed = rotatedVertex * (uBoidScale * aSizeScale * spScale) + instancePos;
                 `
             );
 
@@ -311,7 +340,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
-                totalEmissiveRadiance = vInstanceColor * vSpeciesEmissive;
+                float fresnelGlint = pow(1.0 - max(0.0, dot(geometryNormal, geometryViewDir)), 3.2);
+                totalEmissiveRadiance = vInstanceColor * (vSpeciesEmissive + fresnelGlint * 0.35);
                 `
             );
         };
