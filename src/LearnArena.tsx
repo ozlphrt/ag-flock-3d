@@ -10,7 +10,8 @@ import {
 import {
     PreferenceLearningEngine,
     LearnPair,
-    TasteProfile
+    TasteProfile,
+    BASELINE_LEARN_STATE
 } from './PreferenceLearningEngine';
 import { Flock } from './Flock';
 
@@ -19,7 +20,7 @@ interface LearnArenaProps {
     onClose: () => void;
 }
 
-// Synchronized Camera Rig for Dual Viewports
+// Synchronized Camera Rig for Dual Viewports (Flicker-Free Smooth Camera Sync)
 function SyncCameraRig({
     cameraSyncPos,
     cameraSyncTarget,
@@ -38,10 +39,10 @@ function SyncCameraRig({
                 cameraSyncTarget.current.copy(controlsRef.current.target);
             }
         } else {
-            stateContext.camera.position.copy(cameraSyncPos.current);
+            stateContext.camera.position.lerp(cameraSyncPos.current, 0.25);
             stateContext.camera.lookAt(cameraSyncTarget.current);
             if (controlsRef.current) {
-                controlsRef.current.target.copy(cameraSyncTarget.current);
+                controlsRef.current.target.lerp(cameraSyncTarget.current, 0.25);
             }
         }
     });
@@ -98,56 +99,42 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
     const cameraSyncPos = useRef(new THREE.Vector3(0, 3.5, 14.0));
     const cameraSyncTarget = useRef(new THREE.Vector3(0, 0, 0));
 
-    // Create Candidate Simulation States
+    // Create Candidate Simulation States with 100% Controlled Baseline
     const stateA = useRef<SimulationState>({
         ...mainState.current,
-        bounds: 35,
-        speedMultiplier: 0.16,
-        sizeMultiplier: 1.8,
-        noiseTurbulence: 0.02,
-        materialSettings: { ...mainState.current.materialSettings },
-        lightingProfile: { ...mainState.current.lightingProfile } as any,
-        speciesColors: [...(mainState.current.speciesColors || SPECIES_COLORS)],
+        ...BASELINE_LEARN_STATE,
         ...currentPair.candidateA.state
     } as SimulationState);
 
     const stateB = useRef<SimulationState>({
         ...mainState.current,
-        bounds: 35,
-        speedMultiplier: 0.16,
-        sizeMultiplier: 1.8,
-        noiseTurbulence: 0.02,
-        materialSettings: { ...mainState.current.materialSettings },
-        lightingProfile: { ...mainState.current.lightingProfile } as any,
-        speciesColors: [...(mainState.current.speciesColors || SPECIES_COLORS)],
+        ...BASELINE_LEARN_STATE,
         ...currentPair.candidateB.state
     } as SimulationState);
 
-    // Update candidate states on pair change
+    // Smooth In-Place State Mutation on Pair Change to Prevent 1-Frame Flickering
     useEffect(() => {
-        stateA.current = {
-            ...mainState.current,
-            bounds: 35,
-            speedMultiplier: 0.16,
-            sizeMultiplier: 1.8,
-            noiseTurbulence: 0.02,
-            materialSettings: { ...mainState.current.materialSettings },
-            lightingProfile: { ...mainState.current.lightingProfile } as any,
-            speciesColors: [...(mainState.current.speciesColors || SPECIES_COLORS)],
-            ...currentPair.candidateA.state
-        } as SimulationState;
-        stateB.current = {
-            ...mainState.current,
-            bounds: 35,
-            speedMultiplier: 0.16,
-            sizeMultiplier: 1.8,
-            noiseTurbulence: 0.02,
-            materialSettings: { ...mainState.current.materialSettings },
-            lightingProfile: { ...mainState.current.lightingProfile } as any,
-            speciesColors: [...(mainState.current.speciesColors || SPECIES_COLORS)],
-            ...currentPair.candidateB.state
-        } as SimulationState;
-    }, [currentPair, mainState]);
+        const updateCandidate = (target: SimulationState, candState: Partial<SimulationState>) => {
+            // Reset to clean baseline for all non-target parameters
+            Object.assign(target, BASELINE_LEARN_STATE);
+
+            // Apply target parameter
+            if (candState.formationMode !== undefined && candState.formationMode !== target.formationMode) {
+                target.prevFormationMode = target.formationMode;
+                target.formationMode = candState.formationMode;
+                target.transitionStartTime = target.currentTime || 0;
+            }
+            if (candState.materialSettings) target.materialSettings = { ...candState.materialSettings };
+            if (candState.lightingProfile) target.lightingProfile = { ...candState.lightingProfile };
+            if (candState.speciesColors) target.speciesColors = [...candState.speciesColors];
+            if (candState.speedMultiplier !== undefined) target.speedMultiplier = candState.speedMultiplier;
+            if (candState.noiseTurbulence !== undefined) target.noiseTurbulence = candState.noiseTurbulence;
+            if (candState.bloomSettings) target.bloomSettings = { ...candState.bloomSettings };
+        };
+
+        updateCandidate(stateA.current, currentPair.candidateA.state);
+        updateCandidate(stateB.current, currentPair.candidateB.state);
+    }, [currentPair]);
 
     const handlePick = (choice: 'A' | 'B') => {
         setLastChoice(choice);
@@ -158,7 +145,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
             setLastChoice(null);
             const next = engine.generateNextPair(mainState.current);
             setCurrentPair(next);
-        }, 320);
+        }, 180);
     };
 
     const handleApplyToSwarm = () => {
@@ -328,9 +315,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         flex: 1,
                         position: 'relative',
                         borderRight: '1px solid rgba(255, 255, 255, 0.10)',
-                        cursor: 'pointer',
-                        background: lastChoice === 'A' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                        transition: 'background 0.2s ease'
+                        cursor: 'pointer'
                     }}
                 >
                     <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
@@ -346,13 +331,14 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         bottom: '28px',
                         left: '32px',
                         right: '32px',
-                        background: 'rgba(10, 14, 22, 0.85)',
+                        background: lastChoice === 'A' ? 'rgba(0, 229, 255, 0.15)' : 'rgba(10, 14, 22, 0.85)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        border: lastChoice === 'A' ? '1.5px solid #00e5ff' : '1px solid rgba(255, 255, 255, 0.15)',
                         borderRadius: '12px',
                         padding: '14px 18px',
-                        boxShadow: '0 16px 40px rgba(0,0,0,0.7)',
+                        boxShadow: lastChoice === 'A' ? '0 0 30px rgba(0,229,255,0.3)' : '0 16px 40px rgba(0,0,0,0.7)',
+                        transition: 'all 0.15s ease',
                         pointerEvents: 'none'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -399,9 +385,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                     style={{
                         flex: 1,
                         position: 'relative',
-                        cursor: 'pointer',
-                        background: lastChoice === 'B' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                        transition: 'background 0.2s ease'
+                        cursor: 'pointer'
                     }}
                 >
                     <Canvas gl={{ antialias: false, powerPreference: 'high-performance' }}>
@@ -417,13 +401,14 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
                         bottom: '28px',
                         left: '32px',
                         right: '32px',
-                        background: 'rgba(10, 14, 22, 0.85)',
+                        background: lastChoice === 'B' ? 'rgba(0, 229, 255, 0.15)' : 'rgba(10, 14, 22, 0.85)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        border: lastChoice === 'B' ? '1.5px solid #00e5ff' : '1px solid rgba(255, 255, 255, 0.15)',
                         borderRadius: '12px',
                         padding: '14px 18px',
-                        boxShadow: '0 16px 40px rgba(0,0,0,0.7)',
+                        boxShadow: lastChoice === 'B' ? '0 0 30px rgba(0,229,255,0.3)' : '0 16px 40px rgba(0,0,0,0.7)',
+                        transition: 'all 0.15s ease',
                         pointerEvents: 'none'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
