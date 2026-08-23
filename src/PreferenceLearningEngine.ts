@@ -9,7 +9,7 @@ import {
 } from './BoidLogic';
 import { BLOOM_PRESETS, BloomSettings } from './BloomControlPanel';
 
-export type DimensionKey = 'lighting' | 'material' | 'topology' | 'helixDynamics' | 'palette' | 'bloom';
+export type DimensionKey = 'topology' | 'palette' | 'material' | 'lighting' | 'helixDynamics' | 'bloom';
 
 export type ValidationStatus = 'exploring' | 'reinforcing' | 'confirmed';
 
@@ -91,6 +91,9 @@ export const BASELINE_LEARN_STATE: Partial<SimulationState> = {
     sizeMultiplier: 1.8
 };
 
+const DIMENSION_BLOCK_ORDER: DimensionKey[] = ['topology', 'palette', 'material', 'lighting', 'helixDynamics', 'bloom'];
+const TRIALS_PER_DIMENSION_BLOCK = 4; // Stay on the dimension for 4 consecutive rounds
+
 export class PreferenceLearningEngine {
     private rounds: number = 0;
     private profile: TasteProfile;
@@ -100,12 +103,12 @@ export class PreferenceLearningEngine {
             totalRounds: 0,
             overallConsistency: 100,
             dimensions: {
-                lighting: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Volcanic Magma', bestStyleFamily: 'volcanic_key', bestData: { ...BASELINE_LEARN_STATE.lightingProfile }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                material: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Sparkling Specular Facets', bestStyleFamily: 'specular_metallic', bestData: { ...BASELINE_LEARN_STATE.materialSettings }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                topology: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Trefoil Braided Ribbon', bestStyleFamily: 'braided_knot', bestData: { formationMode: FormationMode.TrefoilBraidedRibbon }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                helixDynamics: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Dynamic Spiral Stream Flow', bestStyleFamily: 'fast_dna_stream', bestData: { speedMultiplier: 0.22, noiseTurbulence: 0.022 }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                palette: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Prismatic Obsidian Flare', bestStyleFamily: 'dark_gold_monochrome', bestData: { speciesColors: [...BASELINE_LEARN_STATE.speciesColors!] }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
-                bloom: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Radiant Specular Halo', bestStyleFamily: 'radiant_halo', bestData: { ...BASELINE_LEARN_STATE.bloomSettings }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false }
+                topology: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Trefoil Braided Ribbon (2,3)', bestStyleFamily: 'trefoil', bestData: { formationMode: FormationMode.TrefoilBraidedRibbon }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
+                palette: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Prismatic Obsidian Flare', bestStyleFamily: 'obsidian_gold', bestData: { speciesColors: ['#14171d', '#ff6b35', '#f7c59f', '#efefd0'] }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
+                material: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Sparkling Specular Facets', bestStyleFamily: 'specular_metallic', bestData: { materialSettings: { roughness: 0.22, metalness: 0.55, wireframe: false, flatShading: true, emissiveIntensity: 0.12 } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
+                lighting: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Volcanic Magma Horizon', bestStyleFamily: 'volcanic_key', bestData: { lightingProfile: { ...BASELINE_LEARN_STATE.lightingProfile } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
+                helixDynamics: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Dynamic Spiral Stream Flow', bestStyleFamily: 'fast_dna_stream', bestData: { speedMultiplier: 0.24, noiseTurbulence: 0.028 }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false },
+                bloom: { score: 0.5, trials: 0, variance: 1.0, bestOptionLabel: 'Radiant Specular Halo', bestStyleFamily: 'radiant_halo', bestData: { bloomSettings: { luminanceThreshold: 0.35, intensity: 1.8, radius: 0.55, levels: 2 } }, consecutiveAgreements: 0, totalAgreements: 0, anglesTested: [], isConfirmed: false }
             },
             insights: [],
             summaryText: 'Collecting initial aesthetic observations...'
@@ -113,19 +116,24 @@ export class PreferenceLearningEngine {
         this.updateInsights();
     }
 
-    // Generate strict single-parameter isolated A/B pair
+    // Generate consecutive dimension block pair (stays on topology for 4 rounds, then palette, etc.)
     public generateNextPair(baseState: SimulationState): LearnPair {
         this.rounds++;
 
-        const dimKeys: DimensionKey[] = ['topology', 'palette', 'material', 'lighting', 'helixDynamics', 'bloom'];
-        dimKeys.sort((a, b) => (this.profile.dimensions[a].trials - this.profile.dimensions[b].trials));
-        const targetDim = dimKeys[0];
+        // Find current dimension block (the first one with < TRIALS_PER_DIMENSION_BLOCK)
+        let targetDim = DIMENSION_BLOCK_ORDER.find(dim => this.profile.dimensions[dim].trials < TRIALS_PER_DIMENSION_BLOCK);
+        if (!targetDim) {
+            // Pick lowest trial count if all initial blocks completed
+            const sorted = [...DIMENSION_BLOCK_ORDER].sort((a, b) => this.profile.dimensions[a].trials - this.profile.dimensions[b].trials);
+            targetDim = sorted[0];
+        }
+
         const record = this.profile.dimensions[targetDim];
-        const trialCount = record.trials;
+        const trialCount = record.trials; // 0, 1, 2, 3
 
         let label = '';
         let question = '';
-        let stageLabel = '';
+        let stageLabel = `Trial ${trialCount + 1}/${TRIALS_PER_DIMENSION_BLOCK}`;
         let angleName = '';
         let optA: Partial<SimulationState> = {};
         let optB: Partial<SimulationState> = {};
@@ -133,13 +141,13 @@ export class PreferenceLearningEngine {
         let descA = '', descB = '';
         let familyA = '', familyB = '';
 
-        // 1. TOPOLOGY: Everything else (Lighting, Material, Palette, Speed, Bloom) is 100% IDENTICAL
+        // 1. TOPOLOGY BLOCK (4 Consecutive Tournament Rounds)
         if (targetDim === 'topology') {
             label = '3D Topology & Knot Geometry';
+            question = 'Which 3D shape structure do you prefer?';
+
             if (trialCount === 0) {
-                stageLabel = 'Trial 1: Knot Architecture';
                 angleName = 'Trefoil vs Figure-8';
-                question = 'Which 3D geometry structure do you prefer?';
                 titleA = 'Trefoil Braided Ribbon (2,3)';
                 descA = '3-fold symmetrical braided torus knot';
                 familyA = 'trefoil';
@@ -150,26 +158,43 @@ export class PreferenceLearningEngine {
                 familyB = 'figure_eight';
                 optB = { formationMode: FormationMode.FigureEightKnotBraid };
             } else if (trialCount === 1) {
-                stageLabel = 'Trial 2: Inverted Bias Check';
-                angleName = 'Position-Flipped Topology';
-                question = 'Consistency Check: Does your topology preference hold in flipped order?';
-                titleA = 'Figure-Eight 4_1 Listing Knot';
-                descA = 'Alternating 4-lobe topological braid';
-                familyA = 'figure_eight';
-                optA = { formationMode: FormationMode.FigureEightKnotBraid };
+                angleName = 'Knot vs Septafoil Stellar';
+                // Challenger: Test winner of round 1 against Septafoil Stellar Knot
+                const currentLeader = record.bestStyleFamily === 'figure_eight' ? 'Figure-Eight 4_1 Listing Knot' : 'Trefoil Braided Ribbon (2,3)';
+                const currentLeaderMode = record.bestStyleFamily === 'figure_eight' ? FormationMode.FigureEightKnotBraid : FormationMode.TrefoilBraidedRibbon;
 
-                titleB = 'Trefoil Braided Ribbon (2,3)';
-                descB = '3-fold symmetrical braided torus knot';
-                familyB = 'trefoil';
-                optB = { formationMode: FormationMode.TrefoilBraidedRibbon };
+                titleA = currentLeader;
+                descA = 'Your current top-ranked topology structure';
+                familyA = record.bestStyleFamily;
+                optA = { formationMode: currentLeaderMode };
+
+                titleB = 'Septafoil Stellar Braid (7,3)';
+                descB = '7-point intertwined stellar torus ribbon';
+                familyB = 'septafoil';
+                optB = { formationMode: FormationMode.SeptafoilKnotBraid };
+            } else if (trialCount === 2) {
+                angleName = 'Leader vs Cinqfoil Solomon Knot';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderMode = record.bestData.formationMode;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked topology structure';
+                familyA = record.bestStyleFamily;
+                optA = { formationMode: currentLeaderMode };
+
+                titleB = 'Cinqfoil Solomon Knot (5,2)';
+                descB = '5-lobed pentagrammatic intertwining torus ribbon';
+                familyB = 'cinqfoil';
+                optB = { formationMode: FormationMode.CinqfoilKnotBraid };
             } else {
-                stageLabel = 'Trial 3: High-Order Symmetry';
-                angleName = 'Septafoil vs Fractal Supercoil';
-                question = 'Validation: Pitting your top knot against high-symmetry fractal geometries.';
-                titleA = 'Septafoil Stellar Braid (7,3)';
-                descA = '7-point intertwined stellar torus ribbon';
-                familyA = 'septafoil';
-                optA = { formationMode: FormationMode.SeptafoilKnotBraid };
+                angleName = 'Championship vs 4-Tier Fractal Supercoil';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderMode = record.bestData.formationMode;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked topology structure';
+                familyA = record.bestStyleFamily;
+                optA = { formationMode: currentLeaderMode };
 
                 titleB = '4-Tier Fractal Supercoil';
                 descB = 'Recursive nested helix-of-helices with coaxial channels';
@@ -177,13 +202,13 @@ export class PreferenceLearningEngine {
                 optB = { formationMode: FormationMode.FractalSupercoil };
             }
         }
-        // 2. PALETTE: Everything else (Topology, Material, Lighting, Speed, Bloom) is 100% IDENTICAL
+        // 2. COLOR PALETTE BLOCK (4 Consecutive Rounds, rendered ON winning topology)
         else if (targetDim === 'palette') {
             label = 'Color Palette Harmony';
+            question = 'Which color palette harmony do you prefer?';
+
             if (trialCount === 0) {
-                stageLabel = 'Trial 1: Warm Gold vs Cool Neon';
-                angleName = 'Chromatic Harmony Baseline';
-                question = 'Which color harmony creates the best chromatic balance?';
+                angleName = 'Obsidian Gold vs Neon Aurora';
                 titleA = 'Prismatic Obsidian Flare';
                 descA = 'Dark charcoal, fiery amber, copper, and titanium white';
                 familyA = 'obsidian_gold';
@@ -194,26 +219,42 @@ export class PreferenceLearningEngine {
                 familyB = 'bioluminescent_neon';
                 optB = { speciesColors: ['#03071e', '#00f5d4', '#00bbf9', '#9b5de5'] };
             } else if (trialCount === 1) {
-                stageLabel = 'Trial 2: Inverted Bias Check';
-                angleName = 'Position-Flipped Palette';
-                question = 'Consistency Check: Does your palette preference hold in flipped layout?';
-                titleA = 'Bioluminescent Aurora';
-                descA = 'Deep abyss navy, neon emerald, cyan, and violet';
-                familyA = 'bioluminescent_neon';
-                optA = { speciesColors: ['#03071e', '#00f5d4', '#00bbf9', '#9b5de5'] };
+                angleName = 'Leader vs Gilded Champagne Gold';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderColors = record.bestData.speciesColors;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked color palette';
+                familyA = record.bestStyleFamily;
+                optA = { speciesColors: [...currentLeaderColors] };
 
                 titleB = 'Gilded Obsidian & Champagne Gold';
                 descB = 'Obsidian black, champagne gold, platinum silver, and white';
-                familyB = 'obsidian_gold';
+                familyB = 'gilded_gold';
                 optB = { speciesColors: ['#0a0d14', '#d4af37', '#e5e4e2', '#ffffff'] };
+            } else if (trialCount === 2) {
+                angleName = 'Leader vs Volcanic Magma Embers';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderColors = record.bestData.speciesColors;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked color palette';
+                familyA = record.bestStyleFamily;
+                optA = { speciesColors: [...currentLeaderColors] };
+
+                titleB = 'Volcanic Magma Embers';
+                descB = 'Pitch obsidian, molten lava orange, glowing ember gold, and white';
+                familyB = 'volcanic_embers';
+                optB = { speciesColors: ['#121316', '#ff4500', '#ffa500', '#ffffff'] };
             } else {
-                stageLabel = 'Trial 3: High-Contrast Monotone';
-                angleName = 'Volcanic vs Celestial Sapphire';
-                question = 'Validation: Testing saturated volcanic magma vs deep celestial sapphire.';
-                titleA = 'Volcanic Magma Embers';
-                descA = 'Pitch obsidian, molten lava orange, glowing ember gold, and white';
-                familyA = 'volcanic_embers';
-                optA = { speciesColors: ['#121316', '#ff4500', '#ffa500', '#ffffff'] };
+                angleName = 'Championship vs Celestial Sapphire';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderColors = record.bestData.speciesColors;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked color palette';
+                familyA = record.bestStyleFamily;
+                optA = { speciesColors: [...currentLeaderColors] };
 
                 titleB = 'Celestial Stellar Sapphire';
                 descB = 'Abyss navy, royal sapphire, electric sky blue, and diamond white';
@@ -221,57 +262,73 @@ export class PreferenceLearningEngine {
                 optB = { speciesColors: ['#050814', '#1d3557', '#457b9d', '#f1faee'] };
             }
         }
-        // 3. MATERIAL: Everything else (Topology, Lighting, Palette, Speed, Bloom) is 100% IDENTICAL
+        // 3. MATERIAL BLOCK (4 Consecutive Rounds)
         else if (targetDim === 'material') {
             label = 'Surface Material (Optics)';
+            question = 'Which surface reflectivity and facet finish do you prefer?';
+
             if (trialCount === 0) {
-                stageLabel = 'Trial 1: Metallic Specular vs Matte Velvet';
-                angleName = 'Direct Surface Finish';
-                question = 'Which surface reflectivity and facet finish do you prefer?';
+                angleName = 'Specular Metallic vs Matte Velvet';
                 titleA = 'Sparkling Specular Facets';
-                descA = 'Glossy metallic finish (Metalness 0.55, Roughness 0.22) with sharp highlights';
+                descA = 'Glossy metallic finish with sharp polygonal facet glints';
                 familyA = 'specular_metallic';
                 optA = { materialSettings: { roughness: 0.22, metalness: 0.55, wireframe: false, flatShading: true, emissiveIntensity: 0.12 } };
 
                 titleB = 'Deep Matte Velvet';
-                descB = 'Dielectric satin finish (Metalness 0.05, Roughness 0.70) with soft diffuse shading';
+                descB = 'Dielectric satin finish with soft diffuse shading';
                 familyB = 'matte_satin';
                 optB = { materialSettings: { roughness: 0.70, metalness: 0.05, wireframe: false, flatShading: true, emissiveIntensity: 0.08 } };
             } else if (trialCount === 1) {
-                stageLabel = 'Trial 2: Inverted Bias Check';
-                angleName = 'Position-Flipped Material';
-                question = 'Consistency Check: Does your material preference hold in reversed order?';
-                titleA = 'Deep Matte Velvet (Soft Satin)';
-                descA = 'Low-specular diffuse finish without sharp metallic glints';
-                familyA = 'matte_satin';
-                optA = { materialSettings: { roughness: 0.68, metalness: 0.08, wireframe: false, flatShading: true, emissiveIntensity: 0.08 } };
+                angleName = 'Leader vs High-Chrome Mirror';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderMat = record.bestData.materialSettings;
 
-                titleB = 'High-Luster Specular Metallic';
-                descB = 'Glossy faceted chrome finish with sparkling light catchers';
-                familyB = 'specular_metallic';
-                optB = { materialSettings: { roughness: 0.20, metalness: 0.60, wireframe: false, flatShading: true, emissiveIntensity: 0.12 } };
-            } else {
-                stageLabel = 'Trial 3: Specular Sweet-Spot';
-                angleName = 'Chrome Facets vs Liquid Glass';
-                question = 'Validation: Pinpointing sharp polygonal facet edges vs smooth glass sheen.';
-                titleA = 'Sharp Specular Polygonal Facets';
-                descA = 'Metalness 0.65, Roughness 0.20 with sharp polygonal facet glints';
-                familyA = 'specular_metallic';
-                optA = { materialSettings: { roughness: 0.20, metalness: 0.65, wireframe: false, flatShading: true, emissiveIntensity: 0.12 } };
+                titleA = currentLeader;
+                descA = 'Your current top-ranked surface material';
+                familyA = record.bestStyleFamily;
+                optA = { materialSettings: { ...currentLeaderMat } };
 
-                titleB = 'Smooth Liquid Glass Mirror';
-                descB = 'Metalness 0.35, Roughness 0.10 with smooth continuous curvature';
+                titleB = 'Ultra-Gloss High-Chrome Mirror';
+                descB = 'Metalness 0.85, Roughness 0.10 with gleaming mirror reflections';
+                familyB = 'high_chrome';
+                optB = { materialSettings: { roughness: 0.10, metalness: 0.85, wireframe: false, flatShading: true, emissiveIntensity: 0.15 } };
+            } else if (trialCount === 2) {
+                angleName = 'Leader vs Smooth Liquid Glass';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderMat = record.bestData.materialSettings;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked surface material';
+                familyA = record.bestStyleFamily;
+                optA = { materialSettings: { ...currentLeaderMat } };
+
+                titleB = 'Smooth Liquid Glass Sheen';
+                descB = 'Metalness 0.30, Roughness 0.05 with smooth continuous curvature';
                 familyB = 'liquid_glass';
-                optB = { materialSettings: { roughness: 0.10, metalness: 0.35, wireframe: false, flatShading: false, emissiveIntensity: 0.08 } };
+                optB = { materialSettings: { roughness: 0.05, metalness: 0.30, wireframe: false, flatShading: false, emissiveIntensity: 0.08 } };
+            } else {
+                angleName = 'Leader vs Prismatic Wireframe Cyber';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderMat = record.bestData.materialSettings;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked surface material';
+                familyA = record.bestStyleFamily;
+                optA = { materialSettings: { ...currentLeaderMat } };
+
+                titleB = 'Holographic Cyber Wireframe';
+                descB = 'Delicate polygon wireframe cage over luminous cores';
+                familyB = 'cyber_wireframe';
+                optB = { materialSettings: { roughness: 0.20, metalness: 0.50, wireframe: true, flatShading: true, emissiveIntensity: 0.30 } };
             }
         }
-        // 4. LIGHTING: Everything else (Topology, Material, Palette, Speed, Bloom) is 100% IDENTICAL
+        // 4. LIGHTING BLOCK (4 Consecutive Rounds)
         else if (targetDim === 'lighting') {
             label = 'Studio Lighting & Atmosphere';
+            question = 'Which atmospheric lighting profile creates the best depth?';
+
             if (trialCount === 0) {
-                stageLabel = 'Trial 1: Volcanic Warm vs Bioluminescent Cool';
-                angleName = 'Atmospheric Temperature';
-                question = 'Which atmospheric lighting profile creates the most compelling depth?';
+                angleName = 'Volcanic Warm vs Bioluminescent Cool';
                 titleA = 'Volcanic Magma Horizon';
                 descA = 'Intense amber key light with crimson fill and high-contrast rim contours';
                 familyA = 'volcanic_key';
@@ -282,40 +339,42 @@ export class PreferenceLearningEngine {
                 familyB = 'bioluminescent_cool';
                 optB = { lightingProfile: { id: 2, label: 'Bioluminescent Abyss', ambientIntensity: 0.22, keyIntensity: 3.6, keyColor: '#00e5ff', fillIntensity: 0.60, fillColor: '#7b2cbf', rimIntensity: 3.2, rimColor: '#00ffff', fogDensity: 0.035 } };
             } else if (trialCount === 1) {
-                stageLabel = 'Trial 2: Inverted Bias Check';
-                angleName = 'Position-Flipped Lighting';
-                question = 'Consistency Check: Does your lighting preference hold in reversed order?';
-                titleA = 'Bioluminescent Abyss';
-                descA = 'Deep indigo ambient with cyan key and violet rim glow';
-                familyA = 'bioluminescent_cool';
-                optA = { lightingProfile: { id: 2, label: 'Bioluminescent Abyss', ambientIntensity: 0.22, keyIntensity: 3.6, keyColor: '#00e5ff', fillIntensity: 0.60, fillColor: '#7b2cbf', rimIntensity: 3.2, rimColor: '#00ffff', fogDensity: 0.035 } };
+                angleName = 'Leader vs Prismatic Solar Daylight';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderLight = record.bestData.lightingProfile;
 
-                titleB = 'Volcanic Magma Horizon';
-                descB = 'Intense amber key light with crimson fill and high-contrast rim contours';
-                familyB = 'volcanic_key';
-                optB = { lightingProfile: { id: 4, label: 'Volcanic Magma', ambientIntensity: 0.28, keyIntensity: 4.2, keyColor: '#ff6820', fillIntensity: 0.75, fillColor: '#802535', rimIntensity: 2.8, rimColor: '#ffa040', fogDensity: 0.045 } };
-            } else {
-                stageLabel = 'Trial 3: Chiaroscuro vs High-Key Solar';
-                angleName = 'Low-Key Dramatic vs High-Key Studio';
-                question = 'Validation: Testing moody low-key chiaroscuro vs bright solar daylight.';
-                titleA = 'Volcanic Chiaroscuro (Moody Low-Key)';
-                descA = 'Dark shadows with intense amber rim backlight and atmospheric mist';
-                familyA = 'volcanic_key';
-                optA = { lightingProfile: { id: 4, label: 'Volcanic Magma', ambientIntensity: 0.24, keyIntensity: 4.3, keyColor: '#ff6820', fillIntensity: 0.70, fillColor: '#802535', rimIntensity: 3.0, rimColor: '#ffa040', fogDensity: 0.048 } };
+                titleA = currentLeader;
+                descA = 'Your current top-ranked lighting atmosphere';
+                familyA = record.bestStyleFamily;
+                optA = { lightingProfile: { ...currentLeaderLight } };
 
                 titleB = 'Prismatic Solar Daylight (High-Key)';
-                descB = 'Bright golden daylight with soft fill and minimal shadows';
+                descB = 'Bright golden daylight with soft fill and crystal-clear shadows';
                 familyB = 'solar_high_key';
                 optB = { lightingProfile: { id: 5, label: 'Prismatic Solar', ambientIntensity: 0.40, keyIntensity: 4.5, keyColor: '#fff0a0', fillIntensity: 0.85, fillColor: '#ff8040', rimIntensity: 3.0, rimColor: '#ffffff', fogDensity: 0.020 } };
+            } else {
+                angleName = 'Leader vs Dark Nebula Chiaroscuro';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderLight = record.bestData.lightingProfile;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked lighting atmosphere';
+                familyA = record.bestStyleFamily;
+                optA = { lightingProfile: { ...currentLeaderLight } };
+
+                titleB = 'Deep Nebula Chiaroscuro';
+                descB = 'Ultra-dark ambient with razor-sharp rim backlighting';
+                familyB = 'dark_nebula';
+                optB = { lightingProfile: { id: 1, label: 'Deep Nebula', ambientIntensity: 0.15, keyIntensity: 4.8, keyColor: '#00ffcc', fillIntensity: 0.40, fillColor: '#3a0ca3', rimIntensity: 3.8, rimColor: '#7209b7', fogDensity: 0.055 } };
             }
         }
-        // 5. HELIX DYNAMICS & FLOW SPEED: Everything else is 100% IDENTICAL
+        // 5. HELIX DYNAMICS BLOCK (4 Consecutive Rounds)
         else if (targetDim === 'helixDynamics') {
             label = 'Pipe Flow Velocity & Helices';
+            question = 'Which internal boid flow speed feels best?';
+
             if (trialCount === 0) {
-                stageLabel = 'Trial 1: Fast Stream vs Gentle Glide';
-                angleName = 'Flow Velocity Baseline';
-                question = 'Which internal boid flow and child spiral speed feels more organic?';
+                angleName = 'Fast Stream vs Gentle Drift';
                 titleA = 'Dynamic Spiral Stream Flow';
                 descA = 'Rapid longitudinal stream flow (Speed 0.24) with child micro-helices';
                 familyA = 'fast_dna_stream';
@@ -325,41 +384,30 @@ export class PreferenceLearningEngine {
                 descB = 'Gentle laminar glide (Speed 0.12) with subtle undulating breathing waves';
                 familyB = 'gentle_laminar';
                 optB = { speedMultiplier: 0.12, noiseTurbulence: 0.012 };
-            } else if (trialCount === 1) {
-                stageLabel = 'Trial 2: Inverted Bias Check';
-                angleName = 'Position-Flipped Flow Test';
-                question = 'Consistency Check: Does your flow speed preference hold in flipped layout?';
-                titleA = 'Tranquil Chiral Drift';
-                descA = 'Gentle laminar glide with subtle breathing waves';
-                familyA = 'gentle_laminar';
-                optA = { speedMultiplier: 0.12, noiseTurbulence: 0.012 };
-
-                titleB = 'Dynamic Spiral Stream Flow';
-                descB = 'Rapid longitudinal stream flow with child micro-helices';
-                familyB = 'fast_dna_stream';
-                optB = { speedMultiplier: 0.24, noiseTurbulence: 0.028 };
             } else {
-                stageLabel = 'Trial 3: Turbulence Sweet-Spot';
-                angleName = 'Fluid Eddies vs Hydrodynamic Laminar';
-                question = 'Validation: Testing natural fluid turbulence vs crisp hydrodynamic laminar lines.';
-                titleA = 'Natural Fluid Turbulence (0.025)';
-                descA = 'Speed 0.20 with organic living curl-noise eddies';
-                familyA = 'fast_dna_stream';
-                optA = { speedMultiplier: 0.20, noiseTurbulence: 0.025 };
+                angleName = 'Leader vs Hydrodynamic Laminar Lines';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderSpeed = record.bestData.speedMultiplier;
+                const currentLeaderTurb = record.bestData.noiseTurbulence;
 
-                titleB = 'Laser Hydrodynamic Streamlines (0.008)';
-                descB = 'Speed 0.20 with zero jitter and laser-straight streamlines';
+                titleA = currentLeader;
+                descA = 'Your current top-ranked flow speed';
+                familyA = record.bestStyleFamily;
+                optA = { speedMultiplier: currentLeaderSpeed, noiseTurbulence: currentLeaderTurb };
+
+                titleB = 'Laser Hydrodynamic Streamlines';
+                descB = 'Smooth hydrodynamic flow with zero jitter and laser-straight streamlines';
                 familyB = 'hydrodynamic_laminar';
                 optB = { speedMultiplier: 0.20, noiseTurbulence: 0.008 };
             }
         }
-        // 6. BLOOM: Everything else is 100% IDENTICAL
+        // 6. BLOOM BLOCK
         else {
             label = 'Optical Bloom & Glow';
+            question = 'Which optical bloom intensity do you prefer?';
+
             if (trialCount === 0) {
-                stageLabel = 'Trial 1: Radiant Halo vs Crisp Facets';
-                angleName = 'Optical Bloom Baseline';
-                question = 'Which optical bloom intensity enhances the specular highlights?';
+                angleName = 'Radiant Specular Halo vs Crisp Architectural';
                 titleA = 'Radiant Specular Halo (Intensity 2.4)';
                 descA = 'Dreamy optical diffusion with intense facet bloom radiation';
                 familyA = 'radiant_halo';
@@ -370,13 +418,14 @@ export class PreferenceLearningEngine {
                 familyB = 'crisp_glints';
                 optB = { bloomSettings: { luminanceThreshold: 0.85, intensity: 1.2, radius: 0.35, levels: 2 } };
             } else {
-                stageLabel = 'Trial 2: Inverted Bias Check';
-                angleName = 'Position-Flipped Bloom';
-                question = 'Consistency Check: Does your bloom preference hold in flipped layout?';
-                titleA = 'Crisp Architectural Specular';
-                descA = 'Minimalist edge glints without light bleeding';
-                familyA = 'crisp_glints';
-                optA = { bloomSettings: { luminanceThreshold: 0.85, intensity: 1.2, radius: 0.35, levels: 2 } };
+                angleName = 'Leader vs Balanced Cinematic Bloom';
+                const currentLeader = record.bestOptionLabel;
+                const currentLeaderBloom = record.bestData.bloomSettings;
+
+                titleA = currentLeader;
+                descA = 'Your current top-ranked optical bloom';
+                familyA = record.bestStyleFamily;
+                optA = { bloomSettings: { ...currentLeaderBloom } };
 
                 titleB = 'Balanced Cinematic Bloom';
                 descB = 'Soft atmospheric glow on specular highlights';
@@ -466,7 +515,7 @@ export class PreferenceLearningEngine {
             const d = dims[dim];
             const trials = d.trials;
             const affinity = Math.round(50 + (trials > 0 ? (d.score - 0.5) * 80 : 0));
-            const confidence = Math.min(100, Math.round(trials * 28.0));
+            const confidence = Math.min(100, Math.round(trials * 25.0));
             const consistencyScore = trials > 0 ? Math.round((d.totalAgreements / trials) * 100) : 100;
 
             totalAgreementSum += d.totalAgreements;
@@ -503,7 +552,7 @@ export class PreferenceLearningEngine {
         const confirmedCount = insights.filter(i => i.status === 'confirmed').length;
 
         if (this.profile.totalRounds === 0) {
-            this.profile.summaryText = 'Multi-angle aesthetic verification active: test variations across isolated parameters and flipped layouts.';
+            this.profile.summaryText = 'Multi-angle aesthetic verification active: focused category tournament with persistent parameter baselines.';
         } else {
             this.profile.summaryText = `Overall Choice Consistency: ${this.profile.overallConsistency}% across ${this.profile.totalRounds} rounds (${confirmedCount} dimensions validated).`;
         }

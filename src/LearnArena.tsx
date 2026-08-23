@@ -115,10 +115,11 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
     // Smooth In-Place State Mutation on Pair Change to Prevent 1-Frame Flickering
     useEffect(() => {
         const updateCandidate = (target: SimulationState, candState: Partial<SimulationState>) => {
-            // Reset to clean baseline for all non-target parameters
+            // Apply baseline + cumulative learned preferences so far
             Object.assign(target, BASELINE_LEARN_STATE);
+            engine.applyToState(target);
 
-            // Apply target parameter
+            // Apply candidate target parameter
             if (candState.formationMode !== undefined && candState.formationMode !== target.formationMode) {
                 target.prevFormationMode = target.formationMode;
                 target.formationMode = candState.formationMode;
@@ -134,7 +135,7 @@ export const LearnArena: React.FC<LearnArenaProps> = ({ mainState, onClose }) =>
 
         updateCandidate(stateA.current, currentPair.candidateA.state);
         updateCandidate(stateB.current, currentPair.candidateB.state);
-    }, [currentPair]);
+    }, [currentPair, engine]);
 
     const handlePick = (choice: 'A' | 'B') => {
         setLastChoice(choice);
