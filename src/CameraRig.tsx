@@ -177,8 +177,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const rPerimeter = Math.max(minSafeStandoff, rBound + 1.8);
 
         if (preset.type === 'flythrough') {
-            flightTime.current += safeDelta * 0.16;
-            const t = flightTime.current;
+            const t = time * 0.16;
             _camIdealPos.set(
                 Math.sin(t) * rPerimeter,
                 Math.sin(t * 1.5) * (rBound * 0.35) + 1.2,
@@ -186,8 +185,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             );
             _camIdealTarget.set(0, Math.sin(t * 0.8) * 0.4, 0);
         } else if (preset.type === 'corkscrew') {
-            flightTime.current += safeDelta * 0.12;
-            const t = flightTime.current;
+            const t = time * 0.12;
             const rSpiral = rPerimeter + Math.sin(t * 0.5) * 0.8;
             _camIdealPos.set(
                 Math.cos(t) * rSpiral,
@@ -218,7 +216,6 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             if (controlsRef.current) {
                 controlsRef.current.autoRotate = false;
                 controlsRef.current.target.copy(curLookTarget.current);
-                controlsRef.current.update();
             }
         } else {
             const targetFov = preset.fov;
@@ -234,15 +231,13 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 if (controlsRef.current) {
                     controlsRef.current.autoRotate = false;
                     controlsRef.current.target.copy(curLookTarget.current);
-                    controlsRef.current.update();
                 }
             } else {
-                // Orbit mode
+                // Orbit mode: let OrbitControls handle autoRotate smoothly
                 if (controlsRef.current) {
                     controlsRef.current.autoRotate = !isUserInteracting;
                     controlsRef.current.autoRotateSpeed = preset.autoRotateSpeed;
                     curLookTarget.current.copy(controlsRef.current.target);
-                    controlsRef.current.update();
                 }
             }
         }
