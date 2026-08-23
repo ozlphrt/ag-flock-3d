@@ -39,6 +39,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [isDebugOpen, setIsDebugOpen] = useState(false);
     const [isLearnOpen, setIsLearnOpen] = useState(false);
     const [isAgentForYouOpen, setIsAgentForYouOpen] = useState(false);
+    const [hoveredDockBtn, setHoveredDockBtn] = useState<{ id: string; title: string; desc: string; color: string } | null>(null);
     const [hoveredTip, setHoveredTip] = useState<{ title: string; desc: string; top: number } | null>(null);
     const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
         swarm: true,
@@ -1897,13 +1898,50 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             </div>
         )}
 
-        {/* Floating Bottom Right Controls */}
+        {/* Floating Bottom Right Controls with Custom High-Legibility Tooltips */}
         <div className="floating-bottom-bar" style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1000 }}>
+            {/* Custom Large High-Legibility Floating Tooltip */}
+            {hoveredDockBtn && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: '68px',
+                    right: hoveredDockBtn.id === 'settings' ? '0px' : hoveredDockBtn.id === 'dice' ? '64px' : hoveredDockBtn.id === 'learn' ? '128px' : '192px',
+                    width: '300px',
+                    background: 'rgba(10, 14, 24, 0.96)',
+                    backdropFilter: 'blur(24px)',
+                    WebkitBackdropFilter: 'blur(24px)',
+                    border: `1.5px solid ${hoveredDockBtn.color}`,
+                    borderRadius: '12px',
+                    padding: '13px 16px',
+                    boxShadow: `0 16px 45px rgba(0,0,0,0.9), 0 0 25px ${hoveredDockBtn.color}33`,
+                    pointerEvents: 'none',
+                    zIndex: 10001,
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    animation: 'fadeIn 0.12s ease-out'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: hoveredDockBtn.color, boxShadow: `0 0 8px ${hoveredDockBtn.color}` }} />
+                        <span style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
+                            {hoveredDockBtn.title}
+                        </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.45', fontWeight: 400 }}>
+                        {hoveredDockBtn.desc}
+                    </div>
+                </div>
+            )}
+
             {/* Aesthetic AI Recommendation Agent "For You" Feed */}
             <button
                 className="defeat-selector-btn"
                 onClick={() => setIsAgentForYouOpen(!isAgentForYouOpen)}
-                title="✨ Launch Autonomous Aesthetic Agent (Personalized Recommendation Feed)"
+                onMouseEnter={() => setHoveredDockBtn({
+                    id: 'agent',
+                    title: '✨ Aesthetic AI Agent ("For You")',
+                    desc: 'Autonomous recommendation engine that understands your taste and curates bespoke procedural swarm aesthetics.',
+                    color: '#00e5ff'
+                })}
+                onMouseLeave={() => setHoveredDockBtn(null)}
                 style={{
                     width: '52px',
                     height: '52px',
@@ -1930,7 +1968,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <button
                 className="defeat-selector-btn"
                 onClick={() => setIsLearnOpen(true)}
-                title="🧠 Launch Aesthetic Evolution & Preference Learning Engine"
+                onMouseEnter={() => setHoveredDockBtn({
+                    id: 'learn',
+                    title: '🧠 Aesthetic Ranking Arena',
+                    desc: 'Side-by-side A/B comparison arena with multi-angle Bayesian taste learning across 6 visual dimensions.',
+                    color: '#2FA1D6'
+                })}
+                onMouseLeave={() => setHoveredDockBtn(null)}
                 style={{
                     width: '52px',
                     height: '52px',
@@ -1957,7 +2001,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <button
                 className="defeat-selector-btn dice-spin-btn"
                 onClick={handleDiceProcedural}
-                title="🎲 Synthesize New Infinite Procedural Topology (Real-Time Generation)"
+                onMouseEnter={() => setHoveredDockBtn({
+                    id: 'dice',
+                    title: '🎲 Infinite Procedural Synthesis',
+                    desc: 'Synthesizes brand-new procedural 3D topologies, palettes, and lighting in real-time with fluid morph transitions.',
+                    color: '#ffd700'
+                })}
+                onMouseLeave={() => setHoveredDockBtn(null)}
                 style={{
                     width: '52px',
                     height: '52px',
@@ -1984,7 +2034,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
             <button
                 className="defeat-selector-btn"
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                title="Toggle Swarm Studio Settings Panel"
+                onMouseEnter={() => setHoveredDockBtn({
+                    id: 'settings',
+                    title: '⚙️ Swarm Studio Settings',
+                    desc: 'Full granular control panel for flock physics, species matrices, lighting, materials, and camera presets.',
+                    color: '#00ffcc'
+                })}
+                onMouseLeave={() => setHoveredDockBtn(null)}
                 style={{
                     width: '52px',
                     height: '52px',
