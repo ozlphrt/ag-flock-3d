@@ -150,30 +150,25 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             orbitBaseAngle.current = Math.atan2(camera.position.x, camera.position.z);
         }
 
-        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 3000 || isUserDragging.current;
+        const isUserInteracting = (performance.now() - lastInteractionTime.current) < 4000 || isUserDragging.current;
 
         // 2. User Interactive Mode (OrbitControls active)
-        if (isUserDragging.current || (userHasOverridden.current && isUserInteracting)) {
+        if (isUserInteracting || isUserDragging.current) {
             if (controlsRef.current) {
-                controlsRef.current.enabled = true;
                 curLookTarget.current.copy(controlsRef.current.target);
             }
             return;
         }
 
-        // 3. Re-enter Autonomous Mode when user interaction expires
-        if (userHasOverridden.current && !isUserInteracting && state.autoMode !== false) {
+        // 3. Re-enter Autonomous Mode seamlessly from user's current camera position
+        if (userHasOverridden.current) {
             userHasOverridden.current = false;
             transitionStartTime.current = time;
             startCamPos.current.copy(camera.position);
             startLookTarget.current.copy(curLookTarget.current);
             startFov.current = perspCam.fov;
             orbitBaseAngle.current = Math.atan2(camera.position.x, camera.position.z) - (time * preset.autoRotateSpeed * 0.35);
-        }
-
-        // Disable OrbitControls during autonomous camera rendering
-        if (controlsRef.current && controlsRef.current.enabled) {
-            controlsRef.current.enabled = false;
+            smoothTargetDist.current = Math.max(minSafeStandoff, camera.position.distanceTo(curLookTarget.current));
         }
 
         const elapsed = Math.max(0.0, time - transitionStartTime.current);
@@ -233,6 +228,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             }
         }
 
+        if (controlsRef.current) {
+            controlsRef.current.target.copy(curLookTarget.current);
+        }
         camera.lookAt(curLookTarget.current);
     });
 

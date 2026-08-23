@@ -254,8 +254,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uniformsRef.current.textureVelocity.value = gpgpuRef.current.getCurrentVelocityTexture();
         }
 
-        // Boid Scale based on population
-        const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.0095 : 0.0165);
+        // Boid Scale based on population (thick, lush pipes matching 50k)
+        const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.024 : 0.032);
         uniformsRef.current.uBoidScale.value = baseScale;
 
         // Species Color Morphing

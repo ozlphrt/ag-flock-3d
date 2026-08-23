@@ -107,13 +107,13 @@ vec3 applyMultiLayerSheath(vec3 m, vec3 tangent, float u, float time, float sp, 
     vec3 n3 = n2 * cosMicro + b2 * sinMicro;
     vec3 b3 = -n2 * sinMicro + b2 * cosMicro;
 
-    float rMicro = (0.32 * vol * (0.45 + 0.55 * sqrt((trackId + 0.5) / 8.0))) * wavePulse;
+    float rMicro = (0.72 * vol * (0.45 + 0.55 * sqrt((trackId + 0.5) / 8.0))) * wavePulse;
     vec3 p3 = p2 + n3 * rMicro;
 
     // 3. Order-4 Nano Filaments (Tight DNA sub-twists inside each child helix)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
     float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 64.0 * PI) + time * 3.2 * speedMult;
-    float rNano = 0.09 * vol * wavePulse;
+    float rNano = 0.28 * vol * wavePulse;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
 
     // 4. Subtle Stray Aura (~8% subtle floaters around the edges)
@@ -656,10 +656,8 @@ void main() {
             cos(uTime * 1.1 * freq + nSeed * 24.12) * activeNoise * agilityMult,
             sin(uTime * 1.6 * freq + nSeed * 14.41) * activeNoise * agilityMult
         );
-    }
-
-    // Exponential smoothing towards target velocity (prevents overshoot/chatter)
-    vec3 accel = (targetVel - vel) * 0.28;
+    }    // Exponential smoothing towards target velocity (snappy fast response)
+    vec3 accel = (targetVel - vel) * 0.72;
 
     // Soft Acceleration Clamping
     float accelMag = length(accel);
@@ -715,24 +713,24 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     const posArray = dtPosition.image.data as Float32Array;
     const velArray = dtVelocity.image.data as Float32Array;
 
-    // Initialize initial spatial distribution
+    // Initialize initial spatial distribution with uniform 3D sphere & golden-ratio low discrepancy u
     for (let i = 0; i < count; i++) {
         const i4 = i * 4;
-        const u = i / count;
+        const u = ((i * 137.50776405) % count) / count;
         const sp = i % 4;
 
         const theta = Math.random() * Math.PI * 2.0;
         const phi = Math.acos(Math.random() * 2.0 - 1.0);
-        const r = 2.0 + Math.random() * 6.0;
+        const r = 2.5 + Math.random() * 3.5;
 
         posArray[i4 + 0] = r * Math.sin(phi) * Math.cos(theta);
-        posArray[i4 + 1] = r * Math.cos(phi);
+        posArray[i4 + 1] = r * Math.cos(phi) * 0.75;
         posArray[i4 + 2] = r * Math.sin(phi) * Math.sin(theta);
         posArray[i4 + 3] = sp + u; // Encodes species in integer and u in decimal
 
-        velArray[i4 + 0] = (Math.random() - 0.5) * 0.02;
-        velArray[i4 + 1] = (Math.random() - 0.5) * 0.02;
-        velArray[i4 + 2] = (Math.random() - 0.5) * 0.02;
+        velArray[i4 + 0] = (Math.random() - 0.5) * 0.05;
+        velArray[i4 + 1] = (Math.random() - 0.5) * 0.05;
+        velArray[i4 + 2] = (Math.random() - 0.5) * 0.05;
         velArray[i4 + 3] = Math.random(); // Unique Noise Seed
     }
 
@@ -755,10 +753,10 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uFormationMode = { value: FormationMode.QuadHelixBraid };
     velocityUniforms.uPrevFormationMode = { value: FormationMode.QuadHelixBraid };
     velocityUniforms.uMorphProgress = { value: 1.0 };
-    velocityUniforms.uLerpRate = { value: 0.075 };
-    velocityUniforms.uMaxSpeed = { value: 0.16 };
-    velocityUniforms.uMaxAccel = { value: 0.028 };
-    velocityUniforms.uVolThickness = { value: 0.30 }; // Defined, clean ribbon thickness
+    velocityUniforms.uLerpRate = { value: 0.16 };
+    velocityUniforms.uMaxSpeed = { value: 0.55 };
+    velocityUniforms.uMaxAccel = { value: 0.12 };
+    velocityUniforms.uVolThickness = { value: 0.95 }; // Defined, rich volumetric pipe thickness
     velocityUniforms.uNoiseDrift = { value: 0.006 }; // Subtle organic fluid turbulence
     velocityUniforms.uSeed = { value: 42.0 };
 
@@ -768,30 +766,27 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uP_r2 = { value: 1.8 };
     velocityUniforms.uP_r3 = { value: 0.9 };
     velocityUniforms.uP_a1 = { value: 2.5 };
-    velocityUniforms.uP_a2 = { value: 1.2 };
-    velocityUniforms.uP_a3 = { value: 0.6 };
-    velocityUniforms.uP_k1 = { value: 1.0 };
-    velocityUniforms.uP_k2 = { value: 2.0 };
-    velocityUniforms.uP_k3 = { value: 3.0 };
-    velocityUniforms.uP_k4 = { value: 4.0 };
-    velocityUniforms.uP_k5 = { value: 5.0 };
-    velocityUniforms.uP_k6 = { value: 1.0 };
-    velocityUniforms.uP_k7 = { value: 2.0 };
-    velocityUniforms.uP_k8 = { value: 3.0 };
+    velocityUniforms.uP_a2 = { value: 1.5 };
+    velocityUniforms.uP_a3 = { value: 0.8 };
+    velocityUniforms.uP_k1 = { value: 3 };
+    velocityUniforms.uP_k2 = { value: 2 };
+    velocityUniforms.uP_k3 = { value: 4 };
+    velocityUniforms.uP_k4 = { value: 1 };
+    velocityUniforms.uP_k5 = { value: 5 };
+    velocityUniforms.uP_k6 = { value: 2 };
+    velocityUniforms.uP_k7 = { value: 3 };
+    velocityUniforms.uP_k8 = { value: 1 };
     velocityUniforms.uP_phi1 = { value: 0.0 };
-    velocityUniforms.uP_phi2 = { value: 1.57 };
-    velocityUniforms.uP_phi3 = { value: 0.78 };
-    velocityUniforms.uP_m = { value: 6.0 };
+    velocityUniforms.uP_phi2 = { value: 0.0 };
+    velocityUniforms.uP_phi3 = { value: 0.0 };
+    velocityUniforms.uP_m = { value: 4.0 };
     velocityUniforms.uP_n1 = { value: 1.0 };
     velocityUniforms.uP_n2 = { value: 1.0 };
     velocityUniforms.uP_n3 = { value: 1.0 };
     velocityUniforms.uP_a = { value: 1.0 };
     velocityUniforms.uP_b = { value: 1.0 };
 
-    const error = gpuCompute.init();
-    if (error !== null) {
-        console.error('GPGPU Initialization Error:', error);
-    }
+    gpuCompute.init();
 
     return {
         renderer,
@@ -814,6 +809,13 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             const elapsed = Math.max(0.0, time - startTime);
             const p = Math.min(1.0, elapsed / duration);
 
+            // Fast Snappy Morphing Dynamics (0.85 speed cap during morphs for instant formation)
+            const isMorphing = p < 1.0;
+            const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
+            const activeLerpRate = isMorphing ? (0.24 * (1.0 - sCurve) + 0.16 * sCurve) : 0.16;
+            const activeMaxSpeed = (isMorphing ? 0.85 : 0.48) * (speedMult > 0 ? speedMult / 0.14 : 1.0);
+            const activeMaxAccel = (isMorphing ? 0.22 : 0.10) * (speedMult > 0 ? speedMult / 0.14 : 1.0);
+
             positionUniforms.uDelta.value = delta;
 
             velocityUniforms.uTime.value = time;
@@ -823,6 +825,9 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             velocityUniforms.uFormationMode.value = mode;
             velocityUniforms.uPrevFormationMode.value = prevMode;
             velocityUniforms.uMorphProgress.value = p;
+            velocityUniforms.uLerpRate.value = activeLerpRate;
+            velocityUniforms.uMaxSpeed.value = activeMaxSpeed;
+            velocityUniforms.uMaxAccel.value = activeMaxAccel;
             velocityUniforms.uSeed.value = state.formationSeed ?? 42.0;
 
             if (state.proceduralGenome) {
