@@ -769,7 +769,13 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     for (let i = 0; i < count; i++) {
         const i4 = i * 4;
         const u = ((i * 137.50776405) % count) / count;
-        const q = i / count;
+        // Low-discrepancy hash dispersion (matches GPGPUFlock.tsx exactly)
+        let h = (i + 1) ^ 0x9e3779b9;
+        h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+        h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+        h = (h ^ (h >>> 16)) >>> 0;
+        const q = (h + 0.5) / 4294967296.0;
+
         let sp = 0;
         if (q < t0) sp = 0;
         else if (q < t1) sp = 1;

@@ -106,7 +106,12 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             uvs[i * 2 + 0] = x / sizeX;
             uvs[i * 2 + 1] = y / sizeY;
 
-            species[i] = (i + 0.5) / actualCapacity; // Continuous normalized particle ratio
+            // Low-discrepancy hash dispersion: perfectly distributes species across 3D space, eliminating spiral parastichy bands
+            let h = (i + 1) ^ 0x9e3779b9;
+            h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+            h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+            h = (h ^ (h >>> 16)) >>> 0;
+            species[i] = (h + 0.5) / 4294967296.0;
 
             // Ultra-Sparse Giant Hierarchy:
             // - 97.0% sleek fine & mid boids (0.20x - 1.0x)
