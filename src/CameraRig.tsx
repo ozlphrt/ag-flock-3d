@@ -166,16 +166,16 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const tgtOut = calcTargetScratch.current;
 
         if (mode === 'rollercoaster') {
-            // 🎢 Roller-Coaster Rail Shoot: Rides on an elevated chase-track outside the pipe looking down the ribbon
+            // 🎢 Roller-Coaster Rail Shoot: Rides on an elevated chase-track safely OUTSIDE the pipe looking down the ribbon
             const formMode = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
             const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
             const speedMult = (state && state.speedMultiplier !== undefined) ? state.speedMultiplier : 0.14;
 
             // Continuous parametric travel along the loop
-            const trackSpeed = 0.038; // Majestic flying velocity along the strand
+            const trackSpeed = 0.034; // Serene majestic flying velocity along the strand
             const uCam = ((time * trackSpeed) % 1.0 + 1.0) % 1.0;
-            const uLookAhead = (uCam + 0.035) % 1.0;
-            const uFarAhead = (uCam + 0.12) % 1.0;
+            const uLookAhead = (uCam + 0.04) % 1.0;
+            const uFarAhead = (uCam + 0.14) % 1.0;
 
             // Evaluate exact positions on the active mathematical manifold
             const camPt = computeFormationPoint(formMode, seed, uCam, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
@@ -197,11 +197,11 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             const radY = camPt[1] / rLen;
             const radZ = camPt[2] / rLen;
 
-            // Stand-off distance floats outside the dense boid pipe with trailing chase offset
-            const standOff = 2.4;
-            const trailDist = 1.4;
+            // Generous stand-off distance floats comfortably outside the dense boid pipe with trailing chase offset
+            const standOff = 4.2;
+            const trailDist = 2.2;
             posOut.x = camPt[0] + radX * standOff - nDirX * trailDist;
-            posOut.y = camPt[1] + radY * standOff - nDirY * trailDist + 0.6;
+            posOut.y = camPt[1] + radY * standOff - nDirY * trailDist + 0.8;
             posOut.z = camPt[2] + radZ * standOff - nDirZ * trailDist;
 
             // Target looks down the forward loop corridor ahead
@@ -210,26 +210,26 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             tgtOut.z = farLookPt[2];
         } else if (mode === 'chopper') {
             // 🚁 Chopper Core Hover: Slow hovering float inside the inner void tracking the orbiting swarm loops
-            const tChop = time * 0.10;
-            posOut.x = Math.sin(tChop * 1.4) * 2.2;
-            posOut.y = Math.sin(tChop * 2.2) * 1.2 + Math.cos(tChop * 0.8) * 0.4;
-            posOut.z = Math.cos(tChop * 1.4) * 2.2;
+            const tChop = time * 0.08;
+            posOut.x = Math.sin(tChop * 1.4) * 2.8;
+            posOut.y = Math.sin(tChop * 2.2) * 1.5 + Math.cos(tChop * 0.8) * 0.5;
+            posOut.z = Math.cos(tChop * 1.4) * 2.8;
 
             // Focus directly on proximate swirling ribbon loops orbiting around the chopper
-            const focusAngle = time * 0.18;
-            const focusR = 5.2 + Math.sin(time * 0.25) * 1.5;
+            const focusAngle = time * 0.16;
+            const focusR = 6.2 + Math.sin(time * 0.25) * 1.5;
             tgtOut.x = Math.sin(focusAngle) * focusR;
-            tgtOut.y = Math.sin(time * 0.30) * 2.0;
+            tgtOut.y = Math.sin(time * 0.25) * 2.0;
             tgtOut.z = Math.cos(focusAngle) * focusR;
         } else if (mode === 'giant') {
             // 🗿 Monumental Giant: Close base-level wide-angle lens right at the foot of the structure
             const tG = time * 0.08;
-            posOut.x = Math.sin(tG) * 5.2;
-            posOut.y = -3.4 + Math.sin(time * 0.12) * 0.3;
-            posOut.z = Math.cos(tG) * 5.2;
+            posOut.x = Math.sin(tG) * 5.6;
+            posOut.y = -3.2 + Math.sin(time * 0.12) * 0.3;
+            posOut.z = Math.cos(tG) * 5.6;
 
             tgtOut.x = 0.0;
-            tgtOut.y = 1.2 + Math.cos(time * 0.15) * 0.6;
+            tgtOut.y = 1.4 + Math.cos(time * 0.15) * 0.6;
             tgtOut.z = 0.0;
         } else if (mode === 'corkscrew') {
             // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix looking through the core
@@ -245,9 +245,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         } else if (mode === 'slalom') {
             // ⚡ Action Slalom: Rapid undulating slalom flyby skimming ribbons
             const tS = time * 0.20;
-            const rS = 8.8 + Math.sin(tS * 2.6) * 2.2;
+            const rS = 9.8 + Math.sin(tS * 2.6) * 2.2;
             posOut.x = Math.sin(tS) * rS;
-            posOut.y = 1.2 + Math.cos(tS * 2.8) * 2.6;
+            posOut.y = 1.6 + Math.cos(tS * 2.8) * 2.6;
             posOut.z = Math.cos(tS) * rS;
 
             tgtOut.x = Math.sin(tS + 0.6) * 3.2;
@@ -307,15 +307,17 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 perspCam.lookAt(controls.target);
             }
 
-            // Synchronize Camera-Mounted Spotlight to follow camera and illuminate shadowed regions
+            // Synchronize Camera-Mounted Spotlight as a gentle soft fill light (prevents blinding specular blowouts)
             if (spotLightRef.current && spotTargetRef.current) {
                 spotLightRef.current.position.copy(perspCam.position);
                 spotTargetRef.current.position.copy(controls.target);
                 spotLightRef.current.target = spotTargetRef.current;
 
                 const mult = state.lightIntensityMultiplier ?? 1.0;
-                const isClosePreset = (preset.type === 'chopper' || preset.type === 'rollercoaster');
-                spotLightRef.current.intensity = (isClosePreset ? 3.0 : 2.4) * mult;
+                spotLightRef.current.intensity = 0.65 * mult;
+                spotLightRef.current.distance = 45.0;
+                spotLightRef.current.penumbra = 0.95;
+                spotLightRef.current.decay = 2.0;
             }
         }
     });
@@ -327,7 +329,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 makeDefault
                 fov={66}
                 position={[0, 3.2, 12.8]}
-                near={0.10}
+                near={0.80}
                 far={1000}
             />
             <OrbitControls
@@ -335,21 +337,21 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 enableDamping={true}
                 dampingFactor={0.08}
                 autoRotate={false}
-                minDistance={1.8}
+                minDistance={2.5}
                 maxDistance={220}
                 minPolarAngle={0.02}
                 maxPolarAngle={Math.PI - 0.02}
             />
 
-            {/* Camera-Mounted Spotlight (Follows view frustum to illuminate dark/shady sides of topology) */}
+            {/* Camera-Mounted Spotlight (Soft fill light to illuminate dark/shady sides without blinding specular bloom) */}
             <spotLight
                 ref={spotLightRef}
                 position={[0, 3.2, 12.8]}
-                intensity={2.4}
-                distance={70.0}
+                intensity={0.65}
+                distance={45.0}
                 angle={Math.PI / 3.0}
-                penumbra={0.85}
-                decay={1.1}
+                penumbra={0.95}
+                decay={2.0}
                 color="#f8fafc"
             />
         </>
