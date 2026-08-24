@@ -763,22 +763,21 @@ void main() {
     float effectiveSize = clamp(boidSize * spBaseScale, spMin, spMax);
 
     // 3. Physical Size-Inertia Law:
-    // Heavy/Large boids have larger momentum & graceful turning radius
-    // Nimble/Micro boids have lightning agility, snappier responsiveness & lively flutter
-    float sizeAgility = clamp(1.0 / sqrt(max(0.08, effectiveSize)), 0.45, 2.40);
-    float sizeSpeed = clamp(1.0 + (1.0 - effectiveSize) * 0.22, 0.70, 1.40);
+    // Controlled agility and velocity damping to eliminate high-frequency twitching / bouncing
+    float sizeAgility = clamp(1.0 / sqrt(max(0.4, effectiveSize)), 0.85, 1.20);
+    float sizeSpeed = clamp(1.0 + (1.0 - effectiveSize) * 0.10, 0.85, 1.15);
 
-    // Active morphing aerodynamic agility boost
+    // Controlled morphing agility boost
     bool isSpeciesMorphing = (spMorph > 0.001 && spMorph < 0.999);
-    float morphAgilityBoost = isSpeciesMorphing ? 1.35 : 1.0;
-    float morphSpeedBoost = isSpeciesMorphing ? 1.25 : 1.0;
+    float morphAgilityBoost = isSpeciesMorphing ? 1.12 : 1.0;
+    float morphSpeedBoost = isSpeciesMorphing ? 1.10 : 1.0;
 
-    float totalAgility = spAgility * sizeAgility * morphAgilityBoost;
-    float totalSpeed = spSpeed * sizeSpeed * morphSpeedBoost;
+    float totalAgility = clamp(spAgility * sizeAgility * morphAgilityBoost, 0.75, 1.25);
+    float totalSpeed = clamp(spSpeed * sizeSpeed * morphSpeedBoost, 0.75, 1.20);
 
     float localLerp = uLerpRate * totalAgility;
-    float localMaxSpeed = uMaxSpeed * totalSpeed;
-    float localMaxAccel = uMaxAccel * totalAgility;
+    float localMaxSpeed = min(uMaxSpeed * totalSpeed, 0.48 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
+    float localMaxAccel = min(uMaxAccel * totalAgility, 0.06 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
 
     // Critically-Damped Target Velocity Filter (smooth proportional pursuit)
     vec3 err = targetPos - pos;
@@ -1004,11 +1003,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Responsive Cruising & Morphing Dynamics (Smoothly flows into topologies without bouncing)
+            // Responsive Cruising & Morphing Dynamics (Smoothly flows into topologies with strictly capped acceleration & velocity)
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.24 : 0.18) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.90 : 0.65) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.20 : 0.14) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.18 : 0.14) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.46 : 0.38) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.055 : 0.035) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 

@@ -745,8 +745,8 @@ export function generateSpeciesKinematics(count: number = 4, sizes?: number[]): 
     const speeds: number[] = [];
     for (let i = 0; i < count; i++) {
         const sz = effSizes[i] || 1.0;
-        const ag = Math.min(2.4, Math.max(0.45, (1.0 / Math.sqrt(sz)) * (0.85 + Math.random() * 0.3)));
-        const sp = Math.min(1.4, Math.max(0.70, (1.0 + (1.0 - sz) * 0.22) * (0.90 + Math.random() * 0.2)));
+        const ag = Math.min(1.20, Math.max(0.85, (1.0 / Math.sqrt(Math.max(0.5, sz))) * (0.92 + Math.random() * 0.16)));
+        const sp = Math.min(1.15, Math.max(0.85, (1.0 + (1.0 - sz) * 0.10) * (0.95 + Math.random() * 0.10)));
         agilities.push(Number(ag.toFixed(2)));
         speeds.push(Number(sp.toFixed(2)));
     }
