@@ -710,32 +710,32 @@ void main() {
 
     float localLerp = uLerpRate * totalAgility;
     float localMaxSpeed = uMaxSpeed * totalSpeed;
+    float localMaxAccel = uMaxAccel * totalAgility;
 
-    // Smooth Critical-Damped Velocity Filter
+    // Critically-Damped Target Velocity Filter (smooth proportional pursuit)
     vec3 err = targetPos - pos;
-    vec3 targetVel = err * localLerp;
+    vec3 desiredVel = err * localLerp;
 
-    // Organic living fluid noise turbulence tailored per individual boid (decorrelated phase prevents collective bouncing)
-    float activeNoise = uNoiseDrift * 0.35 * spRand * (0.35 + 0.65 * settleDecay) * totalAgility;
-    if (activeNoise > 1e-5) {
-        float indPhase1 = fract(nSeed * 18.28) * TWO_PI;
-        float indPhase2 = fract(nSeed * 24.12) * TWO_PI;
-        float indPhase3 = fract(nSeed * 14.41) * TWO_PI;
-        targetVel += vec3(
-            sin(uTime * 0.8 + indPhase1) * activeNoise,
-            cos(uTime * 0.7 + indPhase2) * activeNoise,
-            sin(uTime * 0.9 + indPhase3) * activeNoise
-        );
+    // 1. Cap maximum desired speed to prevent excessive impulse
+    float desiredSpeed = length(desiredVel);
+    if (desiredSpeed > localMaxSpeed && desiredSpeed > 1e-6) {
+        desiredVel = (desiredVel / desiredSpeed) * localMaxSpeed;
     }
 
-    // Analytical exponential damping with per-species/size responsiveness
-    float blendRate = clamp(0.14 * totalAgility, 0.06, 0.42);
-    vel = mix(vel, targetVel, blendRate);
+    // 2. Physical Steering: Cap maximum acceleration per frame to eliminate oscillations and bouncing
+    vec3 steerAccel = desiredVel - vel;
+    float accelMag = length(steerAccel);
+    if (accelMag > localMaxAccel && accelMag > 1e-6) {
+        steerAccel = (steerAccel / accelMag) * localMaxAccel;
+    }
 
-    // Smooth soft-knee speed limiter (no hard trajectory clipping)
-    float speed = length(vel);
-    if (speed > localMaxSpeed && speed > 1e-6) {
-        vel = (vel / speed) * (localMaxSpeed + (speed - localMaxSpeed) * 0.05);
+    // Apply acceleration
+    vel += steerAccel;
+
+    // 3. Absolute ceiling clamp on max speed
+    float currentSpeed = length(vel);
+    if (currentSpeed > localMaxSpeed && currentSpeed > 1e-6) {
+        vel = (vel / currentSpeed) * localMaxSpeed;
     }
 
     gl_FragColor = vec4(vel, nSeed);
@@ -933,11 +933,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Silky Smooth Morphing & Cruising Dynamics (calibrated to match CPU 50k flock)
+            // Silky Smooth Morphing & Cruising Dynamics (calibrated to eliminate all overshoot/bouncing)
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.12 : 0.08) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.24 : 0.15) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.07 : 0.035) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.08 : 0.045) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.18 : 0.10) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.025 : 0.008) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 
