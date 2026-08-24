@@ -223,11 +223,11 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         // -1: Cosmic Chaos / Pure Random Free Swarm Cloud
         float theta = fract(nSeed * 137.5077 + u * 47.19) * TWO_PI + time * 0.15 * speedMult;
         float phi = fract(nSeed * 91.31 + u * 19.83) * PI;
-        float r = 5.0 + fract(nSeed * 37.19 + u * 13.0) * 14.0;
+        float r = 3.5 + fract(nSeed * 37.19 + u * 13.0) * 6.5;
         target = vec3(
-            r * sin(phi) * cos(theta) + sin(time * 0.7 + nSeed * 8.0) * 2.0,
-            r * cos(phi) * 0.75 + cos(time * 0.5 + nSeed * 6.0) * 1.8,
-            r * sin(phi) * sin(theta) + sin(time * 0.6 + nSeed * 9.0) * 2.0
+            r * sin(phi) * cos(theta) + sin(time * 0.7 + nSeed * 8.0) * 1.5,
+            r * cos(phi) * 0.75 + cos(time * 0.5 + nSeed * 6.0) * 1.2,
+            r * sin(phi) * sin(theta) + sin(time * 0.6 + nSeed * 9.0) * 1.5
         );
     }
     else if (mode == 0) {
@@ -1003,11 +1003,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Silky Smooth Non-Bouncing Cruising & Morphing Dynamics
+            // Responsive Cruising & Morphing Dynamics (Smoothly flows into topologies without bouncing)
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.08 : 0.045) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.18 : 0.10) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.025 : 0.008) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.24 : 0.18) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.90 : 0.65) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.20 : 0.14) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 

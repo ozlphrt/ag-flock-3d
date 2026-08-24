@@ -1310,10 +1310,10 @@ export function computeFormationPoint(
         // --- Complete Randomness / Free Swarm Cloud ---
         const theta = (((indexInSpecies * 137.5077) % 1000) / 1000.0) * Math.PI * 2.0 + time * 0.15 * speedMult;
         const phi = (((indexInSpecies * 91.31) % 1000) / 1000.0) * Math.PI;
-        const r = 6.0 + (((indexInSpecies * 37.19 + u * 13.0) % 1000) / 1000.0) * 12.0;
-        tx = r * fastSin(phi) * fastCos(theta) + fastSin(time * 0.8 + (indexInSpecies % 10)) * 2.5;
-        ty = r * fastCos(phi) * 0.75 + fastCos(time * 0.6 + (indexInSpecies % 7)) * 2.0;
-        tz = r * fastSin(phi) * fastSin(theta) + fastSin(time * 0.7 + (indexInSpecies % 11)) * 2.5;
+        const r = 3.5 + (((indexInSpecies * 37.19 + u * 13.0) % 1000) / 1000.0) * 6.5;
+        tx = r * fastSin(phi) * fastCos(theta) + fastSin(time * 0.7 + (indexInSpecies % 10)) * 1.5;
+        ty = r * fastCos(phi) * 0.75 + fastCos(time * 0.5 + (indexInSpecies % 7)) * 1.2;
+        tz = r * fastSin(phi) * fastSin(theta) + fastSin(time * 0.6 + (indexInSpecies % 11)) * 1.5;
     } else if (formation === FormationMode.QuadHelixBraid) {
         // --- 0. Toroidal Quad-Helix Braid (4 Intertwined Pure Species Cords) ---
         const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
