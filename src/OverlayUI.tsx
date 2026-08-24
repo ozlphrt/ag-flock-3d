@@ -55,14 +55,14 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
     const [topologyStats, setTopologyStats] = useState({
-        name: 'Cosmic Chaos (Free Swarm)',
-        icon: '🌌',
+        name: 'Quad Helix Braid',
+        icon: '🧬',
         cameraName: 'Celestial Orbit',
         cameraIcon: '🪐',
         isMorphing: false,
         morphProgress: 1.0,
         timeElapsed: 0,
-        timeRemaining: 12,
+        timeRemaining: 18,
         formationProgress: 0.0
     });
 

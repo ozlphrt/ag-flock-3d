@@ -358,9 +358,9 @@ function App() {
     const [population, setPopulation] = useState(isMobile ? 25000 : 500000);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Default Startup Configuration: Complete Random Cosmic Swarm Chaos -> First Topology Emergence
-    const initialMode: FormationMode = FormationMode.None;
-    const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
+    // Default Startup Configuration: Starts immediately with fully formed Quad Helix Braid topology
+    const initialMode: FormationMode = FormationMode.QuadHelixBraid;
+    const initialPaletteIdx = 0; // Vibrant Spectrum
     const initialMatIdx = 0; // Vibrant Satin Porcelain (roughness 0.30)
     const initialShape = 0; // Geodesic Ico-Sphere is fixed default
     const initialCameraIdx = 0; // Celestial Orbit
@@ -375,7 +375,7 @@ function App() {
     const initialSizeRanges = generateSpeciesSizeRanges(initialSpeciesCount);
     const initialKinematics = generateSpeciesKinematics(initialSpeciesCount, initialSizeRanges.avgSizes);
     const initialRandomness = generateSpeciesRandomness(initialSpeciesCount);
-    const initialMorphTimings = generateSpeciesMorphTimings(initialSpeciesCount, 5.5);
+    const initialMorphTimings = generateSpeciesMorphTimings(initialSpeciesCount, 24.0);
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -385,8 +385,8 @@ function App() {
         sizeMultiplier: 1.5,
         defeatScenario: DefeatScenario.Remove,
         formationMode: initialMode,
-        formationSeed: Math.random() * 100000,
-        proceduralGenome: (initialMode as any) === FormationMode.Procedural ? generateProceduralGenome() : undefined,
+        formationSeed: 42,
+        proceduralGenome: undefined,
         paletteIndex: initialPaletteIdx,
         speciesCount: initialSpeciesCount,
         speciesColors: initialPalette,
@@ -408,6 +408,12 @@ function App() {
         bloomSettings: {
             ...initialBloom.settings
         },
+        isTopologyFormed: true,
+        physicalConvergence: 1.0,
+        morphProgress: 1.0,
+        transitionStartTime: 0.0,
+        transitionDuration: 24.0,
+        holdDuration: 18.0,
         autoMode: true,
         autoShape: false,
         autoMaterial: true,

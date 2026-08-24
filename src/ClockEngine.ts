@@ -70,11 +70,12 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     };
 
     // Initialize formation lifecycle parameters if not set
-    const isStartChaos = (state.formationMode === FormationMode.None || (state.formationMode as number) < 0);
-    let isInitialStartupMorph = isStartChaos;
-    if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 24.0;
-    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 0.3 : 18.0;
+    if (state.transitionDuration === undefined) state.transitionDuration = 24.0;
+    if (state.holdDuration === undefined) state.holdDuration = 18.0;
     if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
+    if (state.isTopologyFormed === undefined) state.isTopologyFormed = true;
+    if (state.physicalConvergence === undefined) state.physicalConvergence = 1.0;
+    if (state.morphProgress === undefined) state.morphProgress = 1.0;
 
     // Recent Histories for Forbidden Repeat Buffers
     const recentFormations: number[] = [state.formationMode];
@@ -220,12 +221,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
             
-            // Initial startup morph forms quickly within 2.8s so first topology is ready <=3.2s
-            const isFirstEmergence = isInitialStartupMorph;
-            const transDuration = isFirstEmergence ? 2.8 : 24.0;
-            state.transitionDuration = transDuration;
+            state.transitionDuration = 24.0;
             state.holdDuration = 18.0;
-            isInitialStartupMorph = false;
+            const transDuration = 24.0;
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
             let nextMode: FormationMode = FormationMode.Procedural;
