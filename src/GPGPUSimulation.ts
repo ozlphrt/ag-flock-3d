@@ -837,10 +837,17 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             const startTime = state.transitionStartTime ?? 0.0;
             const duration = state.transitionDuration ?? 7.0;
             const elapsed = Math.max(0.0, time - startTime);
-            const p = Math.min(1.0, elapsed / duration);
+            const p = Math.min(1.0, elapsed / Math.max(0.1, duration));
+
+            // Sync state for UI & Clock Engine
+            state.morphProgress = p;
+            const isMorphing = p < 1.0;
+            state.isTopologyFormed = !isMorphing;
+            if (!isMorphing && !state.formedTimestamp) {
+                state.formedTimestamp = time;
+            }
 
             // Silky Smooth Morphing & Cruising Dynamics (calibrated to match CPU 50k flock)
-            const isMorphing = p < 1.0;
             const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
             const activeLerpRate = isMorphing ? (0.12 * (1.0 - sCurve) + 0.06 * sCurve) : 0.06;

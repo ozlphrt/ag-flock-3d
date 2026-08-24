@@ -41,8 +41,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     let lastSpeciesDistTime = -30.0;
     let speciesDistInterval = 44.0;
 
-    let lastCameraPresetTime = -15.0;
-    let cameraPresetInterval = 26.0;
+    let lastCameraPresetTime = -8.0;
+    let cameraPresetInterval = 16.0;
 
     let lastCameraMoodTime = -10.0;
     let cameraMoodInterval = 28.0;
@@ -212,21 +212,21 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.formedTimestamp = time;
         }
 
-        const holdDur = state.holdDuration ?? 16.0;
-        const isHoldComplete = state.isTopologyFormed && state.formedTimestamp !== null && (time - (state.formedTimestamp || 0)) >= holdDur;
-
-        // Failsafe max timeout (38s) in case extreme speed/turbulence prevents threshold
+        const transDur = state.transitionDuration ?? 7.0;
+        const holdDur = state.holdDuration ?? 18.0;
+        const totalCycle = transDur + holdDur;
         const transStart = state.transitionStartTime ?? lastFormationTime;
-        const isMaxTimeout = (time - transStart) > 38.0;
+        const isCycleComplete = (time - transStart) >= totalCycle;
 
-        if (!state.isFormationLocked && (isHoldComplete || isMaxTimeout)) {
+        if (!state.isFormationLocked && isCycleComplete) {
             lastFormationTime = time;
             state.isTopologyFormed = false;
             state.formedTimestamp = null;
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
-            state.holdDuration = rndJitter(activeArc ? 12.0 : 16.0, 0.15);
+            state.transitionDuration = 7.0;
+            state.holdDuration = rndJitter(activeArc ? 14.0 : 18.0, 0.15);
 
             let nextMode: FormationMode;
 
@@ -351,12 +351,12 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.speciesSizes = generateSpeciesSizes();
         }
 
-        // 5. INDEPENDENT CAMERA PRESET CLOCK (Every 22-30s in Auto Mode)
+        // 5. INDEPENDENT CAMERA PRESET CLOCK (Cycles Every 14-18s in Auto Mode)
         if (!state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
             lastCameraPresetTime = time;
-            cameraPresetInterval = rndJitter(26.0, 0.2);
+            cameraPresetInterval = rndJitter(16.0, 0.15);
 
-            const curIdx = state.cameraPresetIndex ?? 0;
+            const curIdx = (state.cameraPresetIndex !== undefined) ? state.cameraPresetIndex : 0;
             const nextCamIdx = (curIdx + 1) % 5;
             state.cameraPresetIndex = nextCamIdx;
         }
@@ -385,23 +385,27 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     const getCountdownProgress = () => {
         const now = (state.currentTime !== undefined) ? state.currentTime : (performance.now() / 1000.0);
         const colElapsed = Math.max(0, now - lastColorTime);
-        const holdDur = state.holdDuration ?? 6.0;
+        const start = state.transitionStartTime ?? 0.0;
+        const totalElapsed = Math.max(0, now - start);
+        const transDur = state.transitionDuration ?? 7.0;
+        const holdDur = state.holdDuration ?? 18.0;
+        const totalCycle = transDur + holdDur;
 
-        let formProg = 0;
-        let formRem = 0;
+        const morphProg = Math.min(1.0, totalElapsed / Math.max(0.1, transDur));
+        const isMorphing = morphProg < 1.0;
+        const overallProg = Math.min(1.0, totalElapsed / Math.max(0.1, totalCycle));
+        const formRem = Math.max(0, Math.ceil(totalCycle - totalElapsed));
 
-        if (!state.isTopologyFormed) {
-            formProg = state.morphProgress ?? 0;
-            formRem = Math.max(1, Math.ceil((1.0 - formProg) * 8.0) + Math.ceil(holdDur));
-        } else {
-            const holdElapsed = Math.max(0, now - (state.formedTimestamp ?? now));
-            formProg = 1.0;
-            formRem = Math.max(0, Math.ceil(holdDur - holdElapsed));
-        }
+        const formInfo = FORMATION_PRESETS.find((f: any) => f.id === state.formationMode);
 
         return {
-            formationProgress: formProg,
-            morphProgress: state.morphProgress ?? 0,
+            formationProgress: overallProg,
+            morphProgress: morphProg,
+            isMorphing,
+            timeElapsed: totalElapsed,
+            timeRemaining: formRem,
+            formationName: state.customFormationName || formInfo?.label || 'Saturnian Planetary Rings',
+            formationIcon: formInfo?.icon || '🪐',
             colorProgress: Math.min(1.0, colElapsed / Math.max(1, colorInterval)),
             formationRemaining: formRem,
             currentArcName: activeArc ? activeArc.name : undefined

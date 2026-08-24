@@ -54,6 +54,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
+    const [topologyStats, setTopologyStats] = useState({
+        name: 'Saturnian Planetary Rings',
+        icon: '🪐',
+        isMorphing: false,
+        morphProgress: 1.0,
+        timeElapsed: 0,
+        timeRemaining: 12,
+        formationProgress: 0.0
+    });
 
     // Global Shortcut: CTRL + SHIFT + ALT + D for Live Debug Parameter Panel
     useEffect(() => {
@@ -80,17 +89,39 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             if (state.clockEngine && state.clockEngine.getCountdownProgress) {
                 const info = state.clockEngine.getCountdownProgress();
-                setProgress(info.formationProgress);
-                setCountdown(info.formationRemaining ?? 14);
+                setProgress(info.formationProgress ?? 0);
+                setCountdown(info.timeRemaining ?? info.formationRemaining ?? 14);
+                setTopologyStats({
+                    name: info.formationName ?? 'Saturnian Planetary Rings',
+                    icon: info.formationIcon ?? '🪐',
+                    isMorphing: !!info.isMorphing,
+                    morphProgress: info.morphProgress ?? 1.0,
+                    timeElapsed: Math.round(info.timeElapsed ?? 0),
+                    timeRemaining: info.timeRemaining ?? info.formationRemaining ?? 0,
+                    formationProgress: info.formationProgress ?? 0
+                });
             } else {
                 const now = (state.currentTime !== undefined) ? state.currentTime : (performance.now() / 1000.0);
                 const start = state.transitionStartTime ?? 0.0;
                 const elapsed = Math.max(0, now - start);
-                const totalCycle = (state.transitionDuration ?? 7.0) + (state.holdDuration ?? 7.0);
-                const p = Math.min(1.0, elapsed / totalCycle);
-                setProgress(p);
+                const transDur = state.transitionDuration ?? 7.0;
+                const holdDur = state.holdDuration ?? 18.0;
+                const totalCycle = transDur + holdDur;
+                const p = Math.min(1.0, elapsed / Math.max(0.1, totalCycle));
                 const rem = Math.max(0, Math.ceil(totalCycle - elapsed));
+                setProgress(p);
                 setCountdown(rem);
+
+                const formInfo = FORMATION_PRESETS.find((f: any) => f.id === state.formationMode);
+                setTopologyStats({
+                    name: state.customFormationName || formInfo?.label || 'Saturnian Planetary Rings',
+                    icon: formInfo?.icon || '🪐',
+                    isMorphing: elapsed < transDur,
+                    morphProgress: Math.min(1.0, elapsed / Math.max(0.1, transDur)),
+                    timeElapsed: Math.round(elapsed),
+                    timeRemaining: rem,
+                    formationProgress: p
+                });
             }
         }, 100);
         return () => clearInterval(interval);
@@ -876,6 +907,165 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 </span>
             </div>
         </div>
+
+        {/* Top-Left Topology Formation Radial Progress Dial HUD */}
+        {(() => {
+            const dialRadius = 18;
+            const circumference = 2 * Math.PI * dialRadius; // ~113.1
+            const progress = Math.min(1.0, Math.max(0, topologyStats.formationProgress));
+            const strokeOffset = circumference * (1.0 - progress);
+
+            return (
+                <div
+                    className="hud-topology-dial-badge"
+                    style={{
+                        position: 'fixed',
+                        top: '18px',
+                        left: '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px 16px 8px 10px',
+                        background: 'rgba(10, 14, 24, 0.88)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: '1.5px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '20px',
+                        boxShadow: '0 10px 32px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 255, 204, 0.08)',
+                        zIndex: 1000,
+                        userSelect: 'none',
+                        pointerEvents: 'auto'
+                    }}
+                >
+                    {/* Glowing Circular Radial Progress Dial */}
+                    <div
+                        style={{
+                            position: 'relative',
+                            width: '46px',
+                            height: '46px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                        }}
+                    >
+                        <svg width="46" height="46" viewBox="0 0 46 46" style={{ transform: 'rotate(-90deg)' }}>
+                            <defs>
+                                <linearGradient id="topoDialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#00ffcc" />
+                                    <stop offset="60%" stopColor="#38bdf8" />
+                                    <stop offset="100%" stopColor="#ffaa00" />
+                                </linearGradient>
+                                <linearGradient id="topoMorphGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#ffaa00" />
+                                    <stop offset="100%" stopColor="#ff3b30" />
+                                </linearGradient>
+                            </defs>
+                            {/* Dial Track */}
+                            <circle
+                                cx="23"
+                                cy="23"
+                                r={dialRadius}
+                                fill="rgba(15, 23, 42, 0.6)"
+                                stroke="rgba(255, 255, 255, 0.10)"
+                                strokeWidth="3.5"
+                            />
+                            {/* Radial Progress Arc */}
+                            <circle
+                                cx="23"
+                                cy="23"
+                                r={dialRadius}
+                                fill="transparent"
+                                stroke={topologyStats.isMorphing ? 'url(#topoMorphGrad)' : 'url(#topoDialGrad)'}
+                                strokeWidth="3.8"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeOffset}
+                                strokeLinecap="round"
+                                style={{
+                                    transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease',
+                                    filter: topologyStats.isMorphing
+                                        ? 'drop-shadow(0 0 5px rgba(255, 170, 0, 0.8))'
+                                        : 'drop-shadow(0 0 5px rgba(0, 255, 204, 0.8))'
+                                }}
+                            />
+                        </svg>
+                        {/* Dial Center: Topology Icon */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                fontSize: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {topologyStats.icon}
+                        </div>
+                    </div>
+
+                    {/* Content Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        {/* Header: Title + Status Pill */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span
+                                style={{
+                                    fontSize: '13.5px',
+                                    fontWeight: 800,
+                                    color: '#ffffff',
+                                    letterSpacing: '-0.2px',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {topologyStats.name}
+                            </span>
+                            <span
+                                style={{
+                                    fontSize: '9px',
+                                    fontWeight: 800,
+                                    padding: '1.5px 6px',
+                                    borderRadius: '6px',
+                                    background: topologyStats.isMorphing ? 'rgba(255, 170, 0, 0.22)' : 'rgba(0, 255, 204, 0.18)',
+                                    color: topologyStats.isMorphing ? '#ffaa00' : '#00ffcc',
+                                    border: `1px solid ${topologyStats.isMorphing ? 'rgba(255, 170, 0, 0.45)' : 'rgba(0, 255, 204, 0.35)'}`,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.4px',
+                                    flexShrink: 0
+                                }}
+                            >
+                                {topologyStats.isMorphing ? `Morph ${Math.round(topologyStats.morphProgress * 100)}%` : 'Active'}
+                            </span>
+                        </div>
+
+                        {/* Metric Row */}
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '14px',
+                                fontSize: '11px',
+                                color: 'rgba(255, 255, 255, 0.65)',
+                                fontFamily: 'monospace'
+                            }}
+                        >
+                            <span>
+                                ⏱️ Spent: <strong style={{ color: '#f1f5f9' }}>{topologyStats.timeElapsed}s</strong>
+                            </span>
+                            <span>
+                                ⏳ Next in:{' '}
+                                <strong
+                                    style={{
+                                        color: topologyStats.timeRemaining <= 3 ? '#ffaa00' : '#38bdf8',
+                                        textShadow: topologyStats.timeRemaining <= 3 ? '0 0 6px rgba(255,170,0,0.6)' : 'none'
+                                    }}
+                                >
+                                    {topologyStats.timeRemaining}s
+                                </strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        })()}
 
         {/* Top-Right Overall Combination Like / Dislike Bar */}
         {(() => {
