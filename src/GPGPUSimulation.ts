@@ -96,7 +96,8 @@ vec3 applyMultiLayerSheath(
     float radius,
     float angFreq,
     float vol,
-    float settleDecay
+    float settleDecay,
+    int strandStyle
 ) {
     vec3 tNorm = normalize(tanV + vec3(1e-6));
     // Continuous rotation-minimizing radial basis (no step function flips or kinks)
