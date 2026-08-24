@@ -415,7 +415,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             formationIcon: formInfo?.icon || '🪐',
             colorProgress: Math.min(1.0, colElapsed / Math.max(1, colorInterval)),
             formationRemaining: formRem,
-            currentArcName: activeArc ? activeArc.name : undefined
+            currentArcName: (activeArc as any)?.name
         };
     };
 
