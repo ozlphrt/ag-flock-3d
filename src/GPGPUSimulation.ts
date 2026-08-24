@@ -53,6 +53,7 @@ uniform float uSpeciesMaxSizes[20];
 uniform float uSpeciesAgility[20];
 uniform float uSpeciesSpeed[20];
 uniform float uSpeciesRandomness[20];
+uniform float uSpeciesMorphProgress[20];
 
 // Procedural Parameters
 uniform int uP_family;
@@ -656,14 +657,35 @@ void main() {
     float elapsed = max(0.0, uTime - uStartTime);
     float settleDecay = 0.30 + 0.70 * exp(-elapsed * 0.12);
 
+    // 1. Dynamic Per-Species Kinematic, Randomness & Staggered Morph Profiles (up to 20 species)
+    int spIdx = int(clamp(species, 0.0, 19.0));
+    float spSpeed = 1.0;
+    float spAgility = 1.0;
+    float spBaseScale = 1.0;
+    float spMin = 0.15;
+    float spMax = 3.5;
+    float spRand = 0.50;
+    float spMorph = uMorphProgress;
+
+    for (int k = 0; k < 20; k++) {
+        if (k == spIdx) {
+            spSpeed = uSpeciesSpeed[k];
+            spAgility = uSpeciesAgility[k];
+            spBaseScale = uSpeciesSizes[k];
+            spMin = uSpeciesMinSizes[k];
+            spMax = uSpeciesMaxSizes[k];
+            spRand = uSpeciesRandomness[k];
+            spMorph = uSpeciesMorphProgress[k];
+        }
+    }
+
     // Evaluate target position with organic time-decaying stray noise and balanced volumetric dispersion
     vec3 targetPos = evaluateTopology(uFormationMode, dynamicU, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
 
-    // If morphing between topologies, evaluate previous formation & apply Quintic S-Curve
-    if (uMorphProgress < 1.0) {
+    // If this individual species is transitioning, evaluate previous formation with smooth quintic S-curve
+    if (spMorph < 0.999) {
         vec3 prevTarget = evaluateTopology(uPrevFormationMode, dynamicU, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
-        float p = uMorphProgress;
-        float sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
+        float sCurve = spMorph * spMorph * spMorph * (spMorph * (spMorph * 6.0 - 15.0) + 10.0);
         targetPos = mix(prevTarget, targetPos, sCurve);
     }
 
@@ -692,25 +714,6 @@ void main() {
         boidSize = 3.8 + subU * 1.4;
     }
 
-    // 1. Dynamic Per-Species Kinematic & Randomness Profiles (up to 20 species)
-    int spIdx = int(clamp(species, 0.0, 19.0));
-    float spSpeed = 1.0;
-    float spAgility = 1.0;
-    float spBaseScale = 1.0;
-    float spMin = 0.15;
-    float spMax = 3.5;
-    float spRand = 0.50;
-
-    for (int k = 0; k < 20; k++) {
-        if (k == spIdx) {
-            spSpeed = uSpeciesSpeed[k];
-            spAgility = uSpeciesAgility[k];
-            spBaseScale = uSpeciesSizes[k];
-            spMin = uSpeciesMinSizes[k];
-            spMax = uSpeciesMaxSizes[k];
-            spRand = uSpeciesRandomness[k];
-        }
-    }
     float spFreq = 0.55 + (float(spIdx) / max(1.0, float(uSpeciesCount - 1))) * 1.30;
 
     // 2. Total Effective Physical Size for this individual boid
@@ -722,8 +725,13 @@ void main() {
     float sizeAgility = clamp(1.0 / sqrt(max(0.08, effectiveSize)), 0.45, 2.40);
     float sizeSpeed = clamp(1.0 + (1.0 - effectiveSize) * 0.22, 0.70, 1.40);
 
-    float totalAgility = spAgility * sizeAgility;
-    float totalSpeed = spSpeed * sizeSpeed;
+    // Active morphing aerodynamic agility boost
+    bool isSpeciesMorphing = (spMorph > 0.001 && spMorph < 0.999);
+    float morphAgilityBoost = isSpeciesMorphing ? 1.35 : 1.0;
+    float morphSpeedBoost = isSpeciesMorphing ? 1.25 : 1.0;
+
+    float totalAgility = spAgility * sizeAgility * morphAgilityBoost;
+    float totalSpeed = spSpeed * sizeSpeed * morphSpeedBoost;
 
     float localLerp = uLerpRate * totalAgility;
     float localMaxSpeed = uMaxSpeed * totalSpeed;
@@ -872,6 +880,7 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uSpeciesAgility = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesSpeed = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesRandomness = { value: new Float32Array(20).fill(0.5) };
+    velocityUniforms.uSpeciesMorphProgress = { value: new Float32Array(20).fill(1.0) };
 
     // Procedural Uniforms
     velocityUniforms.uP_family = { value: 0 };
@@ -916,22 +925,38 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             const mode = state.formationMode ?? FormationMode.QuadHelixBraid;
             const prevMode = state.prevFormationMode ?? mode;
 
-            // Morph Progress calculation
+            // Overall & Staggered Per-Species Morph Progress calculation
             const startTime = state.transitionStartTime ?? 0.0;
             const duration = state.transitionDuration ?? 5.5;
             const elapsed = Math.max(0.0, time - startTime);
-            const p = Math.min(1.0, elapsed / Math.max(0.1, duration));
+            const overallP = Math.min(1.0, elapsed / Math.max(0.1, duration));
+
+            const offsets = state.speciesStartOffsets;
+            const durations = state.speciesMorphDurations;
+            const morphArr = velocityUniforms.uSpeciesMorphProgress.value as Float32Array;
+
+            let minProgress = 1.0;
+            let anyActivelyMorphing = false;
+
+            for (let k = 0; k < 20; k++) {
+                const offset = (offsets && k < offsets.length) ? offsets[k] : 0.0;
+                const dur = (durations && k < durations.length) ? durations[k] : duration;
+                const spElapsed = Math.max(0.0, time - (startTime + offset));
+                const pK = Math.min(1.0, spElapsed / Math.max(0.1, dur));
+                morphArr[k] = pK;
+                if (pK < minProgress) minProgress = pK;
+                if (pK > 0.001 && pK < 0.999) anyActivelyMorphing = true;
+            }
 
             // Sync state for UI & Clock Engine
-            state.morphProgress = p;
-            const isMorphing = p < 1.0;
+            state.morphProgress = overallP;
+            const isMorphing = minProgress < 1.0 || anyActivelyMorphing;
             state.isTopologyFormed = !isMorphing;
             if (!isMorphing && !state.formedTimestamp) {
                 state.formedTimestamp = time;
             }
 
             // Silky Smooth Morphing & Cruising Dynamics (calibrated to match CPU 50k flock)
-            const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
             const activeLerpRate = (isMorphing ? 0.12 : 0.08) * speedScale;
             const activeMaxSpeed = (isMorphing ? 0.24 : 0.15) * speedScale;
@@ -945,7 +970,7 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             velocityUniforms.uSpeedMult.value = speedMult;
             velocityUniforms.uFormationMode.value = mode;
             velocityUniforms.uPrevFormationMode.value = prevMode;
-            velocityUniforms.uMorphProgress.value = p;
+            velocityUniforms.uMorphProgress.value = overallP;
             velocityUniforms.uLerpRate.value = activeLerpRate;
             velocityUniforms.uMaxSpeed.value = activeMaxSpeed;
             velocityUniforms.uMaxAccel.value = activeMaxAccel;

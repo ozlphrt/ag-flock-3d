@@ -18,7 +18,8 @@ import {
     generateHarmoniousPalette,
     generateSpeciesKinematics,
     generateSpeciesRandomness,
-    generateSpeciesSizeRanges
+    generateSpeciesSizeRanges,
+    generateSpeciesMorphTimings
 } from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
@@ -98,6 +99,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.transitionStartTime = curTime;
             state.transitionDuration = 5.5;
             state.holdDuration = 2.5;
+            const spCount = state.speciesCount || state.speciesColors?.length || 4;
+            const morphTimings = generateSpeciesMorphTimings(spCount, 5.5);
+            state.speciesStartOffsets = morphTimings.startOffsets;
+            state.speciesMorphDurations = morphTimings.durations;
         } else if (dimension === 'palette') {
             lastColorTime = curTime;
             colorInterval = rndJitter(54.0, 0.25);
@@ -277,6 +282,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             const kin = generateSpeciesKinematics(spCount, sizeRanges.avgSizes);
             state.speciesAgilities = kin.agilities;
             state.speciesSpeeds = kin.speeds;
+
+            const morphTimings = generateSpeciesMorphTimings(spCount, 5.5);
+            state.speciesStartOffsets = morphTimings.startOffsets;
+            state.speciesMorphDurations = morphTimings.durations;
 
             if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                 state.proceduralGenome = generateProceduralGenome();
@@ -493,6 +502,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 const kin = generateSpeciesKinematics(spCount, sizeRanges.avgSizes);
                 state.speciesAgilities = kin.agilities;
                 state.speciesSpeeds = kin.speeds;
+
+                const morphTimings = generateSpeciesMorphTimings(spCount, 5.5);
+                state.speciesStartOffsets = morphTimings.startOffsets;
+                state.speciesMorphDurations = morphTimings.durations;
 
                 if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                     state.proceduralGenome = generateProceduralGenome();

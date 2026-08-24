@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
 import { GPGPUFlock } from './GPGPUFlock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics, generateSpeciesRandomness, generateSpeciesSizeRanges } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics, generateSpeciesRandomness, generateSpeciesSizeRanges, generateSpeciesMorphTimings } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig, CAMERA_PRESETS } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
@@ -375,6 +375,7 @@ function App() {
     const initialSizeRanges = generateSpeciesSizeRanges(initialSpeciesCount);
     const initialKinematics = generateSpeciesKinematics(initialSpeciesCount, initialSizeRanges.avgSizes);
     const initialRandomness = generateSpeciesRandomness(initialSpeciesCount);
+    const initialMorphTimings = generateSpeciesMorphTimings(initialSpeciesCount, 5.5);
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -397,6 +398,8 @@ function App() {
         speciesAgilities: initialKinematics.agilities,
         speciesSpeeds: initialKinematics.speeds,
         speciesRandomness: initialRandomness,
+        speciesStartOffsets: initialMorphTimings.startOffsets,
+        speciesMorphDurations: initialMorphTimings.durations,
         materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
         materialPreset: initialMatIdx,
         boidShape: initialShape,

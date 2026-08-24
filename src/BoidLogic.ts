@@ -696,6 +696,30 @@ export function generateSpeciesRandomness(count: number = 4): number[] {
     return randomness;
 }
 
+// Helper to generate asynchronous, staggered per-species morph start offsets and durations
+export function generateSpeciesMorphTimings(count: number = 4, totalDuration: number = 5.5): { startOffsets: number[]; durations: number[] } {
+    const startOffsets: number[] = [];
+    const durations: number[] = [];
+    // Random permutation of species ranks so which species leads and follows is randomized on every topology
+    const order = Array.from({ length: count }, (_, i) => i).sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < count; i++) {
+        const rank = order.indexOf(i);
+        const offsetRatio = rank / Math.max(1, count - 1);
+        // Staggered start offset across the initial 45% of the total transition duration
+        const offset = rank === 0 ? 0.0 : (offsetRatio * (totalDuration * 0.42) + (Math.random() - 0.5) * 0.35);
+        const clampedOffset = Math.max(0.0, Math.min(totalDuration * 0.48, offset));
+
+        // Individual flight duration for this species
+        const availableTime = totalDuration - clampedOffset;
+        const dur = Math.max(2.4, availableTime * (0.65 + Math.random() * 0.30));
+
+        startOffsets.push(Number(clampedOffset.toFixed(2)));
+        durations.push(Number(dur.toFixed(2)));
+    }
+    return { startOffsets, durations };
+}
+
 // Global Matrices provided by App
 export interface SimulationState {
     speciesCount?: number;
@@ -718,6 +742,9 @@ export interface SimulationState {
     speciesAgilities?: number[];
     speciesSpeeds?: number[];
     speciesRandomness?: number[];
+    speciesStartOffsets?: number[];
+    speciesMorphDurations?: number[];
+    speciesMorphProgress?: number[];
     paletteIndex?: number;
     materialSettings: MaterialSettings;
     transitionStartTime?: number;
