@@ -22,9 +22,9 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'standard',
         name: 'Celestial Orbit',
         icon: '🪐',
-        description: 'Smooth 360° celestial orbit with intimate framing and full envelope visibility',
-        fov: 46,
-        defaultPos: [0, 2.0, 7.8],
+        description: 'Expansive 360° celestial orbit with rich depth perspective from foreground to horizon',
+        fov: 66,
+        defaultPos: [0, 3.2, 12.8],
         target: [0, 0, 0],
         autoRotateSpeed: 0.18,
         type: 'orbit'
@@ -33,10 +33,10 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'giant',
         name: 'Hero Low Angle',
         icon: '🗿',
-        description: 'Positioned close beneath the swarm gazing upward into the glowing geometry',
-        fov: 50,
-        defaultPos: [0, -3.4, 5.6],
-        target: [0, 0.4, 0],
+        description: 'Dramatically pitched low-angle vista gazing up through proximate strands into deep space',
+        fov: 72,
+        defaultPos: [0, -5.5, 9.5],
+        target: [0, 0.8, 0],
         autoRotateSpeed: 0.14,
         type: 'orbit'
     },
@@ -44,20 +44,20 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'action',
         name: 'Action Sweep',
         icon: '⚡',
-        description: 'Dynamic close proximity sweep weaving along ribbon contours',
-        fov: 48,
-        defaultPos: [0, 1.2, 6.2],
-        target: [0, 0, 0],
-        autoRotateSpeed: 0.22,
+        description: 'Dynamic perspective sweep with foreground boids skimming the lens across multi-layered ribbons',
+        fov: 68,
+        defaultPos: [0, 2.2, 11.8],
+        target: [0, -0.2, 0],
+        autoRotateSpeed: 0.20,
         type: 'orbit'
     },
     {
         id: 'spaceship',
         name: 'Ribbon Glider',
         icon: '🚀',
-        description: 'Close-quarters sweeping flyby skimming the outer boid strands',
-        fov: 45,
-        defaultPos: [0, 1.4, 6.8],
+        description: 'Wide-angle flight tracking outer filaments while preserving deep architectural background vanishings',
+        fov: 65,
+        defaultPos: [0, 1.8, 12.5],
         target: [0, 0, 0],
         autoRotateSpeed: 0.12,
         type: 'flythrough'
@@ -66,31 +66,31 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'corkscrew',
         name: 'Helical Spiral',
         icon: '🌀',
-        description: 'Ascending outer spiral gliding alongside the exterior envelope',
-        fov: 46,
-        defaultPos: [0, 0.4, 6.4],
+        description: 'Ascending outer spiral showcasing close foreground spirals receding into far background rings',
+        fov: 67,
+        defaultPos: [0, 0.8, 12.2],
         target: [0, 0, 0],
-        autoRotateSpeed: 0.18,
+        autoRotateSpeed: 0.16,
         type: 'corkscrew'
     },
     {
         id: 'vortex',
         name: 'Vortex Horizon',
         icon: '🌌',
-        description: 'High-angle deep plunge looking directly through the swirl core',
-        fov: 44,
-        defaultPos: [0, 6.2, 2.6],
-        target: [0, -0.3, 0],
+        description: 'High-angle deep plunge overlooking the entire multi-dimensional swirl down to the glowing nexus',
+        fov: 70,
+        defaultPos: [0, 9.2, 7.8],
+        target: [0, -0.6, 0],
         autoRotateSpeed: 0.15,
         type: 'orbit'
     },
     {
         id: 'tunnel',
-        name: 'Core Tunnel Track',
+        name: 'Deep Stream Horizon',
         icon: '🎯',
-        description: 'Ultra-immersive close perspective inside the topological stream',
-        fov: 52,
-        defaultPos: [0, 0.1, 5.0],
+        description: 'Immersive wide perspective with large proximate boids framing the expansive topological field',
+        fov: 68,
+        defaultPos: [0, 1.5, 11.2],
         target: [0, 0, 0],
         autoRotateSpeed: 0.14,
         type: 'flythrough'
@@ -111,12 +111,12 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const isUserInteracting = useRef(false);
     const lastInteractionTime = useRef(0);
 
-    // Initial state initialized to close intimate orbit
-    const currentRadius = useRef(8.05);
-    const currentPolar = useRef(1.31);
+    // Initial state initialized to wide-angle perspective depth
+    const currentRadius = useRef(13.2);
+    const currentPolar = useRef(1.33);
     const currentAzimuth = useRef(0.0);
     const currentTarget = useRef(new THREE.Vector3(0, 0, 0));
-    const currentFov = useRef(46);
+    const currentFov = useRef(66);
     const currentSpeed = useRef(0.18);
 
     // Track active preset transitions
@@ -213,7 +213,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 currentTarget.current.lerp(targetTarget, smoothFactor);
 
                 // Continuous, majestic orbital drift
-                currentAzimuth.current += currentSpeed.current * dt * 0.14;
+                currentAzimuth.current += currentSpeed.current * dt * 0.12;
 
                 // Smooth FOV interpolation
                 if (perspCam) {
@@ -225,7 +225,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 }
 
                 // Compute exact continuous spherical camera coordinates
-                const r = Math.max(2.5, currentRadius.current);
+                const r = Math.max(3.5, currentRadius.current);
                 const phi = Math.max(0.08, Math.min(Math.PI - 0.08, currentPolar.current));
                 const theta = currentAzimuth.current;
 
@@ -243,7 +243,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 spotLightRef.current.target = spotTargetRef.current;
 
                 const mult = state.lightIntensityMultiplier ?? 1.0;
-                spotLightRef.current.intensity = 2.2 * mult;
+                spotLightRef.current.intensity = 2.4 * mult;
             }
         }
     });
@@ -253,9 +253,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             <PerspectiveCamera
                 ref={cameraRef}
                 makeDefault
-                fov={46}
-                position={[0, 2.0, 7.8]}
-                near={0.20}
+                fov={66}
+                position={[0, 3.2, 12.8]}
+                near={0.10}
                 far={1000}
             />
             <OrbitControls
@@ -263,8 +263,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 enableDamping={true}
                 dampingFactor={0.08}
                 autoRotate={false}
-                minDistance={2.2}
-                maxDistance={120}
+                minDistance={3.0}
+                maxDistance={180}
                 minPolarAngle={0.05}
                 maxPolarAngle={Math.PI - 0.05}
             />
@@ -272,11 +272,11 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             {/* Camera-Mounted Spotlight (Follows view frustum to illuminate dark/shady sides of topology) */}
             <spotLight
                 ref={spotLightRef}
-                position={[0, 2.0, 7.8]}
-                intensity={2.2}
-                distance={45.0}
-                angle={Math.PI / 3.8}
-                penumbra={0.75}
+                position={[0, 3.2, 12.8]}
+                intensity={2.4}
+                distance={65.0}
+                angle={Math.PI / 3.2}
+                penumbra={0.80}
                 decay={1.1}
                 color="#f8fafc"
             />
