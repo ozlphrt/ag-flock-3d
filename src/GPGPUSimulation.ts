@@ -50,6 +50,7 @@ uniform float uSpeciesThresholds[20];
 uniform float uSpeciesSizes[20];
 uniform float uSpeciesAgility[20];
 uniform float uSpeciesSpeed[20];
+uniform float uSpeciesRandomness[20];
 
 // Procedural Parameters
 uniform int uP_family;
@@ -80,7 +81,7 @@ vec3 rotateZ(vec3 p, float a) {
     return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
 }
 
-// 3-Tier Nested Spiral Tube Sheathing
+// 3-Tier Nested Spiral Tube Sheathing (Tailored per-species pipe randomness & dispersion)
 vec3 applyMultiLayerSheath(
     vec3 m,
     vec3 tanV,
@@ -99,8 +100,17 @@ vec3 applyMultiLayerSheath(
     vec3 normal = normalize(cross(tNorm, up));
     vec3 binormal = cross(tNorm, normal);
 
+    // Look up per-species individual randomness factor (0.10 to 1.00)
+    int spIdx = int(clamp(sp, 0.0, 19.0));
+    float spRand = 0.50;
+    for (int k = 0; k < 20; k++) {
+        if (k == spIdx) {
+            spRand = uSpeciesRandomness[k];
+        }
+    }
+
     // Smooth subtle pulsation along the tube cross-section
-    float wavePulse = 1.0 + 0.04 * sin(u * 8.0 * PI - time * 1.0 * speedMult);
+    float wavePulse = 1.0 + (0.02 + 0.04 * spRand) * sin(u * 8.0 * PI - time * 1.0 * speedMult);
 
     // 1. Order-2 Meso cord (N species cords spiraling cleanly around macro spine with dynamic phase offsets)
     float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * angFreq * PI) + time * 0.5 * speedMult;
@@ -114,7 +124,7 @@ vec3 applyMultiLayerSheath(
     // Centerline of the species cord
     vec3 p2 = m + n2 * (radius * wavePulse);
 
-    // 2. Order-3 Micro Child Helices (Smooth laminar ribbons with tight coherent dispersion)
+    // 2. Order-3 Micro Child Helices (Differentiated per-species laminar ribbons)
     float trackId = floor(fract(nSeed * 17.31) * 6.0);
     float microAngle = trackId * (TWO_PI / 6.0) + (u * 8.0 * PI) + time * 0.6 * speedMult;
     float cosMicro = cos(microAngle);
@@ -124,13 +134,13 @@ vec3 applyMultiLayerSheath(
     vec3 n3 = n2 * cosMicro + b2 * sinMicro;
     vec3 b3 = -n2 * sinMicro + b2 * cosMicro;
 
-    float rMicro = (0.35 * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0))) * wavePulse;
+    float rMicro = (0.16 + 0.32 * spRand) * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0)) * wavePulse;
     vec3 p3 = p2 + n3 * rMicro;
 
     // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
     float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 12.0 * PI) + time * 0.8 * speedMult;
-    float rNano = 0.12 * vol * wavePulse;
+    float rNano = (0.04 + 0.12 * spRand) * vol * wavePulse;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
 
     return p4;
@@ -647,17 +657,19 @@ void main() {
         boidSize = 3.8 + subU * 1.4;
     }
 
-    // 1. Dynamic Per-Species Kinematic Profiles (up to 20 species)
+    // 1. Dynamic Per-Species Kinematic & Randomness Profiles (up to 20 species)
     int spIdx = int(clamp(species, 0.0, 19.0));
     float spSpeed = 1.0;
     float spAgility = 1.0;
     float spBaseScale = 1.0;
+    float spRand = 0.50;
 
     for (int k = 0; k < 20; k++) {
         if (k == spIdx) {
             spSpeed = uSpeciesSpeed[k];
             spAgility = uSpeciesAgility[k];
             spBaseScale = uSpeciesSizes[k];
+            spRand = uSpeciesRandomness[k];
         }
     }
     float spFreq = 0.55 + (float(spIdx) / max(1.0, float(uSpeciesCount - 1))) * 1.30;
@@ -681,8 +693,8 @@ void main() {
     vec3 err = targetPos - pos;
     vec3 targetVel = err * localLerp;
 
-    // Organic living fluid noise turbulence tailored per species & size
-    float activeNoise = uNoiseDrift * (0.35 + 0.65 * settleDecay) * totalAgility;
+    // Organic living fluid noise turbulence tailored per species & size (modulated by species randomness)
+    float activeNoise = uNoiseDrift * (0.4 + 1.2 * spRand) * (0.35 + 0.65 * settleDecay) * totalAgility;
     if (activeNoise > 1e-5) {
         float freq = spFreq * (0.7 + 0.3 * sizeAgility);
         targetVel += vec3(
@@ -818,6 +830,7 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uSpeciesSizes = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesAgility = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesSpeed = { value: new Float32Array(20) };
+    velocityUniforms.uSpeciesRandomness = { value: new Float32Array(20).fill(0.5) };
 
     // Procedural Uniforms
     velocityUniforms.uP_family = { value: 0 };
@@ -920,11 +933,14 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
 
             const agArr = velocityUniforms.uSpeciesAgility.value as Float32Array;
             const spdArr = velocityUniforms.uSpeciesSpeed.value as Float32Array;
+            const randArr = velocityUniforms.uSpeciesRandomness.value as Float32Array;
             const spAg = state.speciesAgilities || [0.70, 1.15, 1.50, 1.95];
             const spSpd = state.speciesSpeeds || [0.85, 1.18, 1.28, 1.05];
+            const spRand = state.speciesRandomness || [0.5, 0.5, 0.5, 0.5];
             for (let k = 0; k < 20; k++) {
                 agArr[k] = (k < spAg.length) ? spAg[k] : 1.0;
                 spdArr[k] = (k < spSpd.length) ? spSpd[k] : 1.0;
+                randArr[k] = (k < spRand.length) ? spRand[k] : 0.5;
             }
 
             if (state.proceduralGenome) {

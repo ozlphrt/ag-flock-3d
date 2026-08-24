@@ -16,7 +16,8 @@ import {
     generateSpeciesSizes,
     generateDynamicSpeciesCount,
     generateHarmoniousPalette,
-    generateSpeciesKinematics
+    generateSpeciesKinematics,
+    generateSpeciesRandomness
 } from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
@@ -266,6 +267,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.transitionStartTime = time;
             state.transitionDuration = 7.0;
 
+            const spCount = state.speciesCount || state.speciesColors?.length || 4;
+            state.speciesRandomness = generateSpeciesRandomness(spCount);
+
             if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                 state.proceduralGenome = generateProceduralGenome();
             }
@@ -472,6 +476,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
                 state.formationMode = nextMode;
                 state.formationSeed = Math.random() * 10000;
+                const spCount = state.speciesCount || state.speciesColors?.length || 4;
+                state.speciesRandomness = generateSpeciesRandomness(spCount);
                 if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                     state.proceduralGenome = generateProceduralGenome();
                 }

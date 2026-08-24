@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
 import { GPGPUFlock } from './GPGPUFlock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics, generateSpeciesRandomness } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig, CAMERA_PRESETS } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
@@ -374,6 +374,7 @@ function App() {
     const initialSpeciesMaterials = generateSpeciesMaterials(initialSpeciesCount);
     const initialSpeciesSizes = generateSpeciesSizes(initialSpeciesCount);
     const initialKinematics = generateSpeciesKinematics(initialSpeciesCount, initialSpeciesSizes);
+    const initialRandomness = generateSpeciesRandomness(initialSpeciesCount);
 
     const simState = useRef<SimulationState>({
         attributes: SPECIES_CONFIG,
@@ -393,6 +394,7 @@ function App() {
         speciesSizes: initialSpeciesSizes,
         speciesAgilities: initialKinematics.agilities,
         speciesSpeeds: initialKinematics.speeds,
+        speciesRandomness: initialRandomness,
         materialSettings: { ...(MATERIAL_PRESETS[initialMatIdx]?.settings || MATERIAL_PRESETS[0].settings) },
         materialPreset: initialMatIdx,
         boidShape: initialShape,

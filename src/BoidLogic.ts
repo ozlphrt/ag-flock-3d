@@ -649,6 +649,17 @@ export function generateSpeciesKinematics(count: number = 4, sizes?: number[]): 
     return { agilities, speeds };
 }
 
+// Helper to generate distinct per-species pipe randomness / flutter (0.10 to 1.00) refreshed in every topology
+export function generateSpeciesRandomness(count: number = 4): number[] {
+    const randomness: number[] = [];
+    for (let i = 0; i < count; i++) {
+        // Differentiated spread: some species laser-tight (0.12 - 0.25), others organic & lively (0.40 - 0.85)
+        const rand = 0.12 + Math.random() * 0.73;
+        randomness.push(Number(rand.toFixed(2)));
+    }
+    return randomness;
+}
+
 // Global Matrices provided by App
 export interface SimulationState {
     speciesCount?: number;
@@ -668,6 +679,7 @@ export interface SimulationState {
     speciesSizes?: number[];
     speciesAgilities?: number[];
     speciesSpeeds?: number[];
+    speciesRandomness?: number[];
     paletteIndex?: number;
     materialSettings: MaterialSettings;
     transitionStartTime?: number;
