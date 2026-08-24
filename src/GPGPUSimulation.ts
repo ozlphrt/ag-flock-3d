@@ -141,39 +141,31 @@ vec3 applyMultiLayerSheath(
         }
     }
 
-    // 1. Order-2 Meso cord: Integer multiple of TWO_PI ensures exact C_infinity seamless closure (no head/tail gaps)
+    // 1. Order-2 Meso cord: Continuous 3D Volumetric Vogel Pipe Dispersion across entire tube volume
     float windingTurns = floor(angFreq * 0.5 + 0.5);
-    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * windingTurns * TWO_PI) + time * 1.5 * speedMult;
-    float cosMeso = cos(cordAngle);
-    float sinMeso = sin(cordAngle);
+    float goldenAngle = 2.399963229728653; // 137.50776405 degrees
+    
+    // Non-overlapping radial distribution across the tube cross-section
+    float rFrac = fract(nSeed * 137.5077 + u * 97.13);
+    float pipeRadius = (0.20 + 0.80 * sqrt(rFrac)) * radius * (0.85 + 0.30 * spRand);
+    
+    // Helical azimuthal angle with species separation & rapid vortex spinning
+    float speciesOffset = sp * (TWO_PI / max(1.0, float(uSpeciesCount)));
+    float pipeAngle = speciesOffset + (nSeed * 2500.0) * goldenAngle + (u * windingTurns * TWO_PI) + time * 1.8 * speedMult;
 
-    // Dynamic local radial basis vectors (N2, B2) rotating with the Meso cord
-    vec3 n2 = normal * cosMeso + binormal * sinMeso;
-    vec3 b2 = -normal * sinMeso + binormal * cosMeso;
+    // Elastic collision bounce wave between concentric particle shells
+    float shellBounce = sin(pipeAngle * 3.0 - time * 3.2 + u * 16.0) * 0.05 * vol;
+    float finalPipeR = max(0.04, pipeRadius + shellBounce);
 
-    // Centerline of the species cord
-    vec3 p2 = m + n2 * radius;
+    vec3 nVogel = normal * cos(pipeAngle) + binormal * sin(pipeAngle);
+    vec3 bVogel = -normal * sin(pipeAngle) + binormal * cos(pipeAngle);
 
-    // 2. Order-3 Micro Child Helices (Differentiated per-species laminar ribbons with seamless periodic closure)
-    float trackId = floor(fract(nSeed * 17.31) * 6.0);
-    float microAngle = trackId * (TWO_PI / 6.0) + (u * 4.0 * TWO_PI) + time * 2.2 * speedMult;
-    float cosMicro = cos(microAngle);
-    float sinMicro = sin(microAngle);
+    // Longitudinal and orthogonal stagger to ensure clean 3D physical spacing
+    vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.30 * vol);
+    vec3 binormStagger = bVogel * ((fract(nSeed * 431.19) - 0.5) * 0.15 * vol);
 
-    // Local rotating frame (N3, B3) for the child helix
-    vec3 n3 = n2 * cosMicro + b2 * sinMicro;
-    vec3 b3 = -n2 * sinMicro + b2 * cosMicro;
-
-    float rMicro = (0.16 + 0.32 * spRand) * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0));
-    vec3 p3 = p2 + n3 * rMicro;
-
-    // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon with seamless periodic closure)
-    float nanoId = floor(fract(nSeed * 43.19) * 3.0);
-    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 6.0 * TWO_PI) + time * 3.0 * speedMult;
-    float rNano = (0.04 + 0.12 * spRand) * vol;
-    vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
-
-    return p4;
+    vec3 pVol = m + nVogel * finalPipeR + tangStagger + binormStagger;
+    return pVol;
 }
 
 // Compute Target Formation Point

@@ -1007,35 +1007,27 @@ function applyIntertwinedMultiLayer(
 
     // 2. Order-2 (Meso Helix): Species cord with exact integer 2pi turns for seamless closed loops
     const mesoTurns = Math.round(omegaMeso * 0.5);
-    const mesoAngle = u * mesoTurns * (Math.PI * 2.0) + (species * (Math.PI * 0.5)) + (time * 1.5 * speedMult);
-    const cosMeso = fastCos(mesoAngle);
-    const sinMeso = fastSin(mesoAngle);
+    const goldenAngle = 2.399963229728653;
+    const vogelSeed = ((indexInSpecies * 137.5077) % 1000) / 1000.0;
 
-    // Dynamic local radial basis vectors (N2, B2) that rotate with the Meso Helix
-    const n2x = nx * cosMeso + bx * sinMeso;
-    const n2y = ny * cosMeso + by * sinMeso;
-    const n2z = nz * cosMeso + bz * sinMeso;
+    const rFrac = ((vogelSeed * 137.5077 + u * 97.13) % 1.0 + 1.0) % 1.0;
+    const pipeRadius = (0.20 + 0.80 * Math.sqrt(rFrac)) * rMeso;
 
-    const b2x = -nx * sinMeso + bx * cosMeso;
-    const b2y = -ny * sinMeso + by * cosMeso;
-    const b2z = -nz * sinMeso + bz * cosMeso;
+    const speciesOffset = species * (Math.PI * 0.5);
+    const pipeAngle = speciesOffset + (vogelSeed * 2500.0) * goldenAngle + (u * mesoTurns * Math.PI * 2.0) + (time * 1.8 * speedMult);
 
-    // Meso Centerline Position
-    const p2x = mx + n2x * rMeso;
-    const p2y = my + n2y * rMeso;
-    const p2z = mz + n2z * rMeso;
+    const shellBounce = fastSin(pipeAngle * 3.0 - time * 3.2 + u * 16.0) * 0.05;
+    const finalPipeR = Math.max(0.04, pipeRadius + shellBounce);
 
-    // 3. Order-3 (Micro Helix): Particles form tight coherent micro-tubes orbiting the Meso strand
-    const track = indexInSpecies % 8;
-    const trackR = ((track + 0.5) / 8.0) * rMicro * 0.6;
-    const trackTheta = (track * (Math.PI * 0.25)) + (u * 4.0 * Math.PI * 2.0) + (time * 2.2 * speedMult);
-    const cosMicro = fastCos(trackTheta);
-    const sinMicro = fastSin(trackTheta);
+    const cosP = fastCos(pipeAngle);
+    const sinP = fastSin(pipeAngle);
+
+    const tangStagger = tx * (((vogelSeed * 271.31) % 1.0) - 0.5) * 0.30;
 
     return [
-        p2x + (n2x * cosMicro + b2x * sinMicro) * trackR,
-        p2y + (n2y * cosMicro + b2y * sinMicro) * trackR,
-        p2z + (n2z * cosMicro + b2z * sinMicro) * trackR
+        mx + (nx * cosP + bx * sinP) * finalPipeR + tangStagger,
+        my + (ny * cosP + by * sinP) * finalPipeR,
+        mz + (nz * cosP + bz * sinP) * finalPipeR
     ];
 }
 

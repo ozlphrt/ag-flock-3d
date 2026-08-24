@@ -167,7 +167,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const uniformsRef = useRef<{ [key: string]: THREE.IUniform }>({
         texturePosition: { value: null },
         textureVelocity: { value: null },
-        uBoidScale: { value: actualCapacity > 300000 ? 0.0095 : 0.0165 },
+        uBoidScale: { value: actualCapacity > 300000 ? 0.0075 : 0.0125 },
         uSpeciesCount: { value: 4 },
         uSpeciesColors: { value: currentColors.current },
         uSpeciesRoughness: { value: currentRoughness.current },
