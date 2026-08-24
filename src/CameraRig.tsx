@@ -166,48 +166,19 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const tgtOut = calcTargetScratch.current;
 
         if (mode === 'rollercoaster') {
-            // 🎢 Roller-Coaster Rail Shoot: Rides on an elevated chase-track safely OUTSIDE the pipe looking down the ribbon
-            const formMode = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
-            const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
-            const speedMult = (state && state.speedMultiplier !== undefined) ? state.speedMultiplier : 0.14;
+            // 🎢 Roller-Coaster Rail Shoot: Smooth, continuous 3D coaster circuit swooping and banking along an outer rail looking forward
+            const tRC = time * 0.080; // Steady cinematic coaster cruising speed
+            const radRC = 8.8 + 2.6 * Math.cos(tRC * 3.0);
+            posOut.x = radRC * Math.sin(tRC);
+            posOut.y = 3.2 * Math.sin(tRC * 2.0) + 1.2 * Math.cos(tRC * 4.0);
+            posOut.z = radRC * Math.cos(tRC);
 
-            // Continuous parametric travel along the loop
-            const trackSpeed = 0.034; // Serene majestic flying velocity along the strand
-            const uCam = ((time * trackSpeed) % 1.0 + 1.0) % 1.0;
-            const uLookAhead = (uCam + 0.04) % 1.0;
-            const uFarAhead = (uCam + 0.14) % 1.0;
-
-            // Evaluate exact positions on the active mathematical manifold
-            const camPt = computeFormationPoint(formMode, seed, uCam, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
-            const lookPt = computeFormationPoint(formMode, seed, uLookAhead, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
-            const farLookPt = computeFormationPoint(formMode, seed, uFarAhead, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
-
-            // Tangent direction along the loop
-            const dirX = lookPt[0] - camPt[0];
-            const dirY = lookPt[1] - camPt[1];
-            const dirZ = lookPt[2] - camPt[2];
-            const dirLen = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ) || 1.0;
-            const nDirX = dirX / dirLen;
-            const nDirY = dirY / dirLen;
-            const nDirZ = dirZ / dirLen;
-
-            // Radial outward normal from world origin to float safely outside the pipe envelope
-            const rLen = Math.sqrt(camPt[0] * camPt[0] + camPt[1] * camPt[1] + camPt[2] * camPt[2]) || 1.0;
-            const radX = camPt[0] / rLen;
-            const radY = camPt[1] / rLen;
-            const radZ = camPt[2] / rLen;
-
-            // Generous stand-off distance floats comfortably outside the dense boid pipe with trailing chase offset
-            const standOff = 4.2;
-            const trailDist = 2.2;
-            posOut.x = camPt[0] + radX * standOff - nDirX * trailDist;
-            posOut.y = camPt[1] + radY * standOff - nDirY * trailDist + 0.8;
-            posOut.z = camPt[2] + radZ * standOff - nDirZ * trailDist;
-
-            // Target looks down the forward loop corridor ahead
-            tgtOut.x = farLookPt[0];
-            tgtOut.y = farLookPt[1];
-            tgtOut.z = farLookPt[2];
+            // Forward-facing track lookahead with generous predictive horizon
+            const tAhead = tRC + 0.18;
+            const radAhead = 8.8 + 2.6 * Math.cos(tAhead * 3.0);
+            tgtOut.x = radAhead * Math.sin(tAhead);
+            tgtOut.y = 3.2 * Math.sin(tAhead * 2.0) + 1.2 * Math.cos(tAhead * 4.0);
+            tgtOut.z = radAhead * Math.cos(tAhead);
         } else if (mode === 'chopper') {
             // 🚁 Chopper Core Hover: Slow hovering float inside the inner void tracking the orbiting swarm loops
             const tChop = time * 0.08;
