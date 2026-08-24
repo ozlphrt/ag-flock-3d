@@ -20,162 +20,162 @@ export const BLOOM_PRESETS: BloomPreset[] = [
         id: 0,
         label: 'Diamond Facet Sparkle',
         icon: '💎',
-        desc: 'Smooth luminous optical aura around geometric facets with deep contrast',
-        settings: { luminanceThreshold: 0.14, radius: 0.45, intensity: 0.75, levels: 3 }
+        desc: 'Sharp specular glints from crystalline facets with deep background contrast',
+        settings: { luminanceThreshold: 0.65, radius: 0.35, intensity: 0.85, levels: 3 }
     },
     {
         id: 1,
         label: 'Razor Anamorphic Star',
         icon: '⚡',
-        desc: 'Focused optical bloom burst with luminous definition',
-        settings: { luminanceThreshold: 0.15, radius: 0.40, intensity: 0.85, levels: 3 }
+        desc: 'Focused optical bloom burst strictly bounded to glint peaks',
+        settings: { luminanceThreshold: 0.70, radius: 0.30, intensity: 0.95, levels: 3 }
     },
     {
         id: 2,
         label: 'Stellar Supernova Burst',
         icon: '🌟',
-        desc: 'Broad radiant coronal glow with dark space contrast',
-        settings: { luminanceThreshold: 0.13, radius: 0.55, intensity: 0.80, levels: 4 }
+        desc: 'Radiant coronal glow with deep shadow contrast',
+        settings: { luminanceThreshold: 0.60, radius: 0.40, intensity: 0.90, levels: 3 }
     },
     {
         id: 3,
         label: 'High-Carat Prism Gleam',
         icon: '✨',
-        desc: 'Lush prismatic dispersion aura around triangular polyhedra',
-        settings: { luminanceThreshold: 0.14, radius: 0.48, intensity: 0.72, levels: 3 }
+        desc: 'Prismatic dispersion glints around triangular polyhedra',
+        settings: { luminanceThreshold: 0.65, radius: 0.35, intensity: 0.80, levels: 3 }
     },
     {
         id: 4,
         label: 'Solar Flare Specular',
         icon: '☀️',
         desc: 'Warm optical corona highlights along the swarm flow',
-        settings: { luminanceThreshold: 0.14, radius: 0.50, intensity: 0.78, levels: 4 }
+        settings: { luminanceThreshold: 0.62, radius: 0.38, intensity: 0.85, levels: 3 }
     },
     {
         id: 5,
         label: 'Crystalline Laser Flash',
         icon: '🔮',
         desc: 'Vibrant optical bloom radiance on leading geometry edges',
-        settings: { luminanceThreshold: 0.16, radius: 0.38, intensity: 0.90, levels: 3 }
+        settings: { luminanceThreshold: 0.72, radius: 0.28, intensity: 1.05, levels: 3 }
     },
     {
         id: 6,
         label: 'Champagne Gold Mirror',
         icon: '🏆',
-        desc: 'Warm golden optical bloom sheen on metallic polyhedra',
-        settings: { luminanceThreshold: 0.14, radius: 0.45, intensity: 0.70, levels: 3 }
+        desc: 'Warm golden optical sheen on metallic polyhedra',
+        settings: { luminanceThreshold: 0.65, radius: 0.35, intensity: 0.80, levels: 3 }
     },
     {
         id: 7,
         label: 'Cryo-Platinum Glint',
         icon: '❄️',
-        desc: 'Ice-cold luminous platinum optical glow',
-        settings: { luminanceThreshold: 0.15, radius: 0.42, intensity: 0.82, levels: 3 }
+        desc: 'Ice-cold luminous platinum specular flashes',
+        settings: { luminanceThreshold: 0.68, radius: 0.32, intensity: 0.90, levels: 3 }
     },
     {
         id: 8,
         label: 'Obsidian Edge Flash',
         icon: '🖤',
         desc: 'Deep black stealth boids with piercing silhouette bloom',
-        settings: { luminanceThreshold: 0.16, radius: 0.35, intensity: 0.88, levels: 3 }
+        settings: { luminanceThreshold: 0.72, radius: 0.28, intensity: 1.00, levels: 3 }
     },
     {
         id: 9,
         label: 'Cyber Neon Radiant',
         icon: '🛸',
         desc: 'Vibrant neon optical halo with deep background contrast',
-        settings: { luminanceThreshold: 0.13, radius: 0.52, intensity: 0.75, levels: 4 }
+        settings: { luminanceThreshold: 0.60, radius: 0.40, intensity: 0.85, levels: 3 }
     },
     {
         id: 10,
         label: 'Quantum Pulsar Spark',
         icon: '💫',
         desc: 'High-frequency optical bloom with smooth atmospheric falloff',
-        settings: { luminanceThreshold: 0.14, radius: 0.46, intensity: 0.80, levels: 3 }
+        settings: { luminanceThreshold: 0.66, radius: 0.35, intensity: 0.90, levels: 3 }
     },
     {
         id: 11,
         label: 'Polished Chrome Rim',
         icon: '🛡️',
         desc: 'Bright metallic rim glow highlighting aerodynamic facets',
-        settings: { luminanceThreshold: 0.14, radius: 0.48, intensity: 0.72, levels: 3 }
+        settings: { luminanceThreshold: 0.65, radius: 0.35, intensity: 0.80, levels: 3 }
     },
     {
         id: 12,
         label: 'Hyper-Velocity Arc',
         icon: '⚡',
         desc: 'High-energy electrical arc bloom bursts with smooth roll-off',
-        settings: { luminanceThreshold: 0.15, radius: 0.40, intensity: 0.95, levels: 3 }
+        settings: { luminanceThreshold: 0.70, radius: 0.30, intensity: 1.10, levels: 3 }
     },
     {
         id: 13,
         label: 'Saturn Dust Speckles',
         icon: '🪐',
         desc: 'Smooth luminous dust aura across orbital rings',
-        settings: { luminanceThreshold: 0.14, radius: 0.45, intensity: 0.68, levels: 3 }
+        settings: { luminanceThreshold: 0.62, radius: 0.35, intensity: 0.75, levels: 3 }
     },
     {
         id: 14,
         label: 'Emerald Prism Sheen',
         icon: '💎',
         desc: 'Rich jewel-toned optical bloom with deep shadow contrast',
-        settings: { luminanceThreshold: 0.13, radius: 0.50, intensity: 0.75, levels: 4 }
+        settings: { luminanceThreshold: 0.60, radius: 0.38, intensity: 0.85, levels: 3 }
     },
     {
         id: 15,
         label: 'Fireworks Pinpoint Glints',
         icon: '🎆',
         desc: 'Dazzling starburst optical flares along the ribbon trajectory',
-        settings: { luminanceThreshold: 0.15, radius: 0.38, intensity: 0.92, levels: 3 }
+        settings: { luminanceThreshold: 0.72, radius: 0.28, intensity: 1.05, levels: 3 }
     },
     {
         id: 16,
         label: 'Optical Calcite Refraction',
         icon: '🔮',
         desc: 'Double-refraction geometric optical glow with sharp facet edges',
-        settings: { luminanceThreshold: 0.14, radius: 0.44, intensity: 0.76, levels: 3 }
+        settings: { luminanceThreshold: 0.65, radius: 0.32, intensity: 0.85, levels: 3 }
     },
     {
         id: 17,
         label: 'Deep Void Bioluminescence',
         icon: '🌊',
         desc: 'Luminescent deep-ocean glow on pitch-black void',
-        settings: { luminanceThreshold: 0.12, radius: 0.60, intensity: 0.70, levels: 4 }
+        settings: { luminanceThreshold: 0.58, radius: 0.45, intensity: 0.80, levels: 3 }
     },
     {
         id: 18,
         label: 'Golden Hour Silhouette',
         icon: '🌅',
         desc: 'Steep rake optical sheen with golden facet rim lighting',
-        settings: { luminanceThreshold: 0.14, radius: 0.48, intensity: 0.74, levels: 3 }
+        settings: { luminanceThreshold: 0.64, radius: 0.35, intensity: 0.82, levels: 3 }
     },
     {
         id: 19,
         label: 'Filament Bio-Sparks',
         icon: '🧬',
         desc: 'Braided macromolecule nodes with luminous highlight beads',
-        settings: { luminanceThreshold: 0.14, radius: 0.46, intensity: 0.75, levels: 3 }
+        settings: { luminanceThreshold: 0.65, radius: 0.35, intensity: 0.85, levels: 3 }
     },
     {
         id: 20,
         label: 'HDR Studio Specular',
         icon: '📸',
         desc: 'Clean 70-degree cross-side studio reflection bloom',
-        settings: { luminanceThreshold: 0.15, radius: 0.42, intensity: 0.68, levels: 3 }
+        settings: { luminanceThreshold: 0.68, radius: 0.30, intensity: 0.75, levels: 3 }
     },
     {
         id: 21,
         label: 'Super-Intense Laser Sparkle',
         icon: '💥',
         desc: 'High optical brilliance strictly bounded to glint peaks',
-        settings: { luminanceThreshold: 0.16, radius: 0.35, intensity: 1.15, levels: 3 }
+        settings: { luminanceThreshold: 0.75, radius: 0.25, intensity: 1.25, levels: 3 }
     },
     {
         id: 22,
         label: 'Subtle Micro-Sheen',
         icon: '✨',
         desc: 'Gentle, refined optical highlights with smooth falloff',
-        settings: { luminanceThreshold: 0.15, radius: 0.40, intensity: 0.60, levels: 3 }
+        settings: { luminanceThreshold: 0.70, radius: 0.28, intensity: 0.65, levels: 3 }
     },
     {
         id: 23,

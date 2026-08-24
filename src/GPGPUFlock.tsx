@@ -180,9 +180,9 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         uColor1: { value: currentColors.current[1] },
         uColor2: { value: currentColors.current[2] },
         uColor3: { value: currentColors.current[3] },
-        uMatRoughness: { value: new THREE.Vector4(0.28, 0.15, 0.35, 0.22) },
-        uMatMetalness: { value: new THREE.Vector4(0.85, 0.05, 0.05, 0.50) },
-        uMatEmissive: { value: new THREE.Vector4(0.05, 2.40, 0.0, 0.60) },
+        uMatRoughness: { value: new THREE.Vector4(0.30, 0.28, 0.32, 0.29) },
+        uMatMetalness: { value: new THREE.Vector4(0.45, 0.25, 0.65, 0.35) },
+        uMatEmissive: { value: new THREE.Vector4(0.0, 0.0, 0.0, 0.0) },
         uSpeciesSizes: { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) },
         uDistThresholds: { value: currentThresholds.current }
     });

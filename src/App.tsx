@@ -251,63 +251,63 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
-            ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 0.45);
+            ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 0.50);
             ambientRef.current.color.copy(curKeyColor.current).lerp(_whiteColor, 0.70);
         }
         if (hemiRef.current) {
-            hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 0.35);
+            hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 0.40);
             hemiRef.current.color.copy(curKeyColor.current).lerp(_blueColor, 0.50);
             hemiRef.current.groundColor.copy(curFillColor.current).lerp(_darkColor, 0.50);
         }
         if (keyRef.current) {
             keyRef.current.position.copy(curKeyPos.current);
-            keyRef.current.intensity = curKeyInt.current * 1.35;
+            keyRef.current.intensity = curKeyInt.current;
             keyRef.current.color.copy(curKeyColor.current);
         }
         if (fillRef.current) {
             fillRef.current.position.copy(curFillPos.current);
-            fillRef.current.intensity = curFillInt.current * 0.75;
+            fillRef.current.intensity = curFillInt.current;
             fillRef.current.color.copy(curFillColor.current);
         }
         if (rimRef.current) {
             rimRef.current.position.copy(curRimPos.current);
-            rimRef.current.intensity = curRimInt.current * 1.45;
+            rimRef.current.intensity = curRimInt.current;
             rimRef.current.color.copy(curRimColor.current);
         }
         if (bounceRef.current) {
             bounceRef.current.position.copy(curBouncePos.current);
-            bounceRef.current.intensity = curFillInt.current * 0.30;
+            bounceRef.current.intensity = curFillInt.current * 0.25;
             bounceRef.current.color.copy(curFillColor.current);
         }
     });
 
     return (
         <>
-            <ambientLight ref={ambientRef} intensity={0.12} color="#ffffff" />
-            <hemisphereLight ref={hemiRef} args={['#90b8e8', '#101828', 0.25]} />
+            <ambientLight ref={ambientRef} intensity={0.04} color="#ffffff" />
+            <hemisphereLight ref={hemiRef} args={['#60a5fa', '#090d16', 0.04]} />
             <directionalLight
                 ref={keyRef}
-                position={[45, 35, 20]}
-                intensity={3.8}
+                position={[38, 48, 24]}
+                intensity={2.2}
                 color="#ffffff"
             />
             <directionalLight
                 ref={fillRef}
-                position={[-45, -15, -20]}
-                intensity={0.30}
-                color="#5a7090"
+                position={[-28, 22, -16]}
+                intensity={0.22}
+                color="#475569"
             />
             <directionalLight
                 ref={rimRef}
-                position={[-20, 45, -50]}
-                intensity={3.5}
-                color="#ffffff"
+                position={[-36, -18, -34]}
+                intensity={2.4}
+                color="#93c5fd"
             />
             <directionalLight
                 ref={bounceRef}
-                position={[20, -45, -10]}
-                intensity={0.15}
-                color="#5a7090"
+                position={[12, -45, -10]}
+                intensity={0.08}
+                color="#334155"
             />
         </>
     );
@@ -366,19 +366,19 @@ function DynamicBloom({ simState }: { simState: React.MutableRefObject<Simulatio
                 b.intensity = s.intensity ?? 0.75;
             }
             if (b.luminanceMaterial && b.luminanceMaterial.threshold !== undefined) {
-                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.14;
+                b.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.60;
             } else if (b.luminancePass?.luminanceMaterial?.threshold !== undefined) {
-                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.14;
+                b.luminancePass.luminanceMaterial.threshold = s.luminanceThreshold ?? 0.60;
             }
             if (b.mipmapBlurPass && b.mipmapBlurPass.radius !== undefined) {
-                b.mipmapBlurPass.radius = s.radius ?? 0.45;
+                b.mipmapBlurPass.radius = s.radius ?? 0.35;
             } else if (b.radius !== undefined) {
-                b.radius = s.radius ?? 0.45;
+                b.radius = s.radius ?? 0.35;
             }
         }
     });
 
-    const s = simState.current.bloomSettings || { luminanceThreshold: 0.14, intensity: 0.75, radius: 0.45, levels: 3 };
+    const s = simState.current.bloomSettings || { luminanceThreshold: 0.60, intensity: 0.75, radius: 0.35, levels: 3 };
     return (
         <EffectComposer>
             <Bloom

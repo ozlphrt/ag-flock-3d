@@ -342,98 +342,98 @@ export const LIGHTING_PROFILES: LightingProfile[] = [
     {
         id: 0,
         label: 'Studio High-Contrast',
-        ambientIntensity: 0.10,
-        keyIntensity: 4.2,
+        ambientIntensity: 0.04,
+        keyIntensity: 2.2,
         keyColor: '#ffffff',
-        fillIntensity: 0.35,
-        fillColor: '#5a789c',
-        rimIntensity: 3.6,
-        rimColor: '#d8f0ff',
+        fillIntensity: 0.22,
+        fillColor: '#475569',
+        rimIntensity: 2.4,
+        rimColor: '#93c5fd',
         fogDensity: 0.003
     },
     {
         id: 1,
         label: 'Golden Hour Sunset',
-        ambientIntensity: 0.11,
-        keyIntensity: 4.4,
-        keyColor: '#ffc870',
-        fillIntensity: 0.38,
-        fillColor: '#684080',
-        rimIntensity: 3.8,
-        rimColor: '#4080ff',
+        ambientIntensity: 0.04,
+        keyIntensity: 2.4,
+        keyColor: '#fbbf24',
+        fillIntensity: 0.20,
+        fillColor: '#4a2840',
+        rimIntensity: 2.6,
+        rimColor: '#38bdf8',
         fogDensity: 0.0035
     },
     {
         id: 2,
         label: 'Arctic Aurora Frost',
-        ambientIntensity: 0.10,
-        keyIntensity: 4.0,
-        keyColor: '#c8e8ff',
-        fillIntensity: 0.32,
-        fillColor: '#406595',
-        rimIntensity: 4.0,
-        rimColor: '#ff8830',
-        fogDensity: 0.004
+        ambientIntensity: 0.03,
+        keyIntensity: 2.0,
+        keyColor: '#e0f2fe',
+        fillIntensity: 0.18,
+        fillColor: '#1e293b',
+        rimIntensity: 2.5,
+        rimColor: '#f97316',
+        fogDensity: 0.0035
     },
     {
         id: 3,
         label: 'Deep Sea Luminescence',
-        ambientIntensity: 0.09,
-        keyIntensity: 3.8,
-        keyColor: '#00f0ff',
-        fillIntensity: 0.30,
-        fillColor: '#204868',
-        rimIntensity: 4.2,
-        rimColor: '#00ffa0',
-        fogDensity: 0.0055
+        ambientIntensity: 0.03,
+        keyIntensity: 1.9,
+        keyColor: '#38bdf8',
+        fillIntensity: 0.18,
+        fillColor: '#0f172a',
+        rimIntensity: 2.6,
+        rimColor: '#34d399',
+        fogDensity: 0.004
     },
     {
         id: 4,
         label: 'Volcanic Magma Corona',
-        ambientIntensity: 0.10,
-        keyIntensity: 4.5,
-        keyColor: '#ff6020',
-        fillIntensity: 0.32,
-        fillColor: '#752540',
-        rimIntensity: 3.8,
-        rimColor: '#ffaa30',
-        fogDensity: 0.0045
+        ambientIntensity: 0.04,
+        keyIntensity: 2.4,
+        keyColor: '#f97316',
+        fillIntensity: 0.20,
+        fillColor: '#3b0764',
+        rimIntensity: 2.4,
+        rimColor: '#fbbf24',
+        fogDensity: 0.0035
     },
     {
         id: 5,
         label: 'Nebula Cyber Violet',
-        ambientIntensity: 0.10,
-        keyIntensity: 4.2,
-        keyColor: '#b850ff',
-        fillIntensity: 0.34,
-        fillColor: '#582575',
-        rimIntensity: 4.0,
-        rimColor: '#20ffd0',
-        fogDensity: 0.004
+        ambientIntensity: 0.04,
+        keyIntensity: 2.2,
+        keyColor: '#c084fc',
+        fillIntensity: 0.20,
+        fillColor: '#1e1b4b',
+        rimIntensity: 2.5,
+        rimColor: '#2dd4bf',
+        fogDensity: 0.0035
     },
     {
         id: 6,
         label: 'Cinematic Obsidian Noir',
-        ambientIntensity: 0.08,
-        keyIntensity: 4.0,
-        keyColor: '#e0e8f8',
-        fillIntensity: 0.25,
-        fillColor: '#485568',
-        rimIntensity: 4.0,
-        rimColor: '#90c0ff',
-        fogDensity: 0.005
+        ambientIntensity: 0.03,
+        keyIntensity: 2.1,
+        keyColor: '#f1f5f9',
+        fillIntensity: 0.16,
+        fillColor: '#1e293b',
+        rimIntensity: 2.6,
+        rimColor: '#60a5fa',
+        fogDensity: 0.004
     },
     {
         id: 7,
         label: 'Solar Eclipse Backlit',
-        ambientIntensity: 0.07,
-        keyIntensity: 3.8,
+        ambientIntensity: 0.03,
+        keyIntensity: 2.0,
         keyColor: '#ffffff',
-        fillIntensity: 0.22,
-        fillColor: '#384865',
-        rimIntensity: 4.8,
-        rimColor: '#ff9810',
-        fogDensity: 0.006
+        fillIntensity: 0.15,
+        fillColor: '#18181b',
+        rimIntensity: 2.8,
+        rimColor: '#f59e0b',
+        fogDensity: 0.0045
     }
 ];
 
@@ -788,20 +788,20 @@ export function generateProceduralMaterialSurprise(): { settings: MaterialSettin
     const isSparklingMode = Math.random() < 0.75;
     
     let isFaceting = true;
-    let roughness = 0.26;
+    let roughness = 0.30;
     let metalness = 0.40;
-    let emissiveIntensity = 0.10;
+    let emissiveIntensity = 0.0;
 
     if (isSparklingMode) {
         isFaceting = true;
-        roughness = Number((0.18 + Math.random() * 0.14).toFixed(2)); // 0.18 - 0.32: sharp specular glints
-        metalness = Number((0.28 + Math.random() * 0.28).toFixed(2)); // 0.28 - 0.56: brilliant metallic speckles
-        emissiveIntensity = Number((0.05 + Math.random() * 0.15).toFixed(2)); // 0.05 - 0.20: subtle glowing core
+        roughness = Number((0.26 + Math.random() * 0.08).toFixed(2)); // 0.26 - 0.34
+        metalness = Number((0.40 + Math.random() * 0.35).toFixed(2)); // 0.40 - 0.75
+        emissiveIntensity = 0.0;
     } else {
-        isFaceting = Math.random() > 0.40;
-        roughness = Number((Math.random() * 0.85 + 0.05).toFixed(2));
-        metalness = Number((Math.random() * 0.80 + 0.05).toFixed(2));
-        emissiveIntensity = Number((Math.random() * 0.50).toFixed(2));
+        isFaceting = Math.random() > 0.45;
+        roughness = Number((0.28 + Math.random() * 0.06).toFixed(2)); // 0.28 - 0.34
+        metalness = Number((0.15 + Math.random() * 0.55).toFixed(2)); // 0.15 - 0.70
+        emissiveIntensity = 0.0;
     }
 
     const settings: MaterialSettings = {
@@ -809,7 +809,7 @@ export function generateProceduralMaterialSurprise(): { settings: MaterialSettin
         metalness,
         wireframe: false,
         flatShading: isFaceting,
-        emissiveIntensity
+        emissiveIntensity: 0.0
     };
 
     const adjectives = ['Sparkling', 'Crystalline', 'Specular', 'Glinting', 'Prismatic', 'Obsidian', 'Diamond', 'Hyper-Gloss', 'Faceted'];
@@ -831,14 +831,14 @@ export function generateProceduralLightingSurprise(): LightingProfile {
     return {
         id: -1,
         label,
-        ambientIntensity: Number((0.24 + Math.random() * 0.26).toFixed(2)), // 0.24 - 0.50
-        keyIntensity: Number((3.2 + Math.random() * 1.6).toFixed(2)),       // 3.2 - 4.8
+        ambientIntensity: Number((0.03 + Math.random() * 0.02).toFixed(2)), // 0.03 - 0.05
+        keyIntensity: Number((2.0 + Math.random() * 0.5).toFixed(2)),       // 2.0 - 2.5
         keyColor: hslToHex(keyHue, 85, 70),
-        fillIntensity: Number((0.45 + Math.random() * 0.45).toFixed(2)),     // 0.45 - 0.90
-        fillColor: hslToHex(fillHue, 65, 55),
-        rimIntensity: Number((2.2 + Math.random() * 1.8).toFixed(2)),       // 2.2 - 4.0
+        fillIntensity: Number((0.16 + Math.random() * 0.08).toFixed(2)),     // 0.16 - 0.24
+        fillColor: hslToHex(fillHue, 50, 35),
+        rimIntensity: Number((2.2 + Math.random() * 0.6).toFixed(2)),       // 2.2 - 2.8
         rimColor: hslToHex(rimHue, 95, 75),
-        fogDensity: Number((0.020 + Math.random() * 0.045).toFixed(3))      // 0.020 - 0.065: rich atmospheric depth
+        fogDensity: Number((0.003 + Math.random() * 0.002).toFixed(3))      // 0.003 - 0.005: clean space depth
     };
 }
 
