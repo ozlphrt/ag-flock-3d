@@ -166,19 +166,17 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const tgtOut = calcTargetScratch.current;
 
         if (mode === 'rollercoaster') {
-            // 🎢 Roller-Coaster Rail Shoot: Smooth, continuous 3D coaster circuit swooping and banking along an outer rail looking forward
+            // 🎢 Roller-Coaster Rail Shoot: Smooth 3D swooping rail flight constantly framing the boid manifold
             const tRC = time * 0.080; // Steady cinematic coaster cruising speed
-            const radRC = 8.8 + 2.6 * Math.cos(tRC * 3.0);
+            const radRC = 8.5 + 2.2 * Math.cos(tRC * 2.5);
             posOut.x = radRC * Math.sin(tRC);
-            posOut.y = 3.2 * Math.sin(tRC * 2.0) + 1.2 * Math.cos(tRC * 4.0);
+            posOut.y = 2.8 * Math.sin(tRC * 1.8) + 0.8 * Math.cos(tRC * 3.2);
             posOut.z = radRC * Math.cos(tRC);
 
-            // Forward-facing track lookahead with generous predictive horizon
-            const tAhead = tRC + 0.18;
-            const radAhead = 8.8 + 2.6 * Math.cos(tAhead * 3.0);
-            tgtOut.x = radAhead * Math.sin(tAhead);
-            tgtOut.y = 3.2 * Math.sin(tAhead * 2.0) + 1.2 * Math.cos(tAhead * 4.0);
-            tgtOut.z = radAhead * Math.cos(tAhead);
+            // Dynamically frame the center and proximate ribbon nodes of the formation
+            tgtOut.x = Math.sin(tRC * 1.2) * 1.4;
+            tgtOut.y = Math.sin(tRC * 1.5) * 0.8;
+            tgtOut.z = Math.cos(tRC * 1.2) * 1.4;
         } else if (mode === 'chopper') {
             // 🚁 Chopper Core Hover: Slow hovering float inside the inner void tracking the orbiting swarm loops
             const tChop = time * 0.08;
@@ -188,9 +186,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
 
             // Focus directly on proximate swirling ribbon loops orbiting around the chopper
             const focusAngle = time * 0.16;
-            const focusR = 6.2 + Math.sin(time * 0.25) * 1.5;
+            const focusR = 5.8 + Math.sin(time * 0.25) * 1.2;
             tgtOut.x = Math.sin(focusAngle) * focusR;
-            tgtOut.y = Math.sin(time * 0.25) * 2.0;
+            tgtOut.y = Math.sin(time * 0.25) * 1.8;
             tgtOut.z = Math.cos(focusAngle) * focusR;
         } else if (mode === 'giant') {
             // 🗿 Monumental Giant: Close base-level wide-angle lens right at the foot of the structure
@@ -203,27 +201,27 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             tgtOut.y = 1.4 + Math.cos(time * 0.15) * 0.6;
             tgtOut.z = 0.0;
         } else if (mode === 'corkscrew') {
-            // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix looking through the core
-            const tCS = time * 0.16;
+            // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix looking right through the core
+            const tCS = time * 0.14;
             const rCS = 10.5 + Math.cos(time * 0.12) * 1.5;
             posOut.x = Math.sin(tCS) * rCS;
             posOut.y = Math.sin(time * 0.08) * 5.5;
             posOut.z = Math.cos(tCS) * rCS;
 
-            tgtOut.x = Math.sin(tCS + 1.2) * 2.5;
-            tgtOut.y = -posOut.y * 0.25;
-            tgtOut.z = Math.cos(tCS + 1.2) * 2.5;
+            tgtOut.x = 0.0;
+            tgtOut.y = posOut.y * 0.35;
+            tgtOut.z = 0.0;
         } else if (mode === 'slalom') {
             // ⚡ Action Slalom: Rapid undulating slalom flyby skimming ribbons
-            const tS = time * 0.20;
-            const rS = 9.8 + Math.sin(tS * 2.6) * 2.2;
+            const tS = time * 0.18;
+            const rS = 9.5 + Math.sin(tS * 2.4) * 2.0;
             posOut.x = Math.sin(tS) * rS;
-            posOut.y = 1.6 + Math.cos(tS * 2.8) * 2.6;
+            posOut.y = 1.6 + Math.cos(tS * 2.6) * 2.4;
             posOut.z = Math.cos(tS) * rS;
 
-            tgtOut.x = Math.sin(tS + 0.6) * 3.2;
+            tgtOut.x = Math.sin(tS * 0.6) * 1.5;
             tgtOut.y = 0.0;
-            tgtOut.z = Math.cos(tS + 0.6) * 3.2;
+            tgtOut.z = Math.cos(tS * 0.6) * 1.5;
         } else if (mode === 'vortex') {
             // 🌌 Vortex Horizon: Top-down vantage point looking into the funnel
             const tV = time * 0.10;
@@ -237,9 +235,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         } else {
             // 🪐 Celestial Orbit: Smooth 360° majestic horizon sweep
             const tOrb = time * 0.11;
-            posOut.x = Math.sin(tOrb) * 12.2;
-            posOut.y = 2.8 + Math.sin(tOrb * 1.4) * 1.5;
-            posOut.z = Math.cos(tOrb) * 12.2;
+            posOut.x = Math.sin(tOrb) * 13.5;
+            posOut.y = 3.2 + Math.sin(tOrb * 1.4) * 1.5;
+            posOut.z = Math.cos(tOrb) * 13.5;
 
             tgtOut.x = 0.0;
             tgtOut.y = 0.0;
