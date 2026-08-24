@@ -71,8 +71,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     // Initialize formation lifecycle parameters if not set
     const isStartChaos = (state.formationMode === FormationMode.None || (state.formationMode as number) < 0);
-    if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 14.0;
-    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 1.5 : 8.0;
+    if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 24.0;
+    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 1.5 : 18.0;
     if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
 
     // Recent Histories for Forbidden Repeat Buffers
@@ -99,10 +99,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = curTime;
-            state.transitionDuration = 14.0;
-            state.holdDuration = 8.0;
+            state.transitionDuration = 24.0;
+            state.holdDuration = 18.0;
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
-            const morphTimings = generateSpeciesMorphTimings(spCount, 14.0);
+            const morphTimings = generateSpeciesMorphTimings(spCount, 24.0);
             state.speciesStartOffsets = morphTimings.startOffsets;
             state.speciesMorphDurations = morphTimings.durations;
         } else if (dimension === 'palette') {
@@ -218,8 +218,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
-            state.transitionDuration = 14.0;
-            state.holdDuration = 8.0;
+            state.transitionDuration = 24.0;
+            state.holdDuration = 18.0;
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
             let nextMode: FormationMode = FormationMode.Procedural;
@@ -234,7 +234,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.customFormationName = surprise.name;
                 state.formationSeed = Math.random() * 10000;
                 state.transitionStartTime = time;
-                state.transitionDuration = 14.0;
+                state.transitionDuration = 24.0;
 
                 if (!state.isPaletteLocked) {
                     state.speciesColors = getTopologyAlignedPalette(FormationMode.Procedural, spCount);
@@ -257,7 +257,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.formationSeed = Math.random() * 10000;
                 state.customFormationName = undefined;
                 state.transitionStartTime = time;
-                state.transitionDuration = 14.0;
+                state.transitionDuration = 24.0;
 
                 if (!state.isPaletteLocked) {
                     state.speciesColors = getTopologyAlignedPalette(nextMode, spCount);
@@ -272,7 +272,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.speciesAgilities = kin.agilities;
             state.speciesSpeeds = kin.speeds;
 
-            const morphTimings = generateSpeciesMorphTimings(spCount, 14.0);
+            const morphTimings = generateSpeciesMorphTimings(spCount, 24.0);
             state.speciesStartOffsets = morphTimings.startOffsets;
             state.speciesMorphDurations = morphTimings.durations;
 
@@ -382,20 +382,20 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.speciesSizes = generateSpeciesSizes();
         }
 
-        // 5. INDEPENDENT CAMERA PRESET CLOCK (Cycles Every 14-18s in Auto Mode)
+        // 5. INDEPENDENT CAMERA PRESET CLOCK (Cycles Every 54s in Auto Mode)
         if (!state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
             lastCameraPresetTime = time;
-            cameraPresetInterval = rndJitter(18.0, 0.15);
+            cameraPresetInterval = rndJitter(54.0, 0.15);
 
             const curIdx = (state.cameraPresetIndex !== undefined) ? state.cameraPresetIndex : 0;
             const nextCamIdx = (curIdx + 1) % 7;
             state.cameraPresetIndex = nextCamIdx;
         }
 
-        // 6. CAMERA MOOD CLOCK (Every 22-35s)
+        // 6. CAMERA MOOD CLOCK (Every 45-65s)
         if ((time - lastCameraMoodTime) >= cameraMoodInterval) {
             lastCameraMoodTime = time;
-            cameraMoodInterval = rndJitter(28.0, 0.2);
+            cameraMoodInterval = rndJitter(55.0, 0.2);
 
             const moods = ['orbit_wide', 'intimate_close', 'cinematic_sweep', 'dramatic_pitch', 'overhead_iso', 'hero_low_lookup'];
             state.cameraMood = moods[Math.floor(Math.random() * moods.length)];
@@ -459,8 +459,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.prevFormationMode = state.formationMode;
             state.prevFormationSeed = state.formationSeed;
             state.transitionStartTime = time;
-            state.transitionDuration = 14.0; // Smooth 14s morph
-            state.holdDuration = 8.0; // 8s appreciation window
+            state.transitionDuration = 24.0; // Smooth 24s morph
+            state.holdDuration = 18.0; // 18s appreciation window
 
             if (isSurprise || state.isPureProceduralMode) {
                 const surprise = generateProceduralTopologySurprise();
@@ -472,7 +472,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 if (!state.isPaletteLocked) {
                     state.speciesColors = getTopologyAlignedPalette(FormationMode.Procedural, spCount);
                 }
-                const morphTimings = generateSpeciesMorphTimings(spCount, 14.0);
+                const morphTimings = generateSpeciesMorphTimings(spCount, 24.0);
                 state.speciesStartOffsets = morphTimings.startOffsets;
                 state.speciesMorphDurations = morphTimings.durations;
                 return `Procedural: ${surprise.name}`;
@@ -502,7 +502,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.speciesAgilities = kin.agilities;
                 state.speciesSpeeds = kin.speeds;
 
-                const morphTimings = generateSpeciesMorphTimings(spCount, 14.0);
+                const morphTimings = generateSpeciesMorphTimings(spCount, 24.0);
                 state.speciesStartOffsets = morphTimings.startOffsets;
                 state.speciesMorphDurations = morphTimings.durations;
 

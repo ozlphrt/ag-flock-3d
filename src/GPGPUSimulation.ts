@@ -1002,11 +1002,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Silky Serene Cruising & Ultra-Smooth Morphing Dynamics (Further capped max speed and acceleration)
+            // Silky Serene Cruising & Ultra-Smooth Morphing Dynamics (Slow-burn graceful pursuit)
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.065 : 0.090) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.20 : 0.24) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.012 : 0.018) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.040 : 0.065) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.16 : 0.20) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.008 : 0.012) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 

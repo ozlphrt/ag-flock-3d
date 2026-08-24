@@ -765,7 +765,7 @@ export function generateSpeciesRandomness(count: number = 4): number[] {
 }
 
 // Helper to generate asynchronous, staggered per-species morph start offsets and durations
-export function generateSpeciesMorphTimings(count: number = 4, totalDuration: number = 14.0): { startOffsets: number[]; durations: number[] } {
+export function generateSpeciesMorphTimings(count: number = 4, totalDuration: number = 24.0): { startOffsets: number[]; durations: number[] } {
     const startOffsets: number[] = [];
     const durations: number[] = [];
     // Random permutation of species ranks so which species leads and follows is randomized on every topology
@@ -778,9 +778,9 @@ export function generateSpeciesMorphTimings(count: number = 4, totalDuration: nu
         const offset = rank === 0 ? 0.0 : (offsetRatio * (totalDuration * 0.32) + (Math.random() - 0.5) * 0.25);
         const clampedOffset = Math.max(0.0, Math.min(totalDuration * 0.38, offset));
 
-        // Individual flight duration for this species
+        // Individual flight duration for this species spans almost the full duration
         const availableTime = totalDuration - clampedOffset;
-        const dur = Math.max(7.0, availableTime * (0.80 + Math.random() * 0.18));
+        const dur = Math.max(12.0, availableTime * (0.80 + Math.random() * 0.18));
 
         startOffsets.push(Number(clampedOffset.toFixed(2)));
         durations.push(Number(dur.toFixed(2)));
