@@ -1005,9 +1005,6 @@ function applyIntertwinedMultiLayer(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
-    // Dynamic wave pulsation along the tube cross-section
-    const wavePulse = 1.0 + 0.04 * fastSin(u * 8.0 * Math.PI - time * 1.0 * speedMult);
-
     // 2. Order-2 (Meso Helix): Species cord spiraling & flowing cleanly around macro spine
     const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.5 * speedMult);
     const cosMeso = fastCos(mesoAngle);
@@ -1022,16 +1019,14 @@ function applyIntertwinedMultiLayer(
     const b2y = -ny * sinMeso + by * cosMeso;
     const b2z = -nz * sinMeso + bz * cosMeso;
 
-    const mesoR = rMeso * wavePulse;
-
     // Meso Centerline Position
-    const p2x = mx + n2x * mesoR;
-    const p2y = my + n2y * mesoR;
-    const p2z = mz + n2z * mesoR;
+    const p2x = mx + n2x * rMeso;
+    const p2y = my + n2y * rMeso;
+    const p2z = mz + n2z * rMeso;
 
     // 3. Order-3 (Micro Helix): Particles form tight coherent micro-tubes orbiting the Meso strand
     const track = indexInSpecies % 8;
-    const trackR = ((track + 0.5) / 8.0) * rMicro * 0.6 * wavePulse;
+    const trackR = ((track + 0.5) / 8.0) * rMicro * 0.6;
     const trackTheta = (track * (Math.PI * 0.25)) + (u * omegaMicro * 0.6 * Math.PI) + (time * 0.8 * speedMult);
     const cosMicro = fastCos(trackTheta);
     const sinMicro = fastSin(trackTheta);
@@ -1078,9 +1073,6 @@ function applyRecursiveTripleHelix(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
-    // Dynamic wave pulse
-    const wavePulse = 1.0 + 0.14 * fastSin(u * 12.0 * Math.PI - time * 2.2 * speedMult);
-
     // 2. Order-2 (Meso Helix): 4 Species Cords spiraling around macro spine with 90° phase offsets
     const thetaMeso = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 1.1 * speedMult);
     const cosMeso = fastCos(thetaMeso);
@@ -1094,9 +1086,9 @@ function applyRecursiveTripleHelix(
     const b2y = -ny * sinMeso + by * cosMeso;
     const b2z = -nz * sinMeso + bz * cosMeso;
 
-    const p2x = mx + n2x * (rMeso * wavePulse);
-    const p2y = my + n2y * (rMeso * wavePulse);
-    const p2z = mz + n2z * (rMeso * wavePulse);
+    const p2x = mx + n2x * rMeso;
+    const p2y = my + n2y * rMeso;
+    const p2z = mz + n2z * rMeso;
 
     // 3. Order-3 (Micro Helix): Inside each species cord, 3 sub-strands twist in high-frequency tertiary coils
     const subStrandId = indexInSpecies % 3;
@@ -1112,13 +1104,13 @@ function applyRecursiveTripleHelix(
     const b3y = -n2y * sinMicro + b2y * cosMicro;
     const b3z = -n2z * sinMicro + b2z * cosMicro;
 
-    const p3x = p2x + n3x * (rMicro * wavePulse);
-    const p3y = p2y + n3y * (rMicro * wavePulse);
-    const p3z = p2z + n3z * (rMicro * wavePulse);
+    const p3x = p2x + n3x * rMicro;
+    const p3y = p2y + n3y * rMicro;
+    const p3z = p2z + n3z * rMicro;
 
     // 4. Order-4 (Nano Streamlines): Golden-angle concentric boid swarm particles inside each tertiary strand
     const track = Math.floor(indexInSpecies / 3) % 8;
-    const trackR = Math.sqrt((track + 0.5) / 8.0) * rNano * wavePulse;
+    const trackR = Math.sqrt((track + 0.5) / 8.0) * rNano;
     const trackTheta = (track * 2.3999632) + (u * omegaNano * Math.PI) + (time * 2.8 * speedMult);
     const cosNano = fastCos(trackTheta);
     const sinNano = fastSin(trackTheta);
@@ -1575,7 +1567,7 @@ export function computeFormationPoint(
         const theta = (u * 60.0 * Math.PI) + (time * jetFlow * 1.4) + (species * (Math.PI * 0.5));
         const rossbyWave = 0.18 * fastSin(6.0 * theta - time * 1.8 * speedMult) * fastCos(phi0);
         const phi = Math.min(1.50, Math.max(-1.50, phi0 + rossbyWave));
-        const rSurf = 5.2 + 0.16 * fastSin(4.0 * theta + 3.0 * phi + time * 2.0 * speedMult);
+        const rSurf = 5.2;
         tx = rSurf * fastCos(phi) * fastCos(theta);
         ty = rSurf * fastSin(phi);
         tz = rSurf * fastCos(phi) * fastSin(theta);
@@ -1607,7 +1599,7 @@ export function computeFormationPoint(
             const uCoreLat = ((u * 73.19) % 1.0 + 1.0) % 1.0;
             const phiCore = Math.asin(Math.min(0.96, Math.max(-0.96, uCoreLat * 2.0 - 1.0)));
             const thetaCore = (u * 80.0 * Math.PI) + (time * 1.6 * speedMult);
-            const rStar = 2.0 + 0.18 * fastSin(8.0 * thetaCore + 6.0 * phiCore + time * 3.0 * speedMult);
+            const rStar = 2.0;
             tx = rStar * fastCos(phiCore) * fastCos(thetaCore);
             ty = rStar * fastSin(phiCore);
             tz = rStar * fastCos(phiCore) * fastSin(thetaCore);

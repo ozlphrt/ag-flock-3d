@@ -112,9 +112,6 @@ vec3 applyMultiLayerSheath(
         }
     }
 
-    // Smooth subtle pulsation along the tube cross-section
-    float wavePulse = 1.0 + (0.02 + 0.04 * spRand) * sin(u * 8.0 * PI - time * 1.0 * speedMult);
-
     // 1. Order-2 Meso cord (N species cords spiraling cleanly around macro spine with dynamic phase offsets)
     float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * angFreq * PI) + time * 0.5 * speedMult;
     float cosMeso = cos(cordAngle);
@@ -125,7 +122,7 @@ vec3 applyMultiLayerSheath(
     vec3 b2 = -normal * sinMeso + binormal * cosMeso;
 
     // Centerline of the species cord
-    vec3 p2 = m + n2 * (radius * wavePulse);
+    vec3 p2 = m + n2 * radius;
 
     // 2. Order-3 Micro Child Helices (Differentiated per-species laminar ribbons)
     float trackId = floor(fract(nSeed * 17.31) * 6.0);
@@ -137,13 +134,13 @@ vec3 applyMultiLayerSheath(
     vec3 n3 = n2 * cosMicro + b2 * sinMicro;
     vec3 b3 = -n2 * sinMicro + b2 * cosMicro;
 
-    float rMicro = (0.16 + 0.32 * spRand) * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0)) * wavePulse;
+    float rMicro = (0.16 + 0.32 * spRand) * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0));
     vec3 p3 = p2 + n3 * rMicro;
 
     // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
     float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 12.0 * PI) + time * 0.8 * speedMult;
-    float rNano = (0.04 + 0.12 * spRand) * vol * wavePulse;
+    float rNano = (0.04 + 0.12 * spRand) * vol;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
 
     return p4;
@@ -486,8 +483,8 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float rossbyWave = 0.18 * sin(6.0 * theta - time * 1.8 * speedMult) * cos(phi0);
         float phi = clamp(phi0 + rossbyWave, -1.50, 1.50);
         
-        // Dynamic surface breathing and convective pulse
-        float rSurf = 5.2 + 0.16 * sin(4.0 * theta + 3.0 * phi + time * 2.0 * speedMult) + (fract(nSeed * 19.4) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 47.9) - 0.5) * 0.35;
+        // Stable surface shell without radial bouncing
+        float rSurf = 5.2 + (fract(nSeed * 19.4) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 47.9) - 0.5) * 0.35;
         target = vec3(rSurf * cos(phi) * cos(theta), rSurf * sin(phi), rSurf * cos(phi) * sin(theta));
     }
     else if (mode == 31) {
@@ -513,11 +510,11 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         // Dyson Sphere Cage: High-Velocity Great-Circle Energy Rings & Central Churning Star
         float isCore = step(fract(u * 100.0), 0.22);
         if (isCore > 0.5) {
-            // Central Star Core with Churning Convective Granules
+            // Central Star Core
             float uCoreLat = fract(u * 73.19 + nSeed * 37.1);
             float phiCore = asin(clamp(uCoreLat * 2.0 - 1.0, -0.96, 0.96));
             float thetaCore = u * 80.0 * PI + time * 1.6 * speedMult;
-            float rStar = 2.0 + 0.18 * sin(8.0 * thetaCore + 6.0 * phiCore + time * 3.0 * speedMult) + (fract(nSeed * 27.8) - 0.5) * 0.15 * vol;
+            float rStar = 2.0 + (fract(nSeed * 27.8) - 0.5) * 0.15 * vol;
             target = vec3(rStar * cos(phiCore) * cos(thetaCore), rStar * sin(phiCore), rStar * cos(phiCore) * sin(thetaCore));
         } else {
             // 6 Intertwined Great-Circle Armillary High-Speed Orbital Highway Tracks
