@@ -1500,10 +1500,12 @@ export function computeFormationPoint(
         ty = rSurf * fastSin(phi) + fastCos(lambda * 2.0 + time * 0.4) * 0.1;
         tz = rSurf * fastCos(phi) * fastSin(lambda);
     } else if (formation === FormationMode.VillarceauTorus) {
-        // --- 31. Villarceau Torus Mantle: Full 2D Torus Surface Flow with Poloidal-Toroidal Lattice ---
-        const thetaTor = (u * 3.0 * Math.PI) + (time * 0.2 * speedMult);
-        const phiPol = (u * 8.0 * Math.PI) + (species * (Math.PI * 0.5)) + (time * 0.45 * speedMult);
-        const rMajor = 4.6, rMinor = 2.0;
+        // --- 31. Villarceau Torus Mantle: Full continuous 2D Torus Surface & Volume Flow ---
+        const u1 = ((u * 137.5077) % 1.0 + 1.0) % 1.0;
+        const u2 = ((u * 271.3197) % 1.0 + 1.0) % 1.0;
+        const thetaTor = u1 * Math.PI * 2.0 + time * 0.30 * speedMult;
+        const phiPol = u2 * Math.PI * 2.0 + time * 0.45 * speedMult;
+        const rMajor = 4.4, rMinor = 2.0;
         const rEff = rMajor + rMinor * fastCos(phiPol);
         tx = rEff * fastCos(thetaTor);
         ty = rMinor * fastSin(phiPol);

@@ -102,8 +102,8 @@ vec3 applyMultiLayerSheath(
     // Dynamic wave pulsation along the tube cross-section
     float wavePulse = 1.0 + 0.12 * sin(u * 12.0 * PI - time * 1.5 * speedMult);
 
-    // 1. Order-2 Meso cord (4 species cords spiraling around macro spine with 90° phase offsets)
-    float cordAngle = sp * (TWO_PI / 4.0) + (u * angFreq * PI) + time * 0.6 * speedMult;
+    // 1. Order-2 Meso cord (N species cords spiraling around macro spine with dynamic phase offsets)
+    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * angFreq * PI) + time * 0.6 * speedMult;
     float cosMeso = cos(cordAngle);
     float sinMeso = sin(cordAngle);
 
@@ -473,11 +473,12 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         target = vec3(rSurf * sin(phi) * cos(theta), rSurf * cos(phi), rSurf * sin(phi) * sin(theta));
     }
     else if (mode == 31) {
-        // Villarceau Torus
-        float t = u * TWO_PI + time * 0.35 * speedMult;
-        float R0 = 4.2, r0 = 2.2 + (fract(nSeed * 17.5) - 0.5) * 0.20 * vol;
-        float theta = t;
-        float phi = t + sp * (PI * 0.5) + (fract(nSeed * 23.1) - 0.5) * 0.15 + isStray * individualDecay * (fract(nSeed * 11.2) - 0.5) * 0.35;
+        // Villarceau Torus Mantle: Continuous 2D Torus Surface & Volume (eliminates artificial 1D diagonal cut lines)
+        float u1 = fract(u * 137.5077 + nSeed * 19.31);
+        float u2 = fract(u * 271.3197 + nSeed * 47.13);
+        float theta = u1 * TWO_PI + time * 0.30 * speedMult;
+        float phi = u2 * TWO_PI + time * 0.45 * speedMult;
+        float R0 = 4.4, r0 = 2.0 + (fract(nSeed * 17.5) - 0.5) * 0.18 * vol + isStray * individualDecay * (fract(nSeed * 11.2) - 0.5) * 0.35;
         target = vec3((R0 + r0 * cos(phi)) * cos(theta), r0 * sin(phi), (R0 + r0 * cos(phi)) * sin(theta));
     }
     else if (mode == 32) {

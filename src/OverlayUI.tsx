@@ -925,13 +925,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px',
-                        padding: '8px 16px 8px 10px',
-                        background: 'rgba(10, 14, 24, 0.88)',
-                        backdropFilter: 'blur(24px)',
-                        WebkitBackdropFilter: 'blur(24px)',
-                        border: '1.5px solid rgba(255, 255, 255, 0.15)',
-                        borderRadius: '20px',
-                        boxShadow: '0 10px 32px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 255, 204, 0.08)',
+                        padding: '7px 14px 7px 9px',
+                        background: 'rgba(10, 14, 24, 0.82)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderRadius: '16px',
+                        boxShadow: '0 8px 28px rgba(0, 0, 0, 0.55)',
                         zIndex: 1000,
                         userSelect: 'none',
                         pointerEvents: 'auto'
@@ -941,15 +941,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     <div
                         style={{
                             position: 'relative',
-                            width: '46px',
-                            height: '46px',
+                            width: '38px',
+                            height: '38px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             flexShrink: 0
                         }}
                     >
-                        <svg width="46" height="46" viewBox="0 0 46 46" style={{ transform: 'rotate(-90deg)' }}>
+                        <svg width="38" height="38" viewBox="0 0 46 46" style={{ transform: 'rotate(-90deg)' }}>
                             <defs>
                                 <linearGradient id="topoDialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stopColor="#00ffcc" />
@@ -984,8 +984,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 style={{
                                     transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease',
                                     filter: topologyStats.isMorphing
-                                        ? 'drop-shadow(0 0 5px rgba(255, 170, 0, 0.8))'
-                                        : 'drop-shadow(0 0 5px rgba(0, 255, 204, 0.8))'
+                                        ? 'drop-shadow(0 0 4px rgba(255, 170, 0, 0.7))'
+                                        : 'drop-shadow(0 0 4px rgba(0, 255, 204, 0.7))'
                                 }}
                             />
                         </svg>
@@ -993,7 +993,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         <div
                             style={{
                                 position: 'absolute',
-                                fontSize: '18px',
+                                fontSize: '15px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
@@ -1004,109 +1004,71 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
 
                     {/* Content Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                        {/* Header: Title + Status Pill */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '170px' }}>
+                        {/* Title Row */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                             <span
                                 style={{
-                                    fontSize: '13.5px',
-                                    fontWeight: 800,
+                                    fontSize: '13px',
+                                    fontWeight: 700,
                                     color: '#ffffff',
-                                    letterSpacing: '-0.2px',
+                                    letterSpacing: '-0.1px',
                                     whiteSpace: 'nowrap'
                                 }}
                             >
                                 {topologyStats.name}
                             </span>
-                            <span
-                                style={{
-                                    fontSize: '9px',
-                                    fontWeight: 800,
-                                    padding: '1.5px 6px',
-                                    borderRadius: '6px',
-                                    background: topologyStats.isMorphing ? 'rgba(255, 170, 0, 0.22)' : 'rgba(0, 255, 204, 0.18)',
-                                    color: topologyStats.isMorphing ? '#ffaa00' : '#00ffcc',
-                                    border: `1px solid ${topologyStats.isMorphing ? 'rgba(255, 170, 0, 0.45)' : 'rgba(0, 255, 204, 0.35)'}`,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.4px',
-                                    flexShrink: 0
-                                }}
-                            >
-                                {topologyStats.isMorphing ? `Morph ${Math.round(topologyStats.morphProgress * 100)}%` : 'Active'}
-                            </span>
-                        </div>
-
-                        {/* Metric Row */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '14px',
-                                fontSize: '11px',
-                                color: 'rgba(255, 255, 255, 0.65)',
-                                fontFamily: 'monospace'
-                            }}
-                        >
-                            <span>
-                                ⏱️ Spent: <strong style={{ color: '#f1f5f9' }}>{topologyStats.timeElapsed}s</strong>
-                            </span>
-                            <span>
-                                ⏳ Next in:{' '}
-                                <strong
+                            {topologyStats.isMorphing && (
+                                <span
                                     style={{
-                                        color: topologyStats.timeRemaining <= 3 ? '#ffaa00' : '#38bdf8',
-                                        textShadow: topologyStats.timeRemaining <= 3 ? '0 0 6px rgba(255,170,0,0.6)' : 'none'
+                                        fontSize: '8.5px',
+                                        fontWeight: 800,
+                                        padding: '1px 5px',
+                                        borderRadius: '4px',
+                                        background: 'rgba(255, 170, 0, 0.18)',
+                                        color: '#ffaa00',
+                                        border: '1px solid rgba(255, 170, 0, 0.35)',
+                                        whiteSpace: 'nowrap'
                                     }}
                                 >
-                                    {topologyStats.timeRemaining}s
-                                </strong>
-                            </span>
+                                    {Math.round(topologyStats.morphProgress * 100)}%
+                                </span>
+                            )}
                         </div>
 
-                        {/* Species & Population Distribution Breakdown (Top 3 + Others) */}
+                        {/* Minimalist Multi-color Species Population Graph Bar */}
                         {(() => {
                             const spCount = simState.current.speciesCount || simState.current.speciesColors?.length || 4;
                             const dist = simState.current.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
                             const colors = simState.current.speciesColors || SPECIES_COLORS;
 
-                            const ranked = dist.slice(0, spCount).map((pct, idx) => ({
-                                idx,
+                            const segments = dist.slice(0, spCount).map((pct, idx) => ({
                                 color: colors[idx % colors.length] || '#ffffff',
-                                pct: Math.round(pct * 100)
-                            })).sort((a, b) => b.pct - a.pct);
-
-                            const top3 = ranked.slice(0, 3);
-                            const othersPct = ranked.slice(3).reduce((sum, s) => sum + s.pct, 0);
+                                pct: pct * 100
+                            }));
 
                             return (
                                 <div
                                     style={{
-                                        marginTop: '4px',
-                                        paddingTop: '4px',
-                                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        fontSize: '10.5px',
-                                        color: 'rgba(255, 255, 255, 0.85)'
+                                        width: '100%',
+                                        height: '5px',
+                                        borderRadius: '3px',
+                                        overflow: 'hidden',
+                                        background: 'rgba(255, 255, 255, 0.08)'
                                     }}
                                 >
-                                    <span style={{ fontWeight: 800, color: '#38bdf8', whiteSpace: 'nowrap' }}>
-                                        🧬 {spCount} Species:
-                                    </span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                        {top3.map((s, i) => (
-                                            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
-                                                <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: s.color, boxShadow: `0 0 4px ${s.color}` }} />
-                                                <strong style={{ color: '#ffffff' }}>#{s.idx + 1}:</strong> {s.pct}%
-                                            </span>
-                                        ))}
-                                        {spCount > 3 && (
-                                            <span style={{ color: 'rgba(255, 255, 255, 0.55)', whiteSpace: 'nowrap' }}>
-                                                Others ({spCount - 3}): <strong style={{ color: '#e2e8f0' }}>{othersPct}%</strong>
-                                            </span>
-                                        )}
-                                    </div>
+                                    {segments.map((s, i) => (
+                                        <div
+                                            key={i}
+                                            style={{
+                                                width: `${s.pct}%`,
+                                                background: s.color,
+                                                height: '100%',
+                                                transition: 'width 0.3s ease'
+                                            }}
+                                        />
+                                    ))}
                                 </div>
                             );
                         })()}
