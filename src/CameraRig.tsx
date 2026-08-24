@@ -44,10 +44,10 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'giant',
         name: 'Monumental Giant',
         icon: '🗿',
-        description: 'Ultra-wide base-level hero angle gazing up into the towering cosmic structure',
-        fov: 80,
-        defaultPos: [0, -3.6, 8.8],
-        target: [0, 1.8, 0],
+        description: 'Ultra-wide close-up base angle gazing straight up into the colossal structure',
+        fov: 84,
+        defaultPos: [0, -3.4, 5.2],
+        target: [0, 1.2, 0],
         autoRotateSpeed: 0.12,
         type: 'giant'
     },
@@ -166,16 +166,16 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const tgtOut = calcTargetScratch.current;
 
         if (mode === 'rollercoaster') {
-            // 🎢 Roller-Coaster Rail Shoot: Rides directly along one of the active topology's continuous mathematical loops!
+            // 🎢 Roller-Coaster Rail Shoot: Rides on an elevated chase-track outside the pipe looking down the ribbon
             const formMode = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
             const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
             const speedMult = (state && state.speedMultiplier !== undefined) ? state.speedMultiplier : 0.14;
 
             // Continuous parametric travel along the loop
-            const trackSpeed = 0.042; // Gentle cinematic roller coaster velocity along the strand
+            const trackSpeed = 0.038; // Majestic flying velocity along the strand
             const uCam = ((time * trackSpeed) % 1.0 + 1.0) % 1.0;
             const uLookAhead = (uCam + 0.035) % 1.0;
-            const uFarAhead = (uCam + 0.10) % 1.0;
+            const uFarAhead = (uCam + 0.12) % 1.0;
 
             // Evaluate exact positions on the active mathematical manifold
             const camPt = computeFormationPoint(formMode, seed, uCam, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
@@ -191,13 +191,20 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             const nDirY = dirY / dirLen;
             const nDirZ = dirZ / dirLen;
 
-            // Offset camera slightly elevated and behind on the track for third-person rider perspective
-            const upOffset = 0.55;
-            posOut.x = camPt[0] - nDirX * 0.45;
-            posOut.y = camPt[1] - nDirY * 0.45 + upOffset;
-            posOut.z = camPt[2] - nDirZ * 0.45;
+            // Radial outward normal from world origin to float safely outside the pipe envelope
+            const rLen = Math.sqrt(camPt[0] * camPt[0] + camPt[1] * camPt[1] + camPt[2] * camPt[2]) || 1.0;
+            const radX = camPt[0] / rLen;
+            const radY = camPt[1] / rLen;
+            const radZ = camPt[2] / rLen;
 
-            // Target looks down the forward loop corridor
+            // Stand-off distance floats outside the dense boid pipe with trailing chase offset
+            const standOff = 2.4;
+            const trailDist = 1.4;
+            posOut.x = camPt[0] + radX * standOff - nDirX * trailDist;
+            posOut.y = camPt[1] + radY * standOff - nDirY * trailDist + 0.6;
+            posOut.z = camPt[2] + radZ * standOff - nDirZ * trailDist;
+
+            // Target looks down the forward loop corridor ahead
             tgtOut.x = farLookPt[0];
             tgtOut.y = farLookPt[1];
             tgtOut.z = farLookPt[2];
@@ -215,14 +222,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             tgtOut.y = Math.sin(time * 0.30) * 2.0;
             tgtOut.z = Math.cos(focusAngle) * focusR;
         } else if (mode === 'giant') {
-            // 🗿 Monumental Giant: Base-level wide-angle lens at the lowest boid plane gazing up into the structure
+            // 🗿 Monumental Giant: Close base-level wide-angle lens right at the foot of the structure
             const tG = time * 0.08;
-            posOut.x = Math.sin(tG) * 8.8;
-            posOut.y = -3.6 + Math.sin(time * 0.12) * 0.3;
-            posOut.z = Math.cos(tG) * 8.8;
+            posOut.x = Math.sin(tG) * 5.2;
+            posOut.y = -3.4 + Math.sin(time * 0.12) * 0.3;
+            posOut.z = Math.cos(tG) * 5.2;
 
             tgtOut.x = 0.0;
-            tgtOut.y = 1.8 + Math.cos(time * 0.15) * 0.8;
+            tgtOut.y = 1.2 + Math.cos(time * 0.15) * 0.6;
             tgtOut.z = 0.0;
         } else if (mode === 'corkscrew') {
             // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix looking through the core
