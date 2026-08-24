@@ -385,10 +385,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         // 5. INDEPENDENT CAMERA PRESET CLOCK (Cycles Every 14-18s in Auto Mode)
         if (!state.isCameraLocked && (time - lastCameraPresetTime) >= cameraPresetInterval) {
             lastCameraPresetTime = time;
-            cameraPresetInterval = rndJitter(16.0, 0.15);
+            cameraPresetInterval = rndJitter(18.0, 0.15);
 
             const curIdx = (state.cameraPresetIndex !== undefined) ? state.cameraPresetIndex : 0;
-            const nextCamIdx = (curIdx + 1) % 5;
+            const nextCamIdx = (curIdx + 1) % 7;
             state.cameraPresetIndex = nextCamIdx;
         }
 
