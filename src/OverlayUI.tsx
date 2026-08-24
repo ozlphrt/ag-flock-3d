@@ -190,7 +190,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.formationSeed = Math.random() * 10000;
         simState.current.customFormationName = undefined;
         simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
-        simState.current.transitionDuration = 12.0;
+        simState.current.transitionDuration = 14.0;
         simState.current.holdDuration = 8.0;
 
         if (!simState.current.isPaletteLocked) {
@@ -227,7 +227,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.formationSeed = Math.random() * 10000;
         simState.current.customFormationName = customName;
         simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
-        simState.current.transitionDuration = 12.0; // Smooth 12s morph
+        simState.current.transitionDuration = 14.0; // Smooth 14s morph
         simState.current.holdDuration = 8.0;
         simState.current.isTopologyFormed = false;
         simState.current.formedTimestamp = null;

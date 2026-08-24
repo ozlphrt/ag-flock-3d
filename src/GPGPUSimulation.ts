@@ -725,10 +725,13 @@ void main() {
     // Evaluate target position with organic time-decaying stray noise and balanced volumetric dispersion
     vec3 targetPos = evaluateTopology(uFormationMode, dynamicU, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
 
-    // If this individual species is transitioning, evaluate previous formation with smooth quintic S-curve
+    // If this individual species is transitioning, evaluate previous formation with smooth C3-continuous 7th-order S-curve
     if (spMorph < 0.999) {
         vec3 prevTarget = evaluateTopology(uPrevFormationMode, dynamicU, species, nSeed, uTime, uSpeedMult, uVolThickness, settleDecay);
-        float sCurve = spMorph * spMorph * spMorph * (spMorph * (spMorph * 6.0 - 15.0) + 10.0);
+        // 7th-order smoothstep: -20 t^7 + 70 t^6 - 84 t^5 + 35 t^4 (zero jerk and zero acceleration spike)
+        float t2 = spMorph * spMorph;
+        float t4 = t2 * t2;
+        float sCurve = clamp(spMorph * t4 * (spMorph * (spMorph * (-20.0) + 70.0) - 84.0) + 35.0 * t4, 0.0, 1.0);
         targetPos = mix(prevTarget, targetPos, sCurve);
     }
 
@@ -764,20 +767,16 @@ void main() {
 
     // 3. Physical Size-Inertia Law:
     // Controlled agility and velocity damping to eliminate high-frequency twitching / bouncing
-    float sizeAgility = clamp(1.0 / sqrt(max(0.4, effectiveSize)), 0.85, 1.20);
-    float sizeSpeed = clamp(1.0 + (1.0 - effectiveSize) * 0.10, 0.85, 1.15);
+    float sizeAgility = clamp(1.0 / sqrt(max(0.5, effectiveSize)), 0.88, 1.12);
+    float sizeSpeed = clamp(1.0 + (1.0 - effectiveSize) * 0.08, 0.90, 1.10);
 
-    // Controlled morphing agility boost
-    bool isSpeciesMorphing = (spMorph > 0.001 && spMorph < 0.999);
-    float morphAgilityBoost = isSpeciesMorphing ? 1.12 : 1.0;
-    float morphSpeedBoost = isSpeciesMorphing ? 1.10 : 1.0;
-
-    float totalAgility = clamp(spAgility * sizeAgility * morphAgilityBoost, 0.75, 1.25);
-    float totalSpeed = clamp(spSpeed * sizeSpeed * morphSpeedBoost, 0.75, 1.20);
+    // Soft, serene morphing flow (calm, silky speed)
+    float totalAgility = clamp(spAgility * sizeAgility, 0.80, 1.15);
+    float totalSpeed = clamp(spSpeed * sizeSpeed, 0.80, 1.10);
 
     float localLerp = uLerpRate * totalAgility;
-    float localMaxSpeed = min(uMaxSpeed * totalSpeed, 0.40 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
-    float localMaxAccel = min(uMaxAccel * totalAgility, 0.040 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
+    float localMaxSpeed = min(uMaxSpeed * totalSpeed, 0.24 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
+    float localMaxAccel = min(uMaxAccel * totalAgility, 0.018 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
 
     // Critically-Damped Target Velocity Filter (smooth proportional pursuit)
     vec3 err = targetPos - pos;
@@ -1003,11 +1002,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Cinematic Gradual Cruising & Morphing Dynamics (Slow, majestic, smooth topology weaving)
+            // Silky Serene Cruising & Ultra-Smooth Morphing Dynamics (Further capped max speed and acceleration)
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.085 : 0.12) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.26 : 0.34) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.022 : 0.030) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.065 : 0.090) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.20 : 0.24) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.012 : 0.018) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 
