@@ -450,33 +450,44 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         target = vec3(cx, cy, cz) + l;
     }
     else if (mode == 29) {
-        // Saturnian Rings: Species 0 is the Central Planet Core Sphere; Species 1..N-1 are the Dust Rings & Cloud
+        // Saturnian Rings: Species 0 is the Dynamic Differential Planet Core Sphere; Species 1..N-1 are the Dust Rings
         if (sp < 0.5) {
-            // Central Gas Giant Core Sphere (Species 0)
-            float uSph = fract(u * 1000.0);
-            float phi = acos(1.0 - 2.0 * uSph);
-            float theta = sqrt(uSph * 250000.0) * 2.39996 + time * 0.25 * speedMult;
+            // Central Gas Giant Core Sphere with Dynamic Multi-Band Jet Streams
+            float uLat = fract(u * 137.5 + nSeed * 11.3);
+            float phi = asin(clamp(uLat * 2.0 - 1.0, -0.98, 0.98));
+            float bandSpeed = (1.2 + 0.8 * cos(phi * 3.0)) * speedMult;
+            float theta = u * 40.0 * PI + time * bandSpeed * 1.5 + (sp * TWO_PI);
             float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.08 * vol + isStray * individualDecay * (fract(nSeed * 19.3) - 0.5) * 0.3;
-            target = vec3(rPlanet * sin(phi) * cos(theta), rPlanet * cos(phi) * 0.92, rPlanet * sin(phi) * sin(theta));
+            vec3 pCore = vec3(rPlanet * cos(phi) * cos(theta), rPlanet * sin(phi) * 0.88, rPlanet * cos(phi) * sin(theta));
+            target = rotateZ(pCore, 0.44); // 25° axial tilt
         } else {
             // Hyper-Dense Planetary Dust Ring System (Species 1 to N-1)
             float ringSpecies = sp - 1.0;
             float maxRingSp = max(1.0, float(uSpeciesCount - 2));
             float uRing = fract(u * 500.0);
             float ringRadius = 3.6 + (ringSpecies / maxRingSp) * 4.8 + uRing * 0.6 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
-            float ringAngle = (uRing * 180.0 * PI) + time * (1.2 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI + (ringSpecies * 1.047);
+            float ringAngle = (uRing * 180.0 * PI) + time * (1.6 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI + (ringSpecies * 1.047);
             float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.16 * vol + isStray * individualDecay * (fract(nSeed * 53.1) - 0.5) * 0.35;
             vec3 ringPt = vec3(ringRadius * cos(ringAngle), ringThickness, ringRadius * sin(ringAngle));
             target = rotateZ(ringPt, 0.44); // 25° axial tilt
         }
     }
     else if (mode == 30) {
-        // Spherical Surface Vortex
-        float phi = acos(1.0 - 2.0 * u);
-        float latSpeed = (sin(phi * 4.0) * 0.7 + 0.9) * speedMult;
-        float theta = sqrt(u * 250000.0) * 2.39996 + time * latSpeed * 0.45 + nSeed * 0.08;
-        float rSurf = 5.2 + sin(phi * 8.0 + time * 1.5) * 0.18 + (fract(nSeed * 19.4) - 0.5) * 0.22 * vol + isStray * individualDecay * (fract(nSeed * 47.9) - 0.5) * 0.4;
-        target = vec3(rSurf * sin(phi) * cos(theta), rSurf * cos(phi), rSurf * sin(phi) * sin(theta));
+        // Spherical Surface Vortices: High-Speed Zonal Jet Streams, Dynamic Rossby Waves & Swirling Convection
+        float uLat = fract(u * 137.5 + nSeed * 23.17);
+        float phi0 = asin(clamp(uLat * 2.0 - 1.0, -0.96, 0.96)); // Continuous uniform latitude
+        
+        // Multi-tier alternating atmospheric jet streams (Equator East, Mid-lat West, Subpolar East)
+        float jetFlow = (sin(phi0 * 5.0) * 1.6 + cos(phi0 * 2.0) * 0.9) * speedMult;
+        float theta = u * 60.0 * PI + time * jetFlow * 1.4 + sp * (TWO_PI / max(1.0, float(uSpeciesCount)));
+        
+        // Undulating planetary Rossby wave undulations across latitudes
+        float rossbyWave = 0.18 * sin(6.0 * theta - time * 1.8 * speedMult) * cos(phi0);
+        float phi = clamp(phi0 + rossbyWave, -1.50, 1.50);
+        
+        // Dynamic surface breathing and convective pulse
+        float rSurf = 5.2 + 0.16 * sin(4.0 * theta + 3.0 * phi + time * 2.0 * speedMult) + (fract(nSeed * 19.4) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 47.9) - 0.5) * 0.35;
+        target = vec3(rSurf * cos(phi) * cos(theta), rSurf * sin(phi), rSurf * cos(phi) * sin(theta));
     }
     else if (mode == 31) {
         // Villarceau Torus Mantle: Continuous 2D Torus Surface & Volume (eliminates artificial 1D diagonal cut lines)
@@ -498,11 +509,33 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         target = vec3(r * cos(theta), zDisc, r * sin(theta));
     }
     else if (mode == 33) {
-        // Dyson Sphere Lattice
-        float phi = acos(1.0 - 2.0 * u);
-        float theta = sqrt(u * 250000.0) * 2.39996 + time * 0.2 * speedMult;
-        float rDyson = 5.5 + 0.2 * sin(phi * 12.0) * cos(theta * 12.0) + (fract(nSeed * 27.8) - 0.5) * 0.16 * vol + isStray * individualDecay * (fract(nSeed * 89.1) - 0.5) * 0.35;
-        target = vec3(rDyson * sin(phi) * cos(theta), rDyson * cos(phi), rDyson * sin(phi) * sin(theta));
+        // Dyson Sphere Cage: High-Velocity Great-Circle Energy Rings & Central Churning Star
+        float isCore = step(fract(u * 100.0), 0.22);
+        if (isCore > 0.5) {
+            // Central Star Core with Churning Convective Granules
+            float uCoreLat = fract(u * 73.19 + nSeed * 37.1);
+            float phiCore = asin(clamp(uCoreLat * 2.0 - 1.0, -0.96, 0.96));
+            float thetaCore = u * 80.0 * PI + time * 1.6 * speedMult;
+            float rStar = 2.0 + 0.18 * sin(8.0 * thetaCore + 6.0 * phiCore + time * 3.0 * speedMult) + (fract(nSeed * 27.8) - 0.5) * 0.15 * vol;
+            target = vec3(rStar * cos(phiCore) * cos(thetaCore), rStar * sin(phiCore), rStar * cos(phiCore) * sin(thetaCore));
+        } else {
+            // 6 Intertwined Great-Circle Armillary High-Speed Orbital Highway Tracks
+            float ringId = mod(floor(u * 6.0) + sp, 6.0);
+            float incAngle = ringId * (PI / 6.0); // 0°, 30°, 60°, 90°, 120°, 150°
+            float nodeAngle = ringId * (TWO_PI / 6.0) + time * 0.15 * speedMult;
+            float orbAngle = fract(u * 6.0) * TWO_PI + time * 2.2 * speedMult + nSeed * 0.15;
+            
+            float rRing = 5.4 + (fract(nSeed * 41.3) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 89.1) - 0.5) * 0.35;
+            vec3 pOrb = vec3(rRing * cos(orbAngle), (fract(nSeed * 67.1) - 0.5) * 0.15 * vol, rRing * sin(orbAngle));
+            
+            // Inclination rotation around X
+            float ci = cos(incAngle), si = sin(incAngle);
+            vec3 pInc = vec3(pOrb.x, pOrb.y * ci - pOrb.z * si, pOrb.y * si + pOrb.z * ci);
+            
+            // Ascending node precession around Y
+            float cn = cos(nodeAngle), sn = sin(nodeAngle);
+            target = vec3(pInc.x * cn + pInc.z * sn, pInc.y, -pInc.x * sn + pInc.z * cn);
+        }
     }
     else if (mode == 34) {
         // Black Hole Accretion Disk & Polar Jets
@@ -885,7 +918,7 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
 
             // Morph Progress calculation
             const startTime = state.transitionStartTime ?? 0.0;
-            const duration = state.transitionDuration ?? 7.0;
+            const duration = state.transitionDuration ?? 5.5;
             const elapsed = Math.max(0.0, time - startTime);
             const p = Math.min(1.0, elapsed / Math.max(0.1, duration));
 
@@ -900,9 +933,9 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             // Silky Smooth Morphing & Cruising Dynamics (calibrated to match CPU 50k flock)
             const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.10 : 0.07) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.22 : 0.14) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.06 : 0.03) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.12 : 0.08) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.24 : 0.15) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.07 : 0.035) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 

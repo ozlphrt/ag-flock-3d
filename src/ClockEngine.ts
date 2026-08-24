@@ -96,8 +96,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = curTime;
-            state.transitionDuration = 6.0;
-            state.holdDuration = rndJitter(6.0, 0.15);
+            state.transitionDuration = 5.5;
+            state.holdDuration = 2.5;
         } else if (dimension === 'palette') {
             lastColorTime = curTime;
             colorInterval = rndJitter(54.0, 0.25);
@@ -217,8 +217,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.formedTimestamp = time;
         }
 
-        const transDur = state.transitionDuration ?? 7.0;
-        const holdDur = state.holdDuration ?? 18.0;
+        const transDur = state.transitionDuration ?? 5.5;
+        const holdDur = state.holdDuration ?? 2.5;
         const totalCycle = transDur + holdDur;
         const transStart = state.transitionStartTime ?? lastFormationTime;
         const isCycleComplete = (time - transStart) >= totalCycle;
@@ -230,8 +230,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
-            state.transitionDuration = 7.0;
-            state.holdDuration = rndJitter(activeArc ? 14.0 : 18.0, 0.15);
+            state.transitionDuration = 5.5;
+            state.holdDuration = 2.5;
 
             let nextMode: FormationMode;
 
@@ -266,7 +266,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.formationSeed = Math.random() * 10000;
             state.customFormationName = undefined;
             state.transitionStartTime = time;
-            state.transitionDuration = 7.0;
+            state.transitionDuration = 5.5;
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
             state.speciesRandomness = generateSpeciesRandomness(spCount);
@@ -420,8 +420,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         const colElapsed = Math.max(0, now - lastColorTime);
         const start = state.transitionStartTime ?? 0.0;
         const totalElapsed = Math.max(0, now - start);
-        const transDur = state.transitionDuration ?? 7.0;
-        const holdDur = state.holdDuration ?? 18.0;
+        const transDur = state.transitionDuration ?? 5.5;
+        const holdDur = state.holdDuration ?? 2.5;
         const totalCycle = transDur + holdDur;
 
         const morphProg = Math.min(1.0, totalElapsed / Math.max(0.1, transDur));
@@ -461,8 +461,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.prevFormationMode = state.formationMode;
             state.prevFormationSeed = state.formationSeed;
             state.transitionStartTime = time;
-            state.transitionDuration = 5.0; // Snappy 5s morph right away
-            state.holdDuration = 5.5; // 5.5s appreciation window
+            state.transitionDuration = 5.5; // Smooth 5.5s morph
+            state.holdDuration = 2.5; // 2.5s appreciation window
 
             if (isSurprise) {
                 const surprise = generateProceduralTopologySurprise();

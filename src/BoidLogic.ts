@@ -1515,23 +1515,24 @@ export function computeFormationPoint(
         let px = 0, py = 0, pz = 0;
 
         if (species === 0) {
-            // Planet Core Sphere (100% Species 0): Golden-spiral oblate sphere with differential rotation
-            const yCore = (u * 2.0 - 1.0) * 2.2;
-            const rLat = Math.sqrt(Math.max(0, 1.0 - (yCore / 2.2) * (yCore / 2.2))) * 2.4;
-            const bandSpeed = (0.35 - Math.abs(yCore) * 0.08);
-            const theta = (u * 32.0 * Math.PI) + (time * bandSpeed * speedMult);
-            px = rLat * fastCos(theta);
-            py = yCore * 0.88; // Oblate spheroid flattening
-            pz = rLat * fastSin(theta);
+            // Planet Core Sphere (100% Species 0): Dynamic Multi-Band Differential Jet Streams
+            const uLat = ((u * 137.5) % 1.0 + 1.0) % 1.0;
+            const phi = Math.asin(Math.min(0.98, Math.max(-0.98, uLat * 2.0 - 1.0)));
+            const bandSpeed = (1.2 + 0.8 * fastCos(phi * 3.0)) * speedMult;
+            const theta = (u * 40.0 * Math.PI) + (time * bandSpeed * 1.5);
+            const rPlanet = 2.4;
+            px = rPlanet * fastCos(phi) * fastCos(theta);
+            py = rPlanet * fastSin(phi) * 0.88; // Oblate spheroid flattening
+            pz = rPlanet * fastCos(phi) * fastSin(theta);
         } else {
-            // Keplerian Dust Cloud Rings (Species 1, 2, 3): Multi-layer disc with Cassini Division
-            const ringTier = species - 1; // 0, 1, 2
+            // Keplerian Dust Cloud Rings (Species 1..N-1): Multi-layer disc with Cassini Division
+            const ringTier = species - 1;
             const rBase = 3.8 + ringTier * 1.6;
             const rRing = rBase + u * 1.4;
             const keplerSpeed = Math.sqrt(3.2 / (rRing * rRing * rRing));
-            const ringTheta = (u * 36.0 * Math.PI) + (time * keplerSpeed * speedMult) + (indexInSpecies * 0.04) + (ringTier * 1.047);
+            const ringTheta = (u * 36.0 * Math.PI) + (time * keplerSpeed * 1.6 * speedMult) + (ringTier * 1.047);
             px = rRing * fastCos(ringTheta);
-            py = fastSin(ringTheta * 2.0 + rRing) * 0.06; // Ultra-flat ring plane with subtle gravitational ripple
+            py = fastSin(ringTheta * 2.0 + rRing) * 0.06;
             pz = rRing * fastSin(ringTheta);
         }
 
@@ -1540,13 +1541,17 @@ export function computeFormationPoint(
         ty = py * fastCos(tiltAlpha) - pz * fastSin(tiltAlpha);
         tz = py * fastSin(tiltAlpha) + pz * fastCos(tiltAlpha);
     } else if (formation === FormationMode.SphericalSurfaceVortex) {
-        // --- 30. Spherical Surface Vortices: Atmospheric & Rossby Wave Currents on 3D Sphere Surface ---
-        const phi = (u - 0.5) * Math.PI * 0.94; // Latitude (-85 deg to +85 deg)
-        const lambda = (u * 12.0 * Math.PI) + (species * (Math.PI * 0.5)) + (time * (0.2 + fastCos(phi) * 0.5) * speedMult);
-        const rSurf = 5.2 + fastSin(3.0 * lambda + time * 0.3) * fastCos(2.0 * phi) * 0.25;
-        tx = rSurf * fastCos(phi) * fastCos(lambda);
-        ty = rSurf * fastSin(phi) + fastCos(lambda * 2.0 + time * 0.4) * 0.1;
-        tz = rSurf * fastCos(phi) * fastSin(lambda);
+        // --- 30. Spherical Surface Vortices: High-Speed Zonal Jet Streams & Rossby Waves ---
+        const uLat = ((u * 137.5) % 1.0 + 1.0) % 1.0;
+        const phi0 = Math.asin(Math.min(0.96, Math.max(-0.96, uLat * 2.0 - 1.0)));
+        const jetFlow = (fastSin(phi0 * 5.0) * 1.6 + fastCos(phi0 * 2.0) * 0.9) * speedMult;
+        const theta = (u * 60.0 * Math.PI) + (time * jetFlow * 1.4) + (species * (Math.PI * 0.5));
+        const rossbyWave = 0.18 * fastSin(6.0 * theta - time * 1.8 * speedMult) * fastCos(phi0);
+        const phi = Math.min(1.50, Math.max(-1.50, phi0 + rossbyWave));
+        const rSurf = 5.2 + 0.16 * fastSin(4.0 * theta + 3.0 * phi + time * 2.0 * speedMult);
+        tx = rSurf * fastCos(phi) * fastCos(theta);
+        ty = rSurf * fastSin(phi);
+        tz = rSurf * fastCos(phi) * fastSin(theta);
     } else if (formation === FormationMode.VillarceauTorus) {
         // --- 31. Villarceau Torus Mantle: Full continuous 2D Torus Surface & Volume Flow ---
         const u1 = ((u * 137.5077) % 1.0 + 1.0) % 1.0;
@@ -1569,35 +1574,35 @@ export function computeFormationPoint(
         ty = zJitter;
         tz = rDisc * fastSin(winding);
     } else if (formation === FormationMode.DysonSphereLattice) {
-        // --- 33. Dyson Sphere Cage: Central Plasma Star with Orthogonal Great-Circle Rings & Energy Mesh ---
-        if (species === 0) {
-            // Central Star: Pulsating spherical core at R=1.8
-            const yStar = (u * 2.0 - 1.0) * 1.8;
-            const rStar = Math.sqrt(Math.max(0, 1.0 - (yStar / 1.8) * (yStar / 1.8))) * 1.8;
-            const thStar = (u * 16.0 * Math.PI) + (time * 0.35 * speedMult);
-            tx = rStar * fastCos(thStar);
-            ty = yStar;
-            tz = rStar * fastSin(thStar);
+        // --- 33. Dyson Sphere Cage: High-Velocity Great-Circle Energy Rings & Central Star ---
+        const isCore = ((u * 100.0) % 1.0) < 0.22;
+        if (isCore) {
+            const uCoreLat = ((u * 73.19) % 1.0 + 1.0) % 1.0;
+            const phiCore = Math.asin(Math.min(0.96, Math.max(-0.96, uCoreLat * 2.0 - 1.0)));
+            const thetaCore = (u * 80.0 * Math.PI) + (time * 1.6 * speedMult);
+            const rStar = 2.0 + 0.18 * fastSin(8.0 * thetaCore + 6.0 * phiCore + time * 3.0 * speedMult);
+            tx = rStar * fastCos(phiCore) * fastCos(thetaCore);
+            ty = rStar * fastSin(phiCore);
+            tz = rStar * fastCos(phiCore) * fastSin(thetaCore);
         } else {
-            // 3 Orthogonal Orbital Energy Cages at R=5.2 (Equatorial, Polar-X, Polar-Z)
-            const rCage = 5.2;
-            const thCage = (u * 4.0 * Math.PI) + (time * 0.25 * speedMult) + (indexInSpecies * 0.02);
-            if (species === 1) {
-                // Equatorial Ring
-                tx = rCage * fastCos(thCage);
-                ty = fastSin(thCage * 4.0) * 0.15;
-                tz = rCage * fastSin(thCage);
-            } else if (species === 2) {
-                // Polar X-Y Ring
-                tx = rCage * fastCos(thCage);
-                ty = rCage * fastSin(thCage);
-                tz = fastSin(thCage * 4.0) * 0.15;
-            } else {
-                // Polar Y-Z Ring
-                tx = fastSin(thCage * 4.0) * 0.15;
-                ty = rCage * fastCos(thCage);
-                tz = rCage * fastSin(thCage);
-            }
+            const ringId = Math.floor((u * 6.0) + species) % 6;
+            const incAngle = ringId * (Math.PI / 6.0);
+            const nodeAngle = ringId * ((Math.PI * 2.0) / 6.0) + time * 0.15 * speedMult;
+            const orbAngle = ((u * 6.0) % 1.0) * Math.PI * 2.0 + time * 2.2 * speedMult;
+            const rRing = 5.4;
+            const px0 = rRing * fastCos(orbAngle);
+            const py0 = 0.0;
+            const pz0 = rRing * fastSin(orbAngle);
+            // Rotate inclination around X
+            const ci = fastCos(incAngle), si = fastSin(incAngle);
+            const pxi = px0;
+            const pyi = py0 * ci - pz0 * si;
+            const pzi = py0 * si + pz0 * ci;
+            // Rotate node around Y
+            const cn = fastCos(nodeAngle), sn = fastSin(nodeAngle);
+            tx = pxi * cn + pzi * sn;
+            ty = pyi;
+            tz = -pxi * sn + pzi * cn;
         }
     } else if (formation === FormationMode.BlackHoleAccretion) {
         // --- 34. Black Hole & Relativistic Jets: Event Horizon Void + Swirling Accretion Disc + Polar Beams ---
