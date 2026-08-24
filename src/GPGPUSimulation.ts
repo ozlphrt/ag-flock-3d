@@ -131,19 +131,87 @@ vec3 applyMultiLayerSheath(
     // Centerline of THIS species' pure cord (pure separation from other species!)
     vec3 pSpeciesCord = m + n2 * radius;
 
-    // 2. Pure Vogel 3D Volumetric Packing INSIDE THIS SPECIES' OWN PIPE (No Inter-Species Blending)
-    float goldenAngle = 2.399963229728653; // 137.50776405 degrees
-    float rFrac = fract(nSeed * 137.5077 + u * 97.13);
-    
-    // Each species' pipe has its own tight, rich internal thickness
-    float pipeThickness = (0.15 + 0.85 * sqrt(rFrac)) * (0.22 + 0.14 * spRand) * vol;
-    float internalAngle = (nSeed * 2500.0) * goldenAngle + (u * 4.0 * TWO_PI) + time * 2.2 * speedMult;
+    // 2. Cross-Sectional Morphology (Pipes, Ribbons, Helices, DNA Ladders, Braided Ropes, Star Flutes)
+    vec3 pFinal = pSpeciesCord;
 
-    vec3 nInternal = n2 * cos(internalAngle) + b2 * sin(internalAngle);
-    vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.15 * vol);
+    if (strandStyle == 1) {
+        // --- 1. FLAT SILK RIBBON (Wide, undulating planar sheet twisting along path) ---
+        float twistAngle = (u * 4.0 * TWO_PI) + time * 1.8 * speedMult;
+        vec3 nRibbon = n2 * cos(twistAngle) + b2 * sin(twistAngle);
+        vec3 bRibbon = -n2 * sin(twistAngle) + b2 * cos(twistAngle);
+        float widthSpread = ((fract(nSeed * 137.5077 + u * 43.17) - 0.5) * 2.0) * (0.60 + 0.25 * spRand) * vol;
+        float thinThickness = ((fract(nSeed * 311.23) - 0.5) * 0.06) * vol;
+        vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.12 * vol);
+        pFinal = pSpeciesCord + nRibbon * widthSpread + bRibbon * thinThickness + tangStagger;
+    }
+    else if (strandStyle == 2) {
+        // --- 2. SWIRLING HELICAL CORKSCREW (High-speed multi-filar vortex spirals) ---
+        float corkscrewTurns = 16.0;
+        float strandId = floor(fract(nSeed * 17.31) * 3.0);
+        float subAngle = (strandId * (TWO_PI / 3.0)) + (u * corkscrewTurns * TWO_PI) + time * 3.2 * speedMult;
+        float corkRadius = (0.26 + 0.14 * spRand) * vol;
+        float microVogel = (0.05 + 0.07 * sqrt(fract(nSeed * 89.13))) * vol;
+        vec3 nSub = n2 * cos(subAngle) + b2 * sin(subAngle);
+        vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.15 * vol);
+        pFinal = pSpeciesCord + nSub * (corkRadius + microVogel) + tangStagger;
+    }
+    else if (strandStyle == 3) {
+        // --- 3. DNA DOUBLE HELIX LADDER (Dual helical rails with periodic base-pair cross-rungs) ---
+        float isRung = step(fract(nSeed * 71.3 + u * 10.0), 0.24);
+        float dnaAngle = (u * 10.0 * TWO_PI) + time * 2.0 * speedMult;
+        vec3 nRail = n2 * cos(dnaAngle) + b2 * sin(dnaAngle);
+        vec3 bRail = -n2 * sin(dnaAngle) + b2 * cos(dnaAngle);
+        float railSign = (fract(nSeed * 47.19) > 0.5) ? 1.0 : -1.0;
+        float railDist = 0.35 * vol;
+        if (isRung > 0.5) {
+            float rungPos = (fract(nSeed * 137.5) * 2.0 - 1.0) * railDist;
+            pFinal = pSpeciesCord + nRail * rungPos + bRail * ((fract(nSeed * 29.1) - 0.5) * 0.05 * vol);
+        } else {
+            float railJitter = (fract(nSeed * 83.1) - 0.5) * 0.07 * vol;
+            pFinal = pSpeciesCord + nRail * (railDist * railSign + railJitter) + bRail * ((fract(nSeed * 91.7) - 0.5) * 0.07 * vol);
+        }
+    }
+    else if (strandStyle == 4) {
+        // --- 4. TUBULAR HOLLOW SHEATH (Glowing outer plasma cylinder) ---
+        float goldenAngle = 2.399963229728653;
+        float rFrac = 0.70 + 0.30 * sqrt(fract(nSeed * 137.5077 + u * 97.13));
+        float pipeThickness = rFrac * (0.32 + 0.15 * spRand) * vol;
+        float internalAngle = (nSeed * 2500.0) * goldenAngle + (u * 4.0 * TWO_PI) + time * 2.2 * speedMult;
+        vec3 nInternal = n2 * cos(internalAngle) + b2 * sin(internalAngle);
+        vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.15 * vol);
+        pFinal = pSpeciesCord + nInternal * pipeThickness + tangStagger;
+    }
+    else if (strandStyle == 5) {
+        // --- 5. 3-STRAND BRAIDED ROPE (Interwoven sub-cable bundle) ---
+        float ropeSub = floor(fract(nSeed * 19.41) * 3.0);
+        float ropeAngle = ropeSub * (TWO_PI / 3.0) + (u * 12.0 * TWO_PI) + time * 2.4 * speedMult;
+        float subCordR = 0.20 * vol;
+        vec3 nSubCord = n2 * cos(ropeAngle) + b2 * sin(ropeAngle);
+        vec3 bSubCord = -n2 * sin(ropeAngle) + b2 * cos(ropeAngle);
+        vec3 pSubCord = pSpeciesCord + nSubCord * subCordR;
+        float microAngle = fract(nSeed * 37.1) * TWO_PI;
+        float microR = sqrt(fract(nSeed * 91.3)) * 0.08 * vol;
+        pFinal = pSubCord + (nSubCord * cos(microAngle) + bSubCord * sin(microAngle)) * microR;
+    }
+    else if (strandStyle == 6) {
+        // --- 6. ASTROID FLUTED STAR (Multi-cusped star cross-section with fluted ridges) ---
+        float starAngle = (u * 4.0 * TWO_PI) + time * 1.6 * speedMult + fract(nSeed * 13.7) * TWO_PI;
+        float starR = (0.20 + 0.15 * pow(cos(2.0 * starAngle) * cos(2.0 * starAngle), 2.0)) * (0.85 + 0.30 * spRand) * vol;
+        vec3 nStar = n2 * cos(starAngle) + b2 * sin(starAngle);
+        vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.15 * vol);
+        pFinal = pSpeciesCord + nStar * starR + tangStagger;
+    }
+    else {
+        // --- 0. CYLINDRICAL VOGEL PIPE (Default dense 3D cylinder) ---
+        float goldenAngle = 2.399963229728653;
+        float rFrac = fract(nSeed * 137.5077 + u * 97.13);
+        float pipeThickness = (0.15 + 0.85 * sqrt(rFrac)) * (0.22 + 0.14 * spRand) * vol;
+        float internalAngle = (nSeed * 2500.0) * goldenAngle + (u * 4.0 * TWO_PI) + time * 2.2 * speedMult;
+        vec3 nInternal = n2 * cos(internalAngle) + b2 * sin(internalAngle);
+        vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.15 * vol);
+        pFinal = pSpeciesCord + nInternal * pipeThickness + tangStagger;
+    }
 
-    // Pure species pipe position!
-    vec3 pFinal = pSpeciesCord + nInternal * pipeThickness + tangStagger;
     return pFinal;
 }
 
@@ -157,7 +225,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float R0 = 4.6;
         vec3 m = vec3(R0 * cos(t), sin(2.0 * t) * 1.8, R0 * sin(t));
         vec3 tanV = vec3(-R0 * sin(t), cos(2.0 * t) * 3.6, R0 * cos(t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 8.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 8.0, vol, settleDecay, 0); // Cylindrical Pipe
     }
     else if (mode == 1) {
         // 1. Dual Concentric Counter-Tilted Rings (Species 0&1 Inner, Species 2&3 Outer)
@@ -167,51 +235,51 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float R1 = 3.0;
             vec3 m = vec3(R1 * cos(t), sin(2.0 * t) * 0.9, R1 * sin(t));
             vec3 tanV = vec3(-R1 * sin(t), cos(2.0 * t) * 1.8, R1 * cos(t));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.45, 6.0, vol * 0.8, settleDecay);
+            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.45, 6.0, vol * 0.8, settleDecay, 1); // Flat Ribbon
         } else {
             float R2 = 5.2;
             vec3 m = vec3(R2 * cos(t), -sin(2.0 * t) * 1.4, R2 * sin(t));
             vec3 tanV = vec3(-R2 * sin(t), -cos(2.0 * t) * 2.8, R2 * cos(t));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.55, 8.0, vol * 0.9, settleDecay);
+            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.55, 8.0, vol * 0.9, settleDecay, 1); // Flat Ribbon
         }
     }
     else if (mode == 2) {
-        // 2. Toroidal Helix Braid
+        // 2. Toroidal Helix Braid (Toroidal Golden Swirling Helix)
         float t = u * TWO_PI + time * 0.3 * speedMult;
         float R0 = 4.8;
         vec3 m = vec3(R0 * cos(t), 0.0, R0 * sin(t));
         vec3 tanV = vec3(-R0 * sin(t), 0.0, R0 * cos(t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.35, 8.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.35, 8.0, vol, settleDecay, 2); // Swirling Helix
     }
     else if (mode == 3) {
         // 3. Trefoil Braided Ribbon (2,3)
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3((sin(t) + 2.0 * sin(2.0 * t)) * 1.5, (cos(t) - 2.0 * cos(2.0 * t)) * 1.5, (-sin(3.0 * t)) * 2.0);
         vec3 tanV = vec3((cos(t) + 4.0 * cos(2.0 * t)) * 1.5, (-sin(t) + 4.0 * sin(2.0 * t)) * 1.5, (-3.0 * cos(3.0 * t)) * 2.0);
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 4) {
-        // 4. Mobius Helix Braid
+        // 4. Mobius Helix Braid (Twisted 3D Mobius Sheet)
         float t = u * TWO_PI + time * 0.35 * speedMult;
         float halfT = t * 0.5;
         float R0 = 4.5;
         vec3 m = vec3(R0 * cos(t), sin(halfT) * 1.8, R0 * sin(t));
         vec3 tanV = vec3(-R0 * sin(t), cos(halfT) * 0.9, R0 * cos(t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.1, 8.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.1, 8.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 5) {
         // 5. Lissajous Intertwined Knot (3:4:5)
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.2 * sin(2.0 * t), 3.5 * cos(3.0 * t), 2.8 * sin(4.0 * t));
         vec3 tanV = vec3(8.4 * cos(2.0 * t), -10.5 * sin(3.0 * t), 11.2 * cos(4.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay, 2); // Swirling Helix
     }
     else if (mode == 6) {
-        // 6. Caduceus Intertwined Double Ribbon
+        // 6. Caduceus Double Ribbon (Twin Serpents with Cross-Rungs)
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.5 * sin(2.0 * t), 3.8 * sin(t), 2.5 * cos(3.0 * t));
         vec3 tanV = vec3(9.0 * cos(2.0 * t), 3.8 * cos(t), -7.5 * sin(3.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay, 3); // DNA Double Ladder
     }
     else if (mode == 7) {
         // 7. Borromean Rings (3 Mutually Linked Orthogonal Rings)
@@ -229,15 +297,15 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             m = vec3(2.5 * sin(t), 1.4 * sin(2.0 * t) + 0.9, 4.4 * cos(t));
             tanV = vec3(2.5 * cos(t), 2.8 * cos(2.0 * t), -4.4 * sin(t));
         }
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.65, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.65, 6.0, vol, settleDecay, 0); // Cylindrical Pipe
     }
     else if (mode == 8) {
-        // 8. Figure-Eight Knot Braid (4_1 Listing Knot)
+        // 8. Figure-Eight Knot Braid (4_1 Listing Knot - 3-Strand Braided Rope)
         float t = u * TWO_PI + time * 0.38 * speedMult;
         float rBase = 2.8 + 1.3 * cos(2.0 * t);
         vec3 m = vec3(rBase * cos(3.0 * t), rBase * sin(3.0 * t), 2.4 * sin(4.0 * t));
         vec3 tanV = vec3(-3.0 * rBase * sin(3.0 * t), 3.0 * rBase * cos(3.0 * t), 9.6 * cos(4.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay, 5); // 3-Strand Braided Rope
     }
     else if (mode == 9) {
         // 9. Cinqfoil Star Knot Braid (5,2)
@@ -245,7 +313,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = 3.6 + 1.5 * cos(5.0 * t);
         vec3 m = vec3(r * cos(2.0 * t), r * sin(2.0 * t), -2.5 * sin(5.0 * t));
         vec3 tanV = vec3(-2.0 * r * sin(2.0 * t), 2.0 * r * cos(2.0 * t), -12.5 * cos(5.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 5.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 5.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 10) {
         // 10. Septafoil Stellar Braid (7,3)
@@ -253,7 +321,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = 3.8 + 1.6 * cos(7.0 * t);
         vec3 m = vec3(r * cos(3.0 * t), r * sin(3.0 * t), -2.6 * sin(7.0 * t));
         vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 3.0 * r * cos(3.0 * t), -18.2 * cos(7.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 7.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 7.0, vol, settleDecay, 2); // Swirling Helix
     }
     else if (mode == 11) {
         // 11. Viviani's Spherical Figure-8 Window
@@ -261,7 +329,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float R_v = 2.4;
         vec3 m = vec3(R_v * (1.0 + cos(t)) * cos(t) - R_v, R_v * (1.0 + cos(t)) * sin(t), 2.0 * R_v * sin(t * 0.5));
         vec3 tanV = vec3(-R_v * sin(t) * (1.0 + 2.0 * cos(t)), R_v * (cos(t) + cos(2.0 * t)), R_v * cos(t * 0.5));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay, 4); // Hollow Sheath
     }
     else if (mode == 12) {
         // 12. Superhelical Torus Knot (3,5)
@@ -269,7 +337,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = cos(5.0 * t) * 1.6 + 4.0;
         vec3 m = vec3(r * cos(3.0 * t), sin(5.0 * t) * 2.2, r * sin(3.0 * t));
         vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 5.0 * cos(5.0 * t) * 2.2, 3.0 * r * cos(3.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 14.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 14.0, vol, settleDecay, 5); // 3-Strand Braided Rope
     }
     else if (mode == 13) {
         // 13. Astroid 3D Diamond Star Closed Knot
@@ -278,7 +346,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float s3 = sin(t) * sin(t) * sin(t);
         vec3 m = vec3(4.6 * c3, 4.6 * s3, 2.6 * sin(2.0 * t));
         vec3 tanV = vec3(-13.8 * cos(t) * cos(t) * sin(t), 13.8 * sin(t) * sin(t) * cos(t), 5.2 * cos(2.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.80, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.80, 6.0, vol, settleDecay, 6); // Astroid Star Fluted
     }
     else if (mode == 14) {
         // 14. Triquetra Celtic Braid (Trinity Knot)
@@ -286,7 +354,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = 3.3 * (1.0 + 0.48 * cos(3.0 * t));
         vec3 m = vec3(r * cos(t), r * sin(t), 2.3 * sin(3.0 * t));
         vec3 tanV = vec3(-r * sin(t), r * cos(t), 6.9 * cos(3.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 15) {
         // 15. Whitehead Link Braid
@@ -295,11 +363,11 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         if (isRing > 0.5) {
             vec3 m = vec3(4.0 * cos(t), 4.0 * sin(t), 0.7 * sin(2.0 * t));
             vec3 tanV = vec3(-4.0 * sin(t), 4.0 * cos(t), 1.4 * cos(2.0 * t));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.6, 6.0, vol, settleDecay);
+            target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.6, 6.0, vol, settleDecay, 0); // Cylindrical Pipe
         } else {
             vec3 m = vec3(2.4 * sin(2.0 * t), 0.9 * sin(4.0 * t), 3.6 * cos(t));
             vec3 tanV = vec3(4.8 * cos(2.0 * t), 3.6 * cos(4.0 * t), -3.6 * sin(t));
-            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.6, 6.0, vol, settleDecay);
+            target = applyMultiLayerSheath(m, tanV, u, time, sp - 2.0, nSeed, speedMult, 0.6, 6.0, vol, settleDecay, 0); // Cylindrical Pipe
         }
     }
     else if (mode == 16) {
@@ -308,7 +376,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float r = 3.6 + 1.5 * cos(4.0 * t);
         vec3 m = vec3(r * cos(3.0 * t), r * sin(3.0 * t), 2.3 * sin(4.0 * t));
         vec3 tanV = vec3(-3.0 * r * sin(3.0 * t), 3.0 * r * cos(3.0 * t), 9.2 * cos(4.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay, 2); // Swirling Helix
     }
     else if (mode == 17) {
         // 17. Granny Knot Braid (Composite Trefoils)
@@ -318,7 +386,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float yOff = (isUpper > 0.5) ? 2.2 : -2.2;
         vec3 m = vec3((sin(t) + 1.6 * sin(2.0 * t)) * 1.25, (cos(t) - 1.6 * cos(2.0 * t)) * 1.25 + yOff, (-sin(3.0 * t)) * 1.8);
         vec3 tanV = vec3((cos(t) + 3.2 * cos(2.0 * t)) * 1.25, (-sin(t) + 3.2 * sin(2.0 * t)) * 1.25, (-3.0 * cos(3.0 * t)) * 1.8);
-        target = applyMultiLayerSheath(m, tanV, segU, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, segU, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay, 5); // 3-Strand Braided Rope
     }
     else if (mode == 18) {
         // 18. Clelia Spherical Multi-Crown Spiral
@@ -326,21 +394,21 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float c4 = cos(4.0 * t);
         vec3 m = vec3(4.5 * c4 * cos(t), 4.5 * c4 * sin(t), 4.5 * sin(4.0 * t));
         vec3 tanV = vec3(4.5 * (-4.0 * sin(4.0 * t) * cos(t) - c4 * sin(t)), 4.5 * (-4.0 * sin(4.0 * t) * sin(t) + c4 * cos(t)), 18.0 * cos(4.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay, 4); // Hollow Sheath
     }
     else if (mode == 19) {
         // 19. Pretzel Genus-3 Triple-Loop Propeller
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.5 * cos(t) - 1.5 * cos(3.0 * t), 4.5 * sin(t) + 1.5 * sin(3.0 * t), 2.2 * sin(3.0 * t));
         vec3 tanV = vec3(-4.5 * sin(t) + 4.5 * sin(3.0 * t), 4.5 * cos(t) + 4.5 * cos(3.0 * t), 6.6 * cos(3.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.80, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.80, 6.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 20) {
         // 20. Chasles Twisted Hyperboloid Ruled Ribbon
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.0 * cos(t) - 1.2 * sin(2.0 * t), 4.0 * sin(t) + 1.2 * cos(2.0 * t), 3.0 * cos(2.0 * t));
         vec3 tanV = vec3(-4.0 * sin(t) - 2.4 * cos(2.0 * t), 4.0 * cos(t) - 2.4 * sin(2.0 * t), -6.0 * sin(2.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.80, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.80, 6.0, vol, settleDecay, 3); // DNA Double Ladder
     }
     else if (mode == 21) {
         // 21. Gyroid Braid Labyrinth
@@ -351,7 +419,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             (sin(t * 0.5) * cos(t) + cos(t * 1.5)) * 2.8
         );
         vec3 tanV = vec3(cos(t) * 2.8, cos(t * 1.5) * 2.8, cos(t * 0.5) * 2.8);
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 6.0, vol, settleDecay, 2); // Swirling Helix
     }
     else if (mode == 22) {
         // 22. Lorenz Chaotic Braid (Butterfly Attractor)
@@ -359,7 +427,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float s = sin(t);
         vec3 m = vec3(s * 4.4, cos(t) * 3.8, (s > 0.0 ? 1.0 : -1.0) * (4.2 - abs(s) * 2.6));
         vec3 tanV = vec3(cos(t) * 4.4, -sin(t) * 3.8, cos(t) * 2.6);
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.85, 6.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 23) {
         // 23. Klein Bottle Braid
@@ -371,14 +439,14 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float kz = (sin(ku * 0.5) * sin(kv) + cos(ku * 0.5) * sin(2.0 * kv)) * 2.2;
         vec3 m = vec3(kx * 0.75, ky * 0.75, kz * 0.75);
         vec3 tanV = vec3(-ky * 0.75, kx * 0.75, kz * 0.5);
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay, 4); // Hollow Sheath
     }
     else if (mode == 24) {
         // 24. Clifford Torus Braid (4D Hyper-Torus stereographic projection)
         float thC = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.2 * cos(thC), 4.2 * sin(thC), 0.0);
         vec3 tanV = vec3(-4.2 * sin(thC), 4.2 * cos(thC), 0.0);
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol, settleDecay, 5); // 3-Strand Braided Rope
     }
     else if (mode == 25) {
         // 25. Ouroboros Dragon Braid
@@ -386,21 +454,21 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float baseR = 4.2;
         vec3 m = vec3(baseR * cos(ringAngle), sin(u * 7.0 + time) * 0.7, baseR * sin(ringAngle));
         vec3 tanV = vec3(-baseR * sin(ringAngle), 0.5, baseR * cos(ringAngle));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 8.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 8.0, vol, settleDecay, 6); // Astroid Star Fluted
     }
     else if (mode == 26) {
         // 26. Hypotrochoid 6-Star Rosette
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(3.2 * cos(t) + 1.8 * cos(5.0 * t), 3.2 * sin(t) - 1.8 * sin(5.0 * t), 2.2 * sin(6.0 * t));
         vec3 tanV = vec3(-3.2 * sin(t) - 9.0 * sin(5.0 * t), 3.2 * cos(t) - 9.0 * cos(5.0 * t), 13.2 * cos(6.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay, 2); // Swirling Helix
     }
     else if (mode == 27) {
         // 27. Nephroid 2-Cusped Kidney Ribbon
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(1.8 * (3.0 * cos(t) - cos(3.0 * t)), 1.8 * (3.0 * sin(t) - sin(3.0 * t)), 2.2 * sin(2.0 * t));
         vec3 tanV = vec3(1.8 * (-3.0 * sin(t) + 3.0 * sin(3.0 * t)), 1.8 * (3.0 * cos(t) - 3.0 * cos(3.0 * t)), 4.4 * cos(2.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.75, 6.0, vol, settleDecay, 1); // Flat Ribbon
     }
     else if (mode == 28) {
         // Olympic Chain Link
@@ -586,14 +654,15 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             tanV = vec3(dx, dy * 0.85, dz);
         }
 
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol * 1.35, settleDecay);
+        int pStyle = (uP_family == 1) ? 2 : ((uP_family == 2) ? 6 : 1);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.25, 8.0, vol * 1.35, settleDecay, pStyle);
     }
     else {
         // Universal Harmonic Ribbon Fallback
         float t = u * TWO_PI + time * 0.35 * speedMult;
         vec3 m = vec3(4.2 * cos(2.0 * t), 2.5 * sin(3.0 * t), 4.2 * sin(2.0 * t));
         vec3 tanV = vec3(-8.4 * sin(2.0 * t), 7.5 * cos(3.0 * t), 8.4 * cos(2.0 * t));
-        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 6.0, vol, settleDecay);
+        target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 1.15, 6.0, vol, settleDecay, 1);
     }
 
     return target;

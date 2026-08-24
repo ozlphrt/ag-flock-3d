@@ -1033,7 +1033,14 @@ export function generateProceduralShapeSurprise(): { shapes: [number, number, nu
 }
 
 
-// True Cascaded Orthonormal Reference Frame for 3-Tier and 4-Tier Nested Helices
+// Multi-Morphology Species Stream Sheathing:
+// 0: Cylindrical Vogel Pipe (Dense 3D Cylinder)
+// 1: Flat Silk Ribbon (Wide Twisting Planar Sheet)
+// 2: Swirling Helical Corkscrew (High-Speed Multi-Filar Vortex Spirals)
+// 3: DNA Double Helix Ladder (Dual Helical Rails with Periodic Base-Pair Rungs)
+// 4: Tubular Hollow Sheath (Glowing Plasma Outer Cylinder)
+// 5: 3-Strand Braided Rope (Interwoven Sub-Cable Bundle)
+// 6: Astroid Fluted Star (Multi-Cusped Star Cross-Section)
 function applyIntertwinedMultiLayer(
     mx: number, my: number, mz: number,
     tanX: number, tanY: number, tanZ: number,
@@ -1045,7 +1052,8 @@ function applyIntertwinedMultiLayer(
     rMeso: number,
     omegaMeso: number,
     rMicro: number,
-    omegaMicro: number
+    omegaMicro: number,
+    strandStyle: number = 0
 ): [number, number, number] {
     // 1. Order-1: Continuous Rotation-Minimizing Radial Reference (no discontinuous step flips)
     const tLen = Math.sqrt(tanX * tanX + tanY * tanY + tanZ * tanZ) || 1.0;
@@ -1085,27 +1093,106 @@ function applyIntertwinedMultiLayer(
     const p2y = my + n2y * rMeso;
     const p2z = mz + n2z * rMeso;
 
-    // 3. Pure Vogel 3D Volumetric Packing INSIDE THIS SPECIES' OWN PIPE
-    const goldenAngle = 2.399963229728653;
     const vogelSeed = ((indexInSpecies * 137.5077) % 1000) / 1000.0;
-    const rFrac = ((vogelSeed * 137.5077 + u * 97.13) % 1.0 + 1.0) % 1.0;
-    const pipeThickness = (0.15 + 0.85 * Math.sqrt(rFrac)) * rMicro;
 
-    const internalAngle = (vogelSeed * 2500.0) * goldenAngle + (u * 4.0 * Math.PI * 2.0) + (time * 2.2 * speedMult);
-    const cosI = fastCos(internalAngle);
-    const sinI = fastSin(internalAngle);
-
-    const nIx = n2x * cosI + b2x * sinI;
-    const nIy = n2y * cosI + b2y * sinI;
-    const nIz = n2z * cosI + b2z * sinI;
-
-    const tangStagger = tx * (((vogelSeed * 271.31) % 1.0) - 0.5) * 0.15;
-
-    return [
-        p2x + nIx * pipeThickness + tangStagger,
-        p2y + nIy * pipeThickness,
-        p2z + nIz * pipeThickness
-    ];
+    if (strandStyle === 1) {
+        // --- 1. FLAT SILK RIBBON (Wide, undulating sheet twisting along the path) ---
+        const twistAngle = (u * 4.0 * Math.PI * 2.0) + time * 1.8 * speedMult;
+        const cosTwist = fastCos(twistAngle), sinTwist = fastSin(twistAngle);
+        const nRx = n2x * cosTwist + b2x * sinTwist;
+        const nRy = n2y * cosTwist + b2y * sinTwist;
+        const nRz = n2z * cosTwist + b2z * sinTwist;
+        const bRx = -n2x * sinTwist + b2x * cosTwist;
+        const bRy = -n2y * sinTwist + b2y * cosTwist;
+        const bRz = -n2z * sinTwist + b2z * cosTwist;
+        const widthSpread = ((((vogelSeed * 137.5077 + u * 43.17) % 1.0 + 1.0) % 1.0) - 0.5) * 2.0 * (rMicro * 2.5);
+        const thinThickness = ((((vogelSeed * 311.23) % 1.0 + 1.0) % 1.0) - 0.5) * (rMicro * 0.25);
+        return [
+            p2x + nRx * widthSpread + bRx * thinThickness,
+            p2y + nRy * widthSpread + bRy * thinThickness,
+            p2z + nRz * widthSpread + bRz * thinThickness
+        ];
+    } else if (strandStyle === 2) {
+        // --- 2. SWIRLING HELICAL CORKSCREW (High-speed multi-filar vortex spirals) ---
+        const corkscrewTurns = 16.0;
+        const strandId = Math.floor(((vogelSeed * 17.31) % 1.0 + 1.0) % 1.0 * 3.0);
+        const subAngle = (strandId * (Math.PI * 2.0 / 3.0)) + (u * corkscrewTurns * Math.PI * 2.0) + time * 3.2 * speedMult;
+        const cosSub = fastCos(subAngle), sinSub = fastSin(subAngle);
+        const nSx = n2x * cosSub + b2x * sinSub;
+        const nSy = n2y * cosSub + b2y * sinSub;
+        const nSz = n2z * cosSub + b2z * sinSub;
+        const corkRadius = rMicro * 1.1;
+        return [
+            p2x + nSx * corkRadius,
+            p2y + nSy * corkRadius,
+            p2z + nSz * corkRadius
+        ];
+    } else if (strandStyle === 3) {
+        // --- 3. DNA DOUBLE HELIX LADDER (Dual helical rails with periodic base-pair rungs) ---
+        const isRung = ((vogelSeed * 71.3 + u * 10.0) % 1.0 + 1.0) % 1.0 < 0.24;
+        const dnaAngle = (u * 10.0 * Math.PI * 2.0) + time * 2.0 * speedMult;
+        const cosD = fastCos(dnaAngle), sinD = fastSin(dnaAngle);
+        const nRx = n2x * cosD + b2x * sinD;
+        const nRy = n2y * cosD + b2y * sinD;
+        const nRz = n2z * cosD + b2z * sinD;
+        const railSign = (((vogelSeed * 47.19) % 1.0 + 1.0) % 1.0 > 0.5) ? 1.0 : -1.0;
+        const railDist = rMicro * 1.25;
+        if (isRung) {
+            const rungPos = ((((vogelSeed * 137.5) % 1.0 + 1.0) % 1.0) * 2.0 - 1.0) * railDist;
+            return [p2x + nRx * rungPos, p2y + nRy * rungPos, p2z + nRz * rungPos];
+        } else {
+            return [p2x + nRx * railDist * railSign, p2y + nRy * railDist * railSign, p2z + nRz * railDist * railSign];
+        }
+    } else if (strandStyle === 4) {
+        // --- 4. TUBULAR HOLLOW SHEATH (Glowing plasma outer cylinder) ---
+        const goldenAngle = 2.399963229728653;
+        const rFrac = 0.70 + 0.30 * Math.sqrt(((vogelSeed * 137.5077 + u * 97.13) % 1.0 + 1.0) % 1.0);
+        const pipeThickness = rFrac * rMicro * 1.2;
+        const internalAngle = (vogelSeed * 2500.0) * goldenAngle + (u * 4.0 * Math.PI * 2.0) + (time * 2.2 * speedMult);
+        const cosI = fastCos(internalAngle), sinI = fastSin(internalAngle);
+        return [
+            p2x + (n2x * cosI + b2x * sinI) * pipeThickness,
+            p2y + (n2y * cosI + b2y * sinI) * pipeThickness,
+            p2z + (n2z * cosI + b2z * sinI) * pipeThickness
+        ];
+    } else if (strandStyle === 5) {
+        // --- 5. 3-STRAND BRAIDED ROPE (Interwoven sub-cable bundle) ---
+        const ropeSub = Math.floor(((vogelSeed * 19.41) % 1.0 + 1.0) % 1.0 * 3.0);
+        const ropeAngle = ropeSub * (Math.PI * 2.0 / 3.0) + (u * 12.0 * Math.PI * 2.0) + time * 2.4 * speedMult;
+        const cosR = fastCos(ropeAngle), sinR = fastSin(ropeAngle);
+        const nSubCordX = n2x * cosR + b2x * sinR;
+        const nSubCordY = n2y * cosR + b2y * sinR;
+        const nSubCordZ = n2z * cosR + b2z * sinR;
+        const subCordR = rMicro * 0.85;
+        return [
+            p2x + nSubCordX * subCordR,
+            p2y + nSubCordY * subCordR,
+            p2z + nSubCordZ * subCordR
+        ];
+    } else if (strandStyle === 6) {
+        // --- 6. ASTROID FLUTED STAR (Multi-cusped star cross-section) ---
+        const starAngle = (u * 4.0 * Math.PI * 2.0) + time * 1.6 * speedMult + (((vogelSeed * 13.7) % 1.0) * Math.PI * 2.0);
+        const cos2S = fastCos(2.0 * starAngle);
+        const starR = (0.20 + 0.15 * Math.pow(cos2S * cos2S, 2.0)) * (rMicro / 0.22);
+        const cosS = fastCos(starAngle), sinS = fastSin(starAngle);
+        return [
+            p2x + (n2x * cosS + b2x * sinS) * starR,
+            p2y + (n2y * cosS + b2y * sinS) * starR,
+            p2z + (n2z * cosS + b2z * sinS) * starR
+        ];
+    } else {
+        // --- 0. CYLINDRICAL VOGEL PIPE (Default dense 3D cylinder) ---
+        const goldenAngle = 2.399963229728653;
+        const rFrac = ((vogelSeed * 137.5077 + u * 97.13) % 1.0 + 1.0) % 1.0;
+        const pipeThickness = (0.15 + 0.85 * Math.sqrt(rFrac)) * rMicro;
+        const internalAngle = (vogelSeed * 2500.0) * goldenAngle + (u * 4.0 * Math.PI * 2.0) + (time * 2.2 * speedMult);
+        const cosI = fastCos(internalAngle), sinI = fastSin(internalAngle);
+        return [
+            p2x + (n2x * cosI + b2x * sinI) * pipeThickness,
+            p2y + (n2y * cosI + b2y * sinI) * pipeThickness,
+            p2z + (n2z * cosI + b2z * sinI) * pipeThickness
+        ];
+    }
 }
 
 // 4-Tier True Hierarchical Recursive Super-Helix:
@@ -1221,7 +1308,7 @@ export function computeFormationPoint(
         const tanX = -R0 * fastSin(t);
         const tanY = fastCos(2.0 * t) * 3.6;
         const tanZ = R0 * fastCos(t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.15, 8.0, 0.28, 20.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.15, 8.0, 0.28, 20.0, 0); // Cylindrical Pipe
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.ConcentricDualHelixSheath) {
         // --- 1. Dual Concentric Counter-Tilted Rings (Species 0&1 Inner, Species 2&3 Outer) ---
@@ -1233,7 +1320,7 @@ export function computeFormationPoint(
             const my = fastSin(2.0 * t) * 0.9;
             const mz = R1 * fastSin(t);
             const tanX = -R1 * fastSin(t), tanY = fastCos(2.0 * t) * 1.8, tanZ = R1 * fastCos(t);
-            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.45, 6.0, 0.20, 16.0);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.45, 6.0, 0.20, 16.0, 1); // Flat Ribbon
             tx = pt[0]; ty = pt[1]; tz = pt[2];
         } else {
             const R2 = 5.2;
@@ -1241,7 +1328,7 @@ export function computeFormationPoint(
             const my = -fastSin(2.0 * t) * 1.4;
             const mz = R2 * fastSin(t);
             const tanX = -R2 * fastSin(t), tanY = -fastCos(2.0 * t) * 2.8, tanZ = R2 * fastCos(t);
-            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species - 2, indexInSpecies, speedMult, 0.55, 8.0, 0.22, 16.0);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species - 2, indexInSpecies, speedMult, 0.55, 8.0, 0.22, 16.0, 1); // Flat Ribbon
             tx = pt[0]; ty = pt[1]; tz = pt[2];
         }
     } else if (formation === FormationMode.ToroidalHelixBraid) {
@@ -1252,7 +1339,7 @@ export function computeFormationPoint(
         const my = 0;
         const mz = R0 * fastSin(t);
         const tanX = -R0 * fastSin(t), tanY = 0, tanZ = R0 * fastCos(t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.35, 8.0, 0.28, 22.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.35, 8.0, 0.28, 22.0, 2); // Swirling Helix
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.TrefoilBraidedRibbon) {
         // --- 3. Trefoil Braided Ribbon: 4-Strand Multi-Layer Knot (2,3) ---
@@ -1263,7 +1350,7 @@ export function computeFormationPoint(
         const tanX = (fastCos(t) + 4.0 * fastCos(2.0 * t)) * 1.5;
         const tanY = (-fastSin(t) + 4.0 * fastSin(2.0 * t)) * 1.5;
         const tanZ = (-3.0 * fastCos(3.0 * t)) * 2.0;
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.26, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.26, 18.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.MobiusHelixBraid) {
         // --- 4. Mobius Helix Braid: Continuous 3D Mobius Strip with 4 Braided Cords ---
@@ -1276,7 +1363,7 @@ export function computeFormationPoint(
         const tanX = -R0 * fastSin(t);
         const tanY = fastCos(halfT) * 0.9;
         const tanZ = R0 * fastCos(t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.1, 7.0, 0.25, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.1, 7.0, 0.25, 18.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.LissajousIntertwinedKnot) {
         // --- 5. Lissajous Intertwined Knot: 4 Weaving Harmonic Ribbons in 3D 8-Knot ---
@@ -1287,7 +1374,7 @@ export function computeFormationPoint(
         const tanX = 8.4 * fastCos(2.0 * t);
         const tanY = -10.5 * fastSin(3.0 * t);
         const tanZ = 11.2 * fastCos(4.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.26, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.26, 18.0, 2); // Swirling Helix
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.CaduceusVortex) {
         // --- 6. Caduceus Intertwined Double Ribbon ---
@@ -1298,7 +1385,7 @@ export function computeFormationPoint(
         const tanX = 9.0 * fastCos(2.0 * t);
         const tanY = 3.8 * fastCos(t);
         const tanZ = -7.5 * fastSin(3.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0, 3); // DNA Double Ladder
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.BorromeanRings) {
         // --- 7. Borromean Rings: 3 Mutually Intertwined Orthogonal Loops ---
@@ -1315,7 +1402,7 @@ export function computeFormationPoint(
             mz = 4.4 * fastCos(t); mx = 2.5 * fastSin(t); my = 1.4 * fastSin(2.0 * t) + 0.9;
             tanZ = -4.4 * fastSin(t); tanX = 2.5 * fastCos(t); tanY = 2.8 * fastCos(2.0 * t);
         }
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.65, 6.0, 0.22, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.65, 6.0, 0.22, 16.0, 0); // Cylindrical Pipe
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.FigureEightKnotBraid) {
         // --- 8. Figure-Eight Knot Braid: Canonical 4_1 Listing Knot with 4-Strand Braided Cable ---
@@ -1327,7 +1414,7 @@ export function computeFormationPoint(
         const tanX = -3.0 * rBase * fastSin(3.0 * t);
         const tanY = 3.0 * rBase * fastCos(3.0 * t);
         const tanZ = 9.6 * fastCos(4.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 18.0, 5); // 3-Strand Braided Rope
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.CinqfoilKnotBraid) {
         // --- 9. Cinqfoil Knot Braid: 5-Lobe Intertwined Torus (5,2) Solomon Seal Ribbon ---
@@ -1339,7 +1426,7 @@ export function computeFormationPoint(
         const tanX = -2.0 * r * fastSin(2.0 * t);
         const tanY = 2.0 * r * fastCos(2.0 * t);
         const tanZ = -12.5 * fastCos(5.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 5.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 5.0, 0.24, 16.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.SeptafoilKnotBraid) {
         // --- 10. Septafoil Stellar Braid: 7-Point Intertwined Torus (7,3) Ribbon ---
@@ -1351,7 +1438,7 @@ export function computeFormationPoint(
         const tanX = -3.0 * r * fastSin(3.0 * t);
         const tanY = 3.0 * r * fastCos(3.0 * t);
         const tanZ = -18.2 * fastCos(7.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 7.0, 0.24, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 7.0, 0.24, 18.0, 2); // Swirling Helix
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.FractalSupercoil) {
         // --- 11. Viviani's Spherical Figure-8 Window ---
@@ -1363,7 +1450,7 @@ export function computeFormationPoint(
         const tanX = -R_v * fastSin(t) * (1.0 + 2.0 * fastCos(t));
         const tanY = R_v * (fastCos(t) + fastCos(2.0 * t));
         const tanZ = R_v * fastCos(t * 0.5);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0, 4); // Hollow Sheath
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.SuperhelicalTorusKnot) {
         // --- 12. Superhelical Torus Knot: Multi-Layer (3,5) Torus Knot ---
@@ -1376,7 +1463,7 @@ export function computeFormationPoint(
         const tanX = -p * r * fastSin(p * t);
         const tanY = q * fastCos(q * t) * 2.2;
         const tanZ = p * r * fastCos(p * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.15, 14.0, 0.30, 20.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.15, 14.0, 0.30, 20.0, 5); // 3-Strand Braided Rope
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.DNAChromatinSolenoid) {
         // --- 13. Astroid 3D Diamond Star Closed Knot ---
@@ -1389,7 +1476,7 @@ export function computeFormationPoint(
         const tanX = -13.8 * fastCos(t) * fastCos(t) * fastSin(t);
         const tanY = 13.8 * fastSin(t) * fastSin(t) * fastCos(t);
         const tanZ = 5.2 * fastCos(2.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.80, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.80, 6.0, 0.22, 14.0, 6); // Astroid Star Fluted
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.TriquetraCelticBraid) {
         // --- 14. Triquetra Celtic Braid: 3D Celtic Trinity Knot with Over-Under Crossings ---
@@ -1401,7 +1488,7 @@ export function computeFormationPoint(
         const tanX = -r * fastSin(t);
         const tanY = r * fastCos(t);
         const tanZ = 6.9 * fastCos(3.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.WhiteheadLinkBraid) {
         // --- 15. Whitehead Link Braid: Circular Ring Intertwined with 3D Figure-8 Loop ---
@@ -1413,14 +1500,14 @@ export function computeFormationPoint(
             const my = rRing * fastSin(t);
             const mz = 0.7 * fastSin(2.0 * t);
             const tanX = -rRing * fastSin(t), tanY = rRing * fastCos(t), tanZ = 1.4 * fastCos(2.0 * t);
-            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.6, 6.0, 0.22, 14.0);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.6, 6.0, 0.22, 14.0, 0); // Cylindrical Pipe
             tx = pt[0]; ty = pt[1]; tz = pt[2];
         } else {
             const mx = 2.4 * fastSin(2.0 * t);
             const my = 0.9 * fastSin(4.0 * t);
             const mz = 3.6 * fastCos(t);
             const tanX = 4.8 * fastCos(2.0 * t), tanY = 3.6 * fastCos(4.0 * t), tanZ = -3.6 * fastSin(t);
-            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species - 2, indexInSpecies, speedMult, 0.6, 6.0, 0.22, 14.0);
+            const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species - 2, indexInSpecies, speedMult, 0.6, 6.0, 0.22, 14.0, 0); // Cylindrical Pipe
             tx = pt[0]; ty = pt[1]; tz = pt[2];
         }
     } else if (formation === FormationMode.QuatrefoilKnotBraid) {
@@ -1433,7 +1520,7 @@ export function computeFormationPoint(
         const tanX = -3.0 * r * fastSin(3.0 * t);
         const tanY = 3.0 * r * fastCos(3.0 * t);
         const tanZ = 9.2 * fastCos(4.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0, 2); // Swirling Helix
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.GrannyKnotBraid) {
         // --- 17. Granny Knot Braid: Dual Intertwined Composite Trefoils ---
@@ -1447,7 +1534,7 @@ export function computeFormationPoint(
         const tanX = (fastCos(t) + 3.2 * fastCos(2.0 * t)) * 1.25;
         const tanY = (-fastSin(t) + 3.2 * fastSin(2.0 * t)) * 1.25;
         const tanZ = (-3.0 * fastCos(3.0 * t)) * 1.8;
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, segU, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, segU, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0, 5); // 3-Strand Braided Rope
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.DoubleHelixBraid) {
         // --- 18. Clelia Spherical Multi-Crown Spiral ---
@@ -1459,7 +1546,7 @@ export function computeFormationPoint(
         const tanX = 4.5 * (-4.0 * fastSin(4.0 * t) * fastCos(t) - c4 * fastSin(t));
         const tanY = 4.5 * (-4.0 * fastSin(4.0 * t) * fastSin(t) + c4 * fastCos(t));
         const tanZ = 18.0 * fastCos(4.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0, 4); // Hollow Sheath
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.TripleHelixBraid) {
         // --- 19. Pretzel Genus-3 Triple-Loop Propeller ---
@@ -1470,7 +1557,7 @@ export function computeFormationPoint(
         const tanX = -4.5 * fastSin(t) + 4.5 * fastSin(3.0 * t);
         const tanY = 4.5 * fastCos(t) + 4.5 * fastCos(3.0 * t);
         const tanZ = 6.6 * fastCos(3.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.80, 6.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.80, 6.0, 0.24, 16.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.DNALadderBraid) {
         // --- 20. Chasles Twisted Hyperboloid Ruled Ribbon ---
@@ -1481,7 +1568,7 @@ export function computeFormationPoint(
         const tanX = -4.0 * fastSin(t) - 2.4 * fastCos(2.0 * t);
         const tanY = 4.0 * fastCos(t) - 2.4 * fastSin(2.0 * t);
         const tanZ = -6.0 * fastSin(2.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.80, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.80, 6.0, 0.22, 14.0, 3); // DNA Double Ladder
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.GyroidBraidLabyrinth) {
         // --- 21. Gyroid Braid Labyrinth: 4 Species Cords Weaving through Periodic Surface ---
@@ -1490,7 +1577,7 @@ export function computeFormationPoint(
         const my = (fastSin(t * 1.5) * fastCos(t * 0.5) + fastCos(t)) * 2.8;
         const mz = (fastSin(t * 0.5) * fastCos(t) + fastCos(t * 1.5)) * 2.8;
         const tanX = fastCos(t) * 2.8, tanY = fastCos(t * 1.5) * 2.8, tanZ = fastCos(t * 0.5) * 2.8;
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 6.0, 0.24, 16.0, 2); // Swirling Helix
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.LorenzChaoticBraid) {
         // --- 22. Lorenz Chaotic Braid: 4 Intertwined Strands in Dual-Scroll Butterfly Wings ---
@@ -1500,7 +1587,7 @@ export function computeFormationPoint(
         const my = fastCos(t) * 3.8;
         const mz = (s > 0 ? 1 : -1) * (4.2 - Math.abs(s) * 2.6);
         const tanX = fastCos(t) * 4.4, tanY = -fastSin(t) * 3.8, tanZ = fastCos(t) * 2.6;
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.85, 6.0, 0.24, 16.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.KleinBottleBraid) {
         // --- 23. Klein Bottle Braid: 4-Strand Intertwined Immersion ---
@@ -1512,7 +1599,7 @@ export function computeFormationPoint(
         const kz = (fastSin(ku * 0.5) * fastSin(kv) + fastCos(ku * 0.5) * fastSin(2.0 * kv)) * 2.2;
         const mx = kx * 0.75, my = ky * 0.75, mz = kz * 0.75;
         const tanX = -ky * 0.75, tanY = kx * 0.75, tanZ = kz * 0.5;
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0, 4); // Hollow Sheath
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.CliffordTorusBraid) {
         // --- 24. Clifford Torus Braid: 4 Intertwined Cords in 4D Hyper-Torus ---
@@ -1521,7 +1608,7 @@ export function computeFormationPoint(
         const my = 4.2 * fastSin(thC);
         const mz = 0;
         const tanX = -4.2 * fastSin(thC), tanY = 4.2 * fastCos(thC), tanZ = 0;
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.25, 8.0, 0.26, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 1.25, 8.0, 0.26, 18.0, 5); // 3-Strand Braided Rope
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.OuroborosDragonBraid) {
         // --- 25. Ouroboros Dragon Braid: 4-Strand Intertwined Dragon Loop ---
@@ -1531,7 +1618,7 @@ export function computeFormationPoint(
         const my = fastSin(u * 7.0 + time) * 0.7;
         const mz = baseR * fastSin(ringAngle);
         const tanX = -baseR * fastSin(ringAngle), tanY = 0.5, tanZ = baseR * fastCos(ringAngle);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 8.0, 0.25, 18.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 8.0, 0.25, 18.0, 6); // Astroid Star Fluted
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.DancingRibbonBraid) {
         // --- 26. Hypotrochoid 6-Star Rosette ---
@@ -1542,7 +1629,7 @@ export function computeFormationPoint(
         const tanX = -3.2 * fastSin(t) - 9.0 * fastSin(5.0 * t);
         const tanY = 3.2 * fastCos(t) - 9.0 * fastCos(5.0 * t);
         const tanZ = 13.2 * fastCos(6.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0, 2); // Swirling Helix
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.SolarFlareProminence) {
         // --- 27. Nephroid 2-Cusped Kidney Ribbon ---
@@ -1553,7 +1640,7 @@ export function computeFormationPoint(
         const tanX = 1.8 * (-3.0 * fastSin(t) + 3.0 * fastSin(3.0 * t));
         const tanY = 1.8 * (3.0 * fastCos(t) - 3.0 * fastCos(3.0 * t));
         const tanZ = 4.4 * fastCos(2.0 * t);
-        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0);
+        const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.75, 6.0, 0.22, 14.0, 1); // Flat Ribbon
         tx = pt[0]; ty = pt[1]; tz = pt[2];
     } else if (formation === FormationMode.OlympicChainLink) {
         // --- 28. Olympic Chain Link: 4 Interlocked Elliptical Rings ---
