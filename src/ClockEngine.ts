@@ -118,25 +118,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
         }
     };
 
-    // Popularity-Weighted Topology Playlist (Favors highest rated & user-voted topologies)
+    // Non-Repeating Full-Deck Topology Playlist (Pure Bag Randomization across all 36 topologies)
     let randomizedTopologyPlaylist: number[] = [];
-
-    // Core popular baseline formations that always have high visual appeal
-    const POPULAR_CORE_FORMATIONS = [
-        FormationMode.TrefoilBraidedRibbon,
-        FormationMode.CaduceusVortex,
-        FormationMode.QuadHelixBraid,
-        FormationMode.SuperhelicalTorusKnot,
-        FormationMode.FigureEightKnotBraid,
-        FormationMode.BorromeanRings,
-        FormationMode.MobiusHelixBraid,
-        FormationMode.TriquetraCelticBraid,
-        FormationMode.VillarceauTorus,
-        FormationMode.GalacticSpiral,
-        FormationMode.SaturnianRings,
-        FormationMode.FractalSupercoil,
-        FormationMode.LorenzChaoticBraid
-    ];
 
     const getNextRandomizedTopology = (prefs: any, currentMode: number): number => {
         if (randomizedTopologyPlaylist.length === 0) {
@@ -144,36 +127,34 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             const likes = prefs.formationLikes || {};
             const dislikes = prefs.formationDislikes || {};
 
-            // 1. Give each popular core formation strong baseline tickets
-            for (const coreMode of POPULAR_CORE_FORMATIONS) {
-                if ((dislikes[coreMode] || 0) <= (likes[coreMode] || 0)) {
-                    pool.push(coreMode, coreMode, coreMode); // 3x baseline tickets for top tier popular shapes
-                }
-            }
-
-            // 2. Add user-liked and voted formations with heavy weight (+3 tickets per like)
+            // Place every unique topology (0 to TOTAL_FORMATION_COUNT - 1) exactly ONCE into the deck
             for (let i = 0; i < TOTAL_FORMATION_COUNT; i++) {
                 const likeCount = likes[i] || 0;
                 const dislikeCount = dislikes[i] || 0;
-                if (dislikeCount > likeCount) continue; // Skip disliked formations
+                if (dislikeCount > likeCount && dislikeCount >= 2) continue; // Skip disliked formations
 
-                // Base ticket for all valid formations
                 pool.push(i);
-
-                // Heavy weighting for user likes & votes
-                for (let k = 0; k < likeCount * 3; k++) {
-                    pool.push(i);
-                }
             }
 
-            // Procedural surprise chances
-            pool.push(FormationMode.Procedural, FormationMode.Procedural);
-
-            // Fisher-Yates shuffle
+            // Fisher-Yates full deck shuffle
             for (let i = pool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [pool[i], pool[j]] = [pool[j], pool[i]];
             }
+
+            // Anti-repetition deck boundary resolution:
+            // Ensure the start of the new deck doesn't contain the most recently played topologies
+            for (let i = 0; i < Math.min(8, pool.length); i++) {
+                if (recentFormations.includes(pool[i])) {
+                    for (let j = pool.length - 1; j >= 8; j--) {
+                        if (!recentFormations.includes(pool[j])) {
+                            [pool[i], pool[j]] = [pool[j], pool[i]];
+                            break;
+                        }
+                    }
+                }
+            }
+
             randomizedTopologyPlaylist = pool;
         }
 
@@ -238,31 +219,15 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.transitionDuration = 5.5;
             state.holdDuration = 2.5;
 
-            let nextMode: FormationMode;
-
-            // 15% Chance to trigger a new Emotional Arc if not currently in one
-            if (!activeArc && Math.random() < 0.15) {
-                activeArc = getRandomEmotionalArc();
-                arcStepIndex = 0;
-            }
-
-            if (activeArc) {
-                nextMode = activeArc.modes[arcStepIndex];
-                arcStepIndex++;
-                if (arcStepIndex >= activeArc.modes.length) {
-                    activeArc = null; // Arc complete!
-                }
-            } else {
-                // Completely random order topology selection
-                nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
-            }
+            // Pure non-repeating full-deck topology selection
+            let nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
 
             if (nextMode === state.formationMode) {
                 nextMode = ((state.formationMode + 1 + Math.floor(Math.random() * (TOTAL_FORMATION_COUNT - 1))) % TOTAL_FORMATION_COUNT) as FormationMode;
             }
 
             recentFormations.push(nextMode);
-            if (recentFormations.length > 5) recentFormations.shift();
+            if (recentFormations.length > 18) recentFormations.shift();
 
             // Setup new topology morph
             state.prevFormationMode = state.formationMode;
@@ -489,7 +454,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 }
 
                 recentFormations.push(nextMode);
-                if (recentFormations.length > 5) recentFormations.shift();
+                if (recentFormations.length > 18) recentFormations.shift();
 
                 state.formationMode = nextMode;
                 state.formationSeed = Math.random() * 10000;
