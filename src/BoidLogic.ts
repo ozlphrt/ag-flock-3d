@@ -838,6 +838,7 @@ export interface SimulationState {
     microSurpriseType?: string;
     microSurpriseEndTime?: number;
     clockEngine?: any;
+    isPureProceduralMode?: boolean;
     isFormationLocked?: boolean;
     isPaletteLocked?: boolean;
     isMaterialLocked?: boolean;

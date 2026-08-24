@@ -227,8 +227,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.formationSeed = Math.random() * 10000;
         simState.current.customFormationName = customName;
         simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
-        simState.current.transitionDuration = 5.0; // Snappy 5s morph
-        simState.current.holdDuration = 16.0;
+        simState.current.transitionDuration = 12.0; // Smooth 12s morph
+        simState.current.holdDuration = 8.0;
         simState.current.isTopologyFormed = false;
         simState.current.formedTimestamp = null;
         simState.current.physicalConvergence = 0.0;
@@ -240,6 +240,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
         setTick(t => t + 1);
         showToast(`🎲 Synthesized: ${customName}`);
+    };
+
+    const togglePureProceduralMode = () => {
+        const next = !simState.current.isPureProceduralMode;
+        simState.current.isPureProceduralMode = next;
+        if (next) {
+            handleDiceProcedural();
+            showToast(`🎲 Infinite Procedural Mode: ON (100% Unique Mathematical Syntheses)`);
+        } else {
+            showToast(`🌀 Preset Topology Mode: Restored`);
+        }
+        setTick(t => t + 1);
     };
 
     const selectShape = (id: number) => {
@@ -1140,26 +1152,31 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             </button>
 
                             <button
-                                onClick={handleDiceProcedural}
+                                onClick={togglePureProceduralMode}
                                 className="dice-spin-btn"
                                 style={{
                                     padding: '8px 4px',
                                     borderRadius: '10px',
-                                    background: 'rgba(255, 215, 0, 0.10)',
-                                    border: '1.5px solid rgba(255, 215, 0, 0.35)',
+                                    background: simState.current.isPureProceduralMode ? 'rgba(255, 215, 0, 0.25)' : 'rgba(255, 215, 0, 0.10)',
+                                    border: simState.current.isPureProceduralMode ? '1.5px solid #ffd700' : '1.5px solid rgba(255, 215, 0, 0.35)',
                                     color: '#ffd700',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     gap: '3px',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: simState.current.isPureProceduralMode ? '0 0 16px rgba(255, 215, 0, 0.45)' : 'none'
                                 }}
-                                title="Synthesizes brand-new procedural 3D topologies, palettes, and lighting"
+                                title="Toggle Pure Procedural Mode: Synthesizes brand-new unique procedural 3D topologies on every cycle"
                             >
                                 <span style={{ fontSize: '18px' }}>🎲</span>
-                                <span style={{ fontSize: '10px', fontWeight: 800, color: '#fef08a' }}>Surprise Roll</span>
-                                <span style={{ fontSize: '8px', color: '#facc15', opacity: 0.85 }}>Infinite 3D</span>
+                                <span style={{ fontSize: '10px', fontWeight: 800, color: '#fef08a' }}>
+                                    {simState.current.isPureProceduralMode ? 'Procedural: ON' : 'Surprise Roll'}
+                                </span>
+                                <span style={{ fontSize: '8px', color: '#facc15', opacity: 0.85 }}>
+                                    {simState.current.isPureProceduralMode ? 'Infinite 3D Mode' : 'Infinite 3D'}
+                                </span>
                             </button>
                         </div>
 
@@ -2073,7 +2090,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 <div style={{
                     position: 'absolute',
                     bottom: '68px',
-                    right: hoveredDockBtn.id === 'settings' ? '0px' : hoveredDockBtn.id === 'dice' ? '64px' : hoveredDockBtn.id === 'learn' ? '128px' : '192px',
+                    right: hoveredDockBtn.id === 'settings' ? '0px' : hoveredDockBtn.id === 'procedural' ? '64px' : hoveredDockBtn.id === 'dice' ? '128px' : '192px',
                     width: '300px',
                     background: 'rgba(10, 14, 24, 0.96)',
                     backdropFilter: 'blur(24px)',
@@ -2098,6 +2115,59 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     </div>
                 </div>
             )}
+
+            {/* Surprise Roll / Pure Procedural Switch Toggle Button */}
+            <button
+                className="defeat-selector-btn"
+                onClick={togglePureProceduralMode}
+                onMouseEnter={() => setHoveredDockBtn({
+                    id: 'procedural',
+                    title: simState.current.isPureProceduralMode ? '🎲 Procedural Mode (ACTIVE)' : '🎲 Surprise Roll (Switch)',
+                    desc: simState.current.isPureProceduralMode 
+                        ? 'Active! Automatic cycles strictly synthesize 100% brand-new, unique procedural mathematical manifolds instead of preset topologies. Click to return to presets.'
+                        : 'Switch to Pure Procedural Mode. Topologies will be generated as infinite unique mathematical formulas (Superformulas, Fourier Harmonics, Fractal Bifurcations) on every cycle.',
+                    color: '#ffd700'
+                })}
+                onMouseLeave={() => setHoveredDockBtn(null)}
+                style={{
+                    width: '52px',
+                    height: '52px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: simState.current.isPureProceduralMode 
+                        ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.35), rgba(245, 158, 11, 0.45))' 
+                        : 'rgba(12, 16, 26, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: simState.current.isPureProceduralMode ? '2px solid #ffd700' : '1.5px solid rgba(255, 215, 0, 0.45)',
+                    color: simState.current.isPureProceduralMode ? '#ffd700' : '#fef08a',
+                    boxShadow: simState.current.isPureProceduralMode 
+                        ? '0 0 28px rgba(255, 215, 0, 0.65), inset 0 0 12px rgba(255, 215, 0, 0.3)' 
+                        : '0 4px 16px rgba(0,0,0,0.5)',
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    cursor: 'pointer',
+                    position: 'relative'
+                }}
+            >
+                <span style={{ fontSize: '22px', transform: simState.current.isPureProceduralMode ? 'scale(1.15)' : 'scale(1.0)', transition: 'transform 0.2s ease' }}>
+                    🎲
+                </span>
+                {simState.current.isPureProceduralMode && (
+                    <span style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '50%',
+                        background: '#ffd700',
+                        boxShadow: '0 0 6px #ffd700'
+                    }} />
+                )}
+            </button>
 
             {/* Main Settings Toggle Button with Settings Cog */}
             <button

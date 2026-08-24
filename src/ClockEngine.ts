@@ -221,28 +221,47 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.transitionDuration = 12.0;
             state.holdDuration = 8.0;
 
-            // Pure non-repeating full-deck topology selection
-            let nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
-
-            if (nextMode === state.formationMode) {
-                nextMode = ((state.formationMode + 1 + Math.floor(Math.random() * (TOTAL_FORMATION_COUNT - 1))) % TOTAL_FORMATION_COUNT) as FormationMode;
-            }
-
-            recentFormations.push(nextMode);
-            if (recentFormations.length > 18) recentFormations.shift();
-
-            // Setup new topology morph
-            state.prevFormationMode = state.formationMode;
-            state.prevFormationSeed = state.formationSeed;
-            state.formationMode = nextMode;
-            state.formationSeed = Math.random() * 10000;
-            state.customFormationName = undefined;
-            state.transitionStartTime = time;
-            state.transitionDuration = 12.0;
-
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
-            if (!state.isPaletteLocked) {
-                state.speciesColors = getTopologyAlignedPalette(nextMode, spCount);
+            let nextMode: FormationMode = FormationMode.Procedural;
+
+            // Check if Pure Procedural Mode is active
+            if (state.isPureProceduralMode) {
+                const surprise = generateProceduralTopologySurprise();
+                state.prevFormationMode = state.formationMode;
+                state.prevFormationSeed = state.formationSeed;
+                state.formationMode = FormationMode.Procedural;
+                state.proceduralGenome = surprise.genome;
+                state.customFormationName = surprise.name;
+                state.formationSeed = Math.random() * 10000;
+                state.transitionStartTime = time;
+                state.transitionDuration = 12.0;
+
+                if (!state.isPaletteLocked) {
+                    state.speciesColors = getTopologyAlignedPalette(FormationMode.Procedural, spCount);
+                }
+            } else {
+                // Pure non-repeating full-deck topology selection
+                nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
+
+                if (nextMode === state.formationMode) {
+                    nextMode = ((state.formationMode + 1 + Math.floor(Math.random() * (TOTAL_FORMATION_COUNT - 1))) % TOTAL_FORMATION_COUNT) as FormationMode;
+                }
+
+                recentFormations.push(nextMode);
+                if (recentFormations.length > 18) recentFormations.shift();
+
+                // Setup new topology morph
+                state.prevFormationMode = state.formationMode;
+                state.prevFormationSeed = state.formationSeed;
+                state.formationMode = nextMode;
+                state.formationSeed = Math.random() * 10000;
+                state.customFormationName = undefined;
+                state.transitionStartTime = time;
+                state.transitionDuration = 12.0;
+
+                if (!state.isPaletteLocked) {
+                    state.speciesColors = getTopologyAlignedPalette(nextMode, spCount);
+                }
             }
             state.speciesRandomness = generateSpeciesRandomness(spCount);
             const sizeRanges = generateSpeciesSizeRanges(spCount);
@@ -257,8 +276,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.speciesStartOffsets = morphTimings.startOffsets;
             state.speciesMorphDurations = morphTimings.durations;
 
-            if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
-                state.proceduralGenome = generateProceduralGenome();
+            if (state.formationMode === FormationMode.Procedural || !state.proceduralGenome) {
+                if (!state.proceduralGenome) state.proceduralGenome = generateProceduralGenome();
             }
 
             // Auto Shape Mutation (only if user explicitly enabled autoShape AND shape is NOT locked)
@@ -440,16 +459,23 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.prevFormationMode = state.formationMode;
             state.prevFormationSeed = state.formationSeed;
             state.transitionStartTime = time;
-            state.transitionDuration = 5.5; // Smooth 5.5s morph
-            state.holdDuration = 2.5; // 2.5s appreciation window
+            state.transitionDuration = 12.0; // Smooth 12s morph
+            state.holdDuration = 8.0; // 8s appreciation window
 
-            if (isSurprise) {
+            if (isSurprise || state.isPureProceduralMode) {
                 const surprise = generateProceduralTopologySurprise();
                 state.formationMode = FormationMode.Procedural;
                 state.proceduralGenome = surprise.genome;
                 state.customFormationName = surprise.name;
                 state.formationSeed = Math.random() * 10000;
-                return `Topology: ${surprise.name}`;
+                const spCount = state.speciesCount || state.speciesColors?.length || 4;
+                if (!state.isPaletteLocked) {
+                    state.speciesColors = getTopologyAlignedPalette(FormationMode.Procedural, spCount);
+                }
+                const morphTimings = generateSpeciesMorphTimings(spCount, 12.0);
+                state.speciesStartOffsets = morphTimings.startOffsets;
+                state.speciesMorphDurations = morphTimings.durations;
+                return `Procedural: ${surprise.name}`;
             } else {
                 state.customFormationName = undefined;
                 let nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
