@@ -97,6 +97,7 @@ function lerpOklabColor(c1: THREE.Color, c2: THREE.Color, t: number, out: THREE.
 }
 
 // Pre-allocated scratch vectors for DynamicStudioLighting (zero per-frame GC pressure)
+// Pre-allocated scratch vectors for DynamicStudioLighting (zero per-frame GC pressure)
 const _viewVec = new THREE.Vector3();
 const _worldUp = new THREE.Vector3(0, 1, 0);
 const _rightVec = new THREE.Vector3();
@@ -104,60 +105,54 @@ const _upVec = new THREE.Vector3();
 const _idealKey = new THREE.Vector3();
 const _idealFill = new THREE.Vector3();
 const _idealRim = new THREE.Vector3();
-const _idealBounce = new THREE.Vector3();
 const _rawFillScratch = new THREE.Color();
 const _hslScratch = { h: 0, s: 0, l: 0 };
 const _whiteColor = new THREE.Color('#ffffff');
-const _blueColor = new THREE.Color('#90b8e8');
-const _darkColor = new THREE.Color('#101828');
 
 function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<SimulationState> }) {
     const ambientRef = useRef<THREE.AmbientLight>(null!);
-    const hemiRef = useRef<THREE.HemisphereLight>(null!);
     const keyRef = useRef<THREE.DirectionalLight>(null!);
     const fillRef = useRef<THREE.DirectionalLight>(null!);
     const rimRef = useRef<THREE.DirectionalLight>(null!);
-    const bounceRef = useRef<THREE.DirectionalLight>(null!);
     const { camera } = useThree();
 
-    // Smoothed light positions for camera-adaptive studio rig
-    const curKeyPos = useRef(new THREE.Vector3(35, 45, 30));
-    const curFillPos = useRef(new THREE.Vector3(-40, 25, -25));
-    const curRimPos = useRef(new THREE.Vector3(0, 50, -45));
-    const curBouncePos = useRef(new THREE.Vector3(15, -45, 20));
+    // Smoothed light positions for 3-Point Studio Rig (Key, Fill, Rim)
+    const curKeyPos = useRef(new THREE.Vector3(38, 48, 24));
+    const curFillPos = useRef(new THREE.Vector3(-28, 22, -16));
+    const curRimPos = useRef(new THREE.Vector3(-36, -18, -34));
 
     const lastProfileId = useRef<number>(-1);
     const transitionStartTime = useRef<number>(0);
     const transitionDuration = 3.0; // 3.0s smooth lighting transitions
 
     // Physical state anchors
-    const startAmbient = useRef(0.12);
-    const targetAmbient = useRef(0.12);
-    const curAmbient = useRef(0.12);
+    const startAmbient = useRef(0.04);
+    const targetAmbient = useRef(0.04);
+    const curAmbient = useRef(0.04);
 
-    const startKeyInt = useRef(3.8);
-    const targetKeyInt = useRef(3.8);
-    const curKeyInt = useRef(3.8);
+    const startKeyInt = useRef(2.2);
+    const targetKeyInt = useRef(2.2);
+    const curKeyInt = useRef(2.2);
 
-    const startFillInt = useRef(0.30);
-    const targetFillInt = useRef(0.30);
-    const curFillInt = useRef(0.30);
+    const startFillInt = useRef(0.22);
+    const targetFillInt = useRef(0.22);
+    const curFillInt = useRef(0.22);
 
-    const startRimInt = useRef(3.5);
-    const targetRimInt = useRef(3.5);
-    const curRimInt = useRef(3.5);
+    const startRimInt = useRef(2.4);
+    const targetRimInt = useRef(2.4);
+    const curRimInt = useRef(2.4);
 
     const startKeyColor = useRef(new THREE.Color('#ffffff'));
     const targetKeyColor = useRef(new THREE.Color('#ffffff'));
     const curKeyColor = useRef(new THREE.Color('#ffffff'));
 
-    const startFillColor = useRef(new THREE.Color('#5a7090'));
-    const targetFillColor = useRef(new THREE.Color('#5a7090'));
-    const curFillColor = useRef(new THREE.Color('#5a7090'));
+    const startFillColor = useRef(new THREE.Color('#475569'));
+    const targetFillColor = useRef(new THREE.Color('#475569'));
+    const curFillColor = useRef(new THREE.Color('#475569'));
 
-    const startRimColor = useRef(new THREE.Color('#e0e8ff'));
-    const targetRimColor = useRef(new THREE.Color('#e0e8ff'));
-    const curRimColor = useRef(new THREE.Color('#e0e8ff'));
+    const startRimColor = useRef(new THREE.Color('#93c5fd'));
+    const targetRimColor = useRef(new THREE.Color('#93c5fd'));
+    const curRimColor = useRef(new THREE.Color('#93c5fd'));
 
     useFrame((stateContext, delta) => {
         const time = stateContext.clock.getElapsedTime();
@@ -171,16 +166,16 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
         }
 
         // Calibrated dynamic ranges directly responsive to live sliders
-        const tAmb = (profile.ambientIntensity ?? 0.12) * mult;
-        const tKey = (profile.keyIntensity ?? 3.8) * mult * flashBoost;
-        const tFill = (profile.fillIntensity ?? 0.30) * mult * 1.5;
-        const tRim = (profile.rimIntensity ?? 3.5) * mult * flashBoost;
+        const tAmb = (profile.ambientIntensity ?? 0.04) * mult;
+        const tKey = (profile.keyIntensity ?? 2.2) * mult * flashBoost;
+        const tFill = (profile.fillIntensity ?? 0.22) * mult;
+        const tRim = (profile.rimIntensity ?? 2.4) * mult * flashBoost;
 
         // Lift fill color luminance if it's too dark so it visibly illuminates shadows
         _rawFillScratch.set(profile.fillColor);
         _rawFillScratch.getHSL(_hslScratch);
-        if (_hslScratch.l < 0.28) {
-            _rawFillScratch.setHSL(_hslScratch.h, Math.max(_hslScratch.s, 0.40), 0.36);
+        if (_hslScratch.l < 0.24) {
+            _rawFillScratch.setHSL(_hslScratch.h, Math.max(_hslScratch.s, 0.40), 0.32);
         }
 
         if (lastProfileId.current !== profile.id) {
@@ -232,32 +227,25 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
 
         // Dynamic Atmospheric Exponential Fog synchronized with live slider
         if (stateContext.scene.fog && 'density' in stateContext.scene.fog) {
-            const rawDens = profile.fogDensity ?? 0.004;
+            const rawDens = profile.fogDensity ?? 0.0035;
             (stateContext.scene.fog as THREE.FogExp2).density = rawDens;
-            (stateContext.scene.fog as THREE.FogExp2).color.set('#1a233a');
+            (stateContext.scene.fog as THREE.FogExp2).color.set('#0d121f');
         }
 
-        // --- Fixed 3D Celestial Studio Rig: High-Contrast Directional Sun & Sculptural Shadows ---
+        // --- Standard 3-Point Studio Rig: Key Sun, Fill, and Rim Backlight ---
         _idealKey.set(38.0, 48.0, 24.0);
         _idealFill.set(-28.0, 22.0, -16.0);
         _idealRim.set(-36.0, -18.0, -34.0);
-        _idealBounce.set(12.0, -45.0, -10.0);
 
         // Smoothly glide light positions
         const smoothRate = Math.min(1.0, (delta || 0.016) * 3.0);
         curKeyPos.current.lerp(_idealKey, smoothRate);
         curFillPos.current.lerp(_idealFill, smoothRate);
         curRimPos.current.lerp(_idealRim, smoothRate);
-        curBouncePos.current.lerp(_idealBounce, smoothRate);
 
         if (ambientRef.current) {
-            ambientRef.current.intensity = Math.max(0.001, curAmbient.current * 0.50);
+            ambientRef.current.intensity = Math.max(0.001, curAmbient.current);
             ambientRef.current.color.copy(curKeyColor.current).lerp(_whiteColor, 0.70);
-        }
-        if (hemiRef.current) {
-            hemiRef.current.intensity = Math.max(0.001, curAmbient.current * 0.40);
-            hemiRef.current.color.copy(curKeyColor.current).lerp(_blueColor, 0.50);
-            hemiRef.current.groundColor.copy(curFillColor.current).lerp(_darkColor, 0.50);
         }
         if (keyRef.current) {
             keyRef.current.position.copy(curKeyPos.current);
@@ -274,17 +262,11 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
             rimRef.current.intensity = curRimInt.current;
             rimRef.current.color.copy(curRimColor.current);
         }
-        if (bounceRef.current) {
-            bounceRef.current.position.copy(curBouncePos.current);
-            bounceRef.current.intensity = curFillInt.current * 0.25;
-            bounceRef.current.color.copy(curFillColor.current);
-        }
     });
 
     return (
         <>
             <ambientLight ref={ambientRef} intensity={0.04} color="#ffffff" />
-            <hemisphereLight ref={hemiRef} args={['#60a5fa', '#090d16', 0.04]} />
             <directionalLight
                 ref={keyRef}
                 position={[38, 48, 24]}
@@ -302,12 +284,6 @@ function DynamicStudioLighting({ simState }: { simState: React.MutableRefObject<
                 position={[-36, -18, -34]}
                 intensity={2.4}
                 color="#93c5fd"
-            />
-            <directionalLight
-                ref={bounceRef}
-                position={[12, -45, -10]}
-                intensity={0.08}
-                color="#334155"
             />
         </>
     );
