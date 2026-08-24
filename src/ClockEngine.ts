@@ -70,8 +70,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     };
 
     // Initialize formation lifecycle parameters if not set
-    if (state.transitionDuration === undefined) state.transitionDuration = 7.0;
-    if (state.holdDuration === undefined) state.holdDuration = 7.0;
+    const isStartChaos = (state.formationMode === FormationMode.None || (state.formationMode as number) < 0);
+    if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 5.5;
+    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 6.0 : 2.5;
     if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
 
     // Recent Histories for Forbidden Repeat Buffers

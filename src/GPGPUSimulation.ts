@@ -219,7 +219,18 @@ vec3 applyMultiLayerSheath(
 vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, float speedMult, float vol, float settleDecay) {
     vec3 target = vec3(0.0);
 
-    if (mode == 0) {
+    if (mode < 0) {
+        // -1: Cosmic Chaos / Pure Random Free Swarm Cloud
+        float theta = fract(nSeed * 137.5077 + u * 47.19) * TWO_PI + time * 0.15 * speedMult;
+        float phi = fract(nSeed * 91.31 + u * 19.83) * PI;
+        float r = 5.0 + fract(nSeed * 37.19 + u * 13.0) * 14.0;
+        target = vec3(
+            r * sin(phi) * cos(theta) + sin(time * 0.7 + nSeed * 8.0) * 2.0,
+            r * cos(phi) * 0.75 + cos(time * 0.5 + nSeed * 6.0) * 1.8,
+            r * sin(phi) * sin(theta) + sin(time * 0.6 + nSeed * 9.0) * 2.0
+        );
+    }
+    else if (mode == 0) {
         // 0. Toroidal Quad-Helix Braid (4 Intertwined Pure Species Cords)
         float t = u * TWO_PI + time * 0.35 * speedMult;
         float R0 = 4.6;
@@ -859,24 +870,27 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
         else if (q < t2) sp = 2;
         else sp = 3;
 
-        if (state) {
+        if (state && (initialMode as number) >= 0) {
             computeFormationPoint(initialMode, initialSeed, u, 0, sp, i, 3.5, 0.14, state, tempPt);
             posArray[i4 + 0] = tempPt[0];
             posArray[i4 + 1] = tempPt[1];
             posArray[i4 + 2] = tempPt[2];
         } else {
+            // Complete Random 3D Nebula Cloud for pure organic swarm startup
             const theta = Math.random() * Math.PI * 2.0;
             const phi = Math.acos(Math.random() * 2.0 - 1.0);
-            const r = 2.5 + Math.random() * 3.5;
+            const r = 4.0 + Math.random() * 12.0;
             posArray[i4 + 0] = r * Math.sin(phi) * Math.cos(theta);
             posArray[i4 + 1] = r * Math.cos(phi) * 0.75;
             posArray[i4 + 2] = r * Math.sin(phi) * Math.sin(theta);
         }
         posArray[i4 + 3] = sp + u; // Encodes species in integer and u in decimal
 
-        velArray[i4 + 0] = (Math.random() - 0.5) * 0.01;
-        velArray[i4 + 1] = (Math.random() - 0.5) * 0.01;
-        velArray[i4 + 2] = (Math.random() - 0.5) * 0.01;
+        // Dynamic organic initial velocities
+        const vSpeed = (initialMode as number) < 0 ? 0.35 : 0.01;
+        velArray[i4 + 0] = (Math.random() - 0.5) * vSpeed;
+        velArray[i4 + 1] = (Math.random() - 0.5) * vSpeed;
+        velArray[i4 + 2] = (Math.random() - 0.5) * vSpeed;
         velArray[i4 + 3] = Math.random(); // Unique Noise Seed
     }
 

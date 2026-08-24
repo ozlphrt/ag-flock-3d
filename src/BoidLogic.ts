@@ -48,6 +48,7 @@ export enum DefeatScenario {
 }
 
 export enum FormationMode {
+    None = -1,
     QuadHelixBraid = 0,
     ConcentricDualHelixSheath = 1,
     ToroidalHelixBraid = 2,
@@ -89,6 +90,12 @@ export enum FormationMode {
 export const TOTAL_FORMATION_COUNT = 36;
 
 export const FORMATION_PRESETS = [
+    {
+        id: FormationMode.None,
+        label: 'Cosmic Chaos (Free Swarm)',
+        icon: '🌌',
+        desc: 'Pure unbounded 3D chaotic swarm dispersion with organic boid flocking dynamics'
+    },
     {
         id: FormationMode.QuadHelixBraid,
         label: 'Quad Helix Braid',
@@ -309,6 +316,7 @@ export const FORMATION_PRESETS = [
 
 // Topology-Aligned Signature Color Palettes (Curated specifically for each topology's geometry & name)
 export const TOPOLOGY_PALETTES: Record<number, string[]> = {
+    [FormationMode.None]: ['#38bdf8', '#a855f7', '#f43f5e', '#facc15'],                   // Cosmic Chaos Rainbow (Cyan, Violet, Rose, Sun Gold)
     [FormationMode.QuadHelixBraid]: ['#ef4444', '#10b981', '#f59e0b', '#06b6d4'],          // Quad Spectrum Primary (Ruby, Emerald, Amber, Cyan)
     [FormationMode.ConcentricDualHelixSheath]: ['#38bdf8', '#0284c7', '#f43f5e', '#fb7185'], // Dual-Tone Polar (Glacial Sky & Deep Sapphire vs Rose & Coral)
     [FormationMode.ToroidalHelixBraid]: ['#f59e0b', '#fbbf24', '#10b981', '#06b6d4'],        // Gilded Torus Chroma (Amber Gold, Sunbeam, Jade, Aquamarine)
@@ -1298,7 +1306,15 @@ export function computeFormationPoint(
 ): [number, number, number] | Float32Array | number[] {
     let tx = 0, ty = 0, tz = 0;
 
-    if (formation === FormationMode.QuadHelixBraid) {
+    if (formation === FormationMode.None || (formation as number) < 0) {
+        // --- Complete Randomness / Free Swarm Cloud ---
+        const theta = (((indexInSpecies * 137.5077) % 1000) / 1000.0) * Math.PI * 2.0 + time * 0.15 * speedMult;
+        const phi = (((indexInSpecies * 91.31) % 1000) / 1000.0) * Math.PI;
+        const r = 6.0 + (((indexInSpecies * 37.19 + u * 13.0) % 1000) / 1000.0) * 12.0;
+        tx = r * fastSin(phi) * fastCos(theta) + fastSin(time * 0.8 + (indexInSpecies % 10)) * 2.5;
+        ty = r * fastCos(phi) * 0.75 + fastCos(time * 0.6 + (indexInSpecies % 7)) * 2.0;
+        tz = r * fastSin(phi) * fastSin(theta) + fastSin(time * 0.7 + (indexInSpecies % 11)) * 2.5;
+    } else if (formation === FormationMode.QuadHelixBraid) {
         // --- 0. Toroidal Quad-Helix Braid (4 Intertwined Pure Species Cords) ---
         const t = u * Math.PI * 2.0 + time * 0.35 * speedMult;
         const R0 = 4.6;

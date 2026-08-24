@@ -358,8 +358,8 @@ function App() {
     const [population, setPopulation] = useState(isMobile ? 25000 : 500000);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Default Startup Configuration: Saturnian Planetary Rings with calibrated PBR & Bloom
-    const initialMode: FormationMode = FormationMode.SaturnianRings;
+    // Default Startup Configuration: Complete Random Cosmic Swarm Chaos -> First Topology Emergence
+    const initialMode: FormationMode = FormationMode.None;
     const initialPaletteIdx = Math.floor(Math.random() * COLOR_PALETTES.length);
     const initialMatIdx = 0; // Vibrant Satin Porcelain (roughness 0.30)
     const initialShape = 0; // Geodesic Ico-Sphere is fixed default
