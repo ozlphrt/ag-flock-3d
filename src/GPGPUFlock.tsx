@@ -159,6 +159,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
     const currentRoughness = useRef<Float32Array>(new Float32Array(20).fill(0.30));
     const currentMetalness = useRef<Float32Array>(new Float32Array(20).fill(0.40));
     const currentSizes = useRef<Float32Array>(new Float32Array(20).fill(1.0));
+    const currentMinSizes = useRef<Float32Array>(new Float32Array(20).fill(0.15));
+    const currentMaxSizes = useRef<Float32Array>(new Float32Array(20).fill(3.5));
     const currentThresholds = useRef<Float32Array>(new Float32Array(20));
 
     // Custom Shader Uniforms
@@ -171,6 +173,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         uSpeciesRoughness: { value: currentRoughness.current },
         uSpeciesMetalness: { value: currentMetalness.current },
         uSpeciesSizes: { value: currentSizes.current },
+        uSpeciesMinSizes: { value: currentMinSizes.current },
+        uSpeciesMaxSizes: { value: currentMaxSizes.current },
         uSpeciesThresholds: { value: currentThresholds.current }
     });
 
@@ -192,6 +196,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             shader.uniforms.uSpeciesRoughness = uniformsRef.current.uSpeciesRoughness;
             shader.uniforms.uSpeciesMetalness = uniformsRef.current.uSpeciesMetalness;
             shader.uniforms.uSpeciesSizes = uniformsRef.current.uSpeciesSizes;
+            shader.uniforms.uSpeciesMinSizes = uniformsRef.current.uSpeciesMinSizes;
+            shader.uniforms.uSpeciesMaxSizes = uniformsRef.current.uSpeciesMaxSizes;
             shader.uniforms.uSpeciesThresholds = uniformsRef.current.uSpeciesThresholds;
 
             // Vertex Shader: inject reference UV & instance attributes
@@ -207,6 +213,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 uniform float uSpeciesRoughness[20];
                 uniform float uSpeciesMetalness[20];
                 uniform float uSpeciesSizes[20];
+                uniform float uSpeciesMinSizes[20];
+                uniform float uSpeciesMaxSizes[20];
                 uniform float uSpeciesThresholds[20];
                 varying vec3 vInstanceColor;
                 varying float vSpeciesRoughness;
@@ -234,6 +242,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 float spRough = uSpeciesRoughness[0];
                 float spMetal = uSpeciesMetalness[0];
                 float spScale = uSpeciesSizes[0];
+                float spMin = uSpeciesMinSizes[0];
+                float spMax = uSpeciesMaxSizes[0];
 
                 for (int k = 0; k < 20; k++) {
                     if (k == spIdx) {
@@ -241,6 +251,8 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                         spRough = uSpeciesRoughness[k];
                         spMetal = uSpeciesMetalness[k];
                         spScale = uSpeciesSizes[k];
+                        spMin = uSpeciesMinSizes[k];
+                        spMax = uSpeciesMaxSizes[k];
                     }
                 }
 
@@ -249,8 +261,9 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 vSpeciesMetalness = spMetal;
                 vSpeciesEmissive = 0.0;
 
-                // Transform vertex with Gaussian bell curve scale, species scale, and instance position
-                vec3 transformed = position * (uBoidScale * aSizeScale * spScale) + instancePos;
+                // Transform vertex with Gaussian bell curve scale, species scale, and min/max clamp
+                float individualScale = clamp(aSizeScale * spScale, spMin, spMax);
+                vec3 transformed = position * (uBoidScale * individualScale) + instancePos;
                 `
             );
 
@@ -376,11 +389,18 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             currentMetalness.current[s] += (tMetal - currentMetalness.current[s]) * rate;
         }
 
-        // Species Sizes
+        // Species Sizes & Min/Max Extents
         const spSizes = state.speciesSizes;
+        const spMinSizes = state.speciesMinSizes;
+        const spMaxSizes = state.speciesMaxSizes;
         for (let s = 0; s < 20; s++) {
             const tSize = (spSizes && s < spSizes.length) ? spSizes[s] : 1.0;
+            const tMin = (spMinSizes && s < spMinSizes.length) ? spMinSizes[s] : 0.15;
+            const tMax = (spMaxSizes && s < spMaxSizes.length) ? spMaxSizes[s] : 3.5;
+
             currentSizes.current[s] += (tSize - currentSizes.current[s]) * rate;
+            currentMinSizes.current[s] += (tMin - currentMinSizes.current[s]) * rate;
+            currentMaxSizes.current[s] += (tMax - currentMaxSizes.current[s]) * rate;
         }
 
         // Smooth population distribution threshold morphing across N species

@@ -622,16 +622,52 @@ export function generateSpeciesMaterials(count: number = 4): MaterialSettings[] 
     return mats;
 }
 
+// Ecological Size Range Interface per Species
+export interface SpeciesSizeRange {
+    avgSizes: number[];
+    minSizes: number[];
+    maxSizes: number[];
+}
+
+// Helper to generate distinct per-species average, minimum, and maximum boid sizes randomized by topology
+export function generateSpeciesSizeRanges(count: number = 4): SpeciesSizeRange {
+    const avgSizes: number[] = [];
+    const minSizes: number[] = [];
+    const maxSizes: number[] = [];
+
+    // Distinct ecological niches: Micro-swarms, Mid-boids, Apex Giants
+    for (let i = 0; i < count; i++) {
+        const roll = Math.random();
+        let avg: number, min: number, max: number;
+
+        if (roll < 0.35) {
+            // Niche 1: Nano / Micro Boid Swarm
+            avg = 0.28 + Math.random() * 0.26; // 0.28 - 0.54
+            min = Math.max(0.10, avg * (0.40 + Math.random() * 0.25)); // ~0.12 - 0.32
+            max = avg * (1.50 + Math.random() * 0.50); // ~0.45 - 1.00
+        } else if (roll < 0.75) {
+            // Niche 2: Classic / Streamlined Mid-size Boids
+            avg = 0.75 + Math.random() * 0.45; // 0.75 - 1.20
+            min = Math.max(0.25, avg * (0.45 + Math.random() * 0.20)); // ~0.35 - 0.75
+            max = avg * (1.60 + Math.random() * 0.60); // ~1.20 - 2.40
+        } else {
+            // Niche 3: Majestic Giants / Alpha Leviathans
+            avg = 1.35 + Math.random() * 1.10; // 1.35 - 2.45
+            min = Math.max(0.55, avg * (0.55 + Math.random() * 0.20)); // ~0.80 - 1.80
+            max = Math.min(5.50, avg * (1.80 + Math.random() * 0.80)); // ~2.50 - 5.50
+        }
+
+        avgSizes.push(Number(avg.toFixed(2)));
+        minSizes.push(Number(min.toFixed(2)));
+        maxSizes.push(Number(max.toFixed(2)));
+    }
+
+    return { avgSizes, minSizes, maxSizes };
+}
+
 // Helper to generate distinct per-species average scale multipliers
 export function generateSpeciesSizes(count: number = 4): number[] {
-    const sizes: number[] = [];
-    for (let i = 0; i < count; i++) {
-        const norm = i / Math.max(1, count - 1);
-        const base = 1.35 - norm * 0.95;
-        const jitter = (Math.random() - 0.5) * 0.12;
-        sizes.push(Number(Math.max(0.32, base + jitter).toFixed(2)));
-    }
-    return sizes.sort(() => Math.random() - 0.5);
+    return generateSpeciesSizeRanges(count).avgSizes;
 }
 
 // Helper to generate per-species agility and speed kinematics
@@ -677,6 +713,8 @@ export interface SimulationState {
     speciesMaterials?: MaterialSettings[];
     speciesDistribution?: number[];
     speciesSizes?: number[];
+    speciesMinSizes?: number[];
+    speciesMaxSizes?: number[];
     speciesAgilities?: number[];
     speciesSpeeds?: number[];
     speciesRandomness?: number[];

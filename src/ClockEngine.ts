@@ -17,7 +17,8 @@ import {
     generateDynamicSpeciesCount,
     generateHarmoniousPalette,
     generateSpeciesKinematics,
-    generateSpeciesRandomness
+    generateSpeciesRandomness,
+    generateSpeciesSizeRanges
 } from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
@@ -269,6 +270,13 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
             state.speciesRandomness = generateSpeciesRandomness(spCount);
+            const sizeRanges = generateSpeciesSizeRanges(spCount);
+            state.speciesSizes = sizeRanges.avgSizes;
+            state.speciesMinSizes = sizeRanges.minSizes;
+            state.speciesMaxSizes = sizeRanges.maxSizes;
+            const kin = generateSpeciesKinematics(spCount, sizeRanges.avgSizes);
+            state.speciesAgilities = kin.agilities;
+            state.speciesSpeeds = kin.speeds;
 
             if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                 state.proceduralGenome = generateProceduralGenome();
@@ -478,6 +486,14 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.formationSeed = Math.random() * 10000;
                 const spCount = state.speciesCount || state.speciesColors?.length || 4;
                 state.speciesRandomness = generateSpeciesRandomness(spCount);
+                const sizeRanges = generateSpeciesSizeRanges(spCount);
+                state.speciesSizes = sizeRanges.avgSizes;
+                state.speciesMinSizes = sizeRanges.minSizes;
+                state.speciesMaxSizes = sizeRanges.maxSizes;
+                const kin = generateSpeciesKinematics(spCount, sizeRanges.avgSizes);
+                state.speciesAgilities = kin.agilities;
+                state.speciesSpeeds = kin.speeds;
+
                 if (nextMode === FormationMode.Procedural || !state.proceduralGenome) {
                     state.proceduralGenome = generateProceduralGenome();
                 }

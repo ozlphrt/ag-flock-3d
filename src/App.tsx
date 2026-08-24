@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
 import { GPGPUFlock } from './GPGPUFlock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics, generateSpeciesRandomness } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics, generateSpeciesRandomness, generateSpeciesSizeRanges } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig, CAMERA_PRESETS } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
@@ -372,8 +372,8 @@ function App() {
     const initialPalette = generateHarmoniousPalette(initialSpeciesCount);
     const initialSpeciesDistribution = generateSpeciesDistribution(initialSpeciesCount);
     const initialSpeciesMaterials = generateSpeciesMaterials(initialSpeciesCount);
-    const initialSpeciesSizes = generateSpeciesSizes(initialSpeciesCount);
-    const initialKinematics = generateSpeciesKinematics(initialSpeciesCount, initialSpeciesSizes);
+    const initialSizeRanges = generateSpeciesSizeRanges(initialSpeciesCount);
+    const initialKinematics = generateSpeciesKinematics(initialSpeciesCount, initialSizeRanges.avgSizes);
     const initialRandomness = generateSpeciesRandomness(initialSpeciesCount);
 
     const simState = useRef<SimulationState>({
@@ -391,7 +391,9 @@ function App() {
         speciesColors: initialPalette,
         speciesDistribution: initialSpeciesDistribution,
         speciesMaterials: initialSpeciesMaterials,
-        speciesSizes: initialSpeciesSizes,
+        speciesSizes: initialSizeRanges.avgSizes,
+        speciesMinSizes: initialSizeRanges.minSizes,
+        speciesMaxSizes: initialSizeRanges.maxSizes,
         speciesAgilities: initialKinematics.agilities,
         speciesSpeeds: initialKinematics.speeds,
         speciesRandomness: initialRandomness,

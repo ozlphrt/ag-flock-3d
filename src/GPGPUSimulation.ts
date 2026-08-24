@@ -48,6 +48,8 @@ uniform float uSeed;
 uniform int uSpeciesCount;
 uniform float uSpeciesThresholds[20];
 uniform float uSpeciesSizes[20];
+uniform float uSpeciesMinSizes[20];
+uniform float uSpeciesMaxSizes[20];
 uniform float uSpeciesAgility[20];
 uniform float uSpeciesSpeed[20];
 uniform float uSpeciesRandomness[20];
@@ -662,6 +664,8 @@ void main() {
     float spSpeed = 1.0;
     float spAgility = 1.0;
     float spBaseScale = 1.0;
+    float spMin = 0.15;
+    float spMax = 3.5;
     float spRand = 0.50;
 
     for (int k = 0; k < 20; k++) {
@@ -669,13 +673,15 @@ void main() {
             spSpeed = uSpeciesSpeed[k];
             spAgility = uSpeciesAgility[k];
             spBaseScale = uSpeciesSizes[k];
+            spMin = uSpeciesMinSizes[k];
+            spMax = uSpeciesMaxSizes[k];
             spRand = uSpeciesRandomness[k];
         }
     }
     float spFreq = 0.55 + (float(spIdx) / max(1.0, float(uSpeciesCount - 1))) * 1.30;
 
     // 2. Total Effective Physical Size for this individual boid
-    float effectiveSize = boidSize * spBaseScale;
+    float effectiveSize = clamp(boidSize * spBaseScale, spMin, spMax);
 
     // 3. Physical Size-Inertia Law:
     // Heavy/Large boids have larger momentum & graceful turning radius
@@ -828,6 +834,8 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uSpeciesCount = { value: 4 };
     velocityUniforms.uSpeciesThresholds = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesSizes = { value: new Float32Array(20) };
+    velocityUniforms.uSpeciesMinSizes = { value: new Float32Array(20).fill(0.15) };
+    velocityUniforms.uSpeciesMaxSizes = { value: new Float32Array(20).fill(3.5) };
     velocityUniforms.uSpeciesAgility = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesSpeed = { value: new Float32Array(20) };
     velocityUniforms.uSpeciesRandomness = { value: new Float32Array(20).fill(0.5) };
@@ -926,9 +934,15 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             }
 
             const spSizes = state.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+            const spMinSizes = state.speciesMinSizes;
+            const spMaxSizes = state.speciesMaxSizes;
             const sizesArr = velocityUniforms.uSpeciesSizes.value as Float32Array;
+            const minSizesArr = velocityUniforms.uSpeciesMinSizes.value as Float32Array;
+            const maxSizesArr = velocityUniforms.uSpeciesMaxSizes.value as Float32Array;
             for (let k = 0; k < 20; k++) {
                 sizesArr[k] = (k < spSizes.length) ? spSizes[k] : 1.0;
+                minSizesArr[k] = (spMinSizes && k < spMinSizes.length) ? spMinSizes[k] : 0.15;
+                maxSizesArr[k] = (spMaxSizes && k < spMaxSizes.length) ? spMaxSizes[k] : 3.5;
             }
 
             const agArr = velocityUniforms.uSpeciesAgility.value as Float32Array;
