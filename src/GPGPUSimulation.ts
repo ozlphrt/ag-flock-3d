@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
 import { SimulationState, FormationMode, ProceduralGenome, computeFormationPoint } from './BoidLogic';
 
-// GLSL Fragment Shader for Position FBO Ping-Pong Integration with Hard Non-Overlap Collision
+// GLSL Fragment Shader for Position FBO Ping-Pong Integration
 const positionShader = `
 uniform float uDelta;
 uniform float uBounds;
@@ -19,29 +19,6 @@ void main() {
     // Integrate position with framerate-normalized delta scaling (eliminates micro-stuttering)
     float dtScale = clamp(uDelta * 60.0, 0.5, 2.0);
     pos += vel * dtScale;
-
-    // Hard Non-Overlap Spatial Separation Kernel (boids cannot overlap)
-    vec2 texel = 1.0 / resolution.xy;
-    vec3 separationPush = vec3(0.0);
-    float myRadius = 0.045; // Physical hard contact radius
-
-    for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
-            if (x == 0 && y == 0) continue;
-            vec2 neighborUV = uv + vec2(float(x), float(y)) * texel;
-            vec4 otherPosTex = texture2D(texturePosition, neighborUV);
-            vec3 toMe = pos - otherPosTex.xyz;
-            float distSq = dot(toMe, toMe);
-            float minAllowedDist = myRadius * 2.0;
-            if (distSq < minAllowedDist * minAllowedDist && distSq > 1e-7) {
-                float dist = sqrt(distSq);
-                float overlap = minAllowedDist - dist;
-                vec3 nContact = toMe / dist;
-                separationPush += nContact * (overlap * 0.5);
-            }
-        }
-    }
-    pos += separationPush;
 
     // Soft spherical boundary containment at R = 14.0
     float distSq = dot(pos, pos);
@@ -149,13 +126,9 @@ vec3 applyMultiLayerSheath(
     float rFrac = fract(nSeed * 137.5077 + u * 97.13);
     float pipeRadius = (0.20 + 0.80 * sqrt(rFrac)) * radius * (0.85 + 0.30 * spRand);
     
-    // Helical azimuthal angle with species separation & rapid vortex spinning
+    // Helical azimuthal angle with species separation & smooth vortex spinning
     float speciesOffset = sp * (TWO_PI / max(1.0, float(uSpeciesCount)));
-    float pipeAngle = speciesOffset + (nSeed * 2500.0) * goldenAngle + (u * windingTurns * TWO_PI) + time * 1.8 * speedMult;
-
-    // Elastic collision bounce wave between concentric particle shells
-    float shellBounce = sin(pipeAngle * 3.0 - time * 3.2 + u * 16.0) * 0.05 * vol;
-    float finalPipeR = max(0.04, pipeRadius + shellBounce);
+    float pipeAngle = speciesOffset + (nSeed * 2500.0) * goldenAngle + (u * windingTurns * TWO_PI) + time * 1.5 * speedMult;
 
     vec3 nVogel = normal * cos(pipeAngle) + binormal * sin(pipeAngle);
     vec3 bVogel = -normal * sin(pipeAngle) + binormal * cos(pipeAngle);
@@ -164,7 +137,7 @@ vec3 applyMultiLayerSheath(
     vec3 tangStagger = tNorm * ((fract(nSeed * 271.31) - 0.5) * 0.30 * vol);
     vec3 binormStagger = bVogel * ((fract(nSeed * 431.19) - 0.5) * 0.15 * vol);
 
-    vec3 pVol = m + nVogel * finalPipeR + tangStagger + binormStagger;
+    vec3 pVol = m + nVogel * pipeRadius + tangStagger + binormStagger;
     return pVol;
 }
 
@@ -744,38 +717,10 @@ void main() {
         steerAccel = (steerAccel / accelMag) * localMaxAccel;
     }
 
-    // Apply steering acceleration
+    // Apply strictly capped acceleration
     vel += steerAccel;
 
-    // 3. Elastic Collision Bounce Response between neighboring boids (restitution bounce)
-    vec2 texel = 1.0 / resolution.xy;
-    vec3 bounceImpulse = vec3(0.0);
-    float myColRadius = 0.045;
-
-    for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
-            if (x == 0 && y == 0) continue;
-            vec2 neighborUV = uv + vec2(float(x), float(y)) * texel;
-            vec4 otherPosTex = texture2D(texturePosition, neighborUV);
-            vec4 otherVelTex = texture2D(textureVelocity, neighborUV);
-            vec3 toMe = pos - otherPosTex.xyz;
-            float distSq = dot(toMe, toMe);
-            float minAllowedDist = myColRadius * 2.0;
-            if (distSq < minAllowedDist * minAllowedDist && distSq > 1e-7) {
-                float dist = sqrt(distSq);
-                vec3 nContact = toMe / dist;
-                vec3 relVel = vel - otherVelTex.xyz;
-                float normalApproach = dot(relVel, nContact);
-                if (normalApproach < 0.0) {
-                    // Elastic rebound bounce response (restitution coefficient e = 0.70)
-                    bounceImpulse -= (1.0 + 0.70) * normalApproach * nContact * 0.5;
-                }
-            }
-        }
-    }
-    vel += bounceImpulse;
-
-    // 4. Absolute ceiling clamp on max speed
+    // 3. Absolute ceiling clamp on max speed
     float currentSpeed = length(vel);
     if (currentSpeed > localMaxSpeed && currentSpeed > 1e-6) {
         vel = (vel / currentSpeed) * localMaxSpeed;
@@ -976,11 +921,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Silky Smooth Morphing & Cruising Dynamics with high-velocity pipe spinning
+            // Silky Smooth Non-Bouncing Cruising & Morphing Dynamics
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.14 : 0.10) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.42 : 0.30) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.08 : 0.055) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.08 : 0.045) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.18 : 0.10) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.025 : 0.008) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 

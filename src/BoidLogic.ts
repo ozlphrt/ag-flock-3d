@@ -1014,10 +1014,7 @@ function applyIntertwinedMultiLayer(
     const pipeRadius = (0.20 + 0.80 * Math.sqrt(rFrac)) * rMeso;
 
     const speciesOffset = species * (Math.PI * 0.5);
-    const pipeAngle = speciesOffset + (vogelSeed * 2500.0) * goldenAngle + (u * mesoTurns * Math.PI * 2.0) + (time * 1.8 * speedMult);
-
-    const shellBounce = fastSin(pipeAngle * 3.0 - time * 3.2 + u * 16.0) * 0.05;
-    const finalPipeR = Math.max(0.04, pipeRadius + shellBounce);
+    const pipeAngle = speciesOffset + (vogelSeed * 2500.0) * goldenAngle + (u * mesoTurns * Math.PI * 2.0) + (time * 1.5 * speedMult);
 
     const cosP = fastCos(pipeAngle);
     const sinP = fastSin(pipeAngle);
@@ -1025,9 +1022,9 @@ function applyIntertwinedMultiLayer(
     const tangStagger = tx * (((vogelSeed * 271.31) % 1.0) - 0.5) * 0.30;
 
     return [
-        mx + (nx * cosP + bx * sinP) * finalPipeR + tangStagger,
-        my + (ny * cosP + by * sinP) * finalPipeR,
-        mz + (nz * cosP + bz * sinP) * finalPipeR
+        mx + (nx * cosP + bx * sinP) * pipeRadius + tangStagger,
+        my + (ny * cosP + by * sinP) * pipeRadius,
+        mz + (nz * cosP + bz * sinP) * pipeRadius
     ];
 }
 
