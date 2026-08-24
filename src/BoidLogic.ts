@@ -1330,7 +1330,7 @@ export function computeFormationPoint(
         const dnaWrapAngle = beadU * Math.PI * 3.3 + (species % 2) * Math.PI + time * 1.2;
         const rBead = 0.85 + (species >= 2 ? 0.35 : 0.0);
         tx = bx + fastCos(dnaWrapAngle) * rBead;
-        ty = by + (beadU - 0.5) * 0.9 + fastSin(dnaWrapAngle) * 0.35;
+        ty = by + (beadU - 0.5) * 0.9;
         tz = bz + fastSin(dnaWrapAngle) * rBead;
     } else if (formation === FormationMode.TriquetraCelticBraid) {
         // --- 14. Triquetra Celtic Braid: 3D Celtic Trinity Knot with Over-Under Crossings ---
@@ -1568,8 +1568,7 @@ export function computeFormationPoint(
         const phi0 = Math.asin(Math.min(0.96, Math.max(-0.96, uLat * 2.0 - 1.0)));
         const jetFlow = (fastSin(phi0 * 5.0) * 1.6 + fastCos(phi0 * 2.0) * 0.9) * speedMult;
         const theta = (u * 60.0 * Math.PI) + (time * jetFlow * 1.4) + (species * (Math.PI * 0.5));
-        const rossbyWave = 0.18 * fastSin(6.0 * theta - time * 1.8 * speedMult) * fastCos(phi0);
-        const phi = Math.min(1.50, Math.max(-1.50, phi0 + rossbyWave));
+        const phi = phi0;
         const rSurf = 5.2;
         tx = rSurf * fastCos(phi) * fastCos(theta);
         ty = rSurf * fastSin(phi);

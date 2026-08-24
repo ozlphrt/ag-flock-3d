@@ -292,7 +292,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float bz = 3.6 * sin(beadAngle);
         float wrapAngle = beadU * 3.3 * PI + mod(sp, 2.0) * PI + time * 1.2;
         float rBead = 0.85 + (sp >= 2.0 ? 0.35 : 0.0);
-        target = vec3(bx + cos(wrapAngle) * rBead, by + (beadU - 0.5) * 0.9 + sin(wrapAngle) * 0.35, bz + sin(wrapAngle) * rBead);
+        target = vec3(bx + cos(wrapAngle) * rBead, by + (beadU - 0.5) * 0.9, bz + sin(wrapAngle) * rBead);
     }
     else if (mode == 14) {
         // Triquetra Celtic Braid (Trinity Knot)
@@ -474,10 +474,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         // Multi-tier alternating atmospheric jet streams (Equator East, Mid-lat West, Subpolar East)
         float jetFlow = (sin(phi0 * 5.0) * 1.6 + cos(phi0 * 2.0) * 0.9) * speedMult;
         float theta = u * 60.0 * PI + time * jetFlow * 1.4 + sp * (TWO_PI / max(1.0, float(uSpeciesCount)));
-        
-        // Undulating planetary Rossby wave undulations across latitudes
-        float rossbyWave = 0.18 * sin(6.0 * theta - time * 1.8 * speedMult) * cos(phi0);
-        float phi = clamp(phi0 + rossbyWave, -1.50, 1.50);
+        float phi = phi0;
         
         // Stable surface shell without radial bouncing
         float rSurf = 5.2 + (fract(nSeed * 19.4) - 0.5) * 0.20 * vol;
@@ -564,7 +561,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float rMaj = 3.6 + uP_r2 * 0.3;
             float rMin = 1.4 + uP_r3 * 0.25;
             float superFreq = max(2.0, float(uP_k3));
-            float rMod = rMin + 0.35 * sin(superFreq * t + uP_phi1);
+            float rMod = rMin;
 
             float ct = cos(p * t);
             float st = sin(p * t);
