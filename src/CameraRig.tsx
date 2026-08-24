@@ -23,10 +23,10 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         name: 'Celestial Orbit',
         icon: '🪐',
         description: 'Smooth 360° celestial orbit with intimate framing and full envelope visibility',
-        fov: 52,
-        defaultPos: [0, 3.5, 14.0],
+        fov: 46,
+        defaultPos: [0, 2.0, 7.8],
         target: [0, 0, 0],
-        autoRotateSpeed: 0.20,
+        autoRotateSpeed: 0.18,
         type: 'orbit'
     },
     {
@@ -34,30 +34,30 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         name: 'Hero Low Angle',
         icon: '🗿',
         description: 'Positioned close beneath the swarm gazing upward into the glowing geometry',
-        fov: 65,
-        defaultPos: [0, -8.0, 7.5],
-        target: [0, 0.8, 0],
-        autoRotateSpeed: 0.15,
+        fov: 50,
+        defaultPos: [0, -3.4, 5.6],
+        target: [0, 0.4, 0],
+        autoRotateSpeed: 0.14,
         type: 'orbit'
     },
     {
         id: 'action',
         name: 'Action Sweep',
         icon: '⚡',
-        description: 'Dynamic close perimeter flyby with wave height oscillations',
-        fov: 58,
-        defaultPos: [0, 2.5, 11.0],
+        description: 'Dynamic close proximity sweep weaving along ribbon contours',
+        fov: 48,
+        defaultPos: [0, 1.2, 6.2],
         target: [0, 0, 0],
-        autoRotateSpeed: 0.28,
+        autoRotateSpeed: 0.22,
         type: 'orbit'
     },
     {
         id: 'spaceship',
-        name: 'Exterior Flyby',
+        name: 'Ribbon Glider',
         icon: '🚀',
-        description: 'Majestic close sweeping flyby along outer perimeter',
-        fov: 56,
-        defaultPos: [0, 2.0, 13.5],
+        description: 'Close-quarters sweeping flyby skimming the outer boid strands',
+        fov: 45,
+        defaultPos: [0, 1.4, 6.8],
         target: [0, 0, 0],
         autoRotateSpeed: 0.12,
         type: 'flythrough'
@@ -67,11 +67,33 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         name: 'Helical Spiral',
         icon: '🌀',
         description: 'Ascending outer spiral gliding alongside the exterior envelope',
-        fov: 55,
-        defaultPos: [0, 0.5, 12.5],
+        fov: 46,
+        defaultPos: [0, 0.4, 6.4],
         target: [0, 0, 0],
-        autoRotateSpeed: 0.22,
+        autoRotateSpeed: 0.18,
         type: 'corkscrew'
+    },
+    {
+        id: 'vortex',
+        name: 'Vortex Horizon',
+        icon: '🌌',
+        description: 'High-angle deep plunge looking directly through the swirl core',
+        fov: 44,
+        defaultPos: [0, 6.2, 2.6],
+        target: [0, -0.3, 0],
+        autoRotateSpeed: 0.15,
+        type: 'orbit'
+    },
+    {
+        id: 'tunnel',
+        name: 'Core Tunnel Track',
+        icon: '🎯',
+        description: 'Ultra-immersive close perspective inside the topological stream',
+        fov: 52,
+        defaultPos: [0, 0.1, 5.0],
+        target: [0, 0, 0],
+        autoRotateSpeed: 0.14,
+        type: 'flythrough'
     }
 ];
 
@@ -82,21 +104,32 @@ interface CameraRigProps {
 export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const controlsRef = useRef<any>(null);
     const cameraRef = useRef<THREE.PerspectiveCamera>(null!);
-    const { camera } = useThree();
+    const spotLightRef = useRef<THREE.SpotLight>(null!);
+    const spotTargetRef = useRef<THREE.Object3D>(new THREE.Object3D());
+    const { camera, scene } = useThree();
 
     const isUserInteracting = useRef(false);
     const lastInteractionTime = useRef(0);
 
-    const currentRadius = useRef(14.43);
-    const currentPolar = useRef(1.33);
+    // Initial state initialized to close intimate orbit
+    const currentRadius = useRef(8.05);
+    const currentPolar = useRef(1.31);
     const currentAzimuth = useRef(0.0);
     const currentTarget = useRef(new THREE.Vector3(0, 0, 0));
-    const currentFov = useRef(52);
-    const currentSpeed = useRef(0.20);
+    const currentFov = useRef(46);
+    const currentSpeed = useRef(0.18);
+
+    // Track active preset transitions
+    const lastPresetIdx = useRef(0);
 
     useEffect(() => {
         const controls = controlsRef.current;
         if (!controls) return;
+
+        // Ensure spot target is in the scene
+        if (spotTargetRef.current && !spotTargetRef.current.parent) {
+            scene.add(spotTargetRef.current);
+        }
 
         const onStart = () => {
             isUserInteracting.current = true;
@@ -124,8 +157,11 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         return () => {
             controls.removeEventListener('start', onStart);
             controls.removeEventListener('end', onEnd);
+            if (spotTargetRef.current && spotTargetRef.current.parent) {
+                scene.remove(spotTargetRef.current);
+            }
         };
-    }, [camera]);
+    }, [camera, scene]);
 
     useFrame((_, delta) => {
         const state = simState.current;
@@ -133,6 +169,10 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             ? Math.abs(state.cameraPresetIndex) % CAMERA_PRESETS.length
             : 0;
         const preset = CAMERA_PRESETS[presetIdx];
+
+        if (lastPresetIdx.current !== presetIdx) {
+            lastPresetIdx.current = presetIdx;
+        }
 
         // Compute target spherical parameters for current preset
         const dx = preset.defaultPos[0] - preset.target[0];
@@ -153,7 +193,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             const perspCam = camera as THREE.PerspectiveCamera;
 
             if (isUserInteracting.current) {
-                // User is controlling camera - keep internal state synchronized
+                // User is actively controlling camera - keep internal state synchronized
                 const offset = perspCam.position.clone().sub(controls.target);
                 const r = offset.length();
                 if (r > 0.001) {
@@ -163,29 +203,29 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                     currentTarget.current.copy(controls.target);
                 }
             } else if (timeSinceUser > 1.0) {
-                // Gentle continuous director glide (zero jumps, zero fighting)
-                const glideRate = Math.min(1.0, dt * 0.45);
-                const speedRate = Math.min(1.0, dt * 0.60);
+                // Silky-Smooth Critically Damped Director Glide (Exponential smoothing with zero abrupt jumps)
+                const smoothLambda = 1.85; // Natural smooth response rate
+                const smoothFactor = 1.0 - Math.exp(-smoothLambda * dt);
 
-                currentSpeed.current = THREE.MathUtils.lerp(currentSpeed.current, targetSpeed, speedRate);
-                currentRadius.current = THREE.MathUtils.lerp(currentRadius.current, targetRadius, glideRate);
-                currentPolar.current = THREE.MathUtils.lerp(currentPolar.current, targetPolar, glideRate);
-                currentTarget.current.lerp(targetTarget, glideRate);
+                currentSpeed.current = THREE.MathUtils.lerp(currentSpeed.current, targetSpeed, smoothFactor);
+                currentRadius.current = THREE.MathUtils.lerp(currentRadius.current, targetRadius, smoothFactor);
+                currentPolar.current = THREE.MathUtils.lerp(currentPolar.current, targetPolar, smoothFactor);
+                currentTarget.current.lerp(targetTarget, smoothFactor);
 
-                // Elegant, slow cinematic orbital drift
-                currentAzimuth.current += currentSpeed.current * dt * 0.12;
+                // Continuous, majestic orbital drift
+                currentAzimuth.current += currentSpeed.current * dt * 0.14;
 
-                // Smooth FOV
+                // Smooth FOV interpolation
                 if (perspCam) {
-                    currentFov.current = THREE.MathUtils.lerp(currentFov.current, targetFov, glideRate);
-                    if (Math.abs(perspCam.fov - currentFov.current) > 0.02) {
+                    currentFov.current = THREE.MathUtils.lerp(currentFov.current, targetFov, smoothFactor);
+                    if (Math.abs(perspCam.fov - currentFov.current) > 0.01) {
                         perspCam.fov = currentFov.current;
                         perspCam.updateProjectionMatrix();
                     }
                 }
 
-                // Compute exact continuous spherical camera position
-                const r = currentRadius.current;
+                // Compute exact continuous spherical camera coordinates
+                const r = Math.max(2.5, currentRadius.current);
                 const phi = Math.max(0.08, Math.min(Math.PI - 0.08, currentPolar.current));
                 const theta = currentAzimuth.current;
 
@@ -195,21 +235,50 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 perspCam.position.z = controls.target.z + r * Math.sin(phi) * Math.cos(theta);
                 perspCam.lookAt(controls.target);
             }
+
+            // Synchronize Camera-Mounted Spotlight to follow camera and illuminate shadowed regions
+            if (spotLightRef.current && spotTargetRef.current) {
+                spotLightRef.current.position.copy(perspCam.position);
+                spotTargetRef.current.position.copy(controls.target);
+                spotLightRef.current.target = spotTargetRef.current;
+
+                const mult = state.lightIntensityMultiplier ?? 1.0;
+                spotLightRef.current.intensity = 2.2 * mult;
+            }
         }
     });
 
     return (
         <>
-            <PerspectiveCamera ref={cameraRef} makeDefault fov={52} position={[0, 3.5, 14.0]} near={0.25} far={1000} />
+            <PerspectiveCamera
+                ref={cameraRef}
+                makeDefault
+                fov={46}
+                position={[0, 2.0, 7.8]}
+                near={0.20}
+                far={1000}
+            />
             <OrbitControls
                 ref={controlsRef}
                 enableDamping={true}
                 dampingFactor={0.08}
                 autoRotate={false}
-                minDistance={3.5}
-                maxDistance={250}
+                minDistance={2.2}
+                maxDistance={120}
                 minPolarAngle={0.05}
                 maxPolarAngle={Math.PI - 0.05}
+            />
+
+            {/* Camera-Mounted Spotlight (Follows view frustum to illuminate dark/shady sides of topology) */}
+            <spotLight
+                ref={spotLightRef}
+                position={[0, 2.0, 7.8]}
+                intensity={2.2}
+                distance={45.0}
+                angle={Math.PI / 3.8}
+                penumbra={0.75}
+                decay={1.1}
+                color="#f8fafc"
             />
         </>
     );
