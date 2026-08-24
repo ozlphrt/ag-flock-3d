@@ -55,8 +55,10 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
     const [countdown, setCountdown] = useState(30);
     const [progress, setProgress] = useState(0);
     const [topologyStats, setTopologyStats] = useState({
-        name: 'Saturnian Planetary Rings',
-        icon: '🪐',
+        name: 'Cosmic Chaos (Free Swarm)',
+        icon: '🌌',
+        cameraName: 'Celestial Orbit',
+        cameraIcon: '🪐',
         isMorphing: false,
         morphProgress: 1.0,
         timeElapsed: 0,
@@ -89,11 +91,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
 
             if (state.clockEngine && state.clockEngine.getCountdownProgress) {
                 const info = state.clockEngine.getCountdownProgress();
+                const camIdx = (state.cameraPresetIndex !== undefined) ? Math.abs(state.cameraPresetIndex) % CAMERA_PRESETS.length : 0;
+                const camPreset = CAMERA_PRESETS[camIdx];
                 setProgress(info.formationProgress ?? 0);
                 setCountdown(info.timeRemaining ?? info.formationRemaining ?? 14);
                 setTopologyStats({
                     name: info.formationName ?? 'Saturnian Planetary Rings',
                     icon: info.formationIcon ?? '🪐',
+                    cameraName: camPreset?.name || 'Celestial Orbit',
+                    cameraIcon: camPreset?.icon || '🪐',
                     isMorphing: !!info.isMorphing,
                     morphProgress: info.morphProgress ?? 1.0,
                     timeElapsed: Math.round(info.timeElapsed ?? 0),
@@ -113,9 +119,13 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                 setCountdown(rem);
 
                 const formInfo = FORMATION_PRESETS.find((f: any) => f.id === state.formationMode);
+                const camIdx = (state.cameraPresetIndex !== undefined) ? Math.abs(state.cameraPresetIndex) % CAMERA_PRESETS.length : 0;
+                const camPreset = CAMERA_PRESETS[camIdx];
                 setTopologyStats({
                     name: state.customFormationName || formInfo?.label || 'Saturnian Planetary Rings',
                     icon: formInfo?.icon || '🪐',
+                    cameraName: camPreset?.name || 'Celestial Orbit',
+                    cameraIcon: camPreset?.icon || '🪐',
                     isMorphing: elapsed < transDur,
                     morphProgress: Math.min(1.0, elapsed / Math.max(0.1, transDur)),
                     timeElapsed: Math.round(elapsed),
@@ -1020,35 +1030,45 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         </div>
                     </div>
 
-                    {/* Title & Status Row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span
-                            style={{
-                                fontSize: '13.5px',
-                                fontWeight: 700,
-                                color: '#ffffff',
-                                letterSpacing: '-0.1px',
-                                whiteSpace: 'nowrap'
-                            }}
-                        >
-                            {topologyStats.name}
-                        </span>
-                        {topologyStats.isMorphing && (
+                    {/* Title, Status & Active Camera Row */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span
                                 style={{
-                                    fontSize: '8.5px',
-                                    fontWeight: 800,
-                                    padding: '1px 5px',
-                                    borderRadius: '4px',
-                                    background: 'rgba(255, 170, 0, 0.18)',
-                                    color: '#ffaa00',
-                                    border: '1px solid rgba(255, 170, 0, 0.35)',
+                                    fontSize: '13.5px',
+                                    fontWeight: 700,
+                                    color: '#ffffff',
+                                    letterSpacing: '-0.1px',
                                     whiteSpace: 'nowrap'
                                 }}
                             >
-                                {Math.round(topologyStats.morphProgress * 100)}%
+                                {topologyStats.name}
                             </span>
-                        )}
+                            {topologyStats.isMorphing && (
+                                <span
+                                    style={{
+                                        fontSize: '8.5px',
+                                        fontWeight: 800,
+                                        padding: '1px 5px',
+                                        borderRadius: '4px',
+                                        background: 'rgba(255, 170, 0, 0.18)',
+                                        color: '#ffaa00',
+                                        border: '1px solid rgba(255, 170, 0, 0.35)',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    {Math.round(topologyStats.morphProgress * 100)}%
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Current Active Camera Mode Subtitle */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', opacity: 0.85 }}>
+                            <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                <span>{topologyStats.cameraIcon || '🎥'}</span>
+                                <span style={{ fontWeight: 600, color: '#cbd5e1' }}>{topologyStats.cameraName || 'Celestial Orbit'}</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             );

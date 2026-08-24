@@ -71,8 +71,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     // Initialize formation lifecycle parameters if not set
     const isStartChaos = (state.formationMode === FormationMode.None || (state.formationMode as number) < 0);
+    let isInitialStartupMorph = isStartChaos;
     if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 24.0;
-    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 1.5 : 18.0;
+    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 0.8 : 18.0;
     if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
 
     // Recent Histories for Forbidden Repeat Buffers
@@ -218,8 +219,13 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
-            state.transitionDuration = 24.0;
+            
+            // Initial startup morph forms quickly within 3.8s so first topology is ready <=5s
+            const isFirstEmergence = isInitialStartupMorph;
+            const transDuration = isFirstEmergence ? 3.8 : 24.0;
+            state.transitionDuration = transDuration;
             state.holdDuration = 18.0;
+            isInitialStartupMorph = false;
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
             let nextMode: FormationMode = FormationMode.Procedural;
@@ -234,7 +240,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.customFormationName = surprise.name;
                 state.formationSeed = Math.random() * 10000;
                 state.transitionStartTime = time;
-                state.transitionDuration = 24.0;
+                state.transitionDuration = transDuration;
 
                 if (!state.isPaletteLocked) {
                     state.speciesColors = getTopologyAlignedPalette(FormationMode.Procedural, spCount);
@@ -257,7 +263,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.formationSeed = Math.random() * 10000;
                 state.customFormationName = undefined;
                 state.transitionStartTime = time;
-                state.transitionDuration = 24.0;
+                state.transitionDuration = transDuration;
 
                 if (!state.isPaletteLocked) {
                     state.speciesColors = getTopologyAlignedPalette(nextMode, spCount);
@@ -272,7 +278,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.speciesAgilities = kin.agilities;
             state.speciesSpeeds = kin.speeds;
 
-            const morphTimings = generateSpeciesMorphTimings(spCount, 24.0);
+            const morphTimings = generateSpeciesMorphTimings(spCount, transDuration);
             state.speciesStartOffsets = morphTimings.startOffsets;
             state.speciesMorphDurations = morphTimings.durations;
 
