@@ -1403,7 +1403,7 @@ export function computeFormationPoint(
         } else {
             const strand = (species % 2 === 0 ? 0 : 1);
             const strandAngle = theta + (strand * Math.PI);
-            const r = 3.6 + fastSin(h * 0.4 + time * 0.5) * 0.4;
+            const r = 3.6;
             const mx = r * fastCos(strandAngle);
             const my = h;
             const mz = r * fastSin(strandAngle);
@@ -1417,7 +1417,7 @@ export function computeFormationPoint(
         const strandOffset = (strand * Math.PI * 2.0 / 3.0);
         const theta = u * 8.0 * Math.PI + time * 0.7 * speedMult + strandOffset;
         const h = (u - 0.5) * 11.0;
-        const r = 3.4 + fastSin(h * 0.3 + time * 0.5) * 0.4;
+        const r = 3.4;
         const mx = r * fastCos(theta);
         const my = h;
         const mz = r * fastSin(theta);
@@ -1487,11 +1487,10 @@ export function computeFormationPoint(
     } else if (formation === FormationMode.OuroborosDragonBraid) {
         // --- 25. Ouroboros Dragon Braid: 4-Strand Intertwined Dragon Loop ---
         const ringAngle = u * Math.PI * 2.0 + time * 0.4 * speedMult;
-        const spineWave = fastSin(u * 10.0 - time * 2.0) * 0.45;
         const baseR = 4.2;
-        const mx = (baseR + spineWave) * fastCos(ringAngle);
+        const mx = baseR * fastCos(ringAngle);
         const my = fastSin(u * 7.0 + time) * 0.7;
-        const mz = (baseR + spineWave) * fastSin(ringAngle);
+        const mz = baseR * fastSin(ringAngle);
         const tanX = -baseR * fastSin(ringAngle), tanY = 0.5, tanZ = baseR * fastCos(ringAngle);
         const pt = applyIntertwinedMultiLayer(mx, my, mz, tanX, tanY, tanZ, u, time, species, indexInSpecies, speedMult, 0.95, 8.0, 0.25, 18.0);
         tx = pt[0]; ty = pt[1]; tz = pt[2];
@@ -1522,7 +1521,7 @@ export function computeFormationPoint(
         const ringTheta = ringK * (Math.PI * 0.5) + time * 0.25 * speedMult;
         const cx = 3.4 * fastCos(ringTheta);
         const cz = 3.4 * fastSin(ringTheta);
-        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6) * fastSin(time * 0.4 + ringK);
+        const cy = ((ringK % 2 === 0) ? 0.6 : -0.6);
         const tau = ((u * 4) % 1.0) * Math.PI * 2.0 + time * 0.6;
         const cosTau = fastCos(tau), sinTau = fastSin(tau);
         const cosTh = fastCos(ringTheta), sinTh = fastSin(ringTheta);

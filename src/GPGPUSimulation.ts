@@ -340,7 +340,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float theta = u * 8.0 * PI + time * 0.6 * speedMult;
         float strand = mod(sp, 2.0);
         float strandAngle = theta + (strand * PI);
-        float r = 3.6 + sin(h * 0.4 + time * 0.5) * 0.4;
+        float r = 3.6;
         vec3 m = vec3(r * cos(strandAngle), h, r * sin(strandAngle));
         vec3 tanV = vec3(-r * sin(strandAngle), 1.2, r * cos(strandAngle));
         target = applyMultiLayerSheath(m, tanV, u, time, floor(sp * 0.5), nSeed, speedMult, 0.55, 6.0, vol, settleDecay);
@@ -351,7 +351,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float strandOffset = strand * (TWO_PI / 3.0);
         float theta = u * 8.0 * PI + time * 0.7 * speedMult + strandOffset;
         float h = (u - 0.5) * 11.0;
-        float r = 3.4 + sin(h * 0.3 + time * 0.5) * 0.4;
+        float r = 3.4;
         vec3 m = vec3(r * cos(theta), h, r * sin(theta));
         vec3 tanV = vec3(-r * sin(theta), 1.2, r * cos(theta));
         target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.65, 6.0, vol, settleDecay);
@@ -407,9 +407,8 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
     else if (mode == 25) {
         // Ouroboros Dragon Braid
         float ringAngle = u * TWO_PI + time * 0.4 * speedMult;
-        float spineWave = sin(u * 10.0 - time * 2.0) * 0.45;
         float baseR = 4.2;
-        vec3 m = vec3((baseR + spineWave) * cos(ringAngle), sin(u * 7.0 + time) * 0.7, (baseR + spineWave) * sin(ringAngle));
+        vec3 m = vec3(baseR * cos(ringAngle), sin(u * 7.0 + time) * 0.7, baseR * sin(ringAngle));
         vec3 tanV = vec3(-baseR * sin(ringAngle), 0.5, baseR * cos(ringAngle));
         target = applyMultiLayerSheath(m, tanV, u, time, sp, nSeed, speedMult, 0.95, 8.0, vol, settleDecay);
     }
@@ -437,7 +436,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float ringTheta = ringK * (PI * 0.5) + time * 0.25 * speedMult;
         float cx = 3.4 * cos(ringTheta);
         float cz = 3.4 * sin(ringTheta);
-        float cy = (mod(ringK, 2.0) < 0.5 ? 0.6 : -0.6) * sin(time * 0.4 + ringK);
+        float cy = (mod(ringK, 2.0) < 0.5 ? 0.6 : -0.6);
         float tau = fract(u * 4.0) * TWO_PI + time * 0.6;
         float cosTau = cos(tau), sinTau = sin(tau);
         float cosTh = cos(ringTheta), sinTh = sin(ringTheta);
@@ -734,14 +733,16 @@ void main() {
     vec3 err = targetPos - pos;
     vec3 targetVel = err * localLerp;
 
-    // Organic living fluid noise turbulence tailored per species & size (modulated by species randomness)
-    float activeNoise = uNoiseDrift * (0.4 + 1.2 * spRand) * (0.35 + 0.65 * settleDecay) * totalAgility;
+    // Organic living fluid noise turbulence tailored per individual boid (decorrelated phase prevents collective bouncing)
+    float activeNoise = uNoiseDrift * 0.35 * spRand * (0.35 + 0.65 * settleDecay) * totalAgility;
     if (activeNoise > 1e-5) {
-        float freq = spFreq * (0.7 + 0.3 * sizeAgility);
+        float indPhase1 = fract(nSeed * 18.28) * TWO_PI;
+        float indPhase2 = fract(nSeed * 24.12) * TWO_PI;
+        float indPhase3 = fract(nSeed * 14.41) * TWO_PI;
         targetVel += vec3(
-            sin(uTime * 1.1 * freq + nSeed * 18.28) * activeNoise,
-            cos(uTime * 0.9 * freq + nSeed * 24.12) * activeNoise,
-            sin(uTime * 1.3 * freq + nSeed * 14.41) * activeNoise
+            sin(uTime * 0.8 + indPhase1) * activeNoise,
+            cos(uTime * 0.7 + indPhase2) * activeNoise,
+            sin(uTime * 0.9 + indPhase3) * activeNoise
         );
     }
 
