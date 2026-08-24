@@ -924,8 +924,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         left: '18px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '12px',
-                        padding: '7px 14px 7px 9px',
+                        gap: '10px',
+                        padding: '6px 14px 6px 8px',
                         background: 'rgba(10, 14, 24, 0.82)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
@@ -941,15 +941,15 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                     <div
                         style={{
                             position: 'relative',
-                            width: '38px',
-                            height: '38px',
+                            width: '36px',
+                            height: '36px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             flexShrink: 0
                         }}
                     >
-                        <svg width="38" height="38" viewBox="0 0 46 46" style={{ transform: 'rotate(-90deg)' }}>
+                        <svg width="36" height="36" viewBox="0 0 46 46" style={{ transform: 'rotate(-90deg)' }}>
                             <defs>
                                 <linearGradient id="topoDialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stopColor="#00ffcc" />
@@ -1003,75 +1003,35 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                         </div>
                     </div>
 
-                    {/* Content Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '170px' }}>
-                        {/* Title Row */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    {/* Title & Status Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span
+                            style={{
+                                fontSize: '13.5px',
+                                fontWeight: 700,
+                                color: '#ffffff',
+                                letterSpacing: '-0.1px',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            {topologyStats.name}
+                        </span>
+                        {topologyStats.isMorphing && (
                             <span
                                 style={{
-                                    fontSize: '13px',
-                                    fontWeight: 700,
-                                    color: '#ffffff',
-                                    letterSpacing: '-0.1px',
+                                    fontSize: '8.5px',
+                                    fontWeight: 800,
+                                    padding: '1px 5px',
+                                    borderRadius: '4px',
+                                    background: 'rgba(255, 170, 0, 0.18)',
+                                    color: '#ffaa00',
+                                    border: '1px solid rgba(255, 170, 0, 0.35)',
                                     whiteSpace: 'nowrap'
                                 }}
                             >
-                                {topologyStats.name}
+                                {Math.round(topologyStats.morphProgress * 100)}%
                             </span>
-                            {topologyStats.isMorphing && (
-                                <span
-                                    style={{
-                                        fontSize: '8.5px',
-                                        fontWeight: 800,
-                                        padding: '1px 5px',
-                                        borderRadius: '4px',
-                                        background: 'rgba(255, 170, 0, 0.18)',
-                                        color: '#ffaa00',
-                                        border: '1px solid rgba(255, 170, 0, 0.35)',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    {Math.round(topologyStats.morphProgress * 100)}%
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Minimalist Multi-color Species Population Graph Bar */}
-                        {(() => {
-                            const spCount = simState.current.speciesCount || simState.current.speciesColors?.length || 4;
-                            const dist = simState.current.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
-                            const colors = simState.current.speciesColors || SPECIES_COLORS;
-
-                            const segments = dist.slice(0, spCount).map((pct, idx) => ({
-                                color: colors[idx % colors.length] || '#ffffff',
-                                pct: pct * 100
-                            }));
-
-                            return (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        width: '100%',
-                                        height: '5px',
-                                        borderRadius: '3px',
-                                        overflow: 'hidden',
-                                        background: 'rgba(255, 255, 255, 0.08)'
-                                    }}
-                                >
-                                    {segments.map((s, i) => (
-                                        <div
-                                            key={i}
-                                            style={{
-                                                width: `${s.pct}%`,
-                                                background: s.color,
-                                                height: '100%',
-                                                transition: 'width 0.3s ease'
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            );
-                        })()}
+                        )}
                     </div>
                 </div>
             );
