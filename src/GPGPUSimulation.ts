@@ -16,8 +16,9 @@ void main() {
     vec3 vel = velTex.xyz;
     float speciesAndU = posTex.w; // Encodes species in integer part and u in fractional part
 
-    // Integrate position: pos += vel
-    pos += vel;
+    // Integrate position with framerate-normalized delta scaling (eliminates micro-stuttering)
+    float dtScale = clamp(uDelta * 60.0, 0.5, 2.0);
+    pos += vel * dtScale;
 
     // Soft spherical boundary containment at R = 14.0
     float distSq = dot(pos, pos);
@@ -667,21 +668,14 @@ void main() {
         );
     }
 
-    // Exponential smoothing towards target velocity (silky organic damping)
-    vec3 accel = (targetVel - vel) * 0.45;
+    // Analytical exponential damping (silky smooth second-order trajectory convergence)
+    float blendRate = clamp(0.18 * agilityMult, 0.08, 0.35);
+    vel = mix(vel, targetVel, blendRate);
 
-    // Soft Acceleration Clamping
-    float accelMag = length(accel);
-    if (accelMag > localMaxAccel && accelMag > 1e-6) {
-        accel *= (localMaxAccel / accelMag);
-    }
-
-    vel += accel;
-
-    // Velocity Clamping
+    // Smooth soft-knee speed limiter (no hard trajectory clipping)
     float speed = length(vel);
     if (speed > localMaxSpeed && speed > 1e-6) {
-        vel *= (localMaxSpeed / speed);
+        vel = (vel / speed) * (localMaxSpeed + (speed - localMaxSpeed) * 0.05);
     }
 
     gl_FragColor = vec4(vel, nSeed);
@@ -850,9 +844,9 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             // Silky Smooth Morphing & Cruising Dynamics (calibrated to match CPU 50k flock)
             const sCurve = p * p * p * (p * (p * 6.0 - 15.0) + 10.0);
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = isMorphing ? (0.12 * (1.0 - sCurve) + 0.06 * sCurve) : 0.06;
-            const activeMaxSpeed = (isMorphing ? 0.075 : 0.038) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.014 : 0.006) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.10 : 0.07) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.22 : 0.14) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.06 : 0.03) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 
