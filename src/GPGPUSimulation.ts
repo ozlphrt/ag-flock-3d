@@ -99,11 +99,11 @@ vec3 applyMultiLayerSheath(
     vec3 normal = normalize(cross(tNorm, up));
     vec3 binormal = cross(tNorm, normal);
 
-    // Dynamic wave pulsation along the tube cross-section
-    float wavePulse = 1.0 + 0.12 * sin(u * 12.0 * PI - time * 1.5 * speedMult);
+    // Smooth subtle pulsation along the tube cross-section
+    float wavePulse = 1.0 + 0.04 * sin(u * 8.0 * PI - time * 1.0 * speedMult);
 
-    // 1. Order-2 Meso cord (N species cords spiraling around macro spine with dynamic phase offsets)
-    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * angFreq * PI) + time * 0.6 * speedMult;
+    // 1. Order-2 Meso cord (N species cords spiraling cleanly around macro spine with dynamic phase offsets)
+    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * angFreq * PI) + time * 0.5 * speedMult;
     float cosMeso = cos(cordAngle);
     float sinMeso = sin(cordAngle);
 
@@ -114,9 +114,9 @@ vec3 applyMultiLayerSheath(
     // Centerline of the species cord
     vec3 p2 = m + n2 * (radius * wavePulse);
 
-    // 2. Order-3 Micro Child Helices (Cascading high-frequency spirals orbiting around the Meso strand)
-    float trackId = floor(fract(nSeed * 17.31) * 8.0);
-    float microAngle = trackId * (TWO_PI / 8.0) + (u * 14.0 * PI) + time * 0.9 * speedMult;
+    // 2. Order-3 Micro Child Helices (Smooth laminar ribbons with tight coherent dispersion)
+    float trackId = floor(fract(nSeed * 17.31) * 6.0);
+    float microAngle = trackId * (TWO_PI / 6.0) + (u * 8.0 * PI) + time * 0.6 * speedMult;
     float cosMicro = cos(microAngle);
     float sinMicro = sin(microAngle);
 
@@ -124,20 +124,14 @@ vec3 applyMultiLayerSheath(
     vec3 n3 = n2 * cosMicro + b2 * sinMicro;
     vec3 b3 = -n2 * sinMicro + b2 * cosMicro;
 
-    float rMicro = (0.72 * vol * (0.45 + 0.55 * sqrt((trackId + 0.5) / 8.0))) * wavePulse;
+    float rMicro = (0.35 * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0))) * wavePulse;
     vec3 p3 = p2 + n3 * rMicro;
 
-    // 3. Order-4 Nano Filaments (Tight DNA sub-twists inside each child helix)
+    // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
-    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 28.0 * PI) + time * 1.2 * speedMult;
-    float rNano = 0.28 * vol * wavePulse;
+    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 12.0 * PI) + time * 0.8 * speedMult;
+    float rNano = 0.12 * vol * wavePulse;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
-
-    // 4. Subtle Stray Aura (~8% subtle floaters around the edges)
-    float isStray = step(0.92, fract(nSeed * 89.23));
-    float strayAngle = nSeed * TWO_PI * 5.0 + time * 0.3;
-    float strayDist = 0.6 * vol * isStray * settleDecay;
-    p4 += (n2 * cos(strayAngle) + b2 * sin(strayAngle)) * strayDist;
 
     return p4;
 }
@@ -817,7 +811,7 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uMaxSpeed = { value: 0.55 };
     velocityUniforms.uMaxAccel = { value: 0.12 };
     velocityUniforms.uVolThickness = { value: 0.95 }; // Defined, rich volumetric pipe thickness
-    velocityUniforms.uNoiseDrift = { value: 0.006 }; // Subtle organic fluid turbulence
+    velocityUniforms.uNoiseDrift = { value: 0.002 }; // Smooth cohesive laminar flow
     velocityUniforms.uSeed = { value: initialSeed };
     velocityUniforms.uSpeciesCount = { value: 4 };
     velocityUniforms.uSpeciesThresholds = { value: new Float32Array(20) };

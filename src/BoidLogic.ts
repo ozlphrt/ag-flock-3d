@@ -929,10 +929,10 @@ function applyIntertwinedMultiLayer(
     const bz = tx * ny - ty * nx;
 
     // Dynamic wave pulsation along the tube cross-section
-    const wavePulse = 1.0 + 0.14 * fastSin(u * 12.0 * Math.PI - time * 2.2 * speedMult);
+    const wavePulse = 1.0 + 0.04 * fastSin(u * 8.0 * Math.PI - time * 1.0 * speedMult);
 
-    // 2. Order-2 (Meso Helix): Species cord spiraling & flowing around macro spine
-    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 1.2 * speedMult);
+    // 2. Order-2 (Meso Helix): Species cord spiraling & flowing cleanly around macro spine
+    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.5 * speedMult);
     const cosMeso = fastCos(mesoAngle);
     const sinMeso = fastSin(mesoAngle);
 
@@ -945,19 +945,17 @@ function applyIntertwinedMultiLayer(
     const b2y = -ny * sinMeso + by * cosMeso;
     const b2z = -nz * sinMeso + bz * cosMeso;
 
-    const isRung = (indexInSpecies % 12 === 0);
-    const rungExt = isRung ? ((indexInSpecies % 36) / 36.0 - 0.5) * 1.4 : 0.0;
-    const mesoR = (rMeso + rungExt) * wavePulse;
+    const mesoR = rMeso * wavePulse;
 
     // Meso Centerline Position
     const p2x = mx + n2x * mesoR;
     const p2y = my + n2y * mesoR;
     const p2z = mz + n2z * mesoR;
 
-    // 3. Order-3 (Micro Helix): Particles form tight golden-spiral micro-tubes orbiting the Meso strand with continuous corkscrew swirl
-    const track = indexInSpecies % 16;
-    const trackR = Math.sqrt((track + 0.5) / 16.0) * rMicro * wavePulse;
-    const trackTheta = (track * 2.3999632) + (u * omegaMicro * Math.PI) + (time * 2.4 * speedMult);
+    // 3. Order-3 (Micro Helix): Particles form tight coherent micro-tubes orbiting the Meso strand
+    const track = indexInSpecies % 8;
+    const trackR = ((track + 0.5) / 8.0) * rMicro * 0.6 * wavePulse;
+    const trackTheta = (track * (Math.PI * 0.25)) + (u * omegaMicro * 0.6 * Math.PI) + (time * 0.8 * speedMult);
     const cosMicro = fastCos(trackTheta);
     const sinMicro = fastSin(trackTheta);
 
