@@ -190,8 +190,8 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.formationSeed = Math.random() * 10000;
         simState.current.customFormationName = undefined;
         simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
-        simState.current.transitionDuration = 6.0;
-        simState.current.holdDuration = 7.0;
+        simState.current.transitionDuration = 12.0;
+        simState.current.holdDuration = 8.0;
 
         if (!simState.current.isPaletteLocked) {
             const spCount = simState.current.speciesCount || simState.current.speciesColors?.length || 4;

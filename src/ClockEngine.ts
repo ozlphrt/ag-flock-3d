@@ -71,8 +71,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
 
     // Initialize formation lifecycle parameters if not set
     const isStartChaos = (state.formationMode === FormationMode.None || (state.formationMode as number) < 0);
-    if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 5.5;
-    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 6.0 : 2.5;
+    if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 12.0;
+    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 10.0 : 8.0;
     if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
 
     // Recent Histories for Forbidden Repeat Buffers
@@ -99,10 +99,10 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = curTime;
-            state.transitionDuration = 5.5;
-            state.holdDuration = 2.5;
+            state.transitionDuration = 12.0;
+            state.holdDuration = 8.0;
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
-            const morphTimings = generateSpeciesMorphTimings(spCount, 5.5);
+            const morphTimings = generateSpeciesMorphTimings(spCount, 12.0);
             state.speciesStartOffsets = morphTimings.startOffsets;
             state.speciesMorphDurations = morphTimings.durations;
         } else if (dimension === 'palette') {
@@ -218,8 +218,8 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.physicalConvergence = 0.0;
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
-            state.transitionDuration = 5.5;
-            state.holdDuration = 2.5;
+            state.transitionDuration = 12.0;
+            state.holdDuration = 8.0;
 
             // Pure non-repeating full-deck topology selection
             let nextMode = getNextRandomizedTopology(prefs, state.formationMode) as FormationMode;
@@ -238,7 +238,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.formationSeed = Math.random() * 10000;
             state.customFormationName = undefined;
             state.transitionStartTime = time;
-            state.transitionDuration = 5.5;
+            state.transitionDuration = 12.0;
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
             if (!state.isPaletteLocked) {
@@ -253,7 +253,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.speciesAgilities = kin.agilities;
             state.speciesSpeeds = kin.speeds;
 
-            const morphTimings = generateSpeciesMorphTimings(spCount, 5.5);
+            const morphTimings = generateSpeciesMorphTimings(spCount, 12.0);
             state.speciesStartOffsets = morphTimings.startOffsets;
             state.speciesMorphDurations = morphTimings.durations;
 
@@ -476,7 +476,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.speciesAgilities = kin.agilities;
                 state.speciesSpeeds = kin.speeds;
 
-                const morphTimings = generateSpeciesMorphTimings(spCount, 5.5);
+                const morphTimings = generateSpeciesMorphTimings(spCount, 12.0);
                 state.speciesStartOffsets = morphTimings.startOffsets;
                 state.speciesMorphDurations = morphTimings.durations;
 

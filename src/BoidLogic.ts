@@ -765,7 +765,7 @@ export function generateSpeciesRandomness(count: number = 4): number[] {
 }
 
 // Helper to generate asynchronous, staggered per-species morph start offsets and durations
-export function generateSpeciesMorphTimings(count: number = 4, totalDuration: number = 5.5): { startOffsets: number[]; durations: number[] } {
+export function generateSpeciesMorphTimings(count: number = 4, totalDuration: number = 12.0): { startOffsets: number[]; durations: number[] } {
     const startOffsets: number[] = [];
     const durations: number[] = [];
     // Random permutation of species ranks so which species leads and follows is randomized on every topology

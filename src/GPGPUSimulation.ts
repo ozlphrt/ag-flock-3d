@@ -776,8 +776,8 @@ void main() {
     float totalSpeed = clamp(spSpeed * sizeSpeed * morphSpeedBoost, 0.75, 1.20);
 
     float localLerp = uLerpRate * totalAgility;
-    float localMaxSpeed = min(uMaxSpeed * totalSpeed, 0.48 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
-    float localMaxAccel = min(uMaxAccel * totalAgility, 0.06 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
+    float localMaxSpeed = min(uMaxSpeed * totalSpeed, 0.40 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
+    float localMaxAccel = min(uMaxAccel * totalAgility, 0.040 * (uSpeedMult > 0.0 ? (uSpeedMult / 0.14) : 1.0));
 
     // Critically-Damped Target Velocity Filter (smooth proportional pursuit)
     vec3 err = targetPos - pos;
@@ -1003,11 +1003,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Responsive Cruising & Morphing Dynamics (Smoothly flows into topologies with strictly capped acceleration & velocity)
+            // Cinematic Gradual Cruising & Morphing Dynamics (Slow, majestic, smooth topology weaving)
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.18 : 0.14) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.46 : 0.38) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.055 : 0.035) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.085 : 0.12) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.26 : 0.34) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.022 : 0.030) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 
