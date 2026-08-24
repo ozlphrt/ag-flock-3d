@@ -166,77 +166,85 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const tgtOut = calcTargetScratch.current;
 
         if (mode === 'rollercoaster') {
-            // 🎢 Roller-Coaster Rail Shoot: Weaves dynamically through the ribbons with banking
-            const tRC = time * 0.16;
-            const rRC = 6.8 + Math.sin(tRC * 2.5) * 2.8;
-            posOut.x = Math.sin(tRC * 1.8) * rRC;
-            posOut.y = Math.cos(tRC * 2.2) * 3.2 + Math.sin(tRC * 0.9) * 1.5;
-            posOut.z = Math.cos(tRC * 1.8) * rRC;
+            // 🎢 Roller-Coaster Rail Shoot: Weaves right through the ribbon strands while ALWAYS aiming down the boid corridor
+            const tRC = time * 0.18;
+            const rRC = 4.8 + Math.sin(tRC * 2.4) * 1.6;
+            posOut.x = Math.sin(tRC * 1.6) * rRC;
+            posOut.y = Math.sin(tRC * 2.0) * 2.8;
+            posOut.z = Math.cos(tRC * 1.6) * rRC;
 
-            const tAhead = tRC + 0.18;
-            const rAhead = 6.8 + Math.sin(tAhead * 2.5) * 2.8;
-            tgtOut.x = Math.sin(tAhead * 1.8) * rAhead;
-            tgtOut.y = Math.cos(tAhead * 2.2) * 3.2 + Math.sin(tAhead * 0.9) * 1.5;
-            tgtOut.z = Math.cos(tAhead * 1.8) * rAhead;
+            // Look-ahead along the ribbon curve blended with core geometry so flock is ALWAYS centered in frame
+            const tAhead = tRC + 0.40;
+            const rAhead = 4.2 + Math.sin(tAhead * 2.4) * 1.2;
+            const aheadX = Math.sin(tAhead * 1.6) * rAhead;
+            const aheadY = Math.sin(tAhead * 2.0) * 2.2;
+            const aheadZ = Math.cos(tAhead * 1.6) * rAhead;
+
+            // Target blends ahead tangent with structure volume - zero empty space
+            tgtOut.x = aheadX * 0.60;
+            tgtOut.y = aheadY * 0.60;
+            tgtOut.z = aheadZ * 0.60;
         } else if (mode === 'chopper') {
-            // 🚁 Chopper Core Hover: Slow, stable hovering float inside the inner void
-            const tChop = time * 0.12;
+            // 🚁 Chopper Core Hover: Slow hovering float inside the inner void tracking the orbiting swarm loops
+            const tChop = time * 0.10;
             posOut.x = Math.sin(tChop * 1.4) * 2.2;
-            posOut.y = Math.sin(tChop * 2.2) * 1.4 + Math.cos(tChop * 0.8) * 0.6;
+            posOut.y = Math.sin(tChop * 2.2) * 1.2 + Math.cos(tChop * 0.8) * 0.4;
             posOut.z = Math.cos(tChop * 1.4) * 2.2;
 
-            const panAngle = time * 0.20;
-            tgtOut.x = posOut.x + Math.sin(panAngle) * 9.0;
-            tgtOut.y = posOut.y + Math.sin(time * 0.18) * 3.5;
-            tgtOut.z = posOut.z + Math.cos(panAngle) * 9.0;
+            // Focus directly on proximate swirling ribbon loops orbiting around the chopper
+            const focusAngle = time * 0.18;
+            const focusR = 5.2 + Math.sin(time * 0.25) * 1.5;
+            tgtOut.x = Math.sin(focusAngle) * focusR;
+            tgtOut.y = Math.sin(time * 0.30) * 2.0;
+            tgtOut.z = Math.cos(focusAngle) * focusR;
         } else if (mode === 'giant') {
             // 🗿 Monumental Giant: Low-ground wide-angle lens gazing up into the towering monolith
             const tG = time * 0.08;
-            posOut.x = Math.sin(tG) * 10.5;
-            posOut.y = -7.5 + Math.sin(time * 0.12) * 0.6;
-            posOut.z = Math.cos(tG) * 10.5;
+            posOut.x = Math.sin(tG) * 10.0;
+            posOut.y = -7.0 + Math.sin(time * 0.12) * 0.5;
+            posOut.z = Math.cos(tG) * 10.0;
 
             tgtOut.x = 0.0;
-            tgtOut.y = 3.2 + Math.cos(time * 0.15) * 1.2;
+            tgtOut.y = 2.8 + Math.cos(time * 0.15) * 1.0;
             tgtOut.z = 0.0;
         } else if (mode === 'corkscrew') {
-            // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix
-            const tCS = time * 0.18;
-            const rCS = 11.8 + Math.cos(time * 0.12) * 1.8;
+            // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix looking through the core
+            const tCS = time * 0.16;
+            const rCS = 10.5 + Math.cos(time * 0.12) * 1.5;
             posOut.x = Math.sin(tCS) * rCS;
-            posOut.y = Math.sin(time * 0.09) * 6.5;
+            posOut.y = Math.sin(time * 0.08) * 5.5;
             posOut.z = Math.cos(tCS) * rCS;
 
-            tgtOut.x = Math.sin(tCS + Math.PI * 0.5) * 3.0;
-            tgtOut.y = -posOut.y * 0.3;
-            tgtOut.z = Math.cos(tCS + Math.PI * 0.5) * 3.0;
+            tgtOut.x = Math.sin(tCS + 1.2) * 2.5;
+            tgtOut.y = -posOut.y * 0.25;
+            tgtOut.z = Math.cos(tCS + 1.2) * 2.5;
         } else if (mode === 'slalom') {
             // ⚡ Action Slalom: Rapid undulating slalom flyby skimming ribbons
-            const tS = time * 0.22;
-            const rS = 11.2 + Math.sin(tS * 2.8) * 3.2;
+            const tS = time * 0.20;
+            const rS = 8.8 + Math.sin(tS * 2.6) * 2.2;
             posOut.x = Math.sin(tS) * rS;
-            posOut.y = 1.8 + Math.cos(tS * 3.2) * 3.6;
+            posOut.y = 1.2 + Math.cos(tS * 2.8) * 2.6;
             posOut.z = Math.cos(tS) * rS;
 
-            tgtOut.x = Math.sin(tS + 0.3) * 4.0;
+            tgtOut.x = Math.sin(tS + 0.6) * 3.2;
             tgtOut.y = 0.0;
-            tgtOut.z = Math.cos(tS + 0.3) * 4.0;
+            tgtOut.z = Math.cos(tS + 0.6) * 3.2;
         } else if (mode === 'vortex') {
             // 🌌 Vortex Horizon: Top-down vantage point looking into the funnel
             const tV = time * 0.10;
-            posOut.x = Math.sin(tV) * 6.8;
-            posOut.y = 10.5 + Math.sin(tV * 1.4) * 1.8;
-            posOut.z = Math.cos(tV) * 6.8;
+            posOut.x = Math.sin(tV) * 6.5;
+            posOut.y = 9.8 + Math.sin(tV * 1.4) * 1.5;
+            posOut.z = Math.cos(tV) * 6.5;
 
             tgtOut.x = 0.0;
             tgtOut.y = -1.2;
             tgtOut.z = 0.0;
         } else {
             // 🪐 Celestial Orbit: Smooth 360° majestic horizon sweep
-            const tOrb = time * 0.12;
-            posOut.x = Math.sin(tOrb) * 12.8;
-            posOut.y = 3.2 + Math.sin(tOrb * 1.5) * 1.8;
-            posOut.z = Math.cos(tOrb) * 12.8;
+            const tOrb = time * 0.11;
+            posOut.x = Math.sin(tOrb) * 12.2;
+            posOut.y = 2.8 + Math.sin(tOrb * 1.4) * 1.5;
+            posOut.z = Math.cos(tOrb) * 12.2;
 
             tgtOut.x = 0.0;
             tgtOut.y = 0.0;
