@@ -1005,8 +1005,9 @@ function applyIntertwinedMultiLayer(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
-    // 2. Order-2 (Meso Helix): Species cord spiraling & flowing cleanly around macro spine
-    const mesoAngle = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 0.5 * speedMult);
+    // 2. Order-2 (Meso Helix): Species cord with exact integer 2pi turns for seamless closed loops
+    const mesoTurns = Math.round(omegaMeso * 0.5);
+    const mesoAngle = u * mesoTurns * (Math.PI * 2.0) + (species * (Math.PI * 0.5)) + (time * 0.5 * speedMult);
     const cosMeso = fastCos(mesoAngle);
     const sinMeso = fastSin(mesoAngle);
 
@@ -1027,7 +1028,7 @@ function applyIntertwinedMultiLayer(
     // 3. Order-3 (Micro Helix): Particles form tight coherent micro-tubes orbiting the Meso strand
     const track = indexInSpecies % 8;
     const trackR = ((track + 0.5) / 8.0) * rMicro * 0.6;
-    const trackTheta = (track * (Math.PI * 0.25)) + (u * omegaMicro * 0.6 * Math.PI) + (time * 0.8 * speedMult);
+    const trackTheta = (track * (Math.PI * 0.25)) + (u * 4.0 * Math.PI * 2.0) + (time * 0.8 * speedMult);
     const cosMicro = fastCos(trackTheta);
     const sinMicro = fastSin(trackTheta);
 
@@ -1073,8 +1074,9 @@ function applyRecursiveTripleHelix(
     const by = tz * nx - tx * nz;
     const bz = tx * ny - ty * nx;
 
-    // 2. Order-2 (Meso Helix): 4 Species Cords spiraling around macro spine with 90° phase offsets
-    const thetaMeso = u * omegaMeso * Math.PI + (species * (Math.PI * 0.5)) + (time * 1.1 * speedMult);
+    // 2. Order-2 (Meso Helix): 4 Species Cords with exact integer 2pi turns
+    const mesoTurns = Math.round(omegaMeso * 0.5);
+    const thetaMeso = u * mesoTurns * (Math.PI * 2.0) + (species * (Math.PI * 0.5)) + (time * 1.1 * speedMult);
     const cosMeso = fastCos(thetaMeso);
     const sinMeso = fastSin(thetaMeso);
 
@@ -1090,9 +1092,10 @@ function applyRecursiveTripleHelix(
     const p2y = my + n2y * rMeso;
     const p2z = mz + n2z * rMeso;
 
-    // 3. Order-3 (Micro Helix): Inside each species cord, 3 sub-strands twist in high-frequency tertiary coils
+    // 3. Order-3 (Micro Helix): Inside each species cord, 3 sub-strands twist with exact integer 2pi turns
     const subStrandId = indexInSpecies % 3;
-    const thetaMicro = u * omegaMicro * Math.PI + (subStrandId * (Math.PI * 2.0 / 3.0)) + (time * 1.8 * speedMult);
+    const microTurns = Math.round(omegaMicro * 0.5);
+    const thetaMicro = u * microTurns * (Math.PI * 2.0) + (subStrandId * (Math.PI * 2.0 / 3.0)) + (time * 1.8 * speedMult);
     const cosMicro = fastCos(thetaMicro);
     const sinMicro = fastSin(thetaMicro);
 
@@ -1108,10 +1111,11 @@ function applyRecursiveTripleHelix(
     const p3y = p2y + n3y * rMicro;
     const p3z = p2z + n3z * rMicro;
 
-    // 4. Order-4 (Nano Streamlines): Golden-angle concentric boid swarm particles inside each tertiary strand
+    // 4. Order-4 (Nano Streamlines): Golden-angle concentric boid swarm particles with exact integer 2pi turns
     const track = Math.floor(indexInSpecies / 3) % 8;
     const trackR = Math.sqrt((track + 0.5) / 8.0) * rNano;
-    const trackTheta = (track * 2.3999632) + (u * omegaNano * Math.PI) + (time * 2.8 * speedMult);
+    const nanoTurns = Math.round(omegaNano * 0.5);
+    const trackTheta = (track * 2.3999632) + (u * nanoTurns * (Math.PI * 2.0)) + (time * 2.8 * speedMult);
     const cosNano = fastCos(trackTheta);
     const sinNano = fastSin(trackTheta);
 

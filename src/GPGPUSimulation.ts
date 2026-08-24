@@ -98,9 +98,9 @@ vec3 applyMultiLayerSheath(
     float vol,
     float settleDecay
 ) {
-    vec3 tNorm = normalize(tanV + vec3(1e-5));
-    vec3 up = abs(tNorm.y) < 0.92 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-    vec3 normal = normalize(cross(tNorm, up));
+    vec3 tNorm = normalize(tanV + vec3(1e-6));
+    vec3 pVec = (abs(tNorm.y) < 0.95) ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 normal = normalize(cross(tNorm, pVec));
     vec3 binormal = cross(tNorm, normal);
 
     // Look up per-species individual randomness factor (0.10 to 1.00)
@@ -112,8 +112,9 @@ vec3 applyMultiLayerSheath(
         }
     }
 
-    // 1. Order-2 Meso cord (N species cords spiraling cleanly around macro spine with dynamic phase offsets)
-    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * angFreq * PI) + time * 0.5 * speedMult;
+    // 1. Order-2 Meso cord: Integer multiple of TWO_PI ensures exact C_infinity seamless closure (no head/tail gaps)
+    float windingTurns = floor(angFreq * 0.5 + 0.5);
+    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * windingTurns * TWO_PI) + time * 0.5 * speedMult;
     float cosMeso = cos(cordAngle);
     float sinMeso = sin(cordAngle);
 
@@ -124,9 +125,9 @@ vec3 applyMultiLayerSheath(
     // Centerline of the species cord
     vec3 p2 = m + n2 * radius;
 
-    // 2. Order-3 Micro Child Helices (Differentiated per-species laminar ribbons)
+    // 2. Order-3 Micro Child Helices (Differentiated per-species laminar ribbons with seamless periodic closure)
     float trackId = floor(fract(nSeed * 17.31) * 6.0);
-    float microAngle = trackId * (TWO_PI / 6.0) + (u * 8.0 * PI) + time * 0.6 * speedMult;
+    float microAngle = trackId * (TWO_PI / 6.0) + (u * 4.0 * TWO_PI) + time * 0.6 * speedMult;
     float cosMicro = cos(microAngle);
     float sinMicro = sin(microAngle);
 
@@ -137,9 +138,9 @@ vec3 applyMultiLayerSheath(
     float rMicro = (0.16 + 0.32 * spRand) * vol * (0.6 + 0.4 * ((trackId + 0.5) / 6.0));
     vec3 p3 = p2 + n3 * rMicro;
 
-    // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon)
+    // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon with seamless periodic closure)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
-    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 12.0 * PI) + time * 0.8 * speedMult;
+    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 6.0 * TWO_PI) + time * 0.8 * speedMult;
     float rNano = (0.04 + 0.12 * spRand) * vol;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
 
@@ -149,10 +150,6 @@ vec3 applyMultiLayerSheath(
 // Compute Target Formation Point
 vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, float speedMult, float vol, float settleDecay) {
     vec3 target = vec3(0.0);
-
-    // Stray flag for geometric shapes
-    float isStray = step(0.82, fract(nSeed * 19.87));
-    float individualDecay = clamp(settleDecay + (fract(nSeed * 77.13) - 0.5) * 0.25, 0.0, 1.0);
 
     if (mode == 0) {
         // Quad Helix Braid
@@ -455,7 +452,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float phi = asin(clamp(uLat * 2.0 - 1.0, -0.98, 0.98));
             float bandSpeed = (1.2 + 0.8 * cos(phi * 3.0)) * speedMult;
             float theta = u * 40.0 * PI + time * bandSpeed * 1.5 + (sp * TWO_PI);
-            float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.08 * vol + isStray * individualDecay * (fract(nSeed * 19.3) - 0.5) * 0.3;
+            float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.08 * vol;
             vec3 pCore = vec3(rPlanet * cos(phi) * cos(theta), rPlanet * sin(phi) * 0.88, rPlanet * cos(phi) * sin(theta));
             target = rotateZ(pCore, 0.44); // 25° axial tilt
         } else {
@@ -465,7 +462,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float uRing = fract(u * 500.0);
             float ringRadius = 3.6 + (ringSpecies / maxRingSp) * 4.8 + uRing * 0.6 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
             float ringAngle = (uRing * 180.0 * PI) + time * (1.6 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI + (ringSpecies * 1.047);
-            float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.16 * vol + isStray * individualDecay * (fract(nSeed * 53.1) - 0.5) * 0.35;
+            float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.16 * vol;
             vec3 ringPt = vec3(ringRadius * cos(ringAngle), ringThickness, ringRadius * sin(ringAngle));
             target = rotateZ(ringPt, 0.44); // 25° axial tilt
         }
@@ -484,7 +481,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float phi = clamp(phi0 + rossbyWave, -1.50, 1.50);
         
         // Stable surface shell without radial bouncing
-        float rSurf = 5.2 + (fract(nSeed * 19.4) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 47.9) - 0.5) * 0.35;
+        float rSurf = 5.2 + (fract(nSeed * 19.4) - 0.5) * 0.20 * vol;
         target = vec3(rSurf * cos(phi) * cos(theta), rSurf * sin(phi), rSurf * cos(phi) * sin(theta));
     }
     else if (mode == 31) {
@@ -493,7 +490,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float u2 = fract(u * 271.3197 + nSeed * 47.13);
         float theta = u1 * TWO_PI + time * 0.30 * speedMult;
         float phi = u2 * TWO_PI + time * 0.45 * speedMult;
-        float R0 = 4.4, r0 = 2.0 + (fract(nSeed * 17.5) - 0.5) * 0.18 * vol + isStray * individualDecay * (fract(nSeed * 11.2) - 0.5) * 0.35;
+        float R0 = 4.4, r0 = 2.0 + (fract(nSeed * 17.5) - 0.5) * 0.18 * vol;
         target = vec3((R0 + r0 * cos(phi)) * cos(theta), r0 * sin(phi), (R0 + r0 * cos(phi)) * sin(theta));
     }
     else if (mode == 32) {
@@ -503,7 +500,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         float uArm = fract(u * 4.0);
         float r = 0.8 + uArm * 7.5 + (fract(nSeed * 41.3) - 0.5) * 0.18 * vol;
         float theta = armOffset + log(max(0.2, r)) * 2.2 + time * (1.8 / max(0.5, sqrt(r))) * speedMult + (fract(nSeed * 19.1) - 0.5) * 0.12;
-        float zDisc = (fract(nSeed * 47.1) - 0.5) * exp(-r * 0.25) * 0.35 * vol + isStray * individualDecay * (fract(nSeed * 67.3) - 0.5) * 0.35;
+        float zDisc = (fract(nSeed * 47.1) - 0.5) * exp(-r * 0.25) * 0.35 * vol;
         target = vec3(r * cos(theta), zDisc, r * sin(theta));
     }
     else if (mode == 33) {
@@ -523,7 +520,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float nodeAngle = ringId * (TWO_PI / 6.0) + time * 0.15 * speedMult;
             float orbAngle = fract(u * 6.0) * TWO_PI + time * 2.2 * speedMult + nSeed * 0.15;
             
-            float rRing = 5.4 + (fract(nSeed * 41.3) - 0.5) * 0.20 * vol + isStray * individualDecay * (fract(nSeed * 89.1) - 0.5) * 0.35;
+            float rRing = 5.4 + (fract(nSeed * 41.3) - 0.5) * 0.20 * vol;
             vec3 pOrb = vec3(rRing * cos(orbAngle), (fract(nSeed * 67.1) - 0.5) * 0.15 * vol, rRing * sin(orbAngle));
             
             // Inclination rotation around X
@@ -551,7 +548,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float rDisk = 1.8 + uDisk * 6.2 + (fract(nSeed * 33.7) - 0.5) * 0.15 * vol;
             float omega = 3.2 / pow(rDisk, 1.5);
             float thetaDisk = uDisk * 200.0 * PI + time * omega * speedMult + nSeed * TWO_PI;
-            float zDisk = (fract(nSeed * 19.3) - 0.5) * 0.08 * rDisk * vol + isStray * individualDecay * (fract(nSeed * 41.7) - 0.5) * 0.3;
+            float zDisk = (fract(nSeed * 19.3) - 0.5) * 0.08 * rDisk * vol;
             target = vec3(rDisk * cos(thetaDisk), zDisk, rDisk * sin(thetaDisk));
         }
     }
