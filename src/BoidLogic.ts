@@ -1007,7 +1007,7 @@ function applyIntertwinedMultiLayer(
 
     // 2. Order-2 (Meso Helix): Species cord with exact integer 2pi turns for seamless closed loops
     const mesoTurns = Math.round(omegaMeso * 0.5);
-    const mesoAngle = u * mesoTurns * (Math.PI * 2.0) + (species * (Math.PI * 0.5)) + (time * 0.5 * speedMult);
+    const mesoAngle = u * mesoTurns * (Math.PI * 2.0) + (species * (Math.PI * 0.5)) + (time * 1.5 * speedMult);
     const cosMeso = fastCos(mesoAngle);
     const sinMeso = fastSin(mesoAngle);
 
@@ -1028,7 +1028,7 @@ function applyIntertwinedMultiLayer(
     // 3. Order-3 (Micro Helix): Particles form tight coherent micro-tubes orbiting the Meso strand
     const track = indexInSpecies % 8;
     const trackR = ((track + 0.5) / 8.0) * rMicro * 0.6;
-    const trackTheta = (track * (Math.PI * 0.25)) + (u * 4.0 * Math.PI * 2.0) + (time * 0.8 * speedMult);
+    const trackTheta = (track * (Math.PI * 0.25)) + (u * 4.0 * Math.PI * 2.0) + (time * 2.2 * speedMult);
     const cosMicro = fastCos(trackTheta);
     const sinMicro = fastSin(trackTheta);
 

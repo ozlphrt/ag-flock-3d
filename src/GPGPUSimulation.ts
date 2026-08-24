@@ -120,7 +120,7 @@ vec3 applyMultiLayerSheath(
 
     // 1. Order-2 Meso cord: Integer multiple of TWO_PI ensures exact C_infinity seamless closure (no head/tail gaps)
     float windingTurns = floor(angFreq * 0.5 + 0.5);
-    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * windingTurns * TWO_PI) + time * 0.5 * speedMult;
+    float cordAngle = sp * (TWO_PI / max(1.0, float(uSpeciesCount))) + (u * windingTurns * TWO_PI) + time * 1.5 * speedMult;
     float cosMeso = cos(cordAngle);
     float sinMeso = sin(cordAngle);
 
@@ -133,7 +133,7 @@ vec3 applyMultiLayerSheath(
 
     // 2. Order-3 Micro Child Helices (Differentiated per-species laminar ribbons with seamless periodic closure)
     float trackId = floor(fract(nSeed * 17.31) * 6.0);
-    float microAngle = trackId * (TWO_PI / 6.0) + (u * 4.0 * TWO_PI) + time * 0.6 * speedMult;
+    float microAngle = trackId * (TWO_PI / 6.0) + (u * 4.0 * TWO_PI) + time * 2.2 * speedMult;
     float cosMicro = cos(microAngle);
     float sinMicro = sin(microAngle);
 
@@ -146,7 +146,7 @@ vec3 applyMultiLayerSheath(
 
     // 3. Order-4 Nano Filaments (Tight cohesive sub-stream inside each ribbon with seamless periodic closure)
     float nanoId = floor(fract(nSeed * 43.19) * 3.0);
-    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 6.0 * TWO_PI) + time * 0.8 * speedMult;
+    float nanoAngle = nanoId * (TWO_PI / 3.0) + (u * 6.0 * TWO_PI) + time * 3.0 * speedMult;
     float rNano = (0.04 + 0.12 * spRand) * vol;
     vec3 p4 = p3 + (n3 * cos(nanoAngle) + b3 * sin(nanoAngle)) * rNano;
 
@@ -933,11 +933,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
                 state.formedTimestamp = time;
             }
 
-            // Silky Smooth Morphing & Cruising Dynamics (calibrated to eliminate all overshoot/bouncing)
+            // Silky Smooth Morphing & Cruising Dynamics with high-velocity pipe spinning
             const speedScale = speedMult > 0 ? (speedMult / 0.14) : 1.0;
-            const activeLerpRate = (isMorphing ? 0.08 : 0.045) * speedScale;
-            const activeMaxSpeed = (isMorphing ? 0.18 : 0.10) * speedScale;
-            const activeMaxAccel = (isMorphing ? 0.025 : 0.008) * speedScale;
+            const activeLerpRate = (isMorphing ? 0.14 : 0.10) * speedScale;
+            const activeMaxSpeed = (isMorphing ? 0.42 : 0.30) * speedScale;
+            const activeMaxAccel = (isMorphing ? 0.08 : 0.055) * speedScale;
 
             positionUniforms.uDelta.value = delta;
 
