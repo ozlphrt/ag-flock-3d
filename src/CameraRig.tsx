@@ -3,7 +3,7 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
-import { SimulationState } from './BoidLogic';
+import { SimulationState, FormationMode, computeFormationPoint } from './BoidLogic';
 
 export interface CameraPreset {
     id: string;
@@ -22,8 +22,8 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'rollercoaster',
         name: 'Roller-Coaster Shoot',
         icon: '🎢',
-        description: 'Thrilling rail-cam weaving directly through the ribbons and strands with dynamic banking',
-        fov: 74,
+        description: 'Thrilling rail-cam riding directly along the active topology\'s continuous loop strands',
+        fov: 76,
         defaultPos: [0, 2.5, 8.5],
         target: [0, 0, 0],
         autoRotateSpeed: 0.22,
@@ -44,10 +44,10 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         id: 'giant',
         name: 'Monumental Giant',
         icon: '🗿',
-        description: 'Ultra-wide low-ground hero angle gazing up into the towering cosmic structure',
-        fov: 82,
-        defaultPos: [0, -7.5, 10.5],
-        target: [0, 3.2, 0],
+        description: 'Ultra-wide base-level hero angle gazing up into the towering cosmic structure',
+        fov: 80,
+        defaultPos: [0, -3.6, 8.8],
+        target: [0, 1.8, 0],
         autoRotateSpeed: 0.12,
         type: 'giant'
     },
@@ -166,24 +166,41 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
         const tgtOut = calcTargetScratch.current;
 
         if (mode === 'rollercoaster') {
-            // 🎢 Roller-Coaster Rail Shoot: Weaves right through the ribbon strands while ALWAYS aiming down the boid corridor
-            const tRC = time * 0.18;
-            const rRC = 4.8 + Math.sin(tRC * 2.4) * 1.6;
-            posOut.x = Math.sin(tRC * 1.6) * rRC;
-            posOut.y = Math.sin(tRC * 2.0) * 2.8;
-            posOut.z = Math.cos(tRC * 1.6) * rRC;
+            // 🎢 Roller-Coaster Rail Shoot: Rides directly along one of the active topology's continuous mathematical loops!
+            const formMode = (state && state.formationMode !== undefined) ? state.formationMode : FormationMode.QuadHelixBraid;
+            const seed = (state && state.formationSeed !== undefined) ? state.formationSeed : 42;
+            const speedMult = (state && state.speedMultiplier !== undefined) ? state.speedMultiplier : 0.14;
 
-            // Look-ahead along the ribbon curve blended with core geometry so flock is ALWAYS centered in frame
-            const tAhead = tRC + 0.40;
-            const rAhead = 4.2 + Math.sin(tAhead * 2.4) * 1.2;
-            const aheadX = Math.sin(tAhead * 1.6) * rAhead;
-            const aheadY = Math.sin(tAhead * 2.0) * 2.2;
-            const aheadZ = Math.cos(tAhead * 1.6) * rAhead;
+            // Continuous parametric travel along the loop
+            const trackSpeed = 0.042; // Gentle cinematic roller coaster velocity along the strand
+            const uCam = ((time * trackSpeed) % 1.0 + 1.0) % 1.0;
+            const uLookAhead = (uCam + 0.035) % 1.0;
+            const uFarAhead = (uCam + 0.10) % 1.0;
 
-            // Target blends ahead tangent with structure volume - zero empty space
-            tgtOut.x = aheadX * 0.60;
-            tgtOut.y = aheadY * 0.60;
-            tgtOut.z = aheadZ * 0.60;
+            // Evaluate exact positions on the active mathematical manifold
+            const camPt = computeFormationPoint(formMode, seed, uCam, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
+            const lookPt = computeFormationPoint(formMode, seed, uLookAhead, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
+            const farLookPt = computeFormationPoint(formMode, seed, uFarAhead, time, 0, 0, 3.5, speedMult, state) as [number, number, number];
+
+            // Tangent direction along the loop
+            const dirX = lookPt[0] - camPt[0];
+            const dirY = lookPt[1] - camPt[1];
+            const dirZ = lookPt[2] - camPt[2];
+            const dirLen = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ) || 1.0;
+            const nDirX = dirX / dirLen;
+            const nDirY = dirY / dirLen;
+            const nDirZ = dirZ / dirLen;
+
+            // Offset camera slightly elevated and behind on the track for third-person rider perspective
+            const upOffset = 0.55;
+            posOut.x = camPt[0] - nDirX * 0.45;
+            posOut.y = camPt[1] - nDirY * 0.45 + upOffset;
+            posOut.z = camPt[2] - nDirZ * 0.45;
+
+            // Target looks down the forward loop corridor
+            tgtOut.x = farLookPt[0];
+            tgtOut.y = farLookPt[1];
+            tgtOut.z = farLookPt[2];
         } else if (mode === 'chopper') {
             // 🚁 Chopper Core Hover: Slow hovering float inside the inner void tracking the orbiting swarm loops
             const tChop = time * 0.10;
@@ -198,14 +215,14 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             tgtOut.y = Math.sin(time * 0.30) * 2.0;
             tgtOut.z = Math.cos(focusAngle) * focusR;
         } else if (mode === 'giant') {
-            // 🗿 Monumental Giant: Low-ground wide-angle lens gazing up into the towering monolith
+            // 🗿 Monumental Giant: Base-level wide-angle lens at the lowest boid plane gazing up into the structure
             const tG = time * 0.08;
-            posOut.x = Math.sin(tG) * 10.0;
-            posOut.y = -7.0 + Math.sin(time * 0.12) * 0.5;
-            posOut.z = Math.cos(tG) * 10.0;
+            posOut.x = Math.sin(tG) * 8.8;
+            posOut.y = -3.6 + Math.sin(time * 0.12) * 0.3;
+            posOut.z = Math.cos(tG) * 8.8;
 
             tgtOut.x = 0.0;
-            tgtOut.y = 2.8 + Math.cos(time * 0.15) * 1.0;
+            tgtOut.y = 1.8 + Math.cos(time * 0.15) * 0.8;
             tgtOut.z = 0.0;
         } else if (mode === 'corkscrew') {
             // 🌀 Helical Spiral: Ascending corkscrew tracing the vertical helix looking through the core
