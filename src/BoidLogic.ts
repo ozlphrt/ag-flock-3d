@@ -93,13 +93,13 @@ export const FORMATION_PRESETS = [
         id: FormationMode.QuadHelixBraid,
         label: 'Quad Helix Braid',
         icon: '🧬',
-        desc: '4 Intertwined species cords braiding around ascending helical spine with cross rungs'
+        desc: '4 Intertwined pure species cords braiding around ascending helical spine with cross rungs'
     },
     {
         id: FormationMode.ConcentricDualHelixSheath,
         label: 'Concentric Dual Helix Sheath',
         icon: '🧬',
-        desc: 'Multi-layer: inner double-helix nested inside outer counter-rotating 4-strand cage'
+        desc: 'Multi-layer: inner double-ring nested inside outer counter-tilted ribbon loop'
     },
     {
         id: FormationMode.ToroidalHelixBraid,
@@ -123,7 +123,7 @@ export const FORMATION_PRESETS = [
         id: FormationMode.LissajousIntertwinedKnot,
         label: 'Lissajous Intertwined Knot',
         icon: '🔮',
-        desc: '4 Weaving harmonic cords looping in 3D 8-knot configuration'
+        desc: '4 Weaving harmonic cords looping in 3D 8-knot configuration (3:4:5)'
     },
     {
         id: FormationMode.CaduceusVortex,
@@ -157,9 +157,9 @@ export const FORMATION_PRESETS = [
     },
     {
         id: FormationMode.FractalSupercoil,
-        label: 'Fractal Supercoil',
-        icon: '🧬',
-        desc: '3-Tier hierarchical coiled-coil: macro-spine with 4 braided meso-cords & micro-helices'
+        label: 'Viviani Spherical Window',
+        icon: '🪟',
+        desc: 'Figure-8 closed spherical curve at intersection of sphere and cylinder'
     },
     {
         id: FormationMode.SuperhelicalTorusKnot,
@@ -169,9 +169,9 @@ export const FORMATION_PRESETS = [
     },
     {
         id: FormationMode.DNAChromatinSolenoid,
-        label: 'Chromatin Solenoid',
-        icon: '🧬',
-        desc: '3-Level biological supercoiling: solenoid fiber with orbiting nucleosomes & DNA wraps'
+        label: 'Astroid Diamond Star',
+        icon: '✨',
+        desc: '4-Cusped astroid diamond star with vertical harmonic oscillations'
     },
     {
         id: FormationMode.TriquetraCelticBraid,
@@ -199,21 +199,21 @@ export const FORMATION_PRESETS = [
     },
     {
         id: FormationMode.DoubleHelixBraid,
-        label: 'Double Helix Braid',
-        icon: '🧬',
-        desc: 'Dual intertwined bio-macromolecule strands with cross-ladder rungs'
+        label: 'Clelia Crown Spiral',
+        icon: '👑',
+        desc: 'Spherical crown vortex tracing multi-frequency Viviani-Clelia spirals'
     },
     {
         id: FormationMode.TripleHelixBraid,
-        label: 'Triple Helix Braid',
-        icon: '🧬',
-        desc: 'Tri-strand intertwined braided collagen rope'
+        label: 'Pretzel Genus-3 Propeller',
+        icon: '🥨',
+        desc: '3-Lobed propeller manifold with intertwined triple-loop ribbons'
     },
     {
         id: FormationMode.DNALadderBraid,
-        label: 'DNA Ladder Braid',
-        icon: '🧬',
-        desc: 'Dual helical sugar-phosphate rails with periodic cross base-pair rungs'
+        label: 'Chasles Twisted Hyperboloid',
+        icon: '⏳',
+        desc: 'Ruled one-sheet hyperboloid ribbon twisting through periodic waist'
     },
     {
         id: FormationMode.GyroidBraidLabyrinth,
@@ -247,15 +247,15 @@ export const FORMATION_PRESETS = [
     },
     {
         id: FormationMode.DancingRibbonBraid,
-        label: 'Dancing Ribbon Braid',
-        icon: '🎀',
-        desc: '4-Strand intertwined twisting kinetic gymnast loop'
+        label: 'Hypotrochoid 6-Star Rosette',
+        icon: '🏵️',
+        desc: '6-Pointed star rosette ribbon rolling within circular guide'
     },
     {
         id: FormationMode.SolarFlareProminence,
-        label: 'Solar Flare Prominence',
+        label: 'Nephroid 2-Cusped Ribbon',
         icon: '☀️',
-        desc: 'Intertwined magnetic flux ropes arching with counter-helicity twisting'
+        desc: '2-Cusped nephroid caustic ribbon arching with harmonic elevation'
     },
     {
         id: FormationMode.OlympicChainLink,
@@ -306,6 +306,66 @@ export const FORMATION_PRESETS = [
         desc: 'Harmonic Fourier superformula manifold generator'
     }
 ];
+
+// Topology-Aligned Signature Color Palettes (Curated specifically for each topology's geometry & name)
+export const TOPOLOGY_PALETTES: Record<number, string[]> = {
+    [FormationMode.QuadHelixBraid]: ['#ef4444', '#10b981', '#f59e0b', '#06b6d4'],          // Quad Spectrum Primary (Ruby, Emerald, Amber, Cyan)
+    [FormationMode.ConcentricDualHelixSheath]: ['#38bdf8', '#0284c7', '#f43f5e', '#fb7185'], // Dual-Tone Polar (Glacial Sky & Deep Sapphire vs Rose & Coral)
+    [FormationMode.ToroidalHelixBraid]: ['#f59e0b', '#fbbf24', '#10b981', '#06b6d4'],        // Gilded Torus Chroma (Amber Gold, Sunbeam, Jade, Aquamarine)
+    [FormationMode.TrefoilBraidedRibbon]: ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981'],      // Royal Trinity Silk (Electric Violet, Fuchsia, Saffron, Mint)
+    [FormationMode.MobiusHelixBraid]: ['#00f2fe', '#4facfe', '#ff0844', '#ffb199'],          // Infinite Mobius Neon (Bioluminescent Cyan to Hot Coral Crimson)
+    [FormationMode.LissajousIntertwinedKnot]: ['#6366f1', '#a855f7', '#ec4899', '#38bdf8'],  // Harmonic Resonance (Indigo, Amethyst, Magenta, Electric Sky)
+    [FormationMode.CaduceusVortex]: ['#10b981', '#059669', '#f59e0b', '#d97706'],            // Asclepius Staff (Emerald Twin Serpents & Gilded Solar Staff)
+    [FormationMode.BorromeanRings]: ['#ef4444', '#10b981', '#3b82f6', '#f59e0b'],            // Tricolor Orthogonal (Pure Primary Red, Emerald, Royal Blue, Warm Gold)
+    [FormationMode.FigureEightKnotBraid]: ['#00e5ff', '#7c3aed', '#f43f5e', '#fbbf24'],      // Listing Infinity Prism (Fluorescent Aqua, Royal Purple, Coral, Topaz)
+    [FormationMode.CinqfoilKnotBraid]: ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'],          // Pentagram Mystic Gold (Imperial Gold, Orchid, Amethyst, Turquoise)
+    [FormationMode.SeptafoilKnotBraid]: ['#ff3366', '#ff9900', '#33ccff', '#cc33ff'],        // Septagram Celestial Fire (Starfire Pink, Solar Orange, Sirius Cyan, Cosmic Violet)
+    [FormationMode.FractalSupercoil]: ['#00e5ff', '#38bdf8', '#818cf8', '#c084fc'],          // Viviani Glacial Sapphire (Crystalline Ice Aqua, Topaz, Periwinkle, Amethyst)
+    [FormationMode.SuperhelicalTorusKnot]: ['#f43f5e', '#a855f7', '#06b6d4', '#10b981'],      // Hyper-Knot Synthwave (Neon Crimson, Ultraviolet, Cyan, Emerald)
+    [FormationMode.DNAChromatinSolenoid]: ['#e0f2fe', '#38bdf8', '#f43f5e', '#facc15'],       // Astroid Diamond Spark (Diamond Ice Blue, Pure Cyan, Ruby Glint, Star Gold)
+    [FormationMode.TriquetraCelticBraid]: ['#10b981', '#34d399', '#d97706', '#f59e0b'],      // Celtic Emerald & Bronze (Ancient Forest Green, Jade, Bronze Amber, Gold)
+    [FormationMode.WhiteheadLinkBraid]: ['#06b6d4', '#0891b2', '#f43f5e', '#fb7185'],        // Whitehead Polar Duet (Cyan Loop & Hot Carmine Figure-8)
+    [FormationMode.QuatrefoilKnotBraid]: ['#22c55e', '#16a34a', '#84cc16', '#eab308'],       // Lucky Clover Flora (Vibrant Emerald, Forest Green, Lime, Sun Gold)
+    [FormationMode.GrannyKnotBraid]: ['#ec4899', '#f43f5e', '#8b5cf6', '#6366f1'],           // Twin Trefoil Duo (Rose-Pink Upper Knot & Royal Violet-Indigo Lower Knot)
+    [FormationMode.DoubleHelixBraid]: ['#00f2fe', '#4facfe', '#fa709a', '#fee140'],          // Clelia Celestial Aurora (Polar Cyan, Deep Sky, Sunset Rose, Radiant Aurora Gold)
+    [FormationMode.TripleHelixBraid]: ['#f97316', '#06b6d4', '#8b5cf6', '#10b981'],          // Pretzel Tri-Lobe Prism (Vibrant Tangerine, Cyan, Violet, Emerald)
+    [FormationMode.DNALadderBraid]: ['#6366f1', '#06b6d4', '#f59e0b', '#ec4899'],            // Hyperboloid Ruled Laser (Electric Blue, Cyan, Saffron Gold, Magenta)
+    [FormationMode.GyroidBraidLabyrinth]: ['#14b8a6', '#06b6d4', '#a855f7', '#f43f5e'],      // Subterranean Bioluminescence (Teal, Cyan, Phosphor Violet, Coral)
+    [FormationMode.LorenzChaoticBraid]: ['#ef4444', '#f97316', '#06b6d4', '#3b82f6'],        // Lorenz Strange Attractor (Left Wing Crimson-Amber & Right Wing Cyan-Cobalt)
+    [FormationMode.KleinBottleBraid]: ['#a855f7', '#ec4899', '#00e5ff', '#facc15'],          // 4D Non-Orientable (Deep Purple, Magenta, Cyan, Solar Gold)
+    [FormationMode.CliffordTorusBraid]: ['#00e5ff', '#3b82f6', '#8b5cf6', '#ec4899'],        // Clifford Quantum Sphere (Quantum Cyan, Cobalt, Royal Violet, Orchid)
+    [FormationMode.OuroborosDragonBraid]: ['#dc2626', '#f97316', '#eab308', '#16a34a'],      // Dragon Scale & Fire (Dragon Crimson, Blaze Orange, Imperial Gold, Jade Scales)
+    [FormationMode.DancingRibbonBraid]: ['#ec4899', '#f43f5e', '#38bdf8', '#a855f7'],        // Rosette Diamond Star (Neon Magenta, Cherry, Electric Sky, Violet)
+    [FormationMode.SolarFlareProminence]: ['#ff3366', '#ff6b35', '#ffd200', '#ff007f'],      // Nephroid Solar Corona (Solar Prominence Pink, Flare Orange, Sun Yellow, Magenta)
+    [FormationMode.OlympicChainLink]: ['#0284c7', '#eab308', '#16a34a', '#dc2626'],          // Olympic Classical Pentachrome (Pure Blue, Yellow, Green, Red)
+    [FormationMode.SaturnianRings]: ['#d97706', '#fde68a', '#94a3b8', '#38bdf8'],            // Gas Giant & Dust Rings (Golden Amber Planet Core, Cream Rings, Cassini Slate, Ice Ring)
+    [FormationMode.SphericalSurfaceVortex]: ['#ea580c', '#fb923c', '#0284c7', '#38bdf8'],    // Jupiter Rossby Jet Streams (Equatorial Red/Orange Belts & Polar Cyan/Blue Jets)
+    [FormationMode.VillarceauTorus]: ['#f43f5e', '#fb7185', '#06b6d4', '#22d3ee'],           // Villarceau Bitangent Coral (Coral Pink & Seafoam Cyan Bitangent Circles)
+    [FormationMode.GalacticSpiral]: ['#f59e0b', '#38bdf8', '#a855f7', '#ec4899'],            // Milky Way Galactic Arms (Golden Nucleus, Cyan Starburst, Purple Nebula, Magenta Dust)
+    [FormationMode.DysonSphereLattice]: ['#fbbf24', '#f59e0b', '#00e5ff', '#3b82f6'],        // Stellar Core & Plasma Grid (Golden Star Core & Cyan-Cobalt Magnetic Rings)
+    [FormationMode.BlackHoleAccretion]: ['#00e5ff', '#38bdf8', '#f97316', '#dc2626'],        // Relativistic Accretion (Collimated Blue Jets & Superheated Orange/Red Disk)
+    [FormationMode.Procedural]: ['#6366f1', '#ec4899', '#00e5ff', '#f59e0b']                 // Harmonic Synthesis (Violet, Orchid, Cyan, Gold)
+};
+
+// Helper to retrieve topology-aligned palette for any species count (2 to 20)
+export function getTopologyAlignedPalette(mode: FormationMode, spCount: number = 4): string[] {
+    const basePalette = TOPOLOGY_PALETTES[mode] || TOPOLOGY_PALETTES[0] || ['#ef4444', '#10b981', '#f59e0b', '#06b6d4'];
+    if (spCount === 4) {
+        return [...basePalette];
+    }
+    if (spCount <= basePalette.length) {
+        return basePalette.slice(0, spCount);
+    }
+    // For higher species counts, generate harmonious intermediate blends & accents aligned with the topology theme
+    const result: string[] = [...basePalette];
+    while (result.length < spCount) {
+        const idx = result.length;
+        const refHex = basePalette[idx % basePalette.length];
+        // Dynamic harmonic variations from base palette
+        result.push(refHex);
+    }
+    return result.slice(0, spCount);
+}
 
 export interface ProceduralGenome {
     family?: 'harmonic' | 'superformula' | 'branching';

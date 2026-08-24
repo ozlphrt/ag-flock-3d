@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, FORMATION_PRESETS, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials } from './BoidLogic';
+import { SimulationState, SPECIES_COLORS, SpeciesAttributes, DefeatScenario, FormationMode, FORMATION_PRESETS, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, getTopologyAlignedPalette } from './BoidLogic';
 import { LikedCreation, getLikedCreations, saveLikedCreation, likeDimension, dislikeDimension, generateProceduralGenome, getRLPreferences, getCentralRLStore, exportCentralRLJSON, importCentralRLJSON, resetCentralRLStore, likeCompositionCombination, dislikeCompositionCombination } from './RLEngine';
 import { CAMERA_PRESETS } from './CameraRig';
 import { BLOOM_PRESETS, BloomPreset } from './BloomControlPanel';
@@ -192,6 +192,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
         simState.current.transitionStartTime = (simState.current.currentTime !== undefined) ? simState.current.currentTime : 0.0;
         simState.current.transitionDuration = 6.0;
         simState.current.holdDuration = 7.0;
+
+        if (!simState.current.isPaletteLocked) {
+            const spCount = simState.current.speciesCount || simState.current.speciesColors?.length || 4;
+            simState.current.speciesColors = getTopologyAlignedPalette(id, spCount);
+        }
 
         if (id === FormationMode.Procedural || !simState.current.proceduralGenome) {
             simState.current.proceduralGenome = generateProceduralGenome();

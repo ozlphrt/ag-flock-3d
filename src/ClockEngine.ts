@@ -16,6 +16,7 @@ import {
     generateSpeciesSizes,
     generateDynamicSpeciesCount,
     generateHarmoniousPalette,
+    getTopologyAlignedPalette,
     generateSpeciesKinematics,
     generateSpeciesRandomness,
     generateSpeciesSizeRanges,
@@ -239,6 +240,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.transitionDuration = 5.5;
 
             const spCount = state.speciesCount || state.speciesColors?.length || 4;
+            if (!state.isPaletteLocked) {
+                state.speciesColors = getTopologyAlignedPalette(nextMode, spCount);
+            }
             state.speciesRandomness = generateSpeciesRandomness(spCount);
             const sizeRanges = generateSpeciesSizeRanges(spCount);
             state.speciesSizes = sizeRanges.avgSizes;
@@ -459,6 +463,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 state.formationMode = nextMode;
                 state.formationSeed = Math.random() * 10000;
                 const spCount = state.speciesCount || state.speciesColors?.length || 4;
+                if (!state.isPaletteLocked) {
+                    state.speciesColors = getTopologyAlignedPalette(nextMode, spCount);
+                }
                 state.speciesRandomness = generateSpeciesRandomness(spCount);
                 const sizeRanges = generateSpeciesSizeRanges(spCount);
                 state.speciesSizes = sizeRanges.avgSizes;

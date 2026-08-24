@@ -4,6 +4,7 @@ import {
     MATERIAL_PRESETS,
     LIGHTING_PROFILES,
     COLOR_PALETTES,
+    getTopologyAlignedPalette,
     MaterialSettings,
     LightingProfile,
     generateProceduralPaletteSurprise,
@@ -145,16 +146,9 @@ export class AestheticAgentEngine {
             topologyTitle = 'Figure-Eight Listing Knot';
         }
 
-        // 5. Palette Selection
-        let palette = ['#14171d', '#d4af37', '#e5e4e2', '#ffffff'];
-        let paletteTitle = 'Gilded Obsidian & Champagne Gold';
-        if (v.lightWarmth > 0.7) {
-            palette = ['#101216', '#ff4500', '#ffa500', '#ffffff'];
-            paletteTitle = 'Volcanic Magma Embers';
-        } else if (v.lightWarmth < 0.35) {
-            palette = ['#03071e', '#00f5d4', '#00bbf9', '#9b5de5'];
-            paletteTitle = 'Bioluminescent Aurora';
-        }
+        // 5. Palette Selection Aligned with Topology
+        let palette = getTopologyAlignedPalette(mode, 4);
+        let paletteTitle = `${topologyTitle} Signature Palette`;
 
         // 6. Curated Exploratory Mutation
         let explorationFeature = 'Fine-tuned specular highlight balance';

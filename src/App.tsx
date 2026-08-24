@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Flock } from './Flock'
 import { GPGPUFlock } from './GPGPUFlock'
-import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, generateSpeciesKinematics, generateSpeciesRandomness, generateSpeciesSizeRanges, generateSpeciesMorphTimings } from './BoidLogic'
+import { SpeciesAttributes, SimulationState, DefeatScenario, FormationMode, TOTAL_FORMATION_COUNT, COLOR_PALETTES, MATERIAL_PRESETS, LIGHTING_PROFILES, generateSpeciesDistribution, generateSpeciesMaterials, generateSpeciesSizes, generateDynamicSpeciesCount, generateHarmoniousPalette, getTopologyAlignedPalette, generateSpeciesKinematics, generateSpeciesRandomness, generateSpeciesSizeRanges, generateSpeciesMorphTimings } from './BoidLogic'
 import { OverlayUI } from './OverlayUI'
 import { CameraRig, CAMERA_PRESETS } from './CameraRig'
 import { getLastState, generateProceduralGenome } from './RLEngine'
@@ -368,8 +368,8 @@ function App() {
     const initialLightIdx = 0; // Studio High-Contrast
 
     const initialBloom = BLOOM_PRESETS[initialBloomIdx] || BLOOM_PRESETS[0];
-    const initialSpeciesCount = generateDynamicSpeciesCount();
-    const initialPalette = generateHarmoniousPalette(initialSpeciesCount);
+    const initialSpeciesCount = 4; // Default to 4 pure species
+    const initialPalette = getTopologyAlignedPalette(initialMode, initialSpeciesCount);
     const initialSpeciesDistribution = generateSpeciesDistribution(initialSpeciesCount);
     const initialSpeciesMaterials = generateSpeciesMaterials(initialSpeciesCount);
     const initialSizeRanges = generateSpeciesSizeRanges(initialSpeciesCount);
