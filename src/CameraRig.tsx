@@ -19,6 +19,17 @@ export interface CameraPreset {
 
 export const CAMERA_PRESETS: CameraPreset[] = [
     {
+        id: 'standard',
+        name: 'Celestial Orbit',
+        icon: '🪐',
+        description: 'Expansive 360° celestial orbit with rich depth perspective from foreground to horizon',
+        fov: 66,
+        defaultPos: [0, 3.8, 14.5],
+        target: [0, 0, 0],
+        autoRotateSpeed: 0.18,
+        type: 'orbit'
+    },
+    {
         id: 'rollercoaster',
         name: 'Roller-Coaster Shoot',
         icon: '🎢',
@@ -50,17 +61,6 @@ export const CAMERA_PRESETS: CameraPreset[] = [
         target: [0, 1.2, 0],
         autoRotateSpeed: 0.12,
         type: 'giant'
-    },
-    {
-        id: 'standard',
-        name: 'Celestial Orbit',
-        icon: '🪐',
-        description: 'Expansive 360° celestial orbit with rich depth perspective from foreground to horizon',
-        fov: 66,
-        defaultPos: [0, 3.2, 12.8],
-        target: [0, 0, 0],
-        autoRotateSpeed: 0.18,
-        type: 'orbit'
     },
     {
         id: 'corkscrew',
@@ -111,8 +111,8 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
     const isUserInteracting = useRef(false);
     const lastInteractionTime = useRef(0);
 
-    // Filtered continuous kinematic positions for ultra-smooth director glide
-    const curPos = useRef(new THREE.Vector3(0, 3.2, 12.8));
+    // Filtered continuous kinematic positions initialized to wide Celestial Orbit vista
+    const curPos = useRef(new THREE.Vector3(0, 3.8, 14.5));
     const curTarget = useRef(new THREE.Vector3(0, 0, 0));
     const curFov = useRef(66);
 
@@ -328,7 +328,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
                 ref={cameraRef}
                 makeDefault
                 fov={66}
-                position={[0, 3.2, 12.8]}
+                position={[0, 3.8, 14.5]}
                 near={0.80}
                 far={1000}
             />
@@ -346,7 +346,7 @@ export const CameraRig: React.FC<CameraRigProps> = ({ simState }) => {
             {/* Camera-Mounted Spotlight (Soft fill light to illuminate dark/shady sides without blinding specular bloom) */}
             <spotLight
                 ref={spotLightRef}
-                position={[0, 3.2, 12.8]}
+                position={[0, 3.8, 14.5]}
                 intensity={0.65}
                 distance={45.0}
                 angle={Math.PI / 3.0}

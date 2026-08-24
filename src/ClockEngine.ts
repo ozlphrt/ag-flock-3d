@@ -73,7 +73,7 @@ export function createClockEngine(state: SimulationState): ClockEngine {
     const isStartChaos = (state.formationMode === FormationMode.None || (state.formationMode as number) < 0);
     let isInitialStartupMorph = isStartChaos;
     if (state.transitionDuration === undefined) state.transitionDuration = isStartChaos ? 0.0 : 24.0;
-    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 0.8 : 18.0;
+    if (state.holdDuration === undefined) state.holdDuration = isStartChaos ? 0.3 : 18.0;
     if (state.transitionStartTime === undefined) state.transitionStartTime = 0.0;
 
     // Recent Histories for Forbidden Repeat Buffers
@@ -220,9 +220,9 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.morphProgress = 0.0;
             state.transitionStartTime = time;
             
-            // Initial startup morph forms quickly within 3.8s so first topology is ready <=5s
+            // Initial startup morph forms quickly within 2.8s so first topology is ready <=3.2s
             const isFirstEmergence = isInitialStartupMorph;
-            const transDuration = isFirstEmergence ? 3.8 : 24.0;
+            const transDuration = isFirstEmergence ? 2.8 : 24.0;
             state.transitionDuration = transDuration;
             state.holdDuration = 18.0;
             isInitialStartupMorph = false;
