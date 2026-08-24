@@ -545,72 +545,113 @@ export const MATERIAL_PRESETS = [
     }
 ];
 
-// Helper to generate dynamic asymmetric species population distributions (10% to 90%)
-export function generateSpeciesDistribution(): [number, number, number, number] {
+// Helper to generate dynamic species count between 2 and 20
+export function generateDynamicSpeciesCount(): number {
+    // Weighted distribution: 2 to 20 species
     const r = Math.random();
-    let raw = [0.25, 0.25, 0.25, 0.25];
-    if (r < 0.45) {
-        // Dominant species (55-85%) with 3 minority species (5-20% each)
-        const domIdx = Math.floor(Math.random() * 4);
-        const domPct = 0.55 + Math.random() * 0.30;
-        const rem = 1.0 - domPct;
-        const weights = [Math.random() + 0.1, Math.random() + 0.1, Math.random() + 0.1];
-        const sumW = weights[0] + weights[1] + weights[2];
-        let wIdx = 0;
-        for (let i = 0; i < 4; i++) {
-            if (i === domIdx) raw[i] = domPct;
-            else raw[i] = (weights[wIdx++] / sumW) * rem;
+    if (r < 0.25) return Math.floor(Math.random() * 3) + 2; // 2 - 4 species
+    if (r < 0.60) return Math.floor(Math.random() * 5) + 5; // 5 - 9 species
+    if (r < 0.85) return Math.floor(Math.random() * 5) + 10; // 10 - 14 species
+    return Math.floor(Math.random() * 6) + 15; // 15 - 20 species
+}
+
+// Helper to generate harmonious palettes for any count between 2 and 20
+export function generateHarmoniousPalette(count: number): string[] {
+    if (count === 4 && Math.random() < 0.40) {
+        const p = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
+        return [...p];
+    }
+    const mode = Math.random();
+    const baseHue = Math.floor(Math.random() * 360);
+    const colors: string[] = [];
+
+    if (mode < 0.40) {
+        // 1. Golden Angle / Phyllotaxis Spectrum Wheel (Richly distributed vibrant spectrum)
+        for (let i = 0; i < count; i++) {
+            const h = (baseHue + i * 137.5077) % 360;
+            const s = 75 + (i % 3) * 8;
+            const l = 48 + (i % 4) * 6;
+            colors.push(hslToHex(h, s, l));
         }
-    } else if (r < 0.80) {
-        // Asymmetric tiered distribution: e.g. 50%, 25%, 15%, 10%
-        const base = [0.48, 0.26, 0.16, 0.10].sort(() => Math.random() - 0.5);
-        raw = base.map(v => Math.max(0.04, v + (Math.random() - 0.5) * 0.06));
+    } else if (mode < 0.70) {
+        // 2. Analogous Celestial Gradient (e.g. Deep Ocean -> Cyan -> Emerald or Twilight Amethyst -> Rose)
+        const spread = 80 + Math.random() * 100; // 80 to 180 deg span
+        for (let i = 0; i < count; i++) {
+            const h = (baseHue + (i / Math.max(1, count - 1)) * spread) % 360;
+            const s = 80 - (i % 3) * 6;
+            const l = 46 + (i % 3) * 8;
+            colors.push(hslToHex(h, s, l));
+        }
     } else {
-        // Extreme host swarm (85-90%) with rare sentinel floaters (3-5% each)
-        const domIdx = Math.floor(Math.random() * 4);
-        for (let i = 0; i < 4; i++) {
-            raw[i] = i === domIdx ? 0.88 : 0.04;
+        // 3. Multi-Chord Complementary Split (Dominant base + high-contrast accents)
+        const splitAngle = 180 + (Math.random() - 0.5) * 50;
+        for (let i = 0; i < count; i++) {
+            const isAccent = (i % 2 === 1);
+            const h = isAccent ? ((baseHue + splitAngle + i * 20) % 360) : ((baseHue + i * 18) % 360);
+            const s = isAccent ? 88 : 74;
+            const l = isAccent ? 56 : 46;
+            colors.push(hslToHex(h, s, l));
         }
     }
-    const sum = raw.reduce((a, b) => a + b, 0);
-    return [raw[0] / sum, raw[1] / sum, raw[2] / sum, raw[3] / sum];
+    return colors;
+}
+
+// Helper to generate dynamic asymmetric species population distributions (10% to 90%)
+export function generateSpeciesDistribution(count: number = 4): number[] {
+    const weights: number[] = [];
+    const dominantIdx = Math.floor(Math.random() * count);
+    for (let i = 0; i < count; i++) {
+        if (i === dominantIdx && Math.random() < 0.65) {
+            weights.push(2.5 + Math.random() * 3.0);
+        } else {
+            weights.push(0.5 + Math.random() * 1.5);
+        }
+    }
+    const sum = weights.reduce((a, b) => a + b, 0);
+    return weights.map(w => w / sum);
 }
 
 // Helper to generate distinct per-species materials with rich shadow & specular contrast
-export function generateSpeciesMaterials(basePresetIdx: number = 0): [MaterialSettings, MaterialSettings, MaterialSettings, MaterialSettings] {
+export function generateSpeciesMaterials(count: number = 4): MaterialSettings[] {
     const pool = [...MATERIAL_PRESETS];
-    const metallicPresets = pool.filter(p => p.settings.metalness >= 0.7);
-    const facetedPresets = pool.filter(p => p.settings.flatShading);
-    const glossPresets = pool.filter(p => p.settings.roughness <= 0.30 && !p.settings.flatShading);
-    const satinPresets = pool.filter(p => p.settings.metalness < 0.5);
-
-    const mat0 = (metallicPresets[Math.floor(Math.random() * metallicPresets.length)] || pool[9]).settings;
-    const mat1 = (facetedPresets[Math.floor(Math.random() * facetedPresets.length)] || pool[7]).settings;
-    const mat2 = (glossPresets[Math.floor(Math.random() * glossPresets.length)] || pool[1]).settings;
-    const mat3 = (satinPresets[Math.floor(Math.random() * satinPresets.length)] || pool[0]).settings;
-
-    return [
-        { ...mat0, emissiveIntensity: 0.0 },
-        { ...mat1, emissiveIntensity: 0.0 },
-        { ...mat2, emissiveIntensity: 0.0 },
-        { ...mat3, emissiveIntensity: 0.0 }
-    ];
+    const mats: MaterialSettings[] = [];
+    for (let i = 0; i < count; i++) {
+        const preset = pool[i % pool.length] || pool[0];
+        mats.push({ ...preset.settings, emissiveIntensity: 0.0 });
+    }
+    return mats;
 }
 
 // Helper to generate distinct per-species average scale multipliers
-export function generateSpeciesSizes(): [number, number, number, number] {
-    // Distinct hierarchy across species: e.g. Alpha Titans (1.4x), Standard (0.9x), Sleek (0.55x), Micro (0.35x)
-    const tiers = [1.35, 0.90, 0.58, 0.36].sort(() => Math.random() - 0.5);
-    return [
-        Number(tiers[0].toFixed(2)),
-        Number(tiers[1].toFixed(2)),
-        Number(tiers[2].toFixed(2)),
-        Number(tiers[3].toFixed(2))
-    ];
+export function generateSpeciesSizes(count: number = 4): number[] {
+    const sizes: number[] = [];
+    for (let i = 0; i < count; i++) {
+        const norm = i / Math.max(1, count - 1);
+        const base = 1.35 - norm * 0.95;
+        const jitter = (Math.random() - 0.5) * 0.12;
+        sizes.push(Number(Math.max(0.32, base + jitter).toFixed(2)));
+    }
+    return sizes.sort(() => Math.random() - 0.5);
+}
+
+// Helper to generate per-species agility and speed kinematics
+export function generateSpeciesKinematics(count: number = 4, sizes?: number[]): { agilities: number[]; speeds: number[] } {
+    const effSizes = sizes || generateSpeciesSizes(count);
+    const agilities: number[] = [];
+    const speeds: number[] = [];
+    for (let i = 0; i < count; i++) {
+        const sz = effSizes[i] || 1.0;
+        const ag = Math.min(2.4, Math.max(0.45, (1.0 / Math.sqrt(sz)) * (0.85 + Math.random() * 0.3)));
+        const sp = Math.min(1.4, Math.max(0.70, (1.0 + (1.0 - sz) * 0.22) * (0.90 + Math.random() * 0.2)));
+        agilities.push(Number(ag.toFixed(2)));
+        speeds.push(Number(sp.toFixed(2)));
+    }
+    return { agilities, speeds };
 }
 
 // Global Matrices provided by App
 export interface SimulationState {
+    speciesCount?: number;
     attributes: SpeciesAttributes[];
     interactions: number[][]; // [i][j] = Weight of species i being attracted/repelled by species j
     bounds: number;
@@ -622,9 +663,11 @@ export interface SimulationState {
     formationMode: FormationMode;
     formationSeed: number;
     speciesColors: string[];
-    speciesMaterials?: [MaterialSettings, MaterialSettings, MaterialSettings, MaterialSettings];
-    speciesDistribution?: [number, number, number, number];
-    speciesSizes?: [number, number, number, number];
+    speciesMaterials?: MaterialSettings[];
+    speciesDistribution?: number[];
+    speciesSizes?: number[];
+    speciesAgilities?: number[];
+    speciesSpeeds?: number[];
     paletteIndex?: number;
     materialSettings: MaterialSettings;
     transitionStartTime?: number;

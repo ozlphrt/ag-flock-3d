@@ -145,51 +145,33 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         return instGeom;
     }, [actualCapacity, sizeX, sizeY]);
 
-    // Species color state & morphing
+    // Species color state & morphing (up to 20 species)
     const initialPalette = state.speciesColors || COLOR_PALETTES[17];
-    const startColors = useRef<THREE.Color[]>([
-        new THREE.Color(initialPalette[0]),
-        new THREE.Color(initialPalette[1]),
-        new THREE.Color(initialPalette[2]),
-        new THREE.Color(initialPalette[3])
-    ]);
-    const targetColors = useRef<THREE.Color[]>([
-        new THREE.Color(initialPalette[0]),
-        new THREE.Color(initialPalette[1]),
-        new THREE.Color(initialPalette[2]),
-        new THREE.Color(initialPalette[3])
-    ]);
-    const currentColors = useRef<THREE.Color[]>([
-        new THREE.Color(initialPalette[0]),
-        new THREE.Color(initialPalette[1]),
-        new THREE.Color(initialPalette[2]),
-        new THREE.Color(initialPalette[3])
-    ]);
+    const startColors = useRef<THREE.Color[]>(Array.from({ length: 20 }, (_, i) => new THREE.Color(initialPalette[i % initialPalette.length] || '#ffffff')));
+    const targetColors = useRef<THREE.Color[]>(Array.from({ length: 20 }, (_, i) => new THREE.Color(initialPalette[i % initialPalette.length] || '#ffffff')));
+    const currentColors = useRef<THREE.Color[]>(Array.from({ length: 20 }, (_, i) => new THREE.Color(initialPalette[i % initialPalette.length] || '#ffffff')));
 
-    const speciesStartTimes = useRef<number[]>([0, 0, 0, 0]);
-    const speciesDurations = useRef<number[]>([3.2, 3.2, 3.2, 3.2]);
+    const speciesStartTimes = useRef<Float32Array>(new Float32Array(20));
+    const speciesDurations = useRef<Float32Array>(new Float32Array(20).fill(3.2));
     const lastPaletteKey = useRef<string>('');
 
-    // Per-species Material & Optical Bloom state
-    const currentRoughness = useRef<[number, number, number, number]>([0.28, 0.15, 0.35, 0.22]);
-    const currentMetalness = useRef<[number, number, number, number]>([0.85, 0.05, 0.05, 0.50]);
-    const currentEmissive = useRef<[number, number, number, number]>([0.05, 2.40, 0.0, 0.60]);
-    const currentThresholds = useRef<THREE.Vector3>(new THREE.Vector3(0.55, 0.75, 0.90));
+    // Per-species Material & Dynamics arrays
+    const currentRoughness = useRef<Float32Array>(new Float32Array(20).fill(0.30));
+    const currentMetalness = useRef<Float32Array>(new Float32Array(20).fill(0.40));
+    const currentSizes = useRef<Float32Array>(new Float32Array(20).fill(1.0));
+    const currentThresholds = useRef<Float32Array>(new Float32Array(20));
 
     // Custom Shader Uniforms
     const uniformsRef = useRef<{ [key: string]: THREE.IUniform }>({
         texturePosition: { value: null },
         textureVelocity: { value: null },
         uBoidScale: { value: actualCapacity > 300000 ? 0.0095 : 0.0165 },
-        uColor0: { value: currentColors.current[0] },
-        uColor1: { value: currentColors.current[1] },
-        uColor2: { value: currentColors.current[2] },
-        uColor3: { value: currentColors.current[3] },
-        uMatRoughness: { value: new THREE.Vector4(0.30, 0.28, 0.32, 0.29) },
-        uMatMetalness: { value: new THREE.Vector4(0.45, 0.25, 0.65, 0.35) },
-        uMatEmissive: { value: new THREE.Vector4(0.0, 0.0, 0.0, 0.0) },
-        uSpeciesSizes: { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) },
-        uDistThresholds: { value: currentThresholds.current }
+        uSpeciesCount: { value: 4 },
+        uSpeciesColors: { value: currentColors.current },
+        uSpeciesRoughness: { value: currentRoughness.current },
+        uSpeciesMetalness: { value: currentMetalness.current },
+        uSpeciesSizes: { value: currentSizes.current },
+        uSpeciesThresholds: { value: currentThresholds.current }
     });
 
     // Custom Material onBeforeCompile
@@ -205,15 +187,12 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             shader.uniforms.texturePosition = uniformsRef.current.texturePosition;
             shader.uniforms.textureVelocity = uniformsRef.current.textureVelocity;
             shader.uniforms.uBoidScale = uniformsRef.current.uBoidScale;
-            shader.uniforms.uColor0 = uniformsRef.current.uColor0;
-            shader.uniforms.uColor1 = uniformsRef.current.uColor1;
-            shader.uniforms.uColor2 = uniformsRef.current.uColor2;
-            shader.uniforms.uColor3 = uniformsRef.current.uColor3;
-            shader.uniforms.uMatRoughness = uniformsRef.current.uMatRoughness;
-            shader.uniforms.uMatMetalness = uniformsRef.current.uMatMetalness;
-            shader.uniforms.uMatEmissive = uniformsRef.current.uMatEmissive;
+            shader.uniforms.uSpeciesCount = uniformsRef.current.uSpeciesCount;
+            shader.uniforms.uSpeciesColors = uniformsRef.current.uSpeciesColors;
+            shader.uniforms.uSpeciesRoughness = uniformsRef.current.uSpeciesRoughness;
+            shader.uniforms.uSpeciesMetalness = uniformsRef.current.uSpeciesMetalness;
             shader.uniforms.uSpeciesSizes = uniformsRef.current.uSpeciesSizes;
-            shader.uniforms.uDistThresholds = uniformsRef.current.uDistThresholds;
+            shader.uniforms.uSpeciesThresholds = uniformsRef.current.uSpeciesThresholds;
 
             // Vertex Shader: inject reference UV & instance attributes
             shader.vertexShader = `
@@ -223,15 +202,12 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 uniform sampler2D texturePosition;
                 uniform sampler2D textureVelocity;
                 uniform float uBoidScale;
-                uniform vec3 uColor0;
-                uniform vec3 uColor1;
-                uniform vec3 uColor2;
-                uniform vec3 uColor3;
-                uniform vec4 uMatRoughness;
-                uniform vec4 uMatMetalness;
-                uniform vec4 uMatEmissive;
-                uniform vec4 uSpeciesSizes;
-                uniform vec3 uDistThresholds;
+                uniform int uSpeciesCount;
+                uniform vec3 uSpeciesColors[20];
+                uniform float uSpeciesRoughness[20];
+                uniform float uSpeciesMetalness[20];
+                uniform float uSpeciesSizes[20];
+                uniform float uSpeciesThresholds[20];
                 varying vec3 vInstanceColor;
                 varying float vSpeciesRoughness;
                 varying float vSpeciesMetalness;
@@ -245,36 +221,35 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
                 vec3 instancePos = posTex.xyz;
 
                 float q = aParticleRatio;
-                float spScale = 1.0;
 
-                // Color & Material & Size continuous smooth evaluation per species
-                if (q < uDistThresholds.x) {
-                    vInstanceColor = uColor0;
-                    vSpeciesRoughness = uMatRoughness.x;
-                    vSpeciesMetalness = uMatMetalness.x;
-                    vSpeciesEmissive = uMatEmissive.x;
-                    spScale = uSpeciesSizes.x;
-                } else if (q < uDistThresholds.y) {
-                    vInstanceColor = uColor1;
-                    vSpeciesRoughness = uMatRoughness.y;
-                    vSpeciesMetalness = uMatMetalness.y;
-                    vSpeciesEmissive = uMatEmissive.y;
-                    spScale = uSpeciesSizes.y;
-                } else if (q < uDistThresholds.z) {
-                    vInstanceColor = uColor2;
-                    vSpeciesRoughness = uMatRoughness.z;
-                    vSpeciesMetalness = uMatMetalness.z;
-                    vSpeciesEmissive = uMatEmissive.z;
-                    spScale = uSpeciesSizes.z;
-                } else {
-                    vInstanceColor = uColor3;
-                    vSpeciesRoughness = uMatRoughness.w;
-                    vSpeciesMetalness = uMatMetalness.w;
-                    vSpeciesEmissive = uMatEmissive.w;
-                    spScale = uSpeciesSizes.w;
+                // Match species index across up to 20 dynamically sized species
+                int spIdx = 0;
+                for (int k = 0; k < 19; k++) {
+                    if (k < uSpeciesCount - 1 && q >= uSpeciesThresholds[k]) {
+                        spIdx = k + 1;
+                    }
                 }
 
-                // Transform vertex with Gaussian bell curve scale, species average scale, and instance position
+                vec3 spCol = uSpeciesColors[0];
+                float spRough = uSpeciesRoughness[0];
+                float spMetal = uSpeciesMetalness[0];
+                float spScale = uSpeciesSizes[0];
+
+                for (int k = 0; k < 20; k++) {
+                    if (k == spIdx) {
+                        spCol = uSpeciesColors[k];
+                        spRough = uSpeciesRoughness[k];
+                        spMetal = uSpeciesMetalness[k];
+                        spScale = uSpeciesSizes[k];
+                    }
+                }
+
+                vInstanceColor = spCol;
+                vSpeciesRoughness = spRough;
+                vSpeciesMetalness = spMetal;
+                vSpeciesEmissive = 0.0;
+
+                // Transform vertex with Gaussian bell curve scale, species scale, and instance position
                 vec3 transformed = position * (uBoidScale * aSizeScale * spScale) + instancePos;
                 `
             );
@@ -338,25 +313,34 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
         const baseScale = (state.sizeMultiplier || 1.0) * (actualCapacity > 300000 ? 0.024 : 0.032);
         uniformsRef.current.uBoidScale.value = baseScale;
 
-        // Species Color Morphing
-        const newPalette = state.speciesColors || SPECIES_COLORS;
-        const paletteKey = newPalette.join(',');
+        // Species Color Morphing (up to 20 species)
+        const spCount = Math.max(2, Math.min(20, state.speciesCount || state.speciesColors?.length || 4));
+        uniformsRef.current.uSpeciesCount.value = spCount;
+
+        const newPalette = state.speciesColors || COLOR_PALETTES[17];
+        const paletteKey = `${spCount}:${newPalette.join(',')}`;
 
         if (lastPaletteKey.current !== paletteKey) {
             lastPaletteKey.current = paletteKey;
-            const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+            const order = Array.from({ length: spCount }, (_, i) => i).sort(() => Math.random() - 0.5);
             let accumulatedLag = 0.0;
-            for (let idx = 0; idx < 4; idx++) {
+            for (let idx = 0; idx < spCount; idx++) {
                 const s = order[idx];
+                const targetHex = newPalette[s % newPalette.length] || '#ffffff';
                 startColors.current[s].copy(currentColors.current[s]);
-                targetColors.current[s].set(newPalette[s]);
+                targetColors.current[s].set(targetHex);
                 speciesStartTimes.current[s] = time + accumulatedLag;
-                speciesDurations.current[s] = 4.5 + Math.random() * 1.5;
-                accumulatedLag += 1.5 + Math.random() * 1.5;
+                speciesDurations.current[s] = 3.5 + Math.random() * 1.5;
+                accumulatedLag += 0.4 + Math.random() * 0.4;
             }
         }
 
-        for (let s = 0; s < 4; s++) {
+        for (let s = 0; s < 20; s++) {
+            if (s >= spCount) {
+                currentColors.current[s].copy(currentColors.current[s % spCount]);
+                continue;
+            }
+
             const sStart = speciesStartTimes.current[s];
             const sDur = speciesDurations.current[s];
 
@@ -366,7 +350,7 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             }
 
             const colorElapsed = time - sStart;
-            const colorP = Math.min(1.0, colorElapsed / sDur);
+            const colorP = Math.min(1.0, colorElapsed / Math.max(0.1, sDur));
             const colorEase = colorP * colorP * colorP * (colorP * (colorP * 6.0 - 15.0) + 10.0);
 
             const [L1, a1, b1] = rgbToOklab(startColors.current[s].r, startColors.current[s].g, startColors.current[s].b);
@@ -380,73 +364,37 @@ export function GPGPUFlock({ count, state }: GPGPUFlockProps) {
             currentColors.current[s].setRGB(r, g, b_rgb);
         }
 
-        uniformsRef.current.uColor0.value.copy(currentColors.current[0]);
-        uniformsRef.current.uColor1.value.copy(currentColors.current[1]);
-        uniformsRef.current.uColor2.value.copy(currentColors.current[2]);
-        uniformsRef.current.uColor3.value.copy(currentColors.current[3]);
-
-        // Per-Species Material & Optical Bloom Live Dynamics
-        const spMats = state.speciesMaterials || [
-            state.materialSettings,
-            state.materialSettings,
-            state.materialSettings,
-            state.materialSettings
-        ];
-
+        // Per-Species Material Live Dynamics
+        const spMats = state.speciesMaterials;
         const rate = Math.min(1.0, (delta || 0.016) * 3.5);
-        for (let s = 0; s < 4; s++) {
-            const targetMat = spMats[s] || state.materialSettings || { roughness: 0.28, metalness: 0.05, emissiveIntensity: 0.0 };
-            const tRough = targetMat.roughness ?? 0.28;
-            const tMetal = targetMat.metalness ?? 0.05;
-            let tEmiss = targetMat.emissiveIntensity ?? 0.0;
-            if (state.microSurpriseType === 'materialPulse' && state.currentTime && state.microSurpriseEndTime && state.currentTime < state.microSurpriseEndTime) {
-                tEmiss = Math.max(tEmiss, 2.0);
-            }
+        for (let s = 0; s < 20; s++) {
+            const targetMat = (spMats && spMats[s]) || state.materialSettings || { roughness: 0.30, metalness: 0.35, emissiveIntensity: 0.0 };
+            const tRough = targetMat.roughness ?? 0.30;
+            const tMetal = targetMat.metalness ?? 0.35;
 
             currentRoughness.current[s] += (tRough - currentRoughness.current[s]) * rate;
             currentMetalness.current[s] += (tMetal - currentMetalness.current[s]) * rate;
-            currentEmissive.current[s] += (tEmiss - currentEmissive.current[s]) * rate;
         }
 
-        uniformsRef.current.uMatRoughness.value.set(
-            currentRoughness.current[0],
-            currentRoughness.current[1],
-            currentRoughness.current[2],
-            currentRoughness.current[3]
-        );
-        uniformsRef.current.uMatMetalness.value.set(
-            currentMetalness.current[0],
-            currentMetalness.current[1],
-            currentMetalness.current[2],
-            currentMetalness.current[3]
-        );
-        uniformsRef.current.uMatEmissive.value.set(
-            currentEmissive.current[0],
-            currentEmissive.current[1],
-            currentEmissive.current[2],
-            currentEmissive.current[3]
-        );
+        // Species Sizes
+        const spSizes = state.speciesSizes;
+        for (let s = 0; s < 20; s++) {
+            const tSize = (spSizes && s < spSizes.length) ? spSizes[s] : 1.0;
+            currentSizes.current[s] += (tSize - currentSizes.current[s]) * rate;
+        }
 
-        const spSizes = state.speciesSizes || [1.35, 0.90, 0.58, 0.36];
-        uniformsRef.current.uSpeciesSizes.value.set(
-            spSizes[0],
-            spSizes[1],
-            spSizes[2],
-            spSizes[3]
-        );
-
-        // Smooth continuous population distribution threshold morphing
+        // Smooth population distribution threshold morphing across N species
         const dist = state.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
-        const targetT0 = dist[0];
-        const targetT1 = dist[0] + dist[1];
-        const targetT2 = dist[0] + dist[1] + dist[2];
+        let acc = 0;
         const distRate = Math.min(1.0, (delta || 0.016) * 1.8);
-
-        currentThresholds.current.x += (targetT0 - currentThresholds.current.x) * distRate;
-        currentThresholds.current.y += (targetT1 - currentThresholds.current.y) * distRate;
-        currentThresholds.current.z += (targetT2 - currentThresholds.current.z) * distRate;
-
-        uniformsRef.current.uDistThresholds.value.copy(currentThresholds.current);
+        for (let k = 0; k < 20; k++) {
+            if (k < dist.length) {
+                acc += dist[k];
+                currentThresholds.current[k] += (acc - currentThresholds.current[k]) * distRate;
+            } else {
+                currentThresholds.current[k] = 1.0;
+            }
+        }
 
         if (!state.isReady) {
             state.isReady = true;

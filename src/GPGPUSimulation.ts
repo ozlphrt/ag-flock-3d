@@ -45,9 +45,11 @@ uniform float uMaxAccel;
 uniform float uVolThickness;
 uniform float uNoiseDrift;
 uniform float uSeed;
-uniform vec4 uSpeciesSizes;
-uniform vec4 uSpeciesAgility;
-uniform vec4 uSpeciesSpeed;
+uniform int uSpeciesCount;
+uniform float uSpeciesThresholds[20];
+uniform float uSpeciesSizes[20];
+uniform float uSpeciesAgility[20];
+uniform float uSpeciesSpeed[20];
 
 // Procedural Parameters
 uniform int uP_family;
@@ -442,7 +444,7 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
         target = vec3(cx, cy, cz) + l;
     }
     else if (mode == 29) {
-        // Saturnian Rings: Species 0 is the Central Planet Core Sphere; Species 1, 2, 3 are the Dust Rings & Cloud
+        // Saturnian Rings: Species 0 is the Central Planet Core Sphere; Species 1..N-1 are the Dust Rings & Cloud
         if (sp < 0.5) {
             // Central Gas Giant Core Sphere (Species 0)
             float uSph = fract(u * 1000.0);
@@ -451,10 +453,11 @@ vec3 evaluateTopology(int mode, float u, float sp, float nSeed, float time, floa
             float rPlanet = 2.4 + (fract(nSeed * 13.7) - 0.5) * 0.08 * vol + isStray * individualDecay * (fract(nSeed * 19.3) - 0.5) * 0.3;
             target = vec3(rPlanet * sin(phi) * cos(theta), rPlanet * cos(phi) * 0.92, rPlanet * sin(phi) * sin(theta));
         } else {
-            // Hyper-Dense Planetary Dust Ring System (Species 1, 2, 3)
-            float ringSpecies = sp - 1.0; // 0, 1, 2 for species 1, 2, 3
+            // Hyper-Dense Planetary Dust Ring System (Species 1 to N-1)
+            float ringSpecies = sp - 1.0;
+            float maxRingSp = max(1.0, float(uSpeciesCount - 2));
             float uRing = fract(u * 500.0);
-            float ringRadius = 4.0 + (ringSpecies * 1.6) + uRing * 1.5 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
+            float ringRadius = 3.6 + (ringSpecies / maxRingSp) * 4.8 + uRing * 0.6 + (fract(nSeed * 29.13) - 0.5) * 0.12 * vol;
             float ringAngle = (uRing * 180.0 * PI) + time * (1.2 / sqrt(ringRadius)) * speedMult + nSeed * TWO_PI + (ringSpecies * 1.047);
             float ringThickness = (fract(nSeed * 31.7) - 0.5) * 0.16 * vol + isStray * individualDecay * (fract(nSeed * 53.1) - 0.5) * 0.35;
             vec3 ringPt = vec3(ringRadius * cos(ringAngle), ringThickness, ringRadius * sin(ringAngle));
@@ -649,33 +652,20 @@ void main() {
         boidSize = 3.8 + subU * 1.4;
     }
 
-    // 1. Per-Species Kinematic Profiles (Sovereign Titans, Hunter Cruisers, Darting Swarmers, Nano-Sentinels)
-    float spSpeed = uSpeciesSpeed.x;
-    float spAgility = uSpeciesAgility.x;
-    float spBaseScale = uSpeciesSizes.x;
-    float spFreq = 0.55;
+    // 1. Dynamic Per-Species Kinematic Profiles (up to 20 species)
+    int spIdx = int(clamp(species, 0.0, 19.0));
+    float spSpeed = 1.0;
+    float spAgility = 1.0;
+    float spBaseScale = 1.0;
 
-    if (species < 0.5) {
-        spSpeed = uSpeciesSpeed.x;
-        spAgility = uSpeciesAgility.x;
-        spBaseScale = uSpeciesSizes.x;
-        spFreq = 0.55;
-    } else if (species < 1.5) {
-        spSpeed = uSpeciesSpeed.y;
-        spAgility = uSpeciesAgility.y;
-        spBaseScale = uSpeciesSizes.y;
-        spFreq = 1.00;
-    } else if (species < 2.5) {
-        spSpeed = uSpeciesSpeed.z;
-        spAgility = uSpeciesAgility.z;
-        spBaseScale = uSpeciesSizes.z;
-        spFreq = 1.45;
-    } else {
-        spSpeed = uSpeciesSpeed.w;
-        spAgility = uSpeciesAgility.w;
-        spBaseScale = uSpeciesSizes.w;
-        spFreq = 1.85;
+    for (int k = 0; k < 20; k++) {
+        if (k == spIdx) {
+            spSpeed = uSpeciesSpeed[k];
+            spAgility = uSpeciesAgility[k];
+            spBaseScale = uSpeciesSizes[k];
+        }
     }
+    float spFreq = 0.55 + (float(spIdx) / max(1.0, float(uSpeciesCount - 1))) * 1.30;
 
     // 2. Total Effective Physical Size for this individual boid
     float effectiveSize = boidSize * spBaseScale;
@@ -828,9 +818,11 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uVolThickness = { value: 0.95 }; // Defined, rich volumetric pipe thickness
     velocityUniforms.uNoiseDrift = { value: 0.006 }; // Subtle organic fluid turbulence
     velocityUniforms.uSeed = { value: initialSeed };
-    velocityUniforms.uSpeciesSizes = { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) };
-    velocityUniforms.uSpeciesAgility = { value: new THREE.Vector4(0.70, 1.15, 1.50, 1.95) };
-    velocityUniforms.uSpeciesSpeed = { value: new THREE.Vector4(0.85, 1.18, 1.28, 1.05) };
+    velocityUniforms.uSpeciesCount = { value: 4 };
+    velocityUniforms.uSpeciesThresholds = { value: new Float32Array(20) };
+    velocityUniforms.uSpeciesSizes = { value: new Float32Array(20) };
+    velocityUniforms.uSpeciesAgility = { value: new Float32Array(20) };
+    velocityUniforms.uSpeciesSpeed = { value: new Float32Array(20) };
 
     // Procedural Uniforms
     velocityUniforms.uP_family = { value: 0 };
@@ -910,8 +902,35 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             velocityUniforms.uMaxAccel.value = activeMaxAccel;
             velocityUniforms.uSeed.value = state.formationSeed ?? 42.0;
 
+            const spCount = Math.max(2, Math.min(20, state.speciesCount || state.speciesColors?.length || 4));
+            velocityUniforms.uSpeciesCount.value = spCount;
+
+            const dist = state.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+            let acc = 0;
+            const threshArr = velocityUniforms.uSpeciesThresholds.value as Float32Array;
+            for (let k = 0; k < 20; k++) {
+                if (k < dist.length) {
+                    acc += dist[k];
+                    threshArr[k] = acc;
+                } else {
+                    threshArr[k] = 1.0;
+                }
+            }
+
             const spSizes = state.speciesSizes || [1.35, 0.90, 0.58, 0.36];
-            velocityUniforms.uSpeciesSizes.value.set(spSizes[0], spSizes[1], spSizes[2], spSizes[3]);
+            const sizesArr = velocityUniforms.uSpeciesSizes.value as Float32Array;
+            for (let k = 0; k < 20; k++) {
+                sizesArr[k] = (k < spSizes.length) ? spSizes[k] : 1.0;
+            }
+
+            const agArr = velocityUniforms.uSpeciesAgility.value as Float32Array;
+            const spdArr = velocityUniforms.uSpeciesSpeed.value as Float32Array;
+            const spAg = state.speciesAgilities || [0.70, 1.15, 1.50, 1.95];
+            const spSpd = state.speciesSpeeds || [0.85, 1.18, 1.28, 1.05];
+            for (let k = 0; k < 20; k++) {
+                agArr[k] = (k < spAg.length) ? spAg[k] : 1.0;
+                spdArr[k] = (k < spSpd.length) ? spSpd[k] : 1.0;
+            }
 
             if (state.proceduralGenome) {
                 const g = state.proceduralGenome;

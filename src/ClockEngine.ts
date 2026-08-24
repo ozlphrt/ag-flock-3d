@@ -13,7 +13,10 @@ import {
     generateProceduralShapeSurprise,
     generateSpeciesMaterials,
     generateSpeciesDistribution,
-    generateSpeciesSizes
+    generateSpeciesSizes,
+    generateDynamicSpeciesCount,
+    generateHarmoniousPalette,
+    generateSpeciesKinematics
 } from './BoidLogic';
 import { getRLPreferences, sampleRLAttribute, sampleHarmonicFormation, generateProceduralGenome, getRandomEmotionalArc, EmotionalArc, saveLastState } from './RLEngine';
 
@@ -297,7 +300,25 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             if (recentPalettes.length > 4) recentPalettes.shift();
 
             state.paletteIndex = nextPaletteIdx;
-            state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
+            // 45% chance to morph species count between 2 and 20 for dynamic variety
+            if (Math.random() < 0.45) {
+                const spCount = generateDynamicSpeciesCount();
+                state.speciesCount = spCount;
+                state.speciesColors = generateHarmoniousPalette(spCount);
+                state.speciesDistribution = generateSpeciesDistribution(spCount);
+                state.speciesSizes = generateSpeciesSizes(spCount);
+                const kin = generateSpeciesKinematics(spCount, state.speciesSizes);
+                state.speciesAgilities = kin.agilities;
+                state.speciesSpeeds = kin.speeds;
+                state.speciesMaterials = generateSpeciesMaterials(spCount);
+            } else {
+                const spCount = state.speciesCount || 4;
+                if (spCount === 4) {
+                    state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
+                } else {
+                    state.speciesColors = generateHarmoniousPalette(spCount);
+                }
+            }
         }
 
         // 3. INDEPENDENT MATERIAL CLOCK (Every 60-90s)
@@ -464,11 +485,19 @@ export function createClockEngine(state: SimulationState): ClockEngine {
             state.paletteTransitionDuration = 1.8;
 
             if (isSurprise) {
-                const surprise = generateProceduralPaletteSurprise();
+                const spCount = generateDynamicSpeciesCount();
+                state.speciesCount = spCount;
                 state.paletteIndex = -1;
-                state.speciesColors = surprise.colors;
-                state.customPaletteName = surprise.name;
-                return `Palette: ${surprise.name}`;
+                state.speciesColors = generateHarmoniousPalette(spCount);
+                state.speciesDistribution = generateSpeciesDistribution(spCount);
+                state.speciesSizes = generateSpeciesSizes(spCount);
+                const kin = generateSpeciesKinematics(spCount, state.speciesSizes);
+                state.speciesAgilities = kin.agilities;
+                state.speciesSpeeds = kin.speeds;
+                state.speciesMaterials = generateSpeciesMaterials(spCount);
+                const surpriseName = `${spCount}-Species Celestial Harmony`;
+                state.customPaletteName = surpriseName;
+                return `Palette: ${surpriseName}`;
             } else {
                 state.customPaletteName = undefined;
                 const nextPaletteIdx = sampleRLAttribute(
@@ -484,8 +513,26 @@ export function createClockEngine(state: SimulationState): ClockEngine {
                 if (recentPalettes.length > 4) recentPalettes.shift();
 
                 state.paletteIndex = nextPaletteIdx;
-                state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
-                return `Palette: #${nextPaletteIdx + 1} Harmonic Palette`;
+                if (Math.random() < 0.50) {
+                    const spCount = generateDynamicSpeciesCount();
+                    state.speciesCount = spCount;
+                    state.speciesColors = generateHarmoniousPalette(spCount);
+                    state.speciesDistribution = generateSpeciesDistribution(spCount);
+                    state.speciesSizes = generateSpeciesSizes(spCount);
+                    const kin = generateSpeciesKinematics(spCount, state.speciesSizes);
+                    state.speciesAgilities = kin.agilities;
+                    state.speciesSpeeds = kin.speeds;
+                    state.speciesMaterials = generateSpeciesMaterials(spCount);
+                    return `Palette: ${spCount}-Species Harmonic Prism`;
+                } else {
+                    const spCount = state.speciesCount || 4;
+                    if (spCount === 4) {
+                        state.speciesColors = [...COLOR_PALETTES[nextPaletteIdx]];
+                    } else {
+                        state.speciesColors = generateHarmoniousPalette(spCount);
+                    }
+                    return `Palette: #${nextPaletteIdx + 1} Harmonic Palette`;
+                }
             }
         } else if (dim === 'material') {
             if (state.isMaterialLocked) return 'Material is Locked';

@@ -1062,6 +1062,54 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                 </strong>
                             </span>
                         </div>
+
+                        {/* Species & Population Distribution Breakdown (Top 3 + Others) */}
+                        {(() => {
+                            const spCount = simState.current.speciesCount || simState.current.speciesColors?.length || 4;
+                            const dist = simState.current.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
+                            const colors = simState.current.speciesColors || SPECIES_COLORS;
+
+                            const ranked = dist.slice(0, spCount).map((pct, idx) => ({
+                                idx,
+                                color: colors[idx % colors.length] || '#ffffff',
+                                pct: Math.round(pct * 100)
+                            })).sort((a, b) => b.pct - a.pct);
+
+                            const top3 = ranked.slice(0, 3);
+                            const othersPct = ranked.slice(3).reduce((sum, s) => sum + s.pct, 0);
+
+                            return (
+                                <div
+                                    style={{
+                                        marginTop: '4px',
+                                        paddingTop: '4px',
+                                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        fontSize: '10.5px',
+                                        color: 'rgba(255, 255, 255, 0.85)'
+                                    }}
+                                >
+                                    <span style={{ fontWeight: 800, color: '#38bdf8', whiteSpace: 'nowrap' }}>
+                                        🧬 {spCount} Species:
+                                    </span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                        {top3.map((s, i) => (
+                                            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                                                <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: s.color, boxShadow: `0 0 4px ${s.color}` }} />
+                                                <strong style={{ color: '#ffffff' }}>#{s.idx + 1}:</strong> {s.pct}%
+                                            </span>
+                                        ))}
+                                        {spCount > 3 && (
+                                            <span style={{ color: 'rgba(255, 255, 255, 0.55)', whiteSpace: 'nowrap' }}>
+                                                Others ({spCount - 3}): <strong style={{ color: '#e2e8f0' }}>{othersPct}%</strong>
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
             );
@@ -2763,19 +2811,21 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                             {openFolders.species && (
                                 <div>
                                     {(() => {
+                                        const spCount = s.speciesCount || s.speciesColors?.length || 4;
                                         const dist = s.speciesDistribution || [0.55, 0.20, 0.15, 0.10];
                                         const sizes = s.speciesSizes || [1.35, 0.90, 0.58, 0.36];
                                         const colors = s.speciesColors || SPECIES_COLORS;
+                                        const indices = Array.from({ length: Math.min(spCount, dist.length) }, (_, i) => i);
                                         return (
                                             <>
-                                                {[0, 1, 2, 3].map(sp => {
-                                                    const pct = Math.round((dist[sp] || 0.25) * 100);
+                                                {indices.map(sp => {
+                                                    const pct = Math.round((dist[sp] || (1 / spCount)) * 100);
                                                     const sz = sizes[sp] ?? 1.0;
                                                     return (
                                                         <div key={`sp-row-${sp}`} style={{ padding: '6px 8px', borderBottom: '1px solid #1a1a24', background: '#0a0d18' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                    <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: colors[sp] || '#fff', boxShadow: `0 0 6px ${colors[sp] || '#fff'}` }} />
+                                                                    <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: colors[sp % colors.length] || '#fff', boxShadow: `0 0 6px ${colors[sp % colors.length] || '#fff'}` }} />
                                                                     <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#93c5fd' }}>Species {sp + 1}</span>
                                                                 </div>
                                                                 <span style={{ fontSize: '11px', color: '#eee', fontWeight: 'bold' }}>{pct}% pop | {sz.toFixed(2)}x size</span>
@@ -2785,18 +2835,18 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                                                 <span style={{ fontSize: '10px', color: '#888' }}>Population Ratio</span>
                                                                 <input
                                                                     type="range"
-                                                                    min="0.05"
+                                                                    min="0.02"
                                                                     max="0.90"
                                                                     step="0.01"
-                                                                    value={dist[sp] || 0.25}
+                                                                    value={dist[sp] || (1 / spCount)}
                                                                     onChange={(e) => {
                                                                         const val = parseFloat(e.target.value);
-                                                                        const newDist: [number, number, number, number] = [...dist];
+                                                                        const newDist: number[] = [...dist];
                                                                         newDist[sp] = val;
                                                                         const sum = newDist.reduce((a, b) => a + b, 0);
-                                                                        s.speciesDistribution = [newDist[0] / sum, newDist[1] / sum, newDist[2] / sum, newDist[3] / sum];
+                                                                        s.speciesDistribution = newDist.map(v => v / sum);
                                                                     }}
-                                                                    style={{ width: '130px', accentColor: colors[sp] || '#2FA1D6' }}
+                                                                    style={{ width: '130px', accentColor: colors[sp % colors.length] || '#2FA1D6' }}
                                                                 />
                                                             </div>
                                                             {/* Average Size Scale Slider */}
@@ -2810,11 +2860,11 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                                                     value={sizes[sp] ?? 1.0}
                                                                     onChange={(e) => {
                                                                         const val = parseFloat(e.target.value);
-                                                                        const newSizes: [number, number, number, number] = [...sizes];
+                                                                        const newSizes: number[] = [...sizes];
                                                                         newSizes[sp] = val;
                                                                         s.speciesSizes = newSizes;
                                                                     }}
-                                                                    style={{ width: '130px', accentColor: colors[sp] || '#2FA1D6' }}
+                                                                    style={{ width: '130px', accentColor: colors[sp % colors.length] || '#2FA1D6' }}
                                                                 />
                                                             </div>
                                                         </div>
@@ -2823,7 +2873,7 @@ export const OverlayUI: React.FC<OverlayUIProps> = ({ simState, population, setP
                                                 <div style={{ display: 'flex', gap: '4px', padding: '6px 8px' }}>
                                                     <button
                                                         onClick={() => {
-                                                            s.speciesDistribution = generateSpeciesDistribution();
+                                                            s.speciesDistribution = generateSpeciesDistribution(spCount);
                                                         }}
                                                         style={{
                                                             flex: 1,
