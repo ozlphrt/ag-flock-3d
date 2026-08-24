@@ -1971,10 +1971,20 @@ export class Boid {
             tz *= invT;
         }
 
-        // Ultra-gentle liquid spring attraction lerp (0.03 -> 0.06 steady state)
-        const activeLerpRate = (state && state.prevFormationMode !== undefined && p < 1.0)
+        // Species and individual size agility & speed scaling
+        const spAgility = (this.species === 0 ? 0.70 : (this.species === 1 ? 1.15 : (this.species === 2 ? 1.50 : 1.95)));
+        const spSpeed = (this.species === 0 ? 0.85 : (this.species === 1 ? 1.18 : (this.species === 2 ? 1.28 : 1.05)));
+        const effectiveSize = Math.max(0.08, this.size || 1.0);
+        const sizeAgility = Math.min(2.40, Math.max(0.45, 1.0 / Math.sqrt(effectiveSize)));
+        const sizeSpeed = Math.min(1.40, Math.max(0.70, 1.0 + (1.0 - effectiveSize) * 0.22));
+
+        const totalAgility = spAgility * sizeAgility;
+        const totalSpeed = spSpeed * sizeSpeed;
+
+        // Ultra-gentle liquid spring attraction lerp scaled by agility
+        const activeLerpRate = ((state && state.prevFormationMode !== undefined && p < 1.0)
             ? 0.03 + 0.03 * sCurve
-            : 0.06;
+            : 0.06) * totalAgility;
 
         let dx = (tx - this.position.x) * activeLerpRate;
         let dy = (ty - this.position.y) * activeLerpRate;
@@ -1987,15 +1997,16 @@ export class Boid {
             dz *= 1.12;
         }
 
-        // Subtle organic 3D drift (0.015)
-        const driftX = fastSin(time * 1.5 + this.noiseSeed) * 0.015 * speedMult;
-        const driftY = fastCos(time * 1.2 + this.noiseSeed * 1.3) * 0.015 * speedMult;
-        const driftZ = fastSin(time * 1.8 + this.noiseSeed * 0.7) * 0.015 * speedMult;
+        // Subtle organic 3D drift scaled by agility & frequency
+        const spFreq = (this.species === 0 ? 0.55 : (this.species === 1 ? 1.0 : (this.species === 2 ? 1.45 : 1.85)));
+        const driftX = fastSin(time * 1.5 * spFreq + this.noiseSeed) * 0.015 * speedMult * totalAgility;
+        const driftY = fastCos(time * 1.2 * spFreq + this.noiseSeed * 1.3) * 0.015 * speedMult * totalAgility;
+        const driftZ = fastSin(time * 1.8 * spFreq + this.noiseSeed * 0.7) * 0.015 * speedMult * totalAgility;
 
-        // Silky smooth speed cap (0.04 at start -> 0.06 steady state)
-        const activeMaxDisp = (state && state.prevFormationMode !== undefined && p < 1.0)
+        // Silky smooth speed cap scaled by species and size speed
+        const activeMaxDisp = ((state && state.prevFormationMode !== undefined && p < 1.0)
             ? (0.04 + 0.02 * sCurve) * speedMult
-            : 0.06 * speedMult;
+            : 0.06 * speedMult) * totalSpeed;
 
         // Desired velocity for this frame
         const targetVelX = dx + driftX;
@@ -2006,30 +2017,16 @@ export class Boid {
             this.velocity = new THREE.Vector3(targetVelX, targetVelY, targetVelZ);
         }
 
-        // 1. Calculate Acceleration Vector
-        let ax = targetVelX - this.velocity.x;
-        let ay = targetVelY - this.velocity.y;
-        let az = targetVelZ - this.velocity.z;
+        // Exponential smoothing towards target velocity
+        const blendRate = Math.min(0.40, Math.max(0.06, 0.14 * totalAgility));
+        this.velocity.x += (targetVelX - this.velocity.x) * blendRate;
+        this.velocity.y += (targetVelY - this.velocity.y) * blendRate;
+        this.velocity.z += (targetVelZ - this.velocity.z) * blendRate;
 
-        // 2. Restrict max acceleration per frame (0.0025 * speedMult)
-        const maxAccel = 0.0025 * speedMult;
-        const accelMag = Math.sqrt(ax * ax + ay * ay + az * az);
-        if (accelMag > maxAccel && accelMag > 1e-6) {
-            const scale = maxAccel / accelMag;
-            ax *= scale;
-            ay *= scale;
-            az *= scale;
-        }
-
-        // 3. Update velocity smoothly
-        this.velocity.x += ax;
-        this.velocity.y += ay;
-        this.velocity.z += az;
-
-        // 4. Strict speed cap
+        // Soft-knee speed limiter
         const currentSpeed = this.velocity.length();
         if (currentSpeed > activeMaxDisp && currentSpeed > 1e-6) {
-            this.velocity.multiplyScalar(activeMaxDisp / currentSpeed);
+            this.velocity.multiplyScalar((activeMaxDisp + (currentSpeed - activeMaxDisp) * 0.05) / currentSpeed);
         }
 
         // 5. Position update

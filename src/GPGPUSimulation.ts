@@ -45,6 +45,9 @@ uniform float uMaxAccel;
 uniform float uVolThickness;
 uniform float uNoiseDrift;
 uniform float uSeed;
+uniform vec4 uSpeciesSizes;
+uniform vec4 uSpeciesAgility;
+uniform vec4 uSpeciesSpeed;
 
 // Procedural Parameters
 uniform int uP_family;
@@ -646,30 +649,66 @@ void main() {
         boidSize = 3.8 + subU * 1.4;
     }
 
-    // Dynamic Agility & Inertia Scaling:
-    float agilityMult = clamp(1.0 / sqrt(boidSize), 0.55, 1.75);
+    // 1. Per-Species Kinematic Profiles (Sovereign Titans, Hunter Cruisers, Darting Swarmers, Nano-Sentinels)
+    float spSpeed = uSpeciesSpeed.x;
+    float spAgility = uSpeciesAgility.x;
+    float spBaseScale = uSpeciesSizes.x;
+    float spFreq = 0.55;
 
-    float localLerp = uLerpRate * agilityMult;
-    float localMaxAccel = uMaxAccel * agilityMult;
-    float localMaxSpeed = uMaxSpeed * agilityMult;
+    if (species < 0.5) {
+        spSpeed = uSpeciesSpeed.x;
+        spAgility = uSpeciesAgility.x;
+        spBaseScale = uSpeciesSizes.x;
+        spFreq = 0.55;
+    } else if (species < 1.5) {
+        spSpeed = uSpeciesSpeed.y;
+        spAgility = uSpeciesAgility.y;
+        spBaseScale = uSpeciesSizes.y;
+        spFreq = 1.00;
+    } else if (species < 2.5) {
+        spSpeed = uSpeciesSpeed.z;
+        spAgility = uSpeciesAgility.z;
+        spBaseScale = uSpeciesSizes.z;
+        spFreq = 1.45;
+    } else {
+        spSpeed = uSpeciesSpeed.w;
+        spAgility = uSpeciesAgility.w;
+        spBaseScale = uSpeciesSizes.w;
+        spFreq = 1.85;
+    }
+
+    // 2. Total Effective Physical Size for this individual boid
+    float effectiveSize = boidSize * spBaseScale;
+
+    // 3. Physical Size-Inertia Law:
+    // Heavy/Large boids have larger momentum & graceful turning radius
+    // Nimble/Micro boids have lightning agility, snappier responsiveness & lively flutter
+    float sizeAgility = clamp(1.0 / sqrt(max(0.08, effectiveSize)), 0.45, 2.40);
+    float sizeSpeed = clamp(1.0 + (1.0 - effectiveSize) * 0.22, 0.70, 1.40);
+
+    float totalAgility = spAgility * sizeAgility;
+    float totalSpeed = spSpeed * sizeSpeed;
+
+    float localLerp = uLerpRate * totalAgility;
+    float localMaxSpeed = uMaxSpeed * totalSpeed;
 
     // Smooth Critical-Damped Velocity Filter
     vec3 err = targetPos - pos;
     vec3 targetVel = err * localLerp;
 
-    // Organic living fluid noise turbulence (strictly time + seed driven, ZERO positional feedback jitter)
-    float activeNoise = uNoiseDrift * (0.35 + 0.65 * settleDecay);
+    // Organic living fluid noise turbulence tailored per species & size
+    float activeNoise = uNoiseDrift * (0.35 + 0.65 * settleDecay) * totalAgility;
     if (activeNoise > 1e-5) {
-        float freq = 0.6 + 0.4 * agilityMult;
+        float freq = spFreq * (0.7 + 0.3 * sizeAgility);
         targetVel += vec3(
-            sin(uTime * 1.1 * freq + nSeed * 18.28) * activeNoise * agilityMult,
-            cos(uTime * 0.9 * freq + nSeed * 24.12) * activeNoise * agilityMult,
-            sin(uTime * 1.3 * freq + nSeed * 14.41) * activeNoise * agilityMult
+            sin(uTime * 1.1 * freq + nSeed * 18.28) * activeNoise,
+            cos(uTime * 0.9 * freq + nSeed * 24.12) * activeNoise,
+            sin(uTime * 1.3 * freq + nSeed * 14.41) * activeNoise
         );
     }
 
-    // Analytical exponential damping (silky smooth second-order trajectory convergence)
-    float blendRate = clamp(0.18 * agilityMult, 0.08, 0.35);
+    // Analytical exponential damping with per-species/size responsiveness
+    float blendRate = clamp(0.14 * totalAgility, 0.06, 0.42);
     vel = mix(vel, targetVel, blendRate);
 
     // Smooth soft-knee speed limiter (no hard trajectory clipping)
@@ -783,6 +822,9 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
     velocityUniforms.uVolThickness = { value: 0.95 }; // Defined, rich volumetric pipe thickness
     velocityUniforms.uNoiseDrift = { value: 0.006 }; // Subtle organic fluid turbulence
     velocityUniforms.uSeed = { value: initialSeed };
+    velocityUniforms.uSpeciesSizes = { value: new THREE.Vector4(1.35, 0.90, 0.58, 0.36) };
+    velocityUniforms.uSpeciesAgility = { value: new THREE.Vector4(0.70, 1.15, 1.50, 1.95) };
+    velocityUniforms.uSpeciesSpeed = { value: new THREE.Vector4(0.85, 1.18, 1.28, 1.05) };
 
     // Procedural Uniforms
     velocityUniforms.uP_family = { value: 0 };
@@ -861,6 +903,9 @@ export function createGPGPUSimulation(renderer: THREE.WebGLRenderer, population:
             velocityUniforms.uMaxSpeed.value = activeMaxSpeed;
             velocityUniforms.uMaxAccel.value = activeMaxAccel;
             velocityUniforms.uSeed.value = state.formationSeed ?? 42.0;
+
+            const spSizes = state.speciesSizes || [1.35, 0.90, 0.58, 0.36];
+            velocityUniforms.uSpeciesSizes.value.set(spSizes[0], spSizes[1], spSizes[2], spSizes[3]);
 
             if (state.proceduralGenome) {
                 const g = state.proceduralGenome;
